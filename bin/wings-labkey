@@ -1,0 +1,130 @@
+#!/data/workspace/disk/.venv/bin/python
+
+#  Copyright 2007-2015 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+__author__ = 'Rajiv Mayani <mayani@isi.edu>'
+
+import sys
+import logging
+import argparse
+import StringIO
+import ConfigParser
+
+import os
+from disk.labkey import Labkey
+from disk.errors import AuthenticationException, LabkeyException
+
+
+def configure_logging(verbosity=0):
+    verbosity = min(3, verbosity)
+
+    log_levels = [
+        logging.ERROR,
+        logging.WARN,
+        logging.INFO,
+        logging.DEBUG
+    ]
+
+    logging.basicConfig(level=log_levels[verbosity],
+                        format='%(asctime)s:%(levelname)s:%(name)s(%(lineno)d): %(message)s')
+
+
+def get_server_url(credentials='.labkeycredentials.txt'):
+    if credentials is None:
+        credentials='.labkeycredentials.txt'
+
+    credentials = os.path.abspath(credentials)
+
+    if not os.path.isfile(credentials):
+        logging.error('Credentials file %r either does not exist or is not readable' % credentials)
+        sys.exit(1)
+
+    str_buffer = StringIO.StringIO('[default]%s%s' % (os.linesep, open(credentials).read()))
+    config = ConfigParser.ConfigParser({'machine': None, 'login': None, 'password': None})
+    config.readfp(str_buffer)
+
+    base_url = config.get('default', 'machine')
+    username = config.get('default', 'login').strip()
+    password = config.get('default', 'password').strip()
+
+    base_url = base_url.strip() if base_url else base_url
+    return base_url, username, password
+
+
+def upload_file(project_name, file_name, destination, base_url=None, username=None, password=None, create=False,
+                overwrite=False, credentials=None, **kwargs):
+    if not os.path.isfile(file_name):
+        logging.error('File %r either does not exist or is not readable' % file_name)
+        sys.exit(1)
+
+    file_name = os.path.abspath(file_name)
+    files = {
+        'file': (os.path.basename(file_name), open(file_name, 'rb').read())
+    }
+
+    destination = os.path.join(project_name, destination)
+
+    if base_url:
+        logging.debug('Using base_url, username, and password from command line')
+    else:
+        base_url, username, password = get_server_url(credentials)
+
+    client = Labkey(base_url, username, password)
+
+    try:
+        client.upload_file(destination, files, create=create, overwrite=overwrite)
+        print 'File uploaded successfully'
+
+    except AuthenticationException as e:
+        logging.error(e)
+
+    except LabkeyException as e:
+        logging.error(e)
+
+    finally:
+        del client
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Wings Labkey Integration')
+    sub_parser = parser.add_subparsers(title='File Upload', description='Upload file to labkey server')
+
+    # File Upload Options
+    upload = sub_parser.add_parser('upload')
+    upload.add_argument('-p', '--project', dest='project_name', required=True)
+    upload.add_argument('-f', '--file', dest='file_name', required=True)
+    upload.add_argument('-d', '--destination', dest='destination', required=True,
+                        help='Destination directory where the file should be uploaded')
+    upload.add_argument('-c', '--create', default=False, action='store_true',
+                        help='Create destination directory if it does not exists')
+    upload.add_argument('-o', '--overwrite', default=False, action='store_true',
+                        help='Overwrite the file if it exists')
+    upload.set_defaults(func=upload_file)
+
+    parser.add_argument('-b', '--base-url')
+    parser.add_argument('-u', '--username')
+    parser.add_argument('-p', '--password')
+    parser.add_argument('-c', '--credentials', default=None)
+    parser.add_argument('-v', '--verbose', default=0, action='count', help='Logging verbosity')
+
+    args = parser.parse_args(sys.argv[1:])
+
+    configure_logging(args.verbose)
+
+    args.func(**vars(args))
+
+
+if __name__ == '__main__':
+    main()
