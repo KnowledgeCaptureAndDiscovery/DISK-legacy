@@ -1,0 +1,12 @@
+!.gitkeep
+*.egg
+*.egg-info
+*.pyc
+.DS_Store
+.idea
+.iml
+.venv
+build
+dist
+tmp
+
