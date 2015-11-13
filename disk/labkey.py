@@ -47,7 +47,7 @@ class Labkey(object):
         self._context = {
             'domain': url.netloc,
             'container_path': 'Test',
-            'context_path': url.path,
+            'context_path': url.path.lstrip('/'),
             'scheme': url.scheme + '://',
             'session': self._session
         }
@@ -161,11 +161,15 @@ class Labkey(object):
 
     def select_rows(self, *args, **kwargs):
         """Proxy to Labkey's Python API"""
-        return labkey.query.select_rows(self._context, *args, **kwargs)
+        r = labkey.query.select_rows(self._context, *args, **kwargs)
+        logging.debug('Found %d rows' % r[u'rowCount'])
+        return r
 
     def execute_sql(self, *args, **kwargs):
         """Proxy to Labkey's Python API"""
-        return labkey.query.execute_sql(self._context, *args, **kwargs)
+        r = labkey.query.execute_sql(self._context, *args, **kwargs)
+        logging.debug('Found %d rows' % r[u'rowCount'])
+        return r
 
     def delete_rows(self, *args, **kwargs):
         """Proxy to Labkey's Python API"""
