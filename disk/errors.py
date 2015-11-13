@@ -14,9 +14,6 @@
 
 __author__ = 'Rajiv Mayani <mayani@isi.edu>'
 
-import json
-import requests
-
 
 class LabkeyException(Exception):
     pass
