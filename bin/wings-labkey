@@ -131,7 +131,7 @@ def main():
     parser.add_argument('-u', '--username')
     parser.add_argument('-p', '--password')
     parser.add_argument('-n', '--project')
-    parser.add_argument('-c', '--config', default=None)
+    parser.add_argument('-c', '--config')
     parser.add_argument('-v', '--verbose', default=0, action='count', help='Logging verbosity')
 
     args = parser.parse_args(sys.argv[1:])
