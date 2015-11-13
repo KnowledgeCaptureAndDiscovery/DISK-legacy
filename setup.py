@@ -81,6 +81,7 @@ setup(
         'disk'
     ],
     packages=find_packages(exclude=['disk.tests']),
+    scripts=['bin/wings-labkey'],
     zip_safe=False,
     install_requires=install_requires,
     test_suite='disk.tests'
