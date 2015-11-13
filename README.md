@@ -23,7 +23,7 @@ git clone https://github.com/IKCAP/DISK.git
 
 ## Configuring
 
-Create a file .labkeycredentials.txt, with 4 entries
+Create a file .labkey-config.txt, with 4 entries
 ```bash
 [default]
 machine  = https://example.domain.com:8443/labkey
@@ -34,7 +34,7 @@ project  = <project>
 
 The tool loads configuration in following order
 
-1. From .labkeycredentials.txt file in the user's home directory
-2. .labkeycredentials.txt file in current directory.
+1. From .labkey-config.txt file in the user's home directory
+2. .labkey-config.txt file in current directory.
 3. File passed as through the command line's --config option.
 4. Command line arguments for each option.

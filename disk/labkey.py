@@ -63,17 +63,22 @@ class Labkey(object):
     def __configure_labkey(self, base_url=None, username=None, password=None, project=None, config=None):
         """
         Load configuration in priority from lowest to the highest
-        .labkeycredentials.txt file in user's home directory
-        .labkeycredentials.txt file in current directory
+        .labkey-config.txt file in user's home directory
+        .labkey-config.txt file in current directory
         User provided file in config option
         User provided options
         """
         config_files = [
-            os.path.expanduser('~/.labkeycredentials.txt'),
-            os.path.abspath('.labkeycredentials.txt')
+            os.path.expanduser('~/.labkey-config.txt'),
+            os.path.abspath('.labkey-config.txt')
         ]
 
         if config:
+            if not os.path.isfile(config):
+                file_name = os.path.abspath(config)
+                logging.error('File %r either does not exist or is not readable' %  file_name)
+                raise ValueError('File %r either does not exist or is unreadable' % file_name)
+
             config_files.append(os.path.abspath(config))
 
         config_parser = ConfigParser.ConfigParser()

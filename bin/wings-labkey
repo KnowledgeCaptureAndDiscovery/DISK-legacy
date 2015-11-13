@@ -19,9 +19,6 @@ __author__ = 'Rajiv Mayani <mayani@isi.edu>'
 import sys
 import logging
 import argparse
-import StringIO
-import ConfigParser
-from functools import wraps
 
 import os
 from disk.labkey import Labkey
@@ -55,9 +52,8 @@ def upload_file(project, file_name, destination, base_url=None, username=None, p
 
     destination = os.path.join(project, destination)
 
-    client = Labkey(base_url=base_url, username=username, password=password, project=project, config=config)
-
     try:
+        client = Labkey(base_url=base_url, username=username, password=password, project=project, config=config)
         client.upload_file(destination, files, create=create, overwrite=overwrite)
         print 'File uploaded successfully'
 
@@ -67,37 +63,51 @@ def upload_file(project, file_name, destination, base_url=None, username=None, p
     except LabkeyException as e:
         logging.error(e)
 
+    except ValueError as e:
+        logging.error(e)
+        sys.exit(1)
+
     finally:
         del client
 
 
 def select_rows(schema, query, base_url=None, username=None, password=None, project=None, config=None, **kwargs):
-    client = Labkey(base_url=base_url, username=username, password=password, project=project, config=config)
-
     try:
+        client = Labkey(base_url=base_url, username=username, password=password, project=project, config=config)
         print client.select_rows(schema, query)
 
     except AuthenticationException as e:
         logging.error(e)
+        sys.exit(2)
 
     except LabkeyException as e:
         logging.error(e)
+        sys.exit(3)
+
+    except ValueError as e:
+        logging.error(e)
+        sys.exit(1)
 
     finally:
         del client
 
 
 def execute_sql(schema, sql, base_url=None, username=None, password=None, project=None, config=None, **kwargs):
-    client = Labkey(base_url=base_url, username=username, password=password, project=project, config=config)
-
     try:
+        client = Labkey(base_url=base_url, username=username, password=password, project=project, config=config)
         print client.execute_sql(schema, sql)
 
     except AuthenticationException as e:
         logging.error(e)
+        sys.exit(2)
 
     except LabkeyException as e:
         logging.error(e)
+        sys.exit(3)
+
+    except ValueError as e:
+        logging.error(e)
+        sys.exit(1)
 
     finally:
         del client
