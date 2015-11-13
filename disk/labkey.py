@@ -99,12 +99,17 @@ class Labkey(object):
         if project:
             self._config.set('default', 'project', project)
 
+        required = ['machine', 'login', 'password', 'project']
         missing = []
-        for k in ['machine', 'login', 'password', 'project']:
-            try:
-                self._config.get('default', k)
-            except ConfigParser.NoOptionError:
-                missing.append(k)
+
+        if self._config.has_section('default'):
+            for k in required:
+                try:
+                    self._config.get('default', k)
+                except ConfigParser.NoOptionError:
+                    missing.append(k)
+        else:
+            missing = required
 
         if missing:
             logging.debug('Required configuration options not found')

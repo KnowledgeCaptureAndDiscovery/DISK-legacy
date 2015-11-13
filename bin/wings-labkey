@@ -67,9 +67,6 @@ def upload_file(project, file_name, destination, base_url=None, username=None, p
         logging.error(e)
         sys.exit(1)
 
-    finally:
-        del client
-
 
 def select_rows(schema, query, base_url=None, username=None, password=None, project=None, config=None, **kwargs):
     try:
@@ -88,9 +85,6 @@ def select_rows(schema, query, base_url=None, username=None, password=None, proj
         logging.error(e)
         sys.exit(1)
 
-    finally:
-        del client
-
 
 def execute_sql(schema, sql, base_url=None, username=None, password=None, project=None, config=None, **kwargs):
     try:
@@ -108,9 +102,6 @@ def execute_sql(schema, sql, base_url=None, username=None, password=None, projec
     except ValueError as e:
         logging.error(e)
         sys.exit(1)
-
-    finally:
-        del client
 
 
 def main():
