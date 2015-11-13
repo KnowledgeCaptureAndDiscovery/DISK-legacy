@@ -21,3 +21,11 @@ git clone https://github.com/IKCAP/DISK.git
     python setup.py install
     ```
 
+## Configuring
+
+Create a file .labkeycredentials.txt, with 3 entries
+```bash
+machine  = https://example.domain.com:8443/labkey
+login    = <username>
+password = <password>
+```
