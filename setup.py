@@ -23,7 +23,6 @@ from setuptools import setup, find_packages
 
 install_requires = [
     'labkey==0.4.0',
-    'poster==0.8.1',
     'requests==2.8.1'
 ]
 
@@ -55,7 +54,6 @@ def setup_installer_dependencies():
     global install_requires
 
     if sys.version_info[1] < 7:
-        install_requires.append('ordereddict==1.1')
         install_requires.append('argparse==1.4.0')
 
 
