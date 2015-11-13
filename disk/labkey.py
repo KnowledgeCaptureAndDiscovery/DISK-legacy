@@ -18,23 +18,29 @@ __author__ = 'Rajiv Mayani <mayani@isi.edu>'
 
 import json
 import logging
+import ConfigParser
 from functools import wraps
 from urlparse import urlparse
 
 import os
 import requests
 from requests.exceptions import MissingSchema
-from .errors import LabkeyException, AuthenticationException
+from disk.errors import LabkeyException, AuthenticationException
 
 import labkey
+from labkey.exceptions import ServerNotFoundError, QueryNotFoundError, RequestError
 
 
 class Labkey(object):
-    def __init__(self, base_url, username=None, password=None):
+    def __init__(self, base_url=None, username=None, password=None, project=None, config=None):
         self._base_url = base_url
         self._username = username
         self._password = password
+        self._project = project
+        self._config = config
 
+        self._session = None
+        self.__configure_labkey(base_url=base_url, username=username, password=password, project=project, config=config)
         self._session = requests.Session()
         self._session.auth = (self._username, self._password)
         self._session.headers = {
@@ -46,13 +52,72 @@ class Labkey(object):
 
         self._context = {
             'domain': url.netloc,
-            'container_path': 'Test',
+            'container_path': self.project,
             'context_path': url.path.lstrip('/'),
             'scheme': url.scheme + '://',
             'session': self._session
         }
 
         del url
+
+    def __configure_labkey(self, base_url=None, username=None, password=None, project=None, config=None):
+        """
+        Load configuration in priority from lowest to the highest
+        .labkeycredentials.txt file in user's home directory
+        .labkeycredentials.txt file in current directory
+        User provided file in config option
+        User provided options
+        """
+        config_files = [
+            os.path.expanduser('~/.labkeycredentials.txt'),
+            os.path.abspath('.labkeycredentials.txt')
+        ]
+
+        if config:
+            config_files.append(os.path.abspath(config))
+
+        config_parser = ConfigParser.ConfigParser()
+        config_parser.read(config_files)
+
+        self._config = config_parser
+
+        # Highest priority override
+        if base_url:
+            self._config.set('default', 'machine', base_url)
+
+        if username:
+            self._config.set('default', 'login', username)
+
+        if password:
+            self._config.set('default', 'password', password)
+
+        if project:
+            self._config.set('default', 'project', project)
+
+        missing = []
+        for k in ['machine', 'login', 'password', 'project']:
+            try:
+                self._config.get('default', k)
+            except ConfigParser.NoOptionError:
+                missing.append(k)
+
+        if missing:
+            logging.debug('Required configuration options not found')
+            raise ValueError('Missing configuration %s' % ', '.join(missing))
+
+        self._base_url = self._config.get('default', 'machine')
+        self._username = self._config.get('default', 'login')
+        self._password = self._config.get('default', 'password')
+        self._project = self._config.get('default', 'project')
+
+    @property
+    def project(self):
+        return self._project
+
+    @project.setter
+    def project(self, project):
+        self._project = project
+        self._context['container_path'] = project
 
     def _construct_url(self, *args):
         return os.path.join(self._base_url, *args)
@@ -161,15 +226,33 @@ class Labkey(object):
 
     def select_rows(self, *args, **kwargs):
         """Proxy to Labkey's Python API"""
-        r = labkey.query.select_rows(self._context, *args, **kwargs)
-        logging.debug('Found %d rows' % r[u'rowCount'])
-        return r
+        try:
+            r = labkey.query.select_rows(self._context, *args, **kwargs)
+            logging.debug('Found %d rows' % r[u'rowCount'])
+            return r
+
+        except ServerNotFoundError as e:
+            logging.debug('Invalid URL %r, username %r, or password' % (self._base_url, self._username))
+            raise LabkeyException('Invalid URL, username, or password')
+
+        except QueryNotFoundError as e:
+            logging.debug('Invalid schema %r, or query %r' % (args[0], args[1]))
+            raise LabkeyException('Invalid schema, or query')
 
     def execute_sql(self, *args, **kwargs):
         """Proxy to Labkey's Python API"""
-        r = labkey.query.execute_sql(self._context, *args, **kwargs)
-        logging.debug('Found %d rows' % r[u'rowCount'])
-        return r
+        try:
+            r = labkey.query.execute_sql(self._context, *args, **kwargs)
+            logging.debug('Found %d rows' % r[u'rowCount'])
+            return r
+
+        except ServerNotFoundError as e:
+            logging.debug('Invalid URL %r, username %r, or password' % (self._base_url, self._username))
+            raise LabkeyException('Invalid URL, username, or password')
+
+        except (QueryNotFoundError, RequestError) as e:
+            logging.debug('Invalid schema %r, or query %r' % (args[0], args[1]))
+            raise LabkeyException('Invalid schema, or query')
 
     def delete_rows(self, *args, **kwargs):
         """Proxy to Labkey's Python API"""

@@ -21,6 +21,7 @@ import logging
 import argparse
 import StringIO
 import ConfigParser
+from functools import wraps
 
 import os
 from disk.labkey import Labkey
@@ -41,30 +42,8 @@ def configure_logging(verbosity=0):
                         format='%(asctime)s:%(levelname)s:%(name)s(%(lineno)d): %(message)s')
 
 
-def get_server_url(credentials='.labkeycredentials.txt'):
-    if credentials is None:
-        credentials='.labkeycredentials.txt'
-
-    credentials = os.path.abspath(credentials)
-
-    if not os.path.isfile(credentials):
-        logging.error('Credentials file %r either does not exist or is not readable' % credentials)
-        sys.exit(1)
-
-    str_buffer = StringIO.StringIO('[default]%s%s' % (os.linesep, open(credentials).read()))
-    config = ConfigParser.ConfigParser({'machine': None, 'login': None, 'password': None})
-    config.readfp(str_buffer)
-
-    base_url = config.get('default', 'machine')
-    username = config.get('default', 'login').strip()
-    password = config.get('default', 'password').strip()
-
-    base_url = base_url.strip() if base_url else base_url
-    return base_url, username, password
-
-
-def upload_file(project_name, file_name, destination, base_url=None, username=None, password=None, create=False,
-                overwrite=False, credentials=None, **kwargs):
+def upload_file(project, file_name, destination, base_url=None, username=None, password=None, create=False,
+                overwrite=False, config=None, **kwargs):
     if not os.path.isfile(file_name):
         logging.error('File %r either does not exist or is not readable' % file_name)
         sys.exit(1)
@@ -74,18 +53,45 @@ def upload_file(project_name, file_name, destination, base_url=None, username=No
         'file': (os.path.basename(file_name), open(file_name, 'rb').read())
     }
 
-    destination = os.path.join(project_name, destination)
+    destination = os.path.join(project, destination)
 
-    if base_url:
-        logging.debug('Using base_url, username, and password from command line')
-    else:
-        base_url, username, password = get_server_url(credentials)
-
-    client = Labkey(base_url, username, password)
+    client = Labkey(base_url=base_url, username=username, password=password, project=project, config=config)
 
     try:
         client.upload_file(destination, files, create=create, overwrite=overwrite)
         print 'File uploaded successfully'
+
+    except AuthenticationException as e:
+        logging.error(e)
+
+    except LabkeyException as e:
+        logging.error(e)
+
+    finally:
+        del client
+
+
+def select_rows(schema, query, base_url=None, username=None, password=None, project=None, config=None, **kwargs):
+    client = Labkey(base_url=base_url, username=username, password=password, project=project, config=config)
+
+    try:
+        print client.select_rows(schema, query)
+
+    except AuthenticationException as e:
+        logging.error(e)
+
+    except LabkeyException as e:
+        logging.error(e)
+
+    finally:
+        del client
+
+
+def execute_sql(schema, sql, base_url=None, username=None, password=None, project=None, config=None, **kwargs):
+    client = Labkey(base_url=base_url, username=username, password=password, project=project, config=config)
+
+    try:
+        print client.execute_sql(schema, sql)
 
     except AuthenticationException as e:
         logging.error(e)
@@ -103,20 +109,29 @@ def main():
 
     # File Upload Options
     upload = sub_parser.add_parser('upload')
-    upload.add_argument('-p', '--project', dest='project_name', required=True)
     upload.add_argument('-f', '--file', dest='file_name', required=True)
     upload.add_argument('-d', '--destination', dest='destination', required=True,
                         help='Destination directory where the file should be uploaded')
     upload.add_argument('-c', '--create', default=False, action='store_true',
                         help='Create destination directory if it does not exists')
-    upload.add_argument('-o', '--overwrite', default=False, action='store_true',
-                        help='Overwrite the file if it exists')
+    upload.add_argument('-o', '--overwrite', default=False, action='store_true', help='Overwrite the file if it exists')
     upload.set_defaults(func=upload_file)
+
+    select = sub_parser.add_parser('select')
+    select.add_argument('-s', '--schema', required=True)
+    select.add_argument('-q', '--query', required=True)
+    select.set_defaults(func=select_rows)
+
+    sql = sub_parser.add_parser('sql')
+    sql.add_argument('-s', '--schema', required=True)
+    sql.add_argument('-q', '--sql', required=True)
+    sql.set_defaults(func=execute_sql)
 
     parser.add_argument('-b', '--base-url')
     parser.add_argument('-u', '--username')
     parser.add_argument('-p', '--password')
-    parser.add_argument('-c', '--credentials', default=None)
+    parser.add_argument('-n', '--project')
+    parser.add_argument('-c', '--config', default=None)
     parser.add_argument('-v', '--verbose', default=0, action='count', help='Logging verbosity')
 
     args = parser.parse_args(sys.argv[1:])
