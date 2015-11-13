@@ -50,8 +50,6 @@ def upload_file(project, file_name, destination, base_url=None, username=None, p
         'file': (os.path.basename(file_name), open(file_name, 'rb').read())
     }
 
-    destination = os.path.join(project, destination)
-
     try:
         client = Labkey(base_url=base_url, username=username, password=password, project=project, config=config)
         client.upload_file(destination, files, create=create, overwrite=overwrite)

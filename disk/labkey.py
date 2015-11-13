@@ -155,7 +155,7 @@ class Labkey(object):
             'overwrite': 'T' if isinstance(overwrite, bool) and overwrite else 'F'
         }
 
-        response = self._session.post(self._construct_url('_webdav', destination), files=files, params=params)
+        response = self._session.post(self._construct_url('_webdav', self.project, destination), files=files, params=params)
         logging.debug('status_code %s, text %s' % (response.status_code, response.text))
 
         if response.status_code != 207 and response.text:
@@ -192,7 +192,7 @@ class Labkey(object):
         last_status = False
 
         for d in destination.split('/'):
-            response = self._session.request('MKCOL', self._construct_url('_webdav', dest, d), params=params)
+            response = self._session.request('MKCOL', self._construct_url('_webdav', self.project, dest, d), params=params)
             self._log.debug('status_code %s, text %s' % (response.status_code, response.text))
             dest = os.path.join(dest, d)
 
