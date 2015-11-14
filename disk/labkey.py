@@ -31,8 +31,27 @@ import labkey
 from labkey.exceptions import ServerNotFoundError, QueryNotFoundError, RequestError
 
 
+def file_exists(*files):
+    missing = []
+
+    for f in files:
+        if not os.path.isfile(f):
+            missing.append(os.path.abspath(f))
+
+    if missing:
+        if len(missing) == 1:
+            msg = 'File %r either does not exist or is not readable' % ', '.join(missing)
+        else:
+            msg = 'File(s) %r either do not exist or are not readable' % ', '.join(missing)
+
+        logging.getLogger(__name__).debug(msg)
+        raise ValueError(msg)
+
+
 class Labkey(object):
     def __init__(self, base_url=None, username=None, password=None, project=None, config=None):
+        self._log = logging.getLogger(__name__)
+
         self._base_url = base_url
         self._username = username
         self._password = password
@@ -46,7 +65,6 @@ class Labkey(object):
         self._session.headers = {
             'Accept': 'application/json'
         }
-        self._log = logging.getLogger(__name__)
 
         url = urlparse(self._base_url)
 
@@ -60,7 +78,8 @@ class Labkey(object):
 
         del url
 
-    def __configure_labkey(self, base_url=None, username=None, password=None, project=None, config=None):
+    #def __configure_labkey(self, base_url=None, username=None, password=None, project=None, config=None):
+    def __configure_labkey(self, **kwargs):
         """
         Load configuration in priority from lowest to the highest
         .labkey-config.txt file in user's home directory
@@ -73,12 +92,10 @@ class Labkey(object):
             os.path.abspath('.labkey-config.txt')
         ]
 
-        if config:
-            if not os.path.isfile(config):
-                file_name = os.path.abspath(config)
-                logging.error('File %r either does not exist or is not readable' %  file_name)
-                raise ValueError('File %r either does not exist or is unreadable' % file_name)
+        config = kwargs.get('config', None)
 
+        if config:
+            file_exists(config)
             config_files.append(os.path.abspath(config))
 
         config_parser = ConfigParser.ConfigParser()
@@ -86,20 +103,14 @@ class Labkey(object):
 
         self._config = config_parser
 
+        required = ['base-url', 'username', 'password', 'project']
+
         # Highest priority override
-        if base_url:
-            self._config.set('default', 'machine', base_url)
+        for v in required:
+            key = v.replace('-', '_')
+            if kwargs.get(key, None):
+                self._config.set('default', v, kwargs[key])
 
-        if username:
-            self._config.set('default', 'login', username)
-
-        if password:
-            self._config.set('default', 'password', password)
-
-        if project:
-            self._config.set('default', 'project', project)
-
-        required = ['machine', 'login', 'password', 'project']
         missing = []
 
         if self._config.has_section('default'):
@@ -112,11 +123,11 @@ class Labkey(object):
             missing = required
 
         if missing:
-            logging.debug('Required configuration options not found')
+            self._log.debug('Required configuration options not found')
             raise ValueError('Missing configuration %s' % ', '.join(missing))
 
-        self._base_url = self._config.get('default', 'machine')
-        self._username = self._config.get('default', 'login')
+        self._base_url = self._config.get('default', 'base-url')
+        self._username = self._config.get('default', 'username')
         self._password = self._config.get('default', 'password')
         self._project = self._config.get('default', 'project')
 
@@ -149,14 +160,22 @@ class Labkey(object):
         return decorator
 
     @wrapper
-    def upload_file(self, destination, files=None, create=False, overwrite=False):
+    def upload_file(self, destination, input_file, create=False, overwrite=False):
+        # Sanity Checks
+        file_exists(input_file)
+
+        files = {
+            'file': (os.path.basename(input_file), open(input_file, 'rb').read())
+        }
+
         params = {
             'Accept': 'application/json',
             'overwrite': 'T' if isinstance(overwrite, bool) and overwrite else 'F'
         }
 
-        response = self._session.post(self._construct_url('_webdav', self.project, destination), files=files, params=params)
-        logging.debug('status_code %s, text %s' % (response.status_code, response.text))
+        response = self._session.post(self._construct_url('_webdav', self.project, destination), files=files,
+                                      params=params)
+        self._log.debug('status_code %s, text %s' % (response.status_code, response.text))
 
         if response.status_code != 207 and response.text:
             text = self._get_json(response.text)
@@ -174,7 +193,7 @@ class Labkey(object):
                 elif text['status'] == 404:
                     if create:
                         self.create_directory(destination)
-                        self.upload_file(destination, files=files, create=False, overwrite=overwrite)
+                        self.upload_file(destination, input_file=input_file, create=False, overwrite=overwrite)
 
                     else:
                         raise LabkeyException('Either URL is invalid or the directory does not exist')
@@ -192,7 +211,8 @@ class Labkey(object):
         last_status = False
 
         for d in destination.split('/'):
-            response = self._session.request('MKCOL', self._construct_url('_webdav', self.project, dest, d), params=params)
+            response = self._session.request('MKCOL', self._construct_url('_webdav', self.project, dest, d),
+                                             params=params)
             self._log.debug('status_code %s, text %s' % (response.status_code, response.text))
             dest = os.path.join(dest, d)
 
@@ -226,6 +246,43 @@ class Labkey(object):
         # Upload Protocol File
         pass
 
+    def _configure_ms2_analysis(self, **kwargs):
+        overrides = {}
+        required = ['search-engine', 'input-location', 'fasta-location', 'protocol-location']
+
+        # Highest priority override
+        for v in required:
+            key = v.replace('-', '_')
+            if kwargs.get(key, None):
+                overrides[v] = kwargs[key]
+
+        required = ['search-engine', 'input-location', 'fasta-location', 'protocol-location']
+        missing = []
+        if self._config.has_section('ms2'):
+            for k in required:
+                try:
+                    self._config.get('ms2', k, overrides)
+                except ConfigParser.NoOptionError:
+                    missing.append(k)
+        else:
+            missing = required
+
+        if missing:
+            self._log.debug('Required configuration options not found')
+            raise ValueError('Missing configuration %s' % ', '.join(missing))
+
+        return overrides
+
+    def ms2_analysis(self, input_file, fasta_file, protocol_file, search_engine=None, input_location=None,
+                     fasta_location=None, protocol_location=None):
+
+        # Sanity Checks
+        file_exists(input_file, fasta_file, protocol_file)
+
+        overrides = self._configure_ms2_analysis(search_engine=search_engine, input_location=input_location,
+                                                 fasta_location=fasta_location, protocol_location=protocol_location)
+        print self._config.items('ms2', vars=overrides)
+
     def insert_rows(self, *args, **kwargs):
         """Proxy to Labkey's Python API"""
         return labkey.query.insert_rows(self._context, *args, **kwargs)
@@ -238,30 +295,30 @@ class Labkey(object):
         """Proxy to Labkey's Python API"""
         try:
             r = labkey.query.select_rows(self._context, *args, **kwargs)
-            logging.debug('Found %d rows' % r[u'rowCount'])
+            self._log.debug('Found %d rows' % r[u'rowCount'])
             return r
 
         except ServerNotFoundError as e:
-            logging.debug('Invalid URL %r, username %r, or password' % (self._base_url, self._username))
+            self._log.debug('Invalid URL %r, username %r, or password' % (self._base_url, self._username))
             raise LabkeyException('Invalid URL, username, or password')
 
         except QueryNotFoundError as e:
-            logging.debug('Invalid schema %r, or query %r' % (args[0], args[1]))
+            self._log.debug('Invalid schema %r, or query %r' % (args[0], args[1]))
             raise LabkeyException('Invalid schema, or query')
 
     def execute_sql(self, *args, **kwargs):
         """Proxy to Labkey's Python API"""
         try:
             r = labkey.query.execute_sql(self._context, *args, **kwargs)
-            logging.debug('Found %d rows' % r[u'rowCount'])
+            self._log.debug('Found %d rows' % r[u'rowCount'])
             return r
 
         except ServerNotFoundError as e:
-            logging.debug('Invalid URL %r, username %r, or password' % (self._base_url, self._username))
+            self._log.debug('Invalid URL %r, username %r, or password' % (self._base_url, self._username))
             raise LabkeyException('Invalid URL, username, or password')
 
         except (QueryNotFoundError, RequestError) as e:
-            logging.debug('Invalid schema %r, or query %r' % (args[0], args[1]))
+            self._log.debug('Invalid schema %r, or query %r' % (args[0], args[1]))
             raise LabkeyException('Invalid schema, or query')
 
     def delete_rows(self, *args, **kwargs):

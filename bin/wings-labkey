@@ -39,20 +39,11 @@ def configure_logging(verbosity=0):
                         format='%(asctime)s:%(levelname)s:%(name)s(%(lineno)d): %(message)s')
 
 
-def upload_file(project, file_name, destination, base_url=None, username=None, password=None, create=False,
+def upload_file(project, input_file, destination, base_url=None, username=None, password=None, create=False,
                 overwrite=False, config=None, **kwargs):
-    if not os.path.isfile(file_name):
-        logging.error('File %r either does not exist or is not readable' % file_name)
-        sys.exit(1)
-
-    file_name = os.path.abspath(file_name)
-    files = {
-        'file': (os.path.basename(file_name), open(file_name, 'rb').read())
-    }
-
     try:
         client = Labkey(base_url=base_url, username=username, password=password, project=project, config=config)
-        client.upload_file(destination, files, create=create, overwrite=overwrite)
+        client.upload_file(destination, input_file, create=create, overwrite=overwrite)
         print 'File uploaded successfully'
 
     except AuthenticationException as e:
@@ -102,29 +93,64 @@ def execute_sql(schema, sql, base_url=None, username=None, password=None, projec
         sys.exit(1)
 
 
+def ms2_analysis(input_file, fasta_file, protocol_file, base_url=None, username=None, password=None, project=None,
+                 config=None, search_engine=None, input_location=None, fasta_location=None, protocol_location=None,
+                 **kwargs):
+    try:
+        client = Labkey(base_url=base_url, username=username, password=password, project=project, config=config)
+        client.ms2_analysis(input_file=input_file, fasta_file=fasta_file, protocol_file=protocol_file,
+                            search_engine=search_engine, input_location=input_location, fasta_location=fasta_location,
+                            protocol_location=protocol_location)
+
+    except AuthenticationException as e:
+        logging.error(e)
+        sys.exit(2)
+
+    except LabkeyException as e:
+        logging.error(e)
+        sys.exit(3)
+
+    except ValueError as e:
+        logging.error(e)
+        sys.exit(1)
+
+
 def main():
     parser = argparse.ArgumentParser(description='Wings Labkey Integration')
     sub_parser = parser.add_subparsers(title='File Upload', description='Upload file to labkey server')
 
     # File Upload Options
     upload = sub_parser.add_parser('upload')
-    upload.add_argument('-f', '--file', dest='file_name', required=True)
-    upload.add_argument('-d', '--destination', dest='destination', required=True,
+    upload.add_argument('-i', '--input-file', required=True)
+    upload.add_argument('-d', '--destination', required=True,
                         help='Destination directory where the file should be uploaded')
     upload.add_argument('-c', '--create', default=False, action='store_true',
                         help='Create destination directory if it does not exists')
     upload.add_argument('-o', '--overwrite', default=False, action='store_true', help='Overwrite the file if it exists')
     upload.set_defaults(func=upload_file)
 
+    # Labkey API - Select Rows Options
     select = sub_parser.add_parser('select')
     select.add_argument('-s', '--schema', required=True)
     select.add_argument('-q', '--query', required=True)
     select.set_defaults(func=select_rows)
 
+    # Labkey API - Execute SQL Options
     sql = sub_parser.add_parser('sql')
     sql.add_argument('-s', '--schema', required=True)
     sql.add_argument('-q', '--sql', required=True)
     sql.set_defaults(func=execute_sql)
+
+    # Labkey API - Execute SQL Options
+    ms2 = sub_parser.add_parser('ms2')
+    ms2.add_argument('-i', '--input-file', required=True, help='Input file on which the analysis should be run')
+    ms2.add_argument('-f', '--fasta-file', required=True, help='Database against which the input-file is be searched')
+    ms2.add_argument('-p', '--protocol-file', required=True, help='XML file describing the search parameters')
+    ms2.add_argument('-s', '--search-engine', help='Search engine to use', choices=['xtandem'])
+    ms2.add_argument('-il', '--input-location', help='Server directory where the input file should be uploaded')
+    ms2.add_argument('-fl', '--fasta-location', help='Server directory where the FASTA file should be uploaded')
+    ms2.add_argument('-pl', '--protocol-location', help='Server directory where the protocol file should be uploaded')
+    ms2.set_defaults(func=ms2_analysis)
 
     parser.add_argument('-b', '--base-url')
     parser.add_argument('-u', '--username')
