@@ -28,16 +28,16 @@ Create a file .labkey-config.txt, with 4 entries
 [default]
 
 ; URL of Labkey server; including the context path
-base-url = https://example.domain.com:8443/labkey
+base-url     = https://example.domain.com:8443/labkey
 
 ; Labkey credentials
-username = <username>
+username     = <username>
 
 ; Labkey credentials
-password = <password>
+password     = <password>
 
 ; Labkey project name
-project  = <project>
+project-name = <project>
 ```
 
 The tool loads configuration in following order

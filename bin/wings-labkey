@@ -20,7 +20,6 @@ import sys
 import logging
 import argparse
 
-import os
 from disk.labkey import Labkey
 from disk.errors import AuthenticationException, LabkeyException
 
@@ -39,10 +38,10 @@ def configure_logging(verbosity=0):
                         format='%(asctime)s:%(levelname)s:%(name)s(%(lineno)d): %(message)s')
 
 
-def upload_file(project, input_file, destination, base_url=None, username=None, password=None, create=False,
+def upload_file(input_file, destination, base_url=None, username=None, password=None, project_name=None, create=False,
                 overwrite=False, config=None, **kwargs):
     try:
-        client = Labkey(base_url=base_url, username=username, password=password, project=project, config=config)
+        client = Labkey(base_url=base_url, username=username, password=password, project_name=project_name, config=config)
         client.upload_file(destination, input_file, create=create, overwrite=overwrite)
         print 'File uploaded successfully'
 
@@ -57,9 +56,9 @@ def upload_file(project, input_file, destination, base_url=None, username=None, 
         sys.exit(1)
 
 
-def select_rows(schema, query, base_url=None, username=None, password=None, project=None, config=None, **kwargs):
+def select_rows(schema, query, base_url=None, username=None, password=None, project_name=None, config=None, **kwargs):
     try:
-        client = Labkey(base_url=base_url, username=username, password=password, project=project, config=config)
+        client = Labkey(base_url=base_url, username=username, password=password, project_name=project_name, config=config)
         print client.select_rows(schema, query)
 
     except AuthenticationException as e:
@@ -75,9 +74,9 @@ def select_rows(schema, query, base_url=None, username=None, password=None, proj
         sys.exit(1)
 
 
-def execute_sql(schema, sql, base_url=None, username=None, password=None, project=None, config=None, **kwargs):
+def execute_sql(schema, sql, base_url=None, username=None, password=None, project_name=None, config=None, **kwargs):
     try:
-        client = Labkey(base_url=base_url, username=username, password=password, project=project, config=config)
+        client = Labkey(base_url=base_url, username=username, password=password, project_name=project_name, config=config)
         print client.execute_sql(schema, sql)
 
     except AuthenticationException as e:
@@ -93,11 +92,11 @@ def execute_sql(schema, sql, base_url=None, username=None, password=None, projec
         sys.exit(1)
 
 
-def ms2_analysis(input_file, fasta_file, protocol_file, base_url=None, username=None, password=None, project=None,
+def ms2_analysis(input_file, fasta_file, protocol_file, base_url=None, username=None, password=None, project_name=None,
                  config=None, search_engine=None, input_location=None, fasta_location=None, protocol_location=None,
                  **kwargs):
     try:
-        client = Labkey(base_url=base_url, username=username, password=password, project=project, config=config)
+        client = Labkey(base_url=base_url, username=username, password=password, project_name=project_name, config=config)
         client.ms2_analysis(input_file=input_file, fasta_file=fasta_file, protocol_file=protocol_file,
                             search_engine=search_engine, input_location=input_location, fasta_location=fasta_location,
                             protocol_location=protocol_location)
@@ -155,7 +154,7 @@ def main():
     parser.add_argument('-b', '--base-url')
     parser.add_argument('-u', '--username')
     parser.add_argument('-p', '--password')
-    parser.add_argument('-n', '--project')
+    parser.add_argument('-n', '--project-name')
     parser.add_argument('-c', '--config')
     parser.add_argument('-v', '--verbose', default=0, action='count', help='Logging verbosity')
 

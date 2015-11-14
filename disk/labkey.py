@@ -49,17 +49,18 @@ def file_exists(*files):
 
 
 class Labkey(object):
-    def __init__(self, base_url=None, username=None, password=None, project=None, config=None):
+    def __init__(self, base_url=None, username=None, password=None, project_name=None, config=None):
         self._log = logging.getLogger(__name__)
 
         self._base_url = base_url
         self._username = username
         self._password = password
-        self._project = project
+        self._project_name = project_name
         self._config = config
 
         self._session = None
-        self.__configure_labkey(base_url=base_url, username=username, password=password, project=project, config=config)
+        self.__configure_labkey(base_url=base_url, username=username, password=password, project_name=project_name,
+                                config=config)
         self._session = requests.Session()
         self._session.auth = (self._username, self._password)
         self._session.headers = {
@@ -70,7 +71,7 @@ class Labkey(object):
 
         self._context = {
             'domain': url.netloc,
-            'container_path': self.project,
+            'container_path': self.project_name,
             'context_path': url.path.lstrip('/'),
             'scheme': url.scheme + '://',
             'session': self._session
@@ -78,7 +79,6 @@ class Labkey(object):
 
         del url
 
-    #def __configure_labkey(self, base_url=None, username=None, password=None, project=None, config=None):
     def __configure_labkey(self, **kwargs):
         """
         Load configuration in priority from lowest to the highest
@@ -103,7 +103,7 @@ class Labkey(object):
 
         self._config = config_parser
 
-        required = ['base-url', 'username', 'password', 'project']
+        required = ['base-url', 'username', 'password', 'project-name']
 
         # Highest priority override
         for v in required:
@@ -129,16 +129,16 @@ class Labkey(object):
         self._base_url = self._config.get('default', 'base-url')
         self._username = self._config.get('default', 'username')
         self._password = self._config.get('default', 'password')
-        self._project = self._config.get('default', 'project')
+        self._project_name = self._config.get('default', 'project-name')
 
     @property
-    def project(self):
-        return self._project
+    def project_name(self):
+        return self._project_name
 
-    @project.setter
-    def project(self, project):
-        self._project = project
-        self._context['container_path'] = project
+    @project_name.setter
+    def project_name(self, project_name):
+        self._project_name = project_name
+        self._context['container_path'] = project_name
 
     def _construct_url(self, *args):
         return os.path.join(self._base_url, *args)
@@ -173,7 +173,7 @@ class Labkey(object):
             'overwrite': 'T' if isinstance(overwrite, bool) and overwrite else 'F'
         }
 
-        response = self._session.post(self._construct_url('_webdav', self.project, destination), files=files,
+        response = self._session.post(self._construct_url('_webdav', self.project_name, destination), files=files,
                                       params=params)
         self._log.debug('status_code %s, text %s' % (response.status_code, response.text))
 
@@ -211,7 +211,7 @@ class Labkey(object):
         last_status = False
 
         for d in destination.split('/'):
-            response = self._session.request('MKCOL', self._construct_url('_webdav', self.project, dest, d),
+            response = self._session.request('MKCOL', self._construct_url('_webdav', self.project_name, dest, d),
                                              params=params)
             self._log.debug('status_code %s, text %s' % (response.status_code, response.text))
             dest = os.path.join(dest, d)
