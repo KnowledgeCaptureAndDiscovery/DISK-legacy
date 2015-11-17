@@ -173,7 +173,8 @@ class Labkey(object):
             'overwrite': 'T' if isinstance(overwrite, bool) and overwrite else 'F'
         }
 
-        response = self._session.post(self._construct_url('_webdav', self.project_name, destination), files=files,
+        response = self._session.post(self._construct_url('_webdav', self.project_name, '@files', destination),
+                                      files=files,
                                       params=params)
         self._log.debug('status_code %s, text %s' % (response.status_code, response.text))
 
@@ -192,7 +193,7 @@ class Labkey(object):
 
                 elif text['status'] == 404:
                     if create:
-                        self.create_directory(destination)
+                        self.create_directory(os.path.join('@files', destination))
                         self.upload_file(destination, input_file=input_file, create=False, overwrite=overwrite)
 
                     else:
@@ -241,14 +242,9 @@ class Labkey(object):
         if last_status is False:
             raise LabkeyException('Directory creation failed')
 
-    @wrapper
-    def create_protocol(self, protocol_file, protocol_name=None):
-        # Upload Protocol File
-        pass
-
     def _configure_ms2_analysis(self, **kwargs):
         overrides = {}
-        required = ['search-engine', 'input-location', 'fasta-location', 'protocol-location']
+        required = ['search-engine', 'input-location', 'fasta-location', 'protocol-location', 'poll-duration']
 
         # Highest priority override
         for v in required:
@@ -273,15 +269,75 @@ class Labkey(object):
 
         return overrides
 
-    def ms2_analysis(self, input_file, fasta_file, protocol_file, search_engine=None, input_location=None,
-                     fasta_location=None, protocol_location=None):
+    def _trigger_ms2_analysis(self, input_file, input_location, protocol_name, search_engine, run_search=True):
+        params = {
+            'path': input_location,
+            'file': os.path.basename(input_file),
+            'protocol': protocol_name,
+            'runSearch': run_search,
+            'Accept': 'application/json'
+        }
 
-        # Sanity Checks
-        file_exists(input_file, fasta_file, protocol_file)
+        search_engine_map = {
+            'xtandem': 'XTandem'
+        }
+
+        response = self._session.post(
+            self._construct_url('ms2-pipeline', self.project_name, 'search%s.api' % search_engine_map[search_engine]),
+            params=params)
+        self._log.debug('status_code %s, text %s' % (response.status_code, response.text))
+
+        if response.status_code == 401:
+            raise AuthenticationException('Authentication failed')
+
+        elif response.status_code == 403:
+            raise AuthenticationException('Authorization failed')
+
+        elif response.status_code == 404:
+            raise LabkeyException('Either URL is invalid or the directory does not exist')
+
+    def ms2_analysis(self, input_file, fasta_file, protocol_file, search_engine=None, input_location=None,
+                     fasta_location=None, protocol_location=None, upload=True, async=False):
+        section = 'ms2'
 
         overrides = self._configure_ms2_analysis(search_engine=search_engine, input_location=input_location,
                                                  fasta_location=fasta_location, protocol_location=protocol_location)
-        print self._config.items('ms2', vars=overrides)
+
+        search_engine = self._config.get(section, 'search-engine', vars=overrides)
+        input_location = self._config.get(section, 'input-location', vars=overrides)
+        fasta_location = self._config.get(section, 'fasta-location', vars=overrides)
+        protocol_location = self._config.get(section, 'protocol-location', vars=overrides)
+
+        if upload is True:
+            # Upload input file
+            self._log.debug('uploading input-file %r to server at %r' % (input_file, input_location))
+            self.upload_file(input_location, input_file, create=True, overwrite=True)
+            self._log.debug('successfully uploaded input-file')
+
+            # Upload FASTA file
+            self._log.debug('uploading fasta-file %r to server at %r' % (fasta_file, fasta_location))
+            self.upload_file(fasta_location, fasta_file, create=True, overwrite=True)
+            self._log.debug('successfully uploaded fasta-file')
+
+            # Upload protocol file
+            self._log.debug('uploading protocol-file %r to server at %r' % (protocol_file, protocol_location))
+            self.upload_file(protocol_location, protocol_file, create=True, overwrite=True)
+            self._log.debug('successfully uploaded protocol-file')
+
+        else:
+            self._log.debug('upload is set to False, skipping file uploads')
+
+        try:
+            # Trigger Run
+            self._log.debug('trigger MS2 analysis run with search-engine %r' % search_engine)
+            protocol_name = os.path.splitext(os.path.basename(protocol_file))[0]
+            self._trigger_ms2_analysis(input_file, input_location, protocol_name, search_engine)
+
+            if async:
+                return
+
+        except Exception as e:
+            self._log.exception(e)
 
     def insert_rows(self, *args, **kwargs):
         """Proxy to Labkey's Python API"""
@@ -295,7 +351,7 @@ class Labkey(object):
         """Proxy to Labkey's Python API"""
         try:
             r = labkey.query.select_rows(self._context, *args, **kwargs)
-            self._log.debug('Found %d rows' % r[u'rowCount'])
+            self._log.debug('Found %d rows' % r['rowCount'])
             return r
 
         except ServerNotFoundError as e:
@@ -310,7 +366,7 @@ class Labkey(object):
         """Proxy to Labkey's Python API"""
         try:
             r = labkey.query.execute_sql(self._context, *args, **kwargs)
-            self._log.debug('Found %d rows' % r[u'rowCount'])
+            self._log.debug('Found %d rows' % r['rowCount'])
             return r
 
         except ServerNotFoundError as e:

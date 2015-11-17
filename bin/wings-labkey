@@ -41,7 +41,7 @@ def configure_logging(verbosity=0):
 def upload_file(input_file, destination, base_url=None, username=None, password=None, project_name=None, create=False,
                 overwrite=False, config=None, **kwargs):
     try:
-        client = Labkey(base_url=base_url, username=username, password=password, project_name=project_name, config=config)
+        client = Labkey(base_url, username, password, project_name=project_name, config=config)
         client.upload_file(destination, input_file, create=create, overwrite=overwrite)
         print 'File uploaded successfully'
 
@@ -58,7 +58,7 @@ def upload_file(input_file, destination, base_url=None, username=None, password=
 
 def select_rows(schema, query, base_url=None, username=None, password=None, project_name=None, config=None, **kwargs):
     try:
-        client = Labkey(base_url=base_url, username=username, password=password, project_name=project_name, config=config)
+        client = Labkey(base_url, username, password, project_name=project_name, config=config)
         print client.select_rows(schema, query)
 
     except AuthenticationException as e:
@@ -76,7 +76,7 @@ def select_rows(schema, query, base_url=None, username=None, password=None, proj
 
 def execute_sql(schema, sql, base_url=None, username=None, password=None, project_name=None, config=None, **kwargs):
     try:
-        client = Labkey(base_url=base_url, username=username, password=password, project_name=project_name, config=config)
+        client = Labkey(base_url, username, password, project_name=project_name, config=config)
         print client.execute_sql(schema, sql)
 
     except AuthenticationException as e:
@@ -94,12 +94,12 @@ def execute_sql(schema, sql, base_url=None, username=None, password=None, projec
 
 def ms2_analysis(input_file, fasta_file, protocol_file, base_url=None, username=None, password=None, project_name=None,
                  config=None, search_engine=None, input_location=None, fasta_location=None, protocol_location=None,
-                 **kwargs):
+                 upload=True, async=False, **kwargs):
     try:
-        client = Labkey(base_url=base_url, username=username, password=password, project_name=project_name, config=config)
+        client = Labkey(base_url, username, password, project_name=project_name, config=config)
         client.ms2_analysis(input_file=input_file, fasta_file=fasta_file, protocol_file=protocol_file,
                             search_engine=search_engine, input_location=input_location, fasta_location=fasta_location,
-                            protocol_location=protocol_location)
+                            protocol_location=protocol_location, upload=upload, async=async)
 
     except AuthenticationException as e:
         logging.error(e)
@@ -149,6 +149,8 @@ def main():
     ms2.add_argument('-il', '--input-location', help='Server directory where the input file should be uploaded')
     ms2.add_argument('-fl', '--fasta-location', help='Server directory where the FASTA file should be uploaded')
     ms2.add_argument('-pl', '--protocol-location', help='Server directory where the protocol file should be uploaded')
+    ms2.add_argument('-n', '--no-upload', dest='upload', default=True, action='store_false', help='Skip file upload')
+    ms2.add_argument('-a', '--async', default=False, action='store_true', help='Exit after starting the run')
     ms2.set_defaults(func=ms2_analysis)
 
     parser.add_argument('-b', '--base-url')
