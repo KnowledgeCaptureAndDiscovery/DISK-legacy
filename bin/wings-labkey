@@ -18,6 +18,7 @@ __author__ = 'Rajiv Mayani <mayani@isi.edu>'
 
 import sys
 import csv
+import time
 import logging
 import argparse
 
@@ -48,7 +49,8 @@ def convert_to_csv(data):
     if not row_count:
         return
 
-    writer = csv.DictWriter(sys.stdout, fieldnames=[c for c in data['rows'][0].keys() if not c.startswith('_labkey')], extrasaction='ignore')
+    writer = csv.DictWriter(sys.stdout, fieldnames=[c for c in data['rows'][0].keys() if not c.startswith('_labkey')],
+                            extrasaction='ignore')
     writer.writeheader()
 
     for row in data['rows']:
@@ -113,12 +115,49 @@ def execute_sql(schema, sql, base_url=None, username=None, password=None, projec
 
 def ms2_analysis(input_file, fasta_file, protocol_file, base_url=None, username=None, password=None, project_name=None,
                  config=None, search_engine=None, input_location=None, fasta_location=None, protocol_location=None,
-                 upload=True, async=False, **kwargs):
+                 upload=True, watch=False, poll_interval=5, **kwargs):
     try:
         client = Labkey(base_url, username, password, project_name=project_name, config=config)
-        client.ms2_analysis(input_file=input_file, fasta_file=fasta_file, protocol_file=protocol_file,
-                            search_engine=search_engine, input_location=input_location, fasta_location=fasta_location,
-                            protocol_location=protocol_location, upload=upload, async=async)
+        job_name = client.ms2_analysis(input_file=input_file, fasta_file=fasta_file, protocol_file=protocol_file,
+                                       search_engine=search_engine, input_location=input_location,
+                                       fasta_location=fasta_location, protocol_location=protocol_location,
+                                       upload=upload)
+
+        if watch is True:
+            if not poll_interval:
+                poll_interval = 5
+
+            logging.debug('poll_interval %d second(s)' % poll_interval)
+
+            previous_status = None
+
+            while True:
+                data = client.ms2_status(job_name)
+
+                if data['rowCount'] == 0:
+                    raise LabkeyException('Job %r not found' % job_name)
+
+                status = data['rows'][0]['Status']
+                logging.debug('Job %s, Status %s' % (job_name, status))
+
+                if status != previous_status:
+                    previous_status = status
+
+                print 'Job %s, Status %s' % (job_name, status)
+
+                if status == 'COMPLETE':
+                    logging.debug('Job %r finished, exiting' % job_name)
+                    break
+
+                time.sleep(poll_interval)
+
+        else:
+            data = client.ms2_status(job_name)
+
+            if data['rowCount'] == 0:
+                raise LabkeyException('Job %r not found' % job_name)
+
+            print 'Job %s, Status %s' % (job_name, data['rows'][0]['Status'])
 
     except AuthenticationException as e:
         logging.error(e)
@@ -169,7 +208,8 @@ def main():
     ms2.add_argument('-fl', '--fasta-location', help='Server directory where the FASTA file should be uploaded')
     ms2.add_argument('-pl', '--protocol-location', help='Server directory where the protocol file should be uploaded')
     ms2.add_argument('-n', '--no-upload', dest='upload', default=True, action='store_false', help='Skip file upload')
-    ms2.add_argument('-a', '--async', default=False, action='store_true', help='Exit after starting the run')
+    ms2.add_argument('-w', '--watch', default=False, action='store_true', help='Wait for runs to finish')
+    ms2.add_argument('-d', '--poll-interval', default=5, type=int, help='Polling interval')
     ms2.set_defaults(func=ms2_analysis)
 
     parser.add_argument('-b', '--base-url')

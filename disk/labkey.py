@@ -17,6 +17,7 @@ from __future__ import absolute_import
 __author__ = 'Rajiv Mayani <mayani@isi.edu>'
 
 import json
+import time
 import logging
 import ConfigParser
 from functools import wraps
@@ -234,7 +235,7 @@ class Labkey(object):
                         raise LabkeyException(text['exception'])
 
                     else:
-                        self._log.error(response.text)
+                        self._log.debug(response.text)
 
             else:
                 last_status = True
@@ -297,7 +298,7 @@ class Labkey(object):
             raise LabkeyException('Either URL is invalid or the directory does not exist')
 
     def ms2_analysis(self, input_file, fasta_file, protocol_file, search_engine=None, input_location=None,
-                     fasta_location=None, protocol_location=None, upload=True, async=False):
+                     fasta_location=None, protocol_location=None, upload=True):
         section = 'ms2'
 
         overrides = self._configure_ms2_analysis(search_engine=search_engine, input_location=input_location,
@@ -312,32 +313,84 @@ class Labkey(object):
             # Upload input file
             self._log.debug('uploading input-file %r to server at %r' % (input_file, input_location))
             self.upload_file(input_location, input_file, create=True, overwrite=True)
-            self._log.debug('successfully uploaded input-file')
+            self._log.info('successfully uploaded input-file')
 
             # Upload FASTA file
             self._log.debug('uploading fasta-file %r to server at %r' % (fasta_file, fasta_location))
             self.upload_file(fasta_location, fasta_file, create=True, overwrite=True)
-            self._log.debug('successfully uploaded fasta-file')
+            self._log.info('successfully uploaded fasta-file')
 
             # Upload protocol file
             self._log.debug('uploading protocol-file %r to server at %r' % (protocol_file, protocol_location))
             self.upload_file(protocol_location, protocol_file, create=True, overwrite=True)
-            self._log.debug('successfully uploaded protocol-file')
+            self._log.info('successfully uploaded protocol-file')
 
         else:
-            self._log.debug('upload is set to False, skipping file uploads')
+            self._log.info('upload is set to False, skipping file uploads')
 
         try:
             # Trigger Run
-            self._log.debug('trigger MS2 analysis run with search-engine %r' % search_engine)
+            input_name = os.path.join(input_location, os.path.splitext(os.path.basename(input_file))[0])
             protocol_name = os.path.splitext(os.path.basename(protocol_file))[0]
+
+            self._log.info('triggering MS2 analysis run with search-engine %r' % search_engine)
             self._trigger_ms2_analysis(input_file, input_location, protocol_name, search_engine)
 
-            if async:
-                return
+            job_name = '%s (%s)' % (input_name, protocol_name)
+
+            return job_name
 
         except Exception as e:
             self._log.exception(e)
+
+    def ms2_status(self, *jobs, **kwargs):
+        # Remove duplicates
+        jobs = set(jobs)
+
+        if not jobs:
+            raise ValueError('job_name(s) are required')
+
+        schema = 'Pipeline'
+        sql = "SELECT * FROM Job WHERE Description IN ('%s')" % "', '".join(jobs)
+        watch = kwargs.get('watch', False)
+
+        if watch:
+            poll_interval = kwargs.get('poll_interval', 5)
+
+            if not poll_interval:
+                poll_interval = 5
+
+            is_warned = False
+
+            self._log.debug('poll_interval %d second(s)' % poll_interval)
+            self._log.debug('schema %r, sql %r' % (schema, sql))
+
+            while True:
+                data = self.execute_sql(schema, sql=sql)
+
+                if is_warned is False and data['rowCount'] != len(jobs):
+                    self._log.warning('unable to get status for some jobs')
+                    is_warned = True
+
+                completed = 0
+                for row in data['rows']:
+                    job_name = row['Description']
+                    status = row['Status']
+
+                    self._log.debug('Job %s, Status %s' % (job_name, status))
+
+                    if status == 'COMPLETE':
+                        self._log.debug('Job %r finished, exiting' % job_name)
+                        completed += 1
+
+                        if completed == len(jobs):
+                            return data
+
+                    time.sleep(poll_interval)
+
+        else:
+            data = self.execute_sql(schema, sql=sql)
+            return data
 
     def insert_rows(self, *args, **kwargs):
         """Proxy to Labkey's Python API"""
