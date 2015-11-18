@@ -379,7 +379,7 @@ class Labkey(object):
 
                     self._log.debug('Job %s, Status %s' % (job_name, status))
 
-                    if status == 'COMPLETE':
+                    if status in set(['COMPLETE', 'ERROR']):
                         self._log.debug('Job %r finished, exiting' % job_name)
                         completed += 1
 
