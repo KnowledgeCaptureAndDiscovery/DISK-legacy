@@ -64,6 +64,7 @@ input-location    = <input-locaiton>
 fasta-location    = <fasta-file-locaiton>
 
 ; Server directory where the protocol file should be uploaded
-protocol-location = <protocol-file-location>
+; DO NOT CHANGE THIS
+protocol-location = .labkey/protocols/%(search-engine)s/
 ```
 
