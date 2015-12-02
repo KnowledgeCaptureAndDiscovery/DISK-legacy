@@ -16,14 +16,14 @@
 
 __author__ = 'Rajiv Mayani <mayani@isi.edu>'
 
-import sys
-import csv
-import time
-import logging
 import argparse
+import csv
+import logging
+import sys
+import time
 
-from disk.labkey import Labkey
 from disk.errors import AuthenticationException, LabkeyException
+from disk.labkey import Labkey
 
 
 def configure_logging(verbosity=0):
@@ -66,9 +66,31 @@ def upload_file(input_file, destination, base_url=None, username=None, password=
 
     except AuthenticationException as e:
         logging.error(e)
+        sys.exit(2)
 
     except LabkeyException as e:
         logging.error(e)
+        sys.exit(3)
+
+    except ValueError as e:
+        logging.error(e)
+        sys.exit(1)
+
+
+def download_file(file_location, destination, base_url=None, username=None, password=None, project_name=None, create=False,
+                  overwrite=False, config=None, **kwargs):
+    try:
+        client = Labkey(base_url, username, password, project_name=project_name, config=config)
+        client.download_file(destination, file_location, create=create, overwrite=overwrite)
+        print 'File downloaded successfully'
+
+    except AuthenticationException as e:
+        logging.error(e)
+        sys.exit(2)
+
+    except LabkeyException as e:
+        logging.error(e)
+        sys.exit(3)
 
     except ValueError as e:
         logging.error(e)
@@ -185,6 +207,16 @@ def main():
                         help='Create destination directory if it does not exists')
     upload.add_argument('-o', '--overwrite', default=False, action='store_true', help='Overwrite the file if it exists')
     upload.set_defaults(func=upload_file)
+
+    # File Download Options
+    download = sub_parser.add_parser('download')
+    download.add_argument('-f', '--file-location', required=True, help='Location of file on server to download')
+    download.add_argument('-d', '--destination', default='.',
+                        help='Destination directory where the file should be downloaded')
+    download.add_argument('-c', '--create', default=False, action='store_true',
+                        help='Create destination directory if it does not exists')
+    download.add_argument('-o', '--overwrite', default=False, action='store_true', help='Overwrite the file if it exists')
+    download.set_defaults(func=download_file)
 
     # Labkey API - Select Rows Options
     select = sub_parser.add_parser('select')

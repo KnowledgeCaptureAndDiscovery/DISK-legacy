@@ -22,12 +22,10 @@ import logging
 import ConfigParser
 from functools import wraps
 from urlparse import urlparse
-
 import os
 import requests
 from requests.exceptions import MissingSchema
 from disk.errors import LabkeyException, AuthenticationException
-
 import labkey
 from labkey.exceptions import ServerNotFoundError, QueryNotFoundError, RequestError
 
@@ -202,6 +200,56 @@ class Labkey(object):
 
                 else:
                     self._log.error(text)
+
+    @wrapper
+    def download_file(self, destination, file_location, create=False, overwrite=False):
+        response = self._session.get(self._construct_url('_webdav', self.project_name, '@files', file_location))
+        self._log.debug('status_code %r' % (response.status_code))
+
+        if response.status_code != 200:
+            raise LabkeyException('Error HTTP Code %d' % response.status_code)
+
+        if len(response.text) < 150:
+            # Labkey Webdav return 200 even on errors
+            # So we try to determine if the content represents an error response
+            # Error response is JSON, with success, and status keys
+            try:
+                text = self._get_json(response.text)
+
+                if 'success' in text and 'status' in text:
+                    if text['success'] is False:
+
+                        if text['status'] == 401:
+                            raise AuthenticationException('Authentication failed')
+
+                        elif text['status'] == 403:
+                            raise AuthenticationException('Authorization failed')
+
+                        elif text['status'] == 404:
+                            raise LabkeyException('File not found on server')
+
+                        else:
+                            self._log.debug(response.text)
+
+            except ValueError:
+                pass
+
+        if not os.path.isdir(destination):
+            if create:
+                os.makedirs(destination)
+            else:
+                raise LabkeyException(
+                    'Destination directory %s does not exist, to create directory set create flag' % os.path.abspath(
+                        destination))
+
+        file_path = '%s' % os.path.join(destination, os.path.basename(file_location))
+        if os.path.isfile(file_path):
+            if not overwrite:
+                raise LabkeyException(
+                    'File %s already exists, to overwrite the file set overwrite flag' % os.path.abspath(file_path))
+
+        with open(file_path, 'wb') as f:
+            f.write(response.text)
 
     @wrapper
     def create_directory(self, destination):
