@@ -384,9 +384,13 @@ class Labkey(object):
             self._log.info('triggering MS2 analysis run with search-engine %r' % search_engine)
             self._trigger_ms2_analysis(input_file, input_location, protocol_name, search_engine)
 
-            job_name = '%s (%s)' % (input_name, protocol_name)
+            rv = (
+                '%s (%s)' % (input_name, protocol_name),
+                os.path.join(input_location, search_engine, protocol_name,
+                             os.path.splitext(os.path.basename(input_file))[0])
+            )
 
-            return job_name
+            return rv
 
         except Exception as e:
             self._log.exception(e)

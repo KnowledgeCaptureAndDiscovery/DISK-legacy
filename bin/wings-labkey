@@ -22,6 +22,7 @@ import logging
 import sys
 import time
 
+import os
 from disk.errors import AuthenticationException, LabkeyException
 from disk.labkey import Labkey
 
@@ -77,7 +78,8 @@ def upload_file(input_file, destination, base_url=None, username=None, password=
         sys.exit(1)
 
 
-def download_file(file_location, destination, base_url=None, username=None, password=None, project_name=None, create=False,
+def download_file(file_location, destination, base_url=None, username=None, password=None, project_name=None,
+                  create=False,
                   overwrite=False, config=None, **kwargs):
     try:
         client = Labkey(base_url, username, password, project_name=project_name, config=config)
@@ -137,13 +139,16 @@ def execute_sql(schema, sql, base_url=None, username=None, password=None, projec
 
 def ms2_analysis(input_file, fasta_file, protocol_file, base_url=None, username=None, password=None, project_name=None,
                  config=None, search_engine=None, input_location=None, fasta_location=None, protocol_location=None,
-                 upload=True, watch=False, poll_interval=5, **kwargs):
+                 upload=True, watch=False, poll_interval=5, destination='.', **kwargs):
     try:
         client = Labkey(base_url, username, password, project_name=project_name, config=config)
-        job_name = client.ms2_analysis(input_file=input_file, fasta_file=fasta_file, protocol_file=protocol_file,
-                                       search_engine=search_engine, input_location=input_location,
-                                       fasta_location=fasta_location, protocol_location=protocol_location,
-                                       upload=upload)
+        print 'Initializing'
+        job_name, output_prefix = client.ms2_analysis(input_file=input_file, fasta_file=fasta_file,
+                                                      protocol_file=protocol_file,
+                                                      search_engine=search_engine, input_location=input_location,
+                                                      fasta_location=fasta_location,
+                                                      protocol_location=protocol_location, upload=upload)
+        logging.debug('Output Prefix: %s' % output_prefix)
 
         if watch is True:
             if not poll_interval:
@@ -153,6 +158,7 @@ def ms2_analysis(input_file, fasta_file, protocol_file, base_url=None, username=
 
             previous_status = None
 
+            print 'Check MS2 analysis status'
             while True:
                 data = client.ms2_status(job_name)
 
@@ -172,6 +178,14 @@ def ms2_analysis(input_file, fasta_file, protocol_file, base_url=None, username=
                     break
 
                 time.sleep(poll_interval)
+
+            # Download files
+            if destination:
+                client.download_file(destination=destination, file_location='%s.prot.xml' % output_prefix,
+                                     create=True, overwrite=True)
+                client.download_file(destination=destination, file_location='%s.pep.xml' % output_prefix,
+                                     create=True, overwrite=True)
+                print 'Output files placed in directory %s' % os.path.abspath(destination)
 
         else:
             data = client.ms2_status(job_name)
@@ -212,10 +226,11 @@ def main():
     download = sub_parser.add_parser('download')
     download.add_argument('-f', '--file-location', required=True, help='Location of file on server to download')
     download.add_argument('-d', '--destination', default='.',
-                        help='Destination directory where the file should be downloaded')
+                          help='Destination directory where the file should be downloaded')
     download.add_argument('-c', '--create', default=False, action='store_true',
-                        help='Create destination directory if it does not exists')
-    download.add_argument('-o', '--overwrite', default=False, action='store_true', help='Overwrite the file if it exists')
+                          help='Create destination directory if it does not exists')
+    download.add_argument('-o', '--overwrite', default=False, action='store_true',
+                          help='Overwrite the file if it exists')
     download.set_defaults(func=download_file)
 
     # Labkey API - Select Rows Options
@@ -242,6 +257,8 @@ def main():
     ms2.add_argument('-n', '--no-upload', dest='upload', default=True, action='store_false', help='Skip file upload')
     ms2.add_argument('-w', '--watch', default=False, action='store_true', help='Wait for runs to finish')
     ms2.add_argument('-d', '--poll-interval', default=5, type=int, help='Polling interval')
+    ms2.add_argument('-o', '--destination', default='.',
+                     help='Destination directory where the file should be downloaded')
     ms2.set_defaults(func=ms2_analysis)
 
     parser.add_argument('-b', '--base-url')
