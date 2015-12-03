@@ -61,7 +61,7 @@ setup_installer_dependencies()
 
 setup(
     name='wings-labkey-integration',
-    version='0.0',
+    version='0.1',
     author='Rajiv Mayani',
     author_email='mayani@isi.edu',
     description='Description',
