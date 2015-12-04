@@ -22,7 +22,7 @@ import os
 from setuptools import setup, find_packages
 
 install_requires = [
-    'labkey==0.4.0',
+    'labkey==0.4.1',
     'requests==2.8.1'
 ]
 
@@ -61,7 +61,7 @@ setup_installer_dependencies()
 
 setup(
     name='wings-labkey-integration',
-    version='0.2',
+    version='0.3dev',
     author='Rajiv Mayani',
     author_email='mayani@isi.edu',
     description='Description',
