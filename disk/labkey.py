@@ -159,22 +159,60 @@ class Labkey(object):
         return decorator
 
     @wrapper
+    def check_location_exists(self, location):
+        params = {
+            'Accept': 'application/json',
+        }
+        response = self._session.request('PROPFIND',
+                                         self._construct_url('_webdav', self.project_name, '@files', location),
+                                         params=params
+                                         )
+        self._log.debug('status_code %s, text %s' % (response.status_code, response.text))
+
+        if response.status_code == 200:
+            try:
+                text = self._get_json(response.text)
+
+                if text['status'] == 401:
+                    raise AuthenticationException('Authentication failed')
+
+                elif text['status'] == 403:
+                    raise AuthenticationException('Authorization failed')
+
+                elif text['status'] == 404:
+                    return False
+
+            except AuthenticationException:
+                raise
+
+            except:
+                self._log.debug('exception ignored...')
+
+        return True
+
+    @wrapper
     def upload_file(self, destination, input_file, create=False, overwrite=False):
         # Sanity Checks
         file_exists(input_file)
 
-        files = {
-            'file': (os.path.basename(input_file), open(input_file, 'rb').read())
-        }
-
         params = {
             'Accept': 'application/json',
-            'overwrite': 'T' if isinstance(overwrite, bool) and overwrite else 'F'
         }
 
-        response = self._session.post(self._construct_url('_webdav', self.project_name, '@files', destination),
-                                      files=files,
-                                      params=params)
+        file_exist = self.check_location_exists(os.path.join(destination, os.path.basename(input_file)))
+
+        if overwrite is False and file_exist is True:
+            raise LabkeyException('File already exists, try setting overwrite flag')
+
+        if create is False and not self.check_location_exists(destination):
+            raise LabkeyException('Either URL is invalid or the directory does not exist')
+
+        response = self._session.put(
+            self._construct_url('_webdav', self.project_name, '@files', destination, os.path.basename(input_file)),
+            data=open(input_file, 'rb'),
+            params=params
+        )
+
         self._log.debug('status_code %s, text %s' % (response.status_code, response.text))
 
         if response.status_code != 207 and response.text:
