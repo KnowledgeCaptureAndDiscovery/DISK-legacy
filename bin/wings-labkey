@@ -184,7 +184,24 @@ def ms2_analysis(input_file, fasta_file, protocol_file, base_url=None, username=
                 client.download_file(destination=destination, file_location='%s.prot.xml' % output_prefix,
                                      create=True, overwrite=True)
                 client.download_file(destination=destination, file_location='%s.pep.xml' % output_prefix,
-                                     create=True, overwrite=True)
+                                     overwrite=True)
+
+                row_id = client.execute_sql('exp', sql='SELECT RowId From Runs WHERE Name = %r' % job_name)
+                if row_id and data['rowCount'] == 1:
+                    row_id = int(row_id['rows'][0]['RowId'])
+                    graph_url = 'experiment/%%(project-name)s/downloadGraph.view?rowId=%d&detail=%s'
+                    client.download_other_file(destination=destination,
+                                               file_location=graph_url % (row_id, False),
+                                               overwrite=True)
+                    client.download_other_file(destination=destination,
+                                               file_location=graph_url % (row_id, True),
+                                               overwrite=True)
+
+                    os.rename(os.path.join(destination, 'run%d.png' % row_id),
+                              os.path.join(destination, os.path.basename('%s.png' % output_prefix)))
+                    os.rename(os.path.join(destination, 'run%dDetail.png' % row_id),
+                              os.path.join(destination, os.path.basename('%sDetail.png' % output_prefix)))
+
                 print 'Output files placed in directory %s' % os.path.abspath(destination)
 
         else:
