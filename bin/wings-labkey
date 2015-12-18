@@ -83,7 +83,7 @@ def download_file(file_location, destination, base_url=None, username=None, pass
                   overwrite=False, config=None, **kwargs):
     try:
         client = Labkey(base_url, username, password, project_name=project_name, config=config)
-        client.download_file(destination, file_location, create=create, overwrite=overwrite)
+        client.download_other_file(destination, file_location, create=create, overwrite=overwrite)
         print 'File downloaded successfully'
 
     except AuthenticationException as e:

@@ -16,6 +16,7 @@ from __future__ import absolute_import
 
 __author__ = 'Rajiv Mayani <mayani@isi.edu>'
 
+import re
 import json
 import time
 import logging
@@ -288,6 +289,54 @@ class Labkey(object):
 
         with open(file_path, 'wb') as f:
             f.write(response.text)
+
+    @wrapper
+    def download_other_file(self, destination, file_location, create=False, overwrite=False):
+        response = self._session.get(
+            self._construct_url(file_location % {'project-name': self.project_name}))
+        self._log.debug('status_code %r' % (response.status_code))
+
+        if response.status_code != 200:
+            raise LabkeyException('Error HTTP Code %d' % response.status_code)
+
+        if response.history:
+            # Labkey Webdav return 200 even on errors
+            # So we try to determine if the content represents an error response
+            last = response.history[-1]
+
+            if 300 <= last.status_code < 400 and (
+                last.headers.get('location', None) and '/login.view?' in last.headers.get('location')):
+                raise AuthenticationException('Authentication failed')
+
+        if not os.path.isdir(destination):
+            if create:
+                os.makedirs(destination)
+            else:
+                raise LabkeyException(
+                        'Destination directory %s does not exist, to create directory set create flag' % os.path.abspath(
+                                destination))
+
+        output_file = os.path.basename(file_location)
+
+        if response.headers.get('content-disposition', None):
+            output_file = response.headers['content-disposition'].strip()
+
+            p = re.match('^filename\w*=\w*"(.*)";?.*$', output_file)
+
+            if p:
+                output_file = p.group(1)
+            else:
+                output_file = os.path.basename(file_location)
+
+        file_path = os.path.join(destination, output_file)
+        self._log.info('Downloading to filename %s' % file_path)
+        if os.path.isfile(file_path):
+            if not overwrite:
+                raise LabkeyException(
+                        'File %s already exists, to overwrite the file set overwrite flag' % os.path.abspath(file_path))
+
+        with open(file_path, 'wb') as f:
+            f.write(response.content)
 
     @wrapper
     def create_directory(self, destination):
