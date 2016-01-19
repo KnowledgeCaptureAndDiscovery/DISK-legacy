@@ -185,6 +185,10 @@ def ms2_analysis(input_file, fasta_file, protocol_file, base_url=None, username=
                                      create=True, overwrite=True)
                 client.download_file(destination=destination, file_location='%s.pep.xml' % output_prefix,
                                      overwrite=True)
+                client.download_file(destination=destination, file_location='%s.input.xml' % output_prefix,
+                                     overwrite=True)
+                client.download_file(destination=destination, file_location='%s.log' % output_prefix,
+                                     overwrite=True)
 
                 row_id = client.execute_sql('exp', sql='SELECT RowId From Runs WHERE Name = %r' % job_name)
                 if row_id and data['rowCount'] == 1:
@@ -201,6 +205,18 @@ def ms2_analysis(input_file, fasta_file, protocol_file, base_url=None, username=
                               os.path.join(destination, os.path.basename('%s.png' % output_prefix)))
                     os.rename(os.path.join(destination, 'run%dDetail.png' % row_id),
                               os.path.join(destination, os.path.basename('%sDetail.png' % output_prefix)))
+
+                row_id = client.execute_sql('ms2',
+                                            sql='SELECT MS2Details From MS2searchruns WHERE Name = %r' % job_name)
+                if row_id and data['rowCount'] == 1:
+                    row_id = int(row_id['rows'][0]['MS2Details'])
+                    tsv_url = 'ms2/%%(project-name)s/exportProteinGroups.view?grouping=%s&run=%d&exportFormat=TSV'
+                    client.download_other_file(destination=destination,
+                                               file_location=tsv_url % ('proteinprophet', row_id),
+                                               overwrite=True)
+                    tsv_url = 'exportProteinGroups.view?grouping=%s&run=%d&exportFormat=TSV'
+                    os.rename(os.path.join(destination, tsv_url % ('proteinprophet', row_id)),
+                              os.path.join(destination, os.path.basename('%s.tsv' % output_prefix)))
 
                 print 'Output files placed in directory %s' % os.path.abspath(destination)
 
