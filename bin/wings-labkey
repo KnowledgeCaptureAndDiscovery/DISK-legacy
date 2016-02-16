@@ -139,7 +139,8 @@ def execute_sql(schema, sql, base_url=None, username=None, password=None, projec
 
 def ms2_analysis(input_file, fasta_file, protocol_file, base_url=None, username=None, password=None, project_name=None,
                  config=None, search_engine=None, input_location=None, fasta_location=None, protocol_location=None,
-                 grouping='proteinprophet', upload=True, watch=False, poll_interval=5, destination='.', **kwargs):
+                 grouping='proteinprophet', expanded=False, upload=True, watch=False, poll_interval=5, destination='.',
+                 **kwargs):
     try:
         client = Labkey(base_url, username, password, project_name=project_name, config=config)
         print 'Initializing'
@@ -210,12 +211,12 @@ def ms2_analysis(input_file, fasta_file, protocol_file, base_url=None, username=
                                             sql='SELECT MS2Details From MS2searchruns WHERE Name = %r' % job_name)
                 if row_id and data['rowCount'] == 1:
                     row_id = int(row_id['rows'][0]['MS2Details'])
-                    tsv_url = 'ms2/%%(project-name)s/exportProteinGroups.view?grouping=%s&run=%d&exportFormat=TSV'
+                    tsv_url = 'ms2/%%(project-name)s/exportProteinGroups.view?grouping=%s&expanded=%s&run=%d&exportFormat=TSV'
                     client.download_other_file(destination=destination,
-                                               file_location=tsv_url % (grouping, row_id),
+                                               file_location=tsv_url % (grouping, int(expanded), row_id),
                                                overwrite=True)
-                    tsv_url = 'exportProteinGroups.view?grouping=%s&run=%d&exportFormat=TSV'
-                    os.rename(os.path.join(destination, tsv_url % (grouping, row_id)),
+                    tsv_url = 'exportProteinGroups.view?grouping=%s&expanded%s&run=%d&exportFormat=TSV'
+                    os.rename(os.path.join(destination, tsv_url % (grouping, int(expanded), row_id)),
                               os.path.join(destination, os.path.basename('%s.tsv' % output_prefix)))
 
                 print 'Output files placed in directory %s' % os.path.abspath(destination)
@@ -287,6 +288,7 @@ def main():
     ms2.add_argument('-il', '--input-location', help='Server directory where the input file should be uploaded')
     ms2.add_argument('-fl', '--fasta-location', help='Server directory where the FASTA file should be uploaded')
     ms2.add_argument('-pl', '--protocol-location', help='Server directory where the protocol file should be uploaded')
+    ms2.add_argument('-e', '--expanded', dest='expanded', default=False, action='store_true', help='Expanded output view')
     ms2.add_argument('-g', '--grouping', help='TSV grouping', default='proteinprophet',
                      choices=['proteinprophet', 'query', 'queryproteingroups', 'none', 'protein'])
     ms2.add_argument('-n', '--no-upload', dest='upload', default=True, action='store_false', help='Skip file upload')
