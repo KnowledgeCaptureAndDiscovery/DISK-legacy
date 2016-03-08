@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui" 
+	xmlns:l='urn:import:org.diskproject.client.components.loader'
+	xmlns:t='urn:import:org.diskproject.client.components.treeold'
+	xmlns:h='urn:import:org.diskproject.client.components.hypothesis'
+	xmlns:p='urn:import:com.vaadin.polymer.paper.widget'>
+
+	<g:HTMLPanel>
+		<style is="custom-style">
+            div.content {
+                padding: 0px;
+            }		
+            .tree .item {
+                @apply(--layout-horizontal);
+                margin: 16px 16px 0 16px;
+                padding: 20px;
+                border-radius: 8px;
+                background-color: #eee;
+                border: 1px solid #ddd;
+            }
+            .tree paper-item .name {
+                font-size: 14px;
+                font-weight: bold;
+            }
+            .tree paper-item .description {
+                font-size: 12px;
+                color: gray;
+                font-style: italic;
+            }
+            
+            .tree iron-collapse.pad {
+                margin-left: 20px;
+            }
+            @media(max-width: 640px) {
+                .tree iron-collapse.pad {
+                    margin-left: 10px;
+                }
+            }            
+            .tree paper-item {
+                border-top: 1px dotted #e5e5e5;
+                padding: 2px;
+                font-size: 13px;
+                min-height: 32px;
+                cursor: pointer;
+            }
+            .tree paper-item.both-borders {
+                border-bottom: 1px dotted #e5e5e5;
+            }
+            .tree paper-item.no-borders {
+                border-top: 0px;
+            }
+            iron-collapse {
+                border-left: 1px dotted #e5e5e5;
+            }
+            .tree paper-item iron-icon {
+                margin-right: 8px;
+                width: 18px;
+                height: 18px;
+            }  
+			.tree paper-item iron-icon.collapser {
+                font-weight: bold;
+                margin-left: 4px;
+                margin-right: 4px;
+                /*width: 0px;*/                
+            }
+            .tree paper-item iron-icon.collapser:hover {
+                color: orange;
+            }
+            .tree paper-item iron-icon.orange {
+                background-color: transparent;
+                border: 0px;
+            }
+            .tree paper-item iron-icon.transparent {
+                opacity: 0;
+            }
+            .tree paper-item:not(.inherited):hover {
+                background-color: #f5f5f5;
+            }
+            div.padded {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+            .tree paper-item.header {
+                font-weight: 500;
+                background-color: #f5f5f5;
+                cursor: default;
+                font-size: 13px;
+            }
+            paper-dropdown-menu {
+            	width: 33%;
+            }
+            paper-item.no-padding {
+            	padding: 0px;
+            }
+            paper-fab.addicon {
+            	position: fixed;
+            	right: 10px;
+            	top: 10px;
+                --paper-fab-background: var(--paper-orange-500);
+            }
+
+		</style>
+		<p:PaperFab ui:field="addicon" icon="add" mini="true" 
+			addStyleNames="addicon" title="Add Hypothesis" tabindex="0" />
+		<l:Loader ui:field="loader" />
+		<t:TreeWidget ui:field="tree" styleName="tree" />
+		<h:HypothesisEditor ui:field="form" styleName="padded" />		
+	</g:HTMLPanel>
+</ui:UiBinder>

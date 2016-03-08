@@ -1,0 +1,402 @@
+package org.diskproject.client.rest;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.diskproject.client.Config;
+import org.diskproject.client.authentication.AuthenticatedDispatcher;
+import org.diskproject.shared.api.DiskService;
+import org.diskproject.shared.classes.common.Graph;
+import org.diskproject.shared.classes.common.TreeItem;
+import org.diskproject.shared.classes.hypothesis.Hypothesis;
+import org.diskproject.shared.classes.loi.LineOfInquiry;
+import org.diskproject.shared.classes.loi.TriggeredLOI;
+import org.diskproject.shared.classes.vocabulary.Vocabulary;
+import org.diskproject.shared.classes.workflow.Variable;
+import org.diskproject.shared.classes.workflow.Workflow;
+import org.fusesource.restygwt.client.Defaults;
+import org.fusesource.restygwt.client.Method;
+import org.fusesource.restygwt.client.MethodCallback;
+import org.fusesource.restygwt.client.REST;
+
+import com.google.gwt.core.client.Callback;
+import com.google.gwt.core.client.GWT;
+
+public class DiskREST {
+  public static DiskService diskService;
+
+  static class VocabularyCallback {
+    String uri;    
+    Callback<Vocabulary, Throwable> callback;
+    public VocabularyCallback(String uri, 
+        Callback<Vocabulary, Throwable> callback) {
+      this.uri = uri;
+      this.callback = callback;
+    }
+  };
+  
+  private static Vocabulary user_vocabulary;
+  private static ArrayList<VocabularyCallback> user_vocabulary_callbacks =
+      new ArrayList<VocabularyCallback>();
+  
+  private static Map<String, Vocabulary> vocabularies = 
+      new HashMap<String, Vocabulary>();
+  private static ArrayList<VocabularyCallback> vocabulary_callbacks =
+      new ArrayList<VocabularyCallback>(); 
+  
+  private static List<Workflow> workflows = 
+      new ArrayList<Workflow>();
+  private static Map<String, List<Variable>> workflow_variables =
+      new HashMap<String, List<Variable>>();
+  
+  private static String username, domain;
+  
+  public static DiskService getDiskService() {
+    if(diskService == null) {
+      Defaults.setServiceRoot(Config.getServerURL());
+      Defaults.setDateFormat(null);
+      Defaults.setDispatcher(new AuthenticatedDispatcher());
+      diskService = GWT.create(DiskService.class);
+    }
+    return diskService;
+  }
+
+  public static void setUsername(String username) {
+    DiskREST.username = username;
+  }
+
+  public static void setDomain(String domain) {
+    DiskREST.domain = domain;
+  }
+
+  /*
+   * Vocabulary
+   */
+  public static void getVocabulary(
+      final Callback<Vocabulary, Throwable> callback,
+      String uri,
+      boolean reload) {
+    if(vocabularies.containsKey(uri) && !reload) {
+      callback.onSuccess(vocabularies.get(uri));
+    }
+    else {
+      if(vocabulary_callbacks.isEmpty()) {
+        vocabulary_callbacks.add(new VocabularyCallback(uri, callback));        
+        REST.withCallback(new MethodCallback<Map<String, Vocabulary>>() {
+          @Override
+          public void onSuccess(Method method, Map<String, Vocabulary> vocabs) {
+            vocabularies = vocabs;
+            for(VocabularyCallback vcb : vocabulary_callbacks)
+              vcb.callback.onSuccess(vocabularies.get(vcb.uri));
+            vocabulary_callbacks.clear();
+          }
+          @Override
+          public void onFailure(Method method, Throwable exception) {
+            AppNotification.notifyFailure("Could not load vocabularies");
+            callback.onFailure(exception);
+          }
+        }).call(getDiskService()).getVocabularies();        
+      }
+      else {
+        vocabulary_callbacks.add(new VocabularyCallback(uri, callback));
+      }
+    }
+  }
+  
+  public static void getUserVocabulary(
+      final Callback<Vocabulary, Throwable> callback,
+      String username, String domain,
+      boolean reload) {
+    if(user_vocabulary != null && !reload) {
+      callback.onSuccess(user_vocabulary);
+    }
+    else {
+      if(user_vocabulary_callbacks.isEmpty()) {
+        user_vocabulary_callbacks.add(new VocabularyCallback(null, callback));        
+        REST.withCallback(new MethodCallback<Vocabulary>() {
+          @Override
+          public void onSuccess(Method method, Vocabulary vocab) {
+            user_vocabulary = vocab;
+            for(VocabularyCallback vcb : user_vocabulary_callbacks)
+              vcb.callback.onSuccess(user_vocabulary);
+            user_vocabulary_callbacks.clear();
+          }
+          @Override
+          public void onFailure(Method method, Throwable exception) {
+            AppNotification.notifyFailure("Could not load user vocabulary");
+            callback.onFailure(exception);
+          }
+        }).call(getDiskService()).getUserVocabulary(username, domain);        
+      }
+      else {
+        vocabulary_callbacks.add(new VocabularyCallback(null, callback));
+      }
+    }
+  }
+  
+  /*
+   * Hypotheses
+   */
+  public static void listHypotheses(final Callback<List<TreeItem>, Throwable> callback) {
+    REST.withCallback(new MethodCallback<List<TreeItem>>() {
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+      @Override
+      public void onSuccess(Method method, List<TreeItem> response) {
+        callback.onSuccess(response);
+      }
+    }).call(getDiskService()).listHypotheses(username, domain);
+  }
+  
+  public static void getHypothesis(String id, 
+      final Callback<Hypothesis, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Hypothesis>() {
+      @Override
+      public void onSuccess(Method method, Hypothesis response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(getDiskService()).getHypothesis(username, domain, id);
+  }
+  
+  public static void addHypothesis(Hypothesis hypothesis,
+      final Callback<Void, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Void>() {
+      @Override
+      public void onSuccess(Method method, Void response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }      
+    }).call(getDiskService()).addHypothesis(username, domain, hypothesis);
+  }
+  
+  public static void updateHypothesis(Hypothesis hypothesis,
+      final Callback<Void, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Void>() {
+      @Override
+      public void onSuccess(Method method, Void response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }      
+    }).call(getDiskService()).updateHypothesis(username, domain, 
+        hypothesis.getId(), hypothesis);
+  }
+  
+  public static void deleteHypothesis(String id,
+      final Callback<Void, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Void>() {
+      @Override
+      public void onSuccess(Method method, Void response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }      
+    }).call(getDiskService()).deleteHypothesis(username, domain, id);
+  }  
+  
+  public static void queryHypothesis(String id,
+      final Callback<List<TriggeredLOI>, Throwable> callback) {
+    REST.withCallback(new MethodCallback<List<TriggeredLOI>>() {
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+      @Override
+      public void onSuccess(Method method, List<TriggeredLOI> response) {
+        callback.onSuccess(response);
+      }
+    }).call(getDiskService()).queryHypothesis(username, domain, id);
+  }
+  
+  /*
+   * Lines of Inquiry
+   */
+  public static void listLOI(final Callback<List<TreeItem>, Throwable> callback) {
+    REST.withCallback(new MethodCallback<List<TreeItem>>() {
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+      @Override
+      public void onSuccess(Method method, List<TreeItem> response) {
+        callback.onSuccess(response);
+      }
+    }).call(getDiskService()).listLOIs(username, domain);
+  }
+  
+  public static void getLOI(String id, 
+      final Callback<LineOfInquiry, Throwable> callback) {
+    REST.withCallback(new MethodCallback<LineOfInquiry>() {
+      @Override
+      public void onSuccess(Method method, LineOfInquiry response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(getDiskService()).getLOI(username, domain, id);
+  }
+  
+  public static void addLOI(LineOfInquiry loi,
+      final Callback<Void, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Void>() {
+      @Override
+      public void onSuccess(Method method, Void response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }      
+    }).call(getDiskService()).addLOI(username, domain, loi);
+  }
+  
+  public static void deleteLOI(String id,
+      final Callback<Void, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Void>() {
+      @Override
+      public void onSuccess(Method method, Void response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }      
+    }).call(getDiskService()).deleteLOI(username, domain, id);
+  }
+  
+  public static void updateLOI(LineOfInquiry loi,
+      final Callback<Void, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Void>() {
+      @Override
+      public void onSuccess(Method method, Void response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }      
+    }).call(getDiskService()).updateLOI(username, domain, 
+        loi.getId(), loi);
+  }  
+  
+  /*
+   * Triggered LOIs
+   */
+  public static void addTriggeredLOI(TriggeredLOI tloi, 
+      final Callback<Void, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Void>() {
+      @Override
+      public void onSuccess(Method method, Void response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }      
+    }).call(getDiskService()).addTriggeredLOI(username, domain, tloi);
+  }
+  
+  /*
+   * Assertions
+   */
+  
+  public static void updateAssertions(Graph graph,
+      final Callback<Void, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Void>() {
+      @Override
+      public void onSuccess(Method method, Void response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }      
+    }).call(getDiskService()).updateAssertions(username, domain, graph);
+  }
+  
+  public static void addAssertion(Graph graph,
+      final Callback<Void, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Void>() {
+      @Override
+      public void onSuccess(Method method, Void response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }      
+    }).call(getDiskService()).addAssertion(username, domain, graph);
+  }
+  
+  public static void listAssertions(
+      final Callback<Graph, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Graph>() {
+      @Override
+      public void onSuccess(Method method, Graph response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }      
+    }).call(getDiskService()).listAssertions(username, domain);
+  }
+  
+  /*
+   * Workflows
+   */
+  
+  public static void listWorkflows(
+      final Callback<List<Workflow>, Throwable> callback) {
+    if(workflows.size() > 0)
+      callback.onSuccess(workflows);
+    
+    REST.withCallback(new MethodCallback<List<Workflow>>() {
+      @Override
+      public void onSuccess(Method method, List<Workflow> response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }      
+    }).call(getDiskService()).listWorkflows(username, domain);
+  }
+  
+  public static void getWorkflowVariables(final String id, 
+      final Callback<List<Variable>, Throwable> callback) {
+    if(workflow_variables.containsKey(id)) {
+      callback.onSuccess(workflow_variables.get(id));
+      return;
+    }
+    
+    REST.withCallback(new MethodCallback<List<Variable>>() {
+      @Override
+      public void onSuccess(Method method, List<Variable> response) {
+        workflow_variables.put(id, response);
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }      
+    }).call(getDiskService()).getWorkflowVariables(username, domain, id);
+  }  
+}

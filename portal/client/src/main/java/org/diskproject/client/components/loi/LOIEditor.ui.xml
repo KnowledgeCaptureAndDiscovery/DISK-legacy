@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui" 
+	xmlns:tr='urn:import:org.diskproject.client.components.triples'
+	xmlns:loi='urn:import:org.diskproject.client.components.loi'
+	xmlns:p='urn:import:com.vaadin.polymer.paper.widget' >
+	<g:HTMLPanel>
+		<style>
+			paper-icon-button.smallicon {
+				width: 36px;
+				height: 36px;
+				text-align: center;
+			}	
+			vaadin-combo-box.no-label {
+				width: 80%;
+			}
+			vaadin-combo-box.no-label .floated-label-placeholder,
+			vaadin-combo-box.no-label .label-is-floating label            
+			{
+				display: none;
+			}
+		</style>
+		<div class="vertical center-justified layout">
+			<paper-input label="Name" required="true" autoValidate="true"
+				ui:field="name" />
+			<paper-textarea label="Description" required="true"
+				autoValidate="true" ui:field="description" />
+
+			<label class="small-grey">Query (Ctrl-Space for suggestions)</label>
+			<tr:SparqlInput ui:field="query" />
+
+			<loi:LOIWorkflowList ui:field="workflowlist" 
+				metamode="false" label="Workflows to Run"/>
+
+			<loi:LOIWorkflowList ui:field="metaworkflowlist" 
+				metamode="true" label="Meta-Workflows to Run" />
+
+		</div>
+		<div class="horizontal end-justified layout">
+			<p:PaperButton ui:field="savebutton">
+				<iron-icon icon="save" />
+				Save
+			</p:PaperButton>
+		</div>
+
+	</g:HTMLPanel>
+
+</ui:UiBinder>

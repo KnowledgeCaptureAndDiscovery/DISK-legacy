@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui"
+	xmlns:p='urn:import:com.vaadin.polymer.paper.widget'
+	xmlns:tr='urn:import:org.diskproject.client.components.triples'	
+	xmlns:n='urn:import:com.vaadin.polymer.neon.widget'
+	>
+
+	<g:HTMLPanel>
+		<style is="custom-style">
+            div.content {
+                padding: 0px 10px;
+            }		
+		</style>
+		<g:HTMLPanel ui:field="form" styleName="padded">
+			<div class="vertical center-justified layout">
+				<div class="vertical-section">
+					<label class="small-grey">Triples (Ctrl-Space for suggestions)</label>
+					<tr:TripleInput ui:field="triples" />
+				</div>
+			</div>
+			<div class="horizontal end-justified layout">
+				<p:PaperButton ui:field="savebutton">
+					<iron-icon icon="save" />Save</p:PaperButton>
+			</div>
+		</g:HTMLPanel>		
+	</g:HTMLPanel>
+</ui:UiBinder>
