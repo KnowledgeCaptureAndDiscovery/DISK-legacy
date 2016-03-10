@@ -101,6 +101,8 @@ public class LOIWorkflowList extends Composite {
       ListNode tnode) {
     String id = bindings.getWorkflow();
     String description = bindings.getBindingsDescription();
+    if(!description.equals(""))
+      description = "<b>Variable Bindings:</b> "+description;
     
     if(tnode == null) {
       tnode = new ListNode(id, id, description);

@@ -146,9 +146,11 @@
             }
             paper-item .action-button {
             	margin-left:auto;
-            	width: 32px;
-            	height: 32px;
-            	margin-right:10px;
+            	min-width: 18px;
+            	padding: 0px;
+            	width: 18px;
+            	height: 18px;
+            	margin-right:5px;
             	display:none;
             }
             paper-item:hover .action-button {
@@ -163,6 +165,29 @@
             	}
             	--paper-icon-button-ink-color: var(--paper-red-200);
 			}
+			.Codemirror-linenumber {
+				padding-left: 0px;
+			}
+			.information-gutter {
+				width: 8px;
+				height: 18px;
+				margin-left: 6px;
+			}
+			.CodeMirror-gutter-elt paper-icon-button {
+				padding: 0px;
+				width: 16px;
+				height: 16px;
+            	--paper-icon-button: {
+            		color: #AAA;
+            	}
+            	--paper-icon-button-hover: {
+            		color: var(--paper-green-600)
+            	}
+            	--paper-icon-button-ink-color: var(--paper-green-200)				
+			}
+			div.activeMenu {
+				background: #eceff1;
+			}			
 		</style>
 		
 		<paper-drawer-panel class="flex" ui:field="drawer">
@@ -176,34 +201,40 @@
 					</g:Anchor>
 				</paper-toolbar>
 				<nav ui:field="menu">
-					<div>
-						<g:SimplePanel ui:field="sidebar" />
-					</div>	
 					<g:Anchor 
 					href="#{nameTokens.getHypotheses}/{config.getWingsUserid}/{config.getWingsDomain}">
-						<div class="layout horizontal center">
+						<div class="layout horizontal center" ui:field="hypothesesMenu">
 							<iron-icon class="orange" icon="icons:help" />
 							 Hypotheses
 						</div>
 					</g:Anchor>
 					<g:Anchor 
 					href="#{nameTokens.getLOIs}/{config.getWingsUserid}/{config.getWingsDomain}">
-						<div class="layout horizontal center">
+						<div class="layout horizontal center" ui:field="loisMenu">
 							<iron-icon class="green" icon="icons:explore" />
 							 Lines of Inquiry
 						</div>
 					</g:Anchor>
 					<g:Anchor 
 					href="#{nameTokens.getAssertions}/{config.getWingsUserid}/{config.getWingsDomain}">
-						<div class="layout horizontal center">
+						<div class="layout horizontal center" ui:field="assertionsMenu">
 							<iron-icon class="blue" icon="icons:list" />
-							 Assertions
+							 Data
 						</div>
 					</g:Anchor>
+					<div>
+						<g:SimplePanel ui:field="sidebar" />
+					</div>
 					<br />
-					<g:Anchor text="Login" ui:field="loginanchor" />
-					<g:Anchor text="Register" href="#users" ui:field="registeranchor" />
-					<g:Anchor text="Logout" visible="false" ui:field="logoutanchor" />
+					<g:Anchor ui:field="loginanchor">
+						<div>Login</div>
+					</g:Anchor>
+					<g:Anchor ui:field="registeranchor" href="#users">
+						<div>Register</div>
+					</g:Anchor>
+					<g:Anchor ui:field="logoutanchor">
+						<div>Logout</div>
+					</g:Anchor>
 					
 				</nav>		
 			</paper-header-panel>

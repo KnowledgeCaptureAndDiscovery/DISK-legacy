@@ -55,6 +55,7 @@ public class DiskClient implements EntryPoint {
         PaperIconButtonElement.SRC,
         PaperButtonElement.SRC,
         PaperCheckboxElement.SRC,
+        PaperTooltipElement.SRC,
         VaadinComboBoxElement.SRC));
     
     Polymer.whenReady(new Function<Object, Object>() {

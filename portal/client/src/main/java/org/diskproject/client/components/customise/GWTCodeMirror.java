@@ -59,11 +59,17 @@ public class GWTCodeMirror extends Composite implements TakesValue<String>, HasV
     public GWTCodeMirror() {
         this(DEFAULT_MODE);
     }
-
+    
     public GWTCodeMirror(String mode) {
         this(mode, DEFAULT_THEME);
     }
 
+
+    public GWTCodeMirror(boolean showInfoGutter) {
+      initialOptions.setInfoGutter(showInfoGutter);
+      initWidget(new SimplePanel());
+    }
+    
     public GWTCodeMirror(String mode, String theme) {
         initialOptions.setMode(checkNotNull(mode));
         initialOptions.setTheme(checkNotNull(theme));
@@ -211,6 +217,9 @@ public class GWTCodeMirror extends Composite implements TakesValue<String>, HasV
         }
     }-*/;
 
+    public native int getLineCount() /*-{
+      return theCM.lineCount();
+    }-*/;
 
     public void clearErrorRange() {
         if (theCM == null) {
@@ -224,6 +233,16 @@ public class GWTCodeMirror extends Composite implements TakesValue<String>, HasV
         errorMarkers.clear();
     }
 
+    public void setInfoGutter(int lineNumber, Element el) {
+      if (theCM == null) {
+        return;
+      }
+      this.setInfoGutter(theCM, lineNumber, el);
+    }
+    
+    private native void setInfoGutter(JavaScriptObject theCM, int lineNumber, Element val) /*-{
+      theCM.setGutterMarker(lineNumber, "information-gutter", val);
+    }-*/;
 
     public void setErrorRange(EditorPosition start, EditorPosition end) {
         if (theCM == null) {
@@ -376,7 +395,8 @@ public class GWTCodeMirror extends Composite implements TakesValue<String>, HasV
                             $entry(myCodeMirror.@org.diskproject.client.components.customise.GWTCodeMirror::getCompletions(Ljava/lang/String;IIILcom/google/gwt/core/client/JavaScriptObject;Lcom/google/gwt/core/client/JavaScriptObject;)(editor.getValue(), cursor.line, cursor.ch, index, result, callback));
                         }, {async: true});
                     }
-                }
+                },
+                gutters: initialOptions["infoGutter"] ? ["information-gutter"] : []
             }
         );
         // Listener for changes and propagate them back into the GWT compiled code
@@ -402,6 +422,7 @@ public class GWTCodeMirror extends Composite implements TakesValue<String>, HasV
         private boolean readOnly = DEFAULT_READ_ONLY;
         private boolean lineNumbers = DEFAULT_LINE_NUMBERS;
         private boolean lineWrapping = DEFAULT_LINE_WRAPPING;
+        private boolean infoGutter = false;
 
         public String getMode() {
             return mode;
@@ -438,6 +459,10 @@ public class GWTCodeMirror extends Composite implements TakesValue<String>, HasV
         public boolean isLineWrapping() {
             return lineWrapping;
         }
+        
+        public boolean isInfoGutter() {
+          return this.infoGutter;
+      }        
 
         public void setReadOnly(boolean readOnly) {
             this.readOnly = readOnly;
@@ -450,6 +475,10 @@ public class GWTCodeMirror extends Composite implements TakesValue<String>, HasV
         public void setLineWrapping(boolean lineWrapping) {
             this.lineWrapping = lineWrapping;
         }
+        
+        public void setInfoGutter(boolean infoGutter) {
+            this.infoGutter = infoGutter;
+        }
 
         public JavaScriptObject toJavaScriptObject() {
             JavaScriptObject result = JavaScriptObject.createObject();
@@ -460,6 +489,7 @@ public class GWTCodeMirror extends Composite implements TakesValue<String>, HasV
             addProperty(result, "readOnly", readOnly);
             addProperty(result, "lineNumbers", lineNumbers);
             addProperty(result, "lineWrapping", lineWrapping);
+            addProperty(result, "infoGutter", infoGutter);
             return result;
         }
 

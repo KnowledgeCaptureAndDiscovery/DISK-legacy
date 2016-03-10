@@ -120,15 +120,13 @@ paper-toolbar {
   transition: height 450ms cubic-bezier(0.55, 0, 0.1, 1);
 }
 
-nav a {
+nav a div {
     display: block;
-    padding: 9px 16px;
+    padding: 7px 14px;    
     font-weight: 500;
     color: rgba(0,0,0,.87);
     text-transform: none;
     cursor: pointer;
-    border: 1px solid transparent;
-    border-width: 1px 0;
 }
 
 nav a:hover {

@@ -6,7 +6,7 @@ import org.diskproject.client.components.hypothesis.events.HasHypothesisHandlers
 import org.diskproject.client.components.hypothesis.events.HypothesisSaveEvent;
 import org.diskproject.client.components.hypothesis.events.HypothesisSaveHandler;
 import org.diskproject.client.components.loi.TriggeredLOIViewer;
-import org.diskproject.client.components.triples.TripleInput;
+import org.diskproject.client.components.triples.HypothesisTripleInput;
 import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
@@ -40,7 +40,7 @@ public class HypothesisEditor extends Composite
   
   @UiField PaperInputElement name;
   @UiField PaperTextareaElement description;
-  @UiField TripleInput triples;
+  @UiField HypothesisTripleInput triples;
   @UiField PaperDialog triggerdialog;
 
   private static Binder uiBinder = GWT.create(Binder.class);

@@ -4,12 +4,14 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 
 import org.diskproject.client.authentication.SessionStorage;
+import org.diskproject.client.place.NameTokens;
 import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.UserREST;
 import org.diskproject.shared.classes.users.UserCredentials;
 import org.diskproject.shared.classes.users.UserSession;
 
 import com.google.gwt.core.client.Callback;
+import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.user.client.ui.Anchor;
@@ -19,6 +21,8 @@ import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 import com.gwtplatform.mvp.client.ViewImpl;
+import com.vaadin.polymer.Polymer;
+import com.vaadin.polymer.elemental.Function;
 import com.vaadin.polymer.iron.widget.event.IronOverlayOpenedEvent;
 import com.vaadin.polymer.paper.PaperDrawerPanelElement;
 import com.vaadin.polymer.paper.PaperToastElement;
@@ -29,10 +33,12 @@ public class ApplicationView extends ViewImpl implements
     ApplicationPresenter.MyView {
   interface Binder extends UiBinder<Widget, ApplicationView> { }
 
-  @UiField PaperDrawerPanelElement drawer;
-  
+  @UiField public static PaperDrawerPanelElement drawer;
   @UiField public static SimplePanel contentContainer;
   @UiField public static PaperToastElement toast;
+  
+  @UiField public static DivElement 
+    hypothesesMenu, loisMenu, assertionsMenu;
   
   @UiField SimplePanel sidebar;
   @UiField SimplePanel toolbar;
@@ -119,20 +125,43 @@ public class ApplicationView extends ViewImpl implements
       SimplePanel sidebar, SimplePanel toolbar) {
     toolbar.clear();
     toolbar.add(new HTML("<h3>DISK Home</h3>"));
-    //drawer.closeDrawer();
     toggleLoginLogoutButtons();
+    
+    final String nametoken = params[0]; 
+    Polymer.ready(drawer, new Function<Object, Object>() {
+      @Override
+      public Object call(Object arg) {
+        drawer.closeDrawer();
+        hypothesesMenu.removeClassName("activeMenu");
+        loisMenu.removeClassName("activeMenu");
+        assertionsMenu.removeClassName("activeMenu");
+        
+        DivElement menu = null;
+        if(nametoken.equals(NameTokens.hypotheses))
+          menu = hypothesesMenu;
+        else if(nametoken.equals(NameTokens.lois))
+          menu = loisMenu;
+        else if(nametoken.equals(NameTokens.assertions))
+          menu = assertionsMenu;
+        if(menu != null)
+          menu.addClassName("activeMenu");
+        
+        return null;
+      }
+    });
+      
   }
   
   private void toggleLoginLogoutButtons() {
     UserSession session = SessionStorage.getSession();
     if(session == null) {
       loginanchor.setVisible(true);
-      registeranchor.setText("Register");
+      registeranchor.setHTML("<div>Register</div>");
       logoutanchor.setVisible(false);
     }
     else {
       loginanchor.setVisible(false);
-      registeranchor.setText("Change user details");
+      registeranchor.setHTML("<div>Change user details</div>");
       logoutanchor.setVisible(true);
       logoutanchor.setText("Logout " + session.getUsername());
     }

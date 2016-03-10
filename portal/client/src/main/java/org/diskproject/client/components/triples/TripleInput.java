@@ -16,8 +16,15 @@ import org.diskproject.shared.classes.vocabulary.Type;
 import org.diskproject.shared.classes.vocabulary.Vocabulary;
 
 import com.google.gwt.core.client.Callback;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.user.client.ui.HTML;
+import com.vaadin.polymer.Polymer;
+import com.vaadin.polymer.elemental.Event;
+import com.vaadin.polymer.elemental.EventListener;
+import com.vaadin.polymer.paper.PaperIconButtonElement;
+import com.vaadin.polymer.paper.widget.PaperDialog;
 
 import edu.stanford.bmir.gwtcodemirror.client.AutoCompletionCallback;
 import edu.stanford.bmir.gwtcodemirror.client.AutoCompletionChoice;
@@ -32,9 +39,18 @@ public class TripleInput extends GWTCodeMirror {
   Map<String, Type> alltypes;
   
   TripleUtil util;
+  boolean showInfoGutter;
+  
+  PaperDialog dialog;
   
   public TripleInput() {
     super();
+    this.initialize();
+  }
+  
+  public TripleInput(boolean showInfoGutter) {
+    super(showInfoGutter);
+    this.showInfoGutter = showInfoGutter;
     this.initialize();
   }
 
@@ -42,7 +58,7 @@ public class TripleInput extends GWTCodeMirror {
     super(mode);
     this.initialize();
   }
-  
+
   protected void initialize() {
     this.vocabularies = new HashMap<String, Vocabulary>();
     this.allprops = new HashMap<String, Property>();
@@ -52,6 +68,9 @@ public class TripleInput extends GWTCodeMirror {
     this.util = new TripleUtil();
     this.setAutoCompletionHandler(this.completionHandler);
     this.addValueChangeHandler(this.changeHandler);
+    
+    this.dialog = new PaperDialog();
+    this.getElement().appendChild(this.dialog.getElement());
   }
   
   private List<Integer[]> getWordLocations(String triple) {
@@ -80,9 +99,30 @@ public class TripleInput extends GWTCodeMirror {
     @Override
     public void onValueChange(ValueChangeEvent<String> event) {
       validate();
+      // Reset Triple infoboxes ?
     }
   };
   
+  @SuppressWarnings("rawtypes")
+  private void showInfoGutters(List<Triple> triples) {
+    int i=0; 
+    for(final Triple t : triples) {
+      PaperIconButtonElement icon = Polymer.createElement(PaperIconButtonElement.TAG);
+      icon.setIcon("icons:info");
+      setInfoGutter(i, (Element)icon);
+      icon.addEventListener("click", new EventListener() {
+        @Override
+        public void handleEvent(Event event) {
+          dialog.clear();
+          dialog.add(new HTML(util.toString(t)));
+          dialog.add(new HTML("<b>Confidence:</b> 0.87<br/><b>Provenance:</b> Dummy"));
+          dialog.open();
+        }
+      });
+      i++;
+    }
+  }
+
   AutoCompletionHandler completionHandler = new AutoCompletionHandler() {
     @Override
     public void getCompletions(String text, EditorPosition caretPos,
@@ -229,6 +269,8 @@ public class TripleInput extends GWTCodeMirror {
   
   public void setValue(List<Triple> triples) {
     this.setValue(this.getTripleString(triples));
+    if(this.showInfoGutter)
+      showInfoGutters(triples);
   }
   
   public void setDefaultNamespace(String ns) {

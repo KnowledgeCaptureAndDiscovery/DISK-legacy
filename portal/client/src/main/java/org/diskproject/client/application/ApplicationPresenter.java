@@ -79,8 +79,9 @@ public class ApplicationPresenter extends
         else if(nametoken.equals(NameTokens.lois))
           sectionview = loiview;        
 
-        // Tell application view about the parameters in case it wants to change something
-        view.initializeParameters(userid, domain, params, edit, appview.sidebar, appview.toolbar);
+        // Tell application view about the view being loaded in case it wants to change something
+        view.initializeParameters(userid, domain, new String[]{nametoken}, 
+            edit, appview.sidebar, appview.toolbar);
         
         // Reveal called view with parameters & sidebar/toolbar to populate
         if(sectionview != null) {

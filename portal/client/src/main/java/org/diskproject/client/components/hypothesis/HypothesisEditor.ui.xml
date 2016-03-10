@@ -14,7 +14,7 @@
 				<paper-textarea label="Description" required="true"
 					autoValidate="true" ui:field="description" />
 				<label class="small-grey">Triples (Ctrl-Space for suggestions)</label>
-				<tr:TripleInput ui:field="triples" />
+				<tr:HypothesisTripleInput ui:field="triples" />
 			</div>
 		</div>
 		<div class="horizontal end-justified layout">
@@ -28,6 +28,6 @@
 			</p:PaperButton>
 		</div>
 		
-		<p:PaperDialog ui:field="triggerdialog" noCancelOnEscKey="true" />		
+		<p:PaperDialog ui:field="triggerdialog" />		
 	</g:HTMLPanel>
 </ui:UiBinder>

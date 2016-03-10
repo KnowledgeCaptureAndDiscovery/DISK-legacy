@@ -107,7 +107,7 @@ public class AssertionView extends ApplicationSubviewImpl
   private void setHeader(SimplePanel toolbar) {
     // Set Toolbar header
     toolbar.clear();
-    String title = "<h3>Assertions</h3>";
+    String title = "<h3>Data</h3>";
     String icon = "icons:list";
 
     HTML div = new HTML("<nav><div class='layout horizontal center'>"

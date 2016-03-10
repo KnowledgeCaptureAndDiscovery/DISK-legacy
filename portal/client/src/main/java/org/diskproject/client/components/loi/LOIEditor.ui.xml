@@ -7,8 +7,8 @@
 	<g:HTMLPanel>
 		<style>
 			paper-icon-button.smallicon {
-				width: 36px;
-				height: 36px;
+				width: 32px;
+				height: 32px;
 				text-align: center;
 			}	
 			vaadin-combo-box.no-label {
