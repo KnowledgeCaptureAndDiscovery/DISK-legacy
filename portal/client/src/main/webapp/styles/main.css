@@ -203,8 +203,11 @@ vaadin-combo-box-overlay.vaadin-combo-box .item {
 	padding:6px 8px !important;
 }
 
-@media ( max-width : 640px) {
+@media ( max-width : 600px) {
 	paper-toolbar.compact .paper-toolbar {
 		padding: 0px 4px !important;
+	}
+	paper-item .description {
+		display: none;
 	}
 }
