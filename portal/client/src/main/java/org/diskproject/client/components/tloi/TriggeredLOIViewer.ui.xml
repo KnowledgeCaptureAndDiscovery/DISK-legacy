@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui" 
+	xmlns:lw='urn:import:org.diskproject.client.components.list'
+	xmlns:tr='urn:import:org.diskproject.client.components.triples'	
+	xmlns:p='urn:import:com.vaadin.polymer.paper.widget'>
+
+	<g:HTMLPanel>
+		<style is="custom-style">
+			.name {
+                font-size: 14px;
+                font-weight: bold;
+            }
+			div.section {
+                padding: 10px;
+            }
+			div.bordered-list {				
+				background: white;
+				border-radius: 3px;
+				border: 1px solid #E5E5E5;
+				min-height: 15px;
+				margin-bottom: 10px;
+			}
+			div.gutter {
+				display: table-cell;			
+				background: #F7F7F7;
+				border-right: 1px solid #DDD;
+				width: 35px;
+				padding-right: 5px;
+				text-align: right;
+				color: #999;
+			}
+			div.triple-text {
+				padding-left: 5px;
+				display:table-cell;
+			}
+			div.triple {
+				line-height: 1.8em;
+				font-family: Monospace, Fixed;
+				display:table-row;
+			}
+			div.padded {
+				padding: 5px;
+			}
+			div.gutter paper-icon-button {
+			    padding: 4px;
+			    margin-left: 2px;
+			    width: 23px;
+			    height: 23px;
+			    float: left;
+            	--paper-icon-button: {
+            		color: #AAA;
+            	}
+            	--paper-icon-button-hover: {
+            		color: var(--paper-green-600)
+            	}
+            	--paper-icon-button-ink-color: var(--paper-green-200)				
+			}
+			.content a:hover {
+				text-decoration: underline;
+			}
+		</style>
+		<div class="vertical layout section">
+			<div class="name" ui:field="name" />
+			<div class="description" ui:field="description" />
+
+			<label class="small-grey">Workflows</label>
+			<div class="bordered-list">
+				<lw:ListWidget ui:field="workflowlist" styleName="list" />
+			</div>
+			
+			<label class="small-grey">Meta-Workflows</label>
+			<div class="bordered-list">
+				<lw:ListWidget ui:field="metaworkflowlist" styleName="list" />
+			</div>
+			
+			<div ui:field="hypothesisSection">
+				<label class="small-grey">Hypothesis</label>
+				<div class="bordered-list padded">				
+					<div><a ui:field="hypothesisLink" /></div>
+					<tr:TripleViewer ui:field="hypothesis" />
+				</div>
+			</div>
+			
+			<div ui:field="revHypothesisSection">
+				<label class="small-grey">Revised Hypothesis</label>
+				<div class="bordered-list padded">				
+					<div><a ui:field="revHypothesisLink" /></div>
+					<tr:TripleViewer ui:field="revHypothesis" />
+				</div>
+			</div>
+		</div>
+	</g:HTMLPanel>
+</ui:UiBinder>
