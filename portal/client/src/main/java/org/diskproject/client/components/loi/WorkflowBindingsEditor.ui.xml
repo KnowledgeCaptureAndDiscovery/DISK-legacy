@@ -2,6 +2,7 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui" 
 	xmlns:p='urn:import:com.vaadin.polymer.paper.widget'
+	xmlns:i='urn:import:com.vaadin.polymer.iron.widget'
 	xmlns:v='urn:import:com.vaadin.polymer.vaadin.widget'
 	xmlns:m='urn:import:org.diskproject.client.components.menu'>
 
@@ -10,15 +11,26 @@
 			.hidden {
 				display: none;
 			}
+			.workflowCombo {
+				width: calc(100% - 32px)
+			}
+			paper-icon-button.linkicon {
+				margin-top: 25px;
+			}
 		</style>
 		<div class="vertical center-justified layout">
-			<v:VaadinComboBox label="Select Workflow" ui:field="workflowmenu" />
+			<div class="horizontal layout">
+				<v:VaadinComboBox addStyleNames="workflowCombo"
+					label="Select Workflow" ui:field="workflowmenu" />
+				<p:PaperIconButton ui:field="workflowlink"
+					addStyleNames="linkicon smallicon blue-button" icon="link" />
+			</div>
 
 			<g:HTMLPanel ui:field="varsection">
 				<div class="horizontal layout">
 					<label class="small-grey">Variable Bindings</label>
 					<p:PaperIconButton ui:field="addbindingbutton"
-						addStyleNames="smallicon green" icon="add" />
+						addStyleNames="smallicon green-button" icon="add-circle" />
 				</div>
 				<g:HTMLPanel addStyleNames="vertical center-justified layout" 
 					ui:field="varbindings" />

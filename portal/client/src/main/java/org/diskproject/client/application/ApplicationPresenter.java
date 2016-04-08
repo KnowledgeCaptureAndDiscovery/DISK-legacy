@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.diskproject.client.application.assertion.AssertionView;
 import org.diskproject.client.application.hypothesis.HypothesisView;
 import org.diskproject.client.application.loi.LOIView;
+import org.diskproject.client.application.tloi.TriggeredLOIView;
 import org.diskproject.client.application.users.UserView;
 import org.diskproject.client.place.NameTokens;
 
@@ -38,7 +39,8 @@ public class ApplicationPresenter extends
       final UserView userview, 
       final HypothesisView hypview,
       final LOIView loiview,
-      final AssertionView assview
+      final AssertionView assview,
+      final TriggeredLOIView tloiview
      ) {
     super(eventBus, view, proxy, RevealType.Root);
     
@@ -77,10 +79,12 @@ public class ApplicationPresenter extends
         else if(nametoken.equals(NameTokens.assertions))
           sectionview = assview;
         else if(nametoken.equals(NameTokens.lois))
-          sectionview = loiview;        
+          sectionview = loiview;
+        else if(nametoken.equals(NameTokens.tlois))
+          sectionview = tloiview;              
 
         // Tell application view about the view being loaded in case it wants to change something
-        view.initializeParameters(userid, domain, new String[]{nametoken}, 
+        ((ApplicationView)view).initializeParameters(userid, domain, nametoken, params, 
             edit, appview.sidebar, appview.toolbar);
         
         // Reveal called view with parameters & sidebar/toolbar to populate

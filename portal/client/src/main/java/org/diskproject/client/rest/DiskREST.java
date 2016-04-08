@@ -313,6 +313,47 @@ public class DiskREST {
     }).call(getDiskService()).addTriggeredLOI(username, domain, tloi);
   }
   
+  public static void listTriggeredLOIs(final Callback<List<TriggeredLOI>, Throwable> callback) {
+    REST.withCallback(new MethodCallback<List<TriggeredLOI>>() {
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+      @Override
+      public void onSuccess(Method method, List<TriggeredLOI> response) {
+        callback.onSuccess(response);
+      }
+    }).call(getDiskService()).listTriggeredLOIs(username, domain);
+  }
+  
+  public static void getTriggeredLOI(String id, 
+      final Callback<TriggeredLOI, Throwable> callback) {
+    REST.withCallback(new MethodCallback<TriggeredLOI>() {
+      @Override
+      public void onSuccess(Method method, TriggeredLOI response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(getDiskService()).getTriggeredLOI(username, domain, id);
+  }
+  
+  public static void deleteTriggeredLOI(String id,
+      final Callback<Void, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Void>() {
+      @Override
+      public void onSuccess(Method method, Void response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }      
+    }).call(getDiskService()).deleteTriggeredLOI(username, domain, id);
+  }  
+  
   /*
    * Assertions
    */
@@ -329,20 +370,6 @@ public class DiskREST {
         callback.onFailure(exception);
       }      
     }).call(getDiskService()).updateAssertions(username, domain, graph);
-  }
-  
-  public static void addAssertion(Graph graph,
-      final Callback<Void, Throwable> callback) {
-    REST.withCallback(new MethodCallback<Void>() {
-      @Override
-      public void onSuccess(Method method, Void response) {
-        callback.onSuccess(response);
-      }
-      @Override
-      public void onFailure(Method method, Throwable exception) {
-        callback.onFailure(exception);
-      }      
-    }).call(getDiskService()).addAssertion(username, domain, graph);
   }
   
   public static void listAssertions(
@@ -371,7 +398,12 @@ public class DiskREST {
     REST.withCallback(new MethodCallback<List<Workflow>>() {
       @Override
       public void onSuccess(Method method, List<Workflow> response) {
-        callback.onSuccess(response);
+        if(response == null)
+          callback.onFailure(new Throwable("No WINGS workflows found"));
+        else {
+          workflows = response;
+          callback.onSuccess(response);
+        }
       }
       @Override
       public void onFailure(Method method, Throwable exception) {
@@ -390,8 +422,13 @@ public class DiskREST {
     REST.withCallback(new MethodCallback<List<Variable>>() {
       @Override
       public void onSuccess(Method method, List<Variable> response) {
-        workflow_variables.put(id, response);
-        callback.onSuccess(response);
+        if(response == null) {
+          callback.onFailure(new Throwable("No WINGS workflow variables found"));
+        }
+        else {
+          workflow_variables.put(id, response);
+          callback.onSuccess(response);
+        }
       }
       @Override
       public void onFailure(Method method, Throwable exception) {

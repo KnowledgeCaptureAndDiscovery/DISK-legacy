@@ -11,8 +11,9 @@
 				height: 32px;
 				text-align: center;
 			}	
-			vaadin-combo-box.no-label {
-				width: 80%;
+			vaadin-combo-box.no-label,
+			paper-input.no-label {
+				width: 50%;
 			}
 			vaadin-combo-box.no-label .floated-label-placeholder,
 			vaadin-combo-box.no-label .label-is-floating label            
@@ -21,9 +22,9 @@
 			}
 		</style>
 		<div class="vertical center-justified layout">
-			<paper-input label="Name" required="true" autoValidate="true"
-				ui:field="name" />
-			<paper-textarea label="Description" required="true"
+			<paper-input label="Short Description" required="true" 
+				autoValidate="true" ui:field="name" />
+			<paper-textarea label="Long Description" required="true"
 				autoValidate="true" ui:field="description" />
 
 			<label class="small-grey">Query (Ctrl-Space for suggestions)</label>

@@ -10,7 +10,6 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.HTML;
 import com.vaadin.polymer.iron.widget.IronCollapse;
 import com.vaadin.polymer.iron.widget.IronIcon;
-import com.vaadin.polymer.paper.widget.PaperIconButton;
 import com.vaadin.polymer.paper.widget.PaperItem;
 
 public class TreeNode implements Comparable<TreeNode> {
@@ -23,8 +22,7 @@ public class TreeNode implements Comparable<TreeNode> {
   IronCollapse childrenSection;
   
   IronIcon icon, collapser;
-  String iconName;
-  PaperIconButton deleteIcon;
+  String iconName, expandedIconName;
   
   boolean expanded;
   
@@ -39,11 +37,6 @@ public class TreeNode implements Comparable<TreeNode> {
     this.icon = new IronIcon();
     this.children = new ArrayList<TreeNode>();
     this.nodemap = new HashMap<String, TreeNode>();
-    
-    this.deleteIcon = new PaperIconButton();
-    deleteIcon.addStyleName("action-button");
-    deleteIcon.addStyleName("red-button");
-    deleteIcon.setIcon("icons:cancel");
     
     this.childrenSection = new IronCollapse();
     this.childrenSection.addStyleName("pad");
@@ -74,14 +67,11 @@ public class TreeNode implements Comparable<TreeNode> {
   
   public void setIcon(String iconstr) {
     this.iconName = iconstr;
+    this.icon.setIcon(this.iconName);
   }
   
-  public PaperIconButton getDeleteIcon() {
-    return deleteIcon;
-  }
-
-  public void setDeleteIcon(PaperIconButton deleteIcon) {
-    this.deleteIcon = deleteIcon;
+  public void setExpandedIcon(String iconstr) {
+    this.expandedIconName = iconstr;
   }
 
   public String getId() {
@@ -125,13 +115,11 @@ public class TreeNode implements Comparable<TreeNode> {
       return null;
     
     item.clear();
-    icon.setIcon(this.iconName);  
     item.add(collapser);
     item.add(icon);
     String html = "<div class='name'>" + this.name + "</div>";
     html += "<div class='description'>"+this.description+"</div>";
     item.add(new HTML(html));
-    item.add(deleteIcon);
     this.setIcons();
     
     return this.item;
@@ -141,9 +129,11 @@ public class TreeNode implements Comparable<TreeNode> {
     childrenSection.clear();
     if(this.expanded)
       childrenSection.setOpened(true);
-    for(TreeNode childnode : this.getChildren())
+    for(TreeNode childnode : this.getChildren()) {
+      childnode.updateChildrenSection();
       childrenSection.add(childnode.getItem());
-    
+      childrenSection.add(childnode.getChildrenSection());
+    }
     this.setIcons();
     return childrenSection;
   }
@@ -167,11 +157,14 @@ public class TreeNode implements Comparable<TreeNode> {
   public boolean removeNode(String id) {
     if(this.id.equals(id)) {
       this.item.removeFromParent();
+      this.childrenSection.removeFromParent();
       return true;
     }
     for(TreeNode child : this.children) {
-      if(child.removeNode(id))
-        return true;
+      if(child.removeNode(id)) {
+        this.children.remove(child);
+        this.nodemap.remove(child.getId());
+      }
     }
     return false;
   }
@@ -188,8 +181,6 @@ public class TreeNode implements Comparable<TreeNode> {
     this.children.add(child);
     this.nodemap.put(child.getId(), child);
     child.setParent(this);
-    
-    this.childrenSection.add(child.getItem());
   }
 
   public List<TreeNode> getChildren() {
@@ -212,14 +203,17 @@ public class TreeNode implements Comparable<TreeNode> {
     if(this.children.size() == 0) {
       collapser.setIcon("icons:a");
       collapser.addStyleName("transparent");
+      icon.setIcon(this.iconName);
     }
     else {
       collapser.removeStyleName("transparent");
       if(this.isExpanded()) {
         collapser.setIcon("icons:expand-more");
+        icon.setIcon(this.expandedIconName);
       }
       else {
         collapser.setIcon("icons:chevron-right");
+        icon.setIcon(this.iconName);
       }
     }
   }  

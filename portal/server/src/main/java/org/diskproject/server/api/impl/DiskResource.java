@@ -21,13 +21,14 @@ import org.diskproject.server.repository.WingsAdapter;
 import org.diskproject.shared.api.DiskService;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
-import org.diskproject.shared.classes.common.Value;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.vocabulary.Vocabulary;
 import org.diskproject.shared.classes.workflow.Variable;
+import org.diskproject.shared.classes.workflow.VariableBinding;
 import org.diskproject.shared.classes.workflow.Workflow;
+import org.diskproject.shared.classes.workflow.WorkflowRun;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -255,12 +256,38 @@ public class DiskResource implements DiskService {
    * Triggered LOIs
    */
   @POST
-  @Path("{username}/{domain}/tloi")
+  @Path("{username}/{domain}/tlois")
   @Override
   public void addTriggeredLOI(@PathParam("username") String username, 
       @PathParam("domain") String domain,
       @JsonProperty("tloi") TriggeredLOI tloi) {
     this.repo.addTriggeredLOI(username, domain, tloi);
+  }
+  
+  @GET
+  @Path("{username}/{domain}/tlois")
+  @Override
+  public List<TriggeredLOI> listTriggeredLOIs(@PathParam("username") String username, 
+      @PathParam("domain") String domain) {
+    return this.repo.listTriggeredLOIs(username, domain);
+  }
+  
+  @GET
+  @Path("{username}/{domain}/tlois/{id}")
+  @Override
+  public TriggeredLOI getTriggeredLOI(@PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("id") String id) {
+    return this.repo.getTriggeredLOI(username, domain, id);
+  }
+  
+  @DELETE
+  @Path("{username}/{domain}/tlois/{id}")
+  @Override
+  public void deleteTriggeredLOI(@PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("id") String id) {
+    this.repo.deleteTriggeredLOI(username, domain, id);
   }
   
   /*
@@ -282,7 +309,7 @@ public class DiskResource implements DiskService {
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @PathParam("id") String id) {
-    return WingsAdapter.get().getWorkflowVariables(username, domain, id);    
+    return WingsAdapter.get().getWorkflowInputs(username, domain, id);    
   }
   
   @GET
@@ -292,19 +319,18 @@ public class DiskResource implements DiskService {
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @PathParam("id") String id,
-      @JsonProperty("bindings") Map<String, Value> bindings) {
-    // Return the run id -- To check execution
-    return null;
+      @JsonProperty("bindings") List<VariableBinding> bindings) {
+    return WingsAdapter.get().runWorkflow(username, domain, id, bindings);
   }
   
   @GET
   @Override
   @Path("{username}/{domain}/runs/{id}")
-  public String monitorWorkflow(
+  public WorkflowRun monitorWorkflow(
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @PathParam("id") String id) {
     // Check execution status
-    return null;
+    return WingsAdapter.get().getWorkflowRunStatus(username, domain, id);
   }  
 }

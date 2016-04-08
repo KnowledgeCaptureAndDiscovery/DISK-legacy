@@ -37,8 +37,13 @@ public class TripleUtil {
     String subject = this.getURIValue(tarr[0]);
     String predicate = this.getURIValue(tarr[1]);
     Value object = this.getObjectValue(tarr[2]);
-    if(subject != null && predicate != null && object != null)
-      return new Triple(subject, predicate, object);
+    if(subject != null && predicate != null && object != null) {
+      Triple triple = new Triple();
+      triple.setSubject(subject);
+      triple.setPredicate(predicate);
+      triple.setObject(object);      
+      return triple;
+    }
     return null;
   }
   
@@ -129,4 +134,5 @@ public class TripleUtil {
         + this.getQName(t.getPredicate())+" "
         + this.getObjectString(t.getObject());
   }
+  
 }

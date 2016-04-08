@@ -17,7 +17,7 @@
 		<div class="horizontal layout">
 			<label class="small-grey" ui:field="label" />
 			<p:PaperIconButton ui:field="addwflowbutton"
-				addStyleNames="smallicon" icon="add" />
+				addStyleNames="smallicon green-button" icon="add-circle" />
 		</div>
 		<div class="bordered-list">
 			<lw:ListWidget ui:field="workflowlist" styleName="list" />

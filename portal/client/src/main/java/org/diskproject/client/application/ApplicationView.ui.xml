@@ -134,37 +134,68 @@
             paper-dropdown-menu, vaadin-combo-box {
             	--paper-input-container-input: {
             		font-size: 14px;
-            	}
+            	};
             	--paper-input-container-label: {
             		font-size: 14px;
-            	}            	
+            	};
+            	--paper-input-container-label-floating: {
+            		font-size: 16px;
+            	};
             }
             paper-listbox paper-item, 
             paper-menu paper-item {
             	min-height: 36px;
             	font-size:14px;
             }
-            paper-item .action-button {
+            paper-item .action-buttons {
             	margin-left:auto;
+            	white-space:nowrap;
+            }
+            paper-item .action-buttons paper-icon-button {
             	min-width: 18px;
-            	padding: 0px;
             	width: 18px;
             	height: 18px;
+            	padding: 0px;
             	margin-right:5px;
-            	display:none;
             }
-            paper-item:hover .action-button {
-            	display:block;
-            }
-            paper-item paper-icon-button.red-button {
+            
+            paper-icon-button.red-button {
             	--paper-icon-button: {
-            		color: var(--paper-red-200);
+            		color: var(--paper-grey-400);
             	}
             	--paper-icon-button-hover: {
             		color: var(--paper-red-600);
             	}
             	--paper-icon-button-ink-color: var(--paper-red-200);
 			}
+            paper-icon-button.blue-button {
+            	--paper-icon-button: {
+            		color: var(--paper-grey-400);
+            	}
+            	--paper-icon-button-hover: {
+            		color: var(--paper-blue-600);
+            	}
+            	--paper-icon-button-ink-color: var(--paper-blue-200);
+			}
+            paper-icon-button.green-button {
+            	--paper-icon-button: {
+            		color: var(--paper-grey-400);
+            	}
+            	--paper-icon-button-hover: {
+            		color: var(--paper-green-600);
+            	}
+            	--paper-icon-button-ink-color: var(--paper-green-200);
+			}
+            paper-icon-button.orange-button {
+            	--paper-icon-button: {
+            		color: var(--paper-grey-400);
+            	}
+            	--paper-icon-button-hover: {
+            		color: var(--paper-orange-600);
+            	}
+            	--paper-icon-button-ink-color: var(--paper-orange-200);
+			}			
+			
 			.Codemirror-linenumber {
 				padding-left: 0px;
 			}
@@ -187,7 +218,26 @@
 			}
 			div.activeMenu {
 				background: #eceff1;
+			}
+			div.activeItemMenu {
+    			border-bottom: 1px solid #cfd8dc;
+    			padding-left: 0px;
+			}
+			.backbutton {
+				display: none;
+				margin-right: 0px;
 			}			
+			div.activeItemMenu iron-icon.backbutton {
+				display: inline-flex;
+			    align-items: center;
+			    justify-content: center;
+			    vertical-align: middle;
+			    width: 24px;
+			    height: 24px;
+			}
+			div.hiddenMenu {
+				display: none;
+			}
 		</style>
 		
 		<paper-drawer-panel class="flex" ui:field="drawer">
@@ -204,6 +254,7 @@
 					<g:Anchor 
 					href="#{nameTokens.getHypotheses}/{config.getWingsUserid}/{config.getWingsDomain}">
 						<div class="layout horizontal center" ui:field="hypothesesMenu">
+							<iron-icon class="backbutton grey" icon="icons:chevron-left" />
 							<iron-icon class="orange" icon="icons:help" />
 							 Hypotheses
 						</div>
@@ -211,13 +262,23 @@
 					<g:Anchor 
 					href="#{nameTokens.getLOIs}/{config.getWingsUserid}/{config.getWingsDomain}">
 						<div class="layout horizontal center" ui:field="loisMenu">
+							<iron-icon class="backbutton grey" icon="icons:chevron-left" />			
 							<iron-icon class="green" icon="icons:explore" />
-							 Lines of Inquiry
+							 Lines of Inquiry (LOIs)
 						</div>
 					</g:Anchor>
 					<g:Anchor 
+					href="#{nameTokens.getTLOIs}/{config.getWingsUserid}/{config.getWingsDomain}">
+						<div class="layout horizontal center" ui:field="tloisMenu">
+							<iron-icon class="backbutton grey" icon="icons:chevron-left" />			
+							<iron-icon class="orange" icon="icons:explore" />
+							 Triggered LOIs
+						</div>
+					</g:Anchor>					
+					<g:Anchor 
 					href="#{nameTokens.getAssertions}/{config.getWingsUserid}/{config.getWingsDomain}">
 						<div class="layout horizontal center" ui:field="assertionsMenu">
+							<iron-icon class="backbutton grey" icon="icons:chevron-left" />						
 							<iron-icon class="blue" icon="icons:list" />
 							 Data
 						</div>
@@ -261,6 +322,5 @@
 				<p:PaperButton styleName="green" ui:field="loginbutton">Login</p:PaperButton>
 			</div>
 		</p:PaperDialog>
-		
 	</g:HTMLPanel>
 </ui:UiBinder>

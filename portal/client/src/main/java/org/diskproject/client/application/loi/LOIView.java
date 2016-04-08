@@ -6,7 +6,7 @@ import org.diskproject.client.Config;
 import org.diskproject.client.application.ApplicationSubviewImpl;
 import org.diskproject.client.components.list.ListNode;
 import org.diskproject.client.components.list.ListWidget;
-import org.diskproject.client.components.list.events.ListItemDeletionEvent;
+import org.diskproject.client.components.list.events.ListItemActionEvent;
 import org.diskproject.client.components.list.events.ListItemSelectionEvent;
 import org.diskproject.client.components.loader.Loader;
 import org.diskproject.client.components.loi.LOIEditor;
@@ -52,6 +52,7 @@ public class LOIView extends ApplicationSubviewImpl
   @Inject
   public LOIView(Binder binder) {
     initWidget(binder.createAndBindUi(this));
+    loilist.addDeleteAction();
   }
   
   @Override
@@ -128,8 +129,8 @@ public class LOIView extends ApplicationSubviewImpl
           public void onSuccess(LineOfInquiry result) {
             loader.setVisible(false);
             form.setVisible(true);
-            form.load(result);
-            form.setNamespace(getNamespace(result.getId()));            
+            form.setNamespace(getNamespace(result.getId()));
+            form.load(result);            
           }
           @Override
           public void onFailure(Throwable reason) {
@@ -154,8 +155,8 @@ public class LOIView extends ApplicationSubviewImpl
     LineOfInquiry loi = new LineOfInquiry();
     loi.setId(id);
     loi.setQuery("");
-    form.load(loi);
     form.setNamespace(this.getNamespace(id));
+    form.load(loi);
     
     History.newItem(this.getHistoryToken(id), false);
   }
@@ -198,7 +199,7 @@ public class LOIView extends ApplicationSubviewImpl
   }
   
   @UiHandler("loilist")
-  void onListItemDeleted(ListItemDeletionEvent event) {
+  void onListItemDeleted(ListItemActionEvent event) {
     final ListNode node = event.getItem();
     if(loilist.getNode(node.getId()) != null) {
       if(Window.confirm("Are you sure you want to delete " + node.getName())) {

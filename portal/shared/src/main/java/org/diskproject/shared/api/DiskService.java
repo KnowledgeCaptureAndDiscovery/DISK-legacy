@@ -14,13 +14,14 @@ import javax.ws.rs.Produces;
 
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
-import org.diskproject.shared.classes.common.Value;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.vocabulary.Vocabulary;
 import org.diskproject.shared.classes.workflow.Variable;
+import org.diskproject.shared.classes.workflow.VariableBinding;
 import org.diskproject.shared.classes.workflow.Workflow;
+import org.diskproject.shared.classes.workflow.WorkflowRun;
 import org.fusesource.restygwt.client.DirectRestService;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -164,10 +165,27 @@ public interface DiskService extends DirectRestService {
    * Triggered LOIs
    */
   @POST
-  @Path("{username}/{domain}/tloi")
+  @Path("{username}/{domain}/tlois")
   public void addTriggeredLOI(@PathParam("username") String username, 
       @PathParam("domain") String domain,
       @JsonProperty("tloi") TriggeredLOI tloi);
+  
+  @GET
+  @Path("{username}/{domain}/tlois")
+  public List<TriggeredLOI> listTriggeredLOIs(@PathParam("username") String username, 
+      @PathParam("domain") String domain);
+
+  @GET
+  @Path("{username}/{domain}/tlois/{id}")
+  public TriggeredLOI getTriggeredLOI(@PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("id") String id);
+
+  @DELETE
+  @Path("{username}/{domain}/tlois/{id}")
+  public void deleteTriggeredLOI(@PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("id") String id);
   
   /*
    * Workflows
@@ -191,11 +209,11 @@ public interface DiskService extends DirectRestService {
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @PathParam("id") String id,
-      @JsonProperty("bindings") Map<String, Value> bindings);
+      @JsonProperty("bindings") List<VariableBinding> bindings);
   
   @GET
   @Path("{username}/{domain}/runs/{id}")
-  public String monitorWorkflow(
+  public WorkflowRun monitorWorkflow(
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @PathParam("id") String id);  

@@ -2,7 +2,8 @@ package org.diskproject.shared.classes.workflow;
 
 public class Variable {
   String name;
-  boolean input;
+  String type;
+  int dimensionality;
   boolean param;
 
   public String getName() {
@@ -13,12 +14,20 @@ public class Variable {
     this.name = name;
   }
 
-  public boolean isInput() {
-    return input;
+  public String getType() {
+    return type;
   }
 
-  public void setInput(boolean input) {
-    this.input = input;
+  public void setType(String type) {
+    this.type = type;
+  }
+
+  public int getDimensionality() {
+    return dimensionality;
+  }
+
+  public void setDimensionality(int dimensionality) {
+    this.dimensionality = dimensionality;
   }
 
   public boolean isParam() {

@@ -1,6 +1,7 @@
 package org.diskproject.client.components.loi;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,7 @@ import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
 import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.workflow.Variable;
+import org.diskproject.shared.classes.workflow.VariableBinding;
 import org.diskproject.shared.classes.workflow.Workflow;
 
 import com.google.gwt.core.client.Callback;
@@ -18,10 +20,12 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.polymer.Polymer;
+import com.vaadin.polymer.PolymerWidget;
 import com.vaadin.polymer.paper.widget.PaperIconButton;
 import com.vaadin.polymer.paper.widget.PaperInput;
 import com.vaadin.polymer.vaadin.widget.VaadinComboBox;
@@ -36,10 +40,11 @@ public class WorkflowBindingsEditor extends Composite {
   @UiField PaperIconButton addbindingbutton;
   
   boolean metamode;
-  List<Workflow> workflowcache;
-  List<Variable> variablecache;
+  Map<String, Workflow> workflowcache;
+  Map<String, Variable> variablecache;
   
   WorkflowBindings bindings;
+  boolean initloaded;
   
   public WorkflowBindingsEditor() {
     initWidget(uiBinder.createAndBindUi(this));  
@@ -47,23 +52,23 @@ public class WorkflowBindingsEditor extends Composite {
   
   public void setMetamode(boolean metamode) {
     this.metamode = metamode;
-    if(this.metamode)
-      this.varsection.addStyleName("hidden");
-    else
-      this.varsection.removeStyleName("hidden");
   }
   
   public void setWorkflowList(List<Workflow> list) {
-    this.workflowcache = list;
+    workflowcache = new HashMap<String, Workflow>();
+    for(Workflow w : list)
+      workflowcache.put(w.getName(), w);
     List<String> names = new ArrayList<String>();
-    for(Workflow wflow : workflowcache) {
-      names.add(wflow.getName());
+    for(String wflowName : workflowcache.keySet()) {
+      names.add(wflowName);
     }
+    Collections.sort(names);
     workflowmenu.setItems(Polymer.asJsArray(names));
     clearVariableBindingsUI();
   }
 
   public void loadWorkflowBindings(WorkflowBindings bindings) {
+    initloaded = false;
     this.bindings = bindings;
     workflowmenu.setValue(null);  
     if(bindings != null)
@@ -80,9 +85,8 @@ public class WorkflowBindingsEditor extends Composite {
     if(bindings == null)
       return;
     
-    for(String varid : bindings.getBindings().keySet()) {
-      String binding = bindings.getBindings().get(varid);
-      this.addVariableBinding(varid, binding);
+    for(VariableBinding vbinding : bindings.getBindings()) {
+      this.addVariableBinding(vbinding.getVariable(), vbinding.getBinding());
     }
   }
   
@@ -93,28 +97,47 @@ public class WorkflowBindingsEditor extends Composite {
     VaadinComboBox varmenu = new VaadinComboBox();
     varmenu.setLabel("Workflow Variable");
     varmenu.addStyleName("no-label");
-    
     List<String> names = new ArrayList<String>();
-    for(Variable var : variablecache) {
-      if(var.isInput())
-        names.add(var.getName());
+    for(String varname : variablecache.keySet()) {
+      names.add(varname);
     }
     varmenu.setItems(Polymer.asJsArray(names));
     if(varid != null)
       varmenu.setValue(varid);
     
-    PaperInput bindinput = new PaperInput();
-    bindinput.setLabel("Binding");
-    bindinput.setNoLabelFloat(true);
-    if(binding != null)
-      bindinput.setValue(binding);
+    PolymerWidget bindwidget = null;
+    if(this.metamode) {
+      VaadinComboBox bindinput = new VaadinComboBox();
+      List<String> workflownames = new ArrayList<String>();
+      for(String wflowName : workflowcache.keySet()) {
+        workflownames.add(wflowName);
+      }
+      Collections.sort(workflownames);
+      
+      bindinput.setItems(Polymer.asJsArray(workflownames));
+      bindinput.setLabel("Previous workflow run");
+      bindinput.addStyleName("no-label");
+      if(binding != null)
+        bindinput.setValue(binding);
+      
+      bindwidget = bindinput;
+    }
+    else {
+      PaperInput bindinput = new PaperInput();
+      bindinput.setLabel("Binding");
+      bindinput.setNoLabelFloat(true);
+      bindinput.addStyleName("no-label");
+      if(binding != null)
+        bindinput.setValue(binding);
+      bindwidget = bindinput;
+    }
     
     PaperIconButton delbutton = new PaperIconButton();
-    delbutton.setStyleName("smallicon");
-    delbutton.setIcon("clear");
+    delbutton.setStyleName("smallicon red-button");
+    delbutton.setIcon("cancel");
     
     el.add(varmenu);
-    el.add(bindinput);
+    el.add(bindwidget);
     el.add(delbutton);
     varbindings.add(el);
     
@@ -148,24 +171,52 @@ public class WorkflowBindingsEditor extends Composite {
       @Override
       public void onSuccess(List<Variable> result) {
         clearVariableBindingsUI();
+        if(!initloaded) 
+          initloaded = true;
+        else
+          bindings = null;
         addbindingbutton.setVisible(true);
-        variablecache = result;
+        variablecache = new HashMap<String, Variable>();
+        for(Variable v : result)
+          variablecache.put(v.getName(), v);
         setBindingsUI();
       }
     });
   }
   
+  @UiHandler("workflowlink")
+  void onWorkflowLinkClicked(ClickEvent event) {
+    if(workflowmenu.getValue() != null) {
+      Workflow workflow = workflowcache.get(workflowmenu.getValue());
+      if(workflow != null && workflow.getLink() != null)
+        Window.open(workflow.getLink(), "_blank", "");
+    }
+  }
+  
   public WorkflowBindings getWorkflowBindings() {
     WorkflowBindings bindings = new WorkflowBindings();
-    bindings.setWorkflow(workflowmenu.getValue());
-    Map<String, String> map = new HashMap<String, String>();
+    Workflow workflow = workflowcache.get(workflowmenu.getValue());
+    bindings.setWorkflow(workflow.getName());
+    bindings.setWorkflowLink(workflow.getLink());
+    
+    List<VariableBinding> vbindings = new ArrayList<VariableBinding>();
     for(int i=0; i<varbindings.getWidgetCount(); i++) {
       HTMLPanel row = (HTMLPanel) varbindings.getWidget(i);
       VaadinComboBox cb = (VaadinComboBox) row.getWidget(0);
-      PaperInput in = (PaperInput) row.getWidget(1);
-      map.put(cb.getValue(), in.getValue());
+      String varname = cb.getValue();
+      VariableBinding vbinding = new VariableBinding();
+      vbinding.setVariable(varname);
+      if(this.metamode) {
+        VaadinComboBox vb = (VaadinComboBox) row.getWidget(1);
+        vbinding.setBinding(vb.getValue());
+      }
+      else {
+        PaperInput in = (PaperInput) row.getWidget(1);
+        vbinding.setBinding(in.getValue());
+      }
+      vbindings.add(vbinding);
     }
-    bindings.setBindings(map);
+    bindings.setBindings(vbindings);
     return bindings;
   }  
 }

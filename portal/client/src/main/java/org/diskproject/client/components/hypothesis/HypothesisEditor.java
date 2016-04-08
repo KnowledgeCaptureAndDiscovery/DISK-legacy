@@ -1,39 +1,39 @@
 package org.diskproject.client.components.hypothesis;
 
-import java.util.List;
-
 import org.diskproject.client.components.hypothesis.events.HasHypothesisHandlers;
 import org.diskproject.client.components.hypothesis.events.HypothesisSaveEvent;
 import org.diskproject.client.components.hypothesis.events.HypothesisSaveHandler;
-import org.diskproject.client.components.loi.TriggeredLOIViewer;
 import org.diskproject.client.components.triples.HypothesisTripleInput;
+import org.diskproject.client.place.NameTokens;
 import org.diskproject.client.rest.AppNotification;
-import org.diskproject.client.rest.DiskREST;
+import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
-import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.util.KBConstants;
 
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.polymer.paper.PaperInputElement;
 import com.vaadin.polymer.paper.PaperTextareaElement;
 import com.vaadin.polymer.paper.widget.PaperDialog;
+import com.vaadin.polymer.paper.widget.PaperDialogScrollable;
 
 public class HypothesisEditor extends Composite 
     implements HasHypothesisHandlers {
   private HandlerManager handlerManager;
   
   interface Binder extends UiBinder<Widget, HypothesisEditor> {}
+  
+  int loadcount=0;
   
   String userid, domain;
   Hypothesis hypothesis;
@@ -42,6 +42,7 @@ public class HypothesisEditor extends Composite
   @UiField PaperTextareaElement description;
   @UiField HypothesisTripleInput triples;
   @UiField PaperDialog triggerdialog;
+  @UiField PaperDialogScrollable dialogcontent;
 
   private static Binder uiBinder = GWT.create(Binder.class);
   
@@ -53,6 +54,7 @@ public class HypothesisEditor extends Composite
   public void initialize(String username, String domain) {
     this.userid = username;
     this.domain = domain;
+    triples.setDomainInformation(username, domain);
     this.loadVocabularies();
   }
   
@@ -60,7 +62,8 @@ public class HypothesisEditor extends Composite
     this.hypothesis = hypothesis;
     name.setValue(hypothesis.getName());
     description.setValue(hypothesis.getDescription());
-    triples.setValue(hypothesis.getTriples());
+    if(hypothesis.getGraph() != null && loadcount==3)
+      triples.setValue(hypothesis.getGraph().getTriples());
   }
   
   public void setNamespace(String ns) {
@@ -68,10 +71,21 @@ public class HypothesisEditor extends Composite
   }
   
   private void loadVocabularies() {
-    triples.loadVocabulary("bio", KBConstants.OMICSURI());
-    triples.loadVocabulary("hyp", KBConstants.HYPURI());
-    triples.loadUserVocabulary("user", this.userid, this.domain);
+    loadcount=0;
+    triples.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
+    triples.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
+    triples.loadUserVocabulary("user", this.userid, this.domain, vocabLoaded);
   }
+  
+  private Callback<String, Throwable> vocabLoaded = 
+      new Callback<String, Throwable>() {
+    public void onSuccess(String result) {
+      loadcount++;
+      if(hypothesis != null && hypothesis.getGraph() != null && loadcount==3)
+        triples.setValue(hypothesis.getGraph().getTriples());
+    }
+    public void onFailure(Throwable reason) {}
+  };
   
   @UiHandler("savebutton")
   void onSaveButtonClicked(ClickEvent event) {
@@ -86,57 +100,21 @@ public class HypothesisEditor extends Composite
     
     hypothesis.setDescription(description.getValue());
     hypothesis.setName(name.getValue());
-    hypothesis.setTriples(triples.getTriples());
+    Graph graph = new Graph();
+    graph.setTriples(triples.getTriples());
+    hypothesis.setGraph(graph);
     
     fireEvent(new HypothesisSaveEvent(hypothesis));
   }
   
   @UiHandler("runbutton")
   void onRunButtonClicked(ClickEvent event) {
-    DiskREST.queryHypothesis(hypothesis.getId(), 
-        new Callback<List<TriggeredLOI>, Throwable>() {
-      @Override
-      public void onSuccess(List<TriggeredLOI> result) {
-        showTriggeredLOIOptions(result);
-      }
-      @Override
-      public void onFailure(Throwable reason) {
-        AppNotification.notifyFailure(reason.getMessage());
-      }
-    });
-  }
-
-  private void showTriggeredLOIOptions(List<TriggeredLOI> tlois) {
-    triggerdialog.clear();
-    for(final TriggeredLOI tloi : tlois) {
-      final TriggeredLOIViewer tviewer = new TriggeredLOIViewer();
-      tviewer.load(tloi);
-      tviewer.getActionButton().addClickHandler(new ClickHandler() {
-        @Override
-        public void onClick(ClickEvent event) {
-          submitTriggeredLOI(tloi, tviewer);
-        }
-      });
-      triggerdialog.add(tviewer);
-    }
-    triggerdialog.open();
+    History.newItem(this.getQueryHistoryToken(hypothesis.getId()));
   }
   
-  private void submitTriggeredLOI(TriggeredLOI tloi, final TriggeredLOIViewer viewer) {
-    DiskREST.addTriggeredLOI(tloi, new Callback<Void, Throwable>() {
-      @Override
-      public void onFailure(Throwable reason) {
-        AppNotification.notifyFailure(reason.getMessage());
-      }
-      @Override
-      public void onSuccess(Void result) {
-        AppNotification.notifySuccess("Submitted. "
-            + "Go to hypothesis list view to see results", 2000);
-        triggerdialog.remove(viewer);
-        if(triggerdialog.getWidgetCount() == 0)
-          triggerdialog.close();
-      }
-    });
+  private String getQueryHistoryToken(String id) {    
+    return NameTokens.getHypotheses()+"/" + this.userid+"/"+this.domain + "/" 
+        + id + "/query";    
   }
   
   @Override

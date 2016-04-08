@@ -1,8 +1,8 @@
 package org.diskproject.client.components.list;
 
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.polymer.iron.widget.IronIcon;
-import com.vaadin.polymer.paper.widget.PaperIconButton;
 import com.vaadin.polymer.paper.widget.PaperItem;
 
 public class ListNode implements Comparable<ListNode> {
@@ -10,22 +10,30 @@ public class ListNode implements Comparable<ListNode> {
   String name;
   String description;
   Object data;
+  Widget content;
   
   PaperItem item;
   IronIcon icon;
   String iconName;
-  PaperIconButton deleteIcon;
   
   public ListNode(String id, String name, String description) {
     this.id = id;
     this.name = name;
     this.description = description;
     this.icon = new IronIcon();
-    
-    deleteIcon = new PaperIconButton();
-    deleteIcon.addStyleName("action-button");
-    deleteIcon.addStyleName("red-button");
-    deleteIcon.setIcon("icons:cancel");
+    this.setContent(name,  description);
+  }
+  
+  public ListNode(String id, Widget content) {
+    this.id = id;
+    this.content = content;
+    this.icon = new IronIcon();
+  }
+  
+  private void setContent(String name, String description) {
+    String html = "<div class='name'>" + this.name + "</div>";
+    html += "<div class='description'>"+this.description+"</div>";
+    this.content = new HTML(html);
   }
 
   public IronIcon getIcon() {
@@ -38,14 +46,6 @@ public class ListNode implements Comparable<ListNode> {
   
   public void setIcon(String iconstr) {
     this.iconName = iconstr;
-  }
-  
-  public PaperIconButton getDeleteIcon() {
-    return deleteIcon;
-  }
-
-  public void setDeleteIcon(PaperIconButton deleteIcon) {
-    this.deleteIcon = deleteIcon;
   }
 
   public String getId() {
@@ -62,6 +62,7 @@ public class ListNode implements Comparable<ListNode> {
 
   public void setName(String name) {
     this.name = name;
+    this.setContent(name, description);
   }
 
   public String getDescription() {
@@ -70,6 +71,7 @@ public class ListNode implements Comparable<ListNode> {
 
   public void setDescription(String description) {
     this.description = description;
+    this.setContent(name, description);
   }
 
   public Object getData() {
@@ -93,12 +95,11 @@ public class ListNode implements Comparable<ListNode> {
       return null;
     
     item.clear();
-    icon.setIcon(this.iconName);    
-    item.add(icon);
-    String html = "<div class='name'>" + this.name + "</div>";
-    html += "<div class='description'>"+this.description+"</div>";
-    item.add(new HTML(html));
-    item.add(deleteIcon);
+    if(this.iconName != null) {
+      icon.setIcon(this.iconName);    
+      item.add(icon);
+    }
+    item.add(content);
     return this.item;
   }
   

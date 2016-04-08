@@ -4,21 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Graph {
-  String id;
   List<Triple> triples;
 
   public Graph() {
     this.triples = new ArrayList<Triple>();
   }
   
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
-  }
-
   public List<Triple> getTriples() {
     return triples;
   }

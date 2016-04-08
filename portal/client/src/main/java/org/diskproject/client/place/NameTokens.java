@@ -6,6 +6,7 @@ public class NameTokens {
   public static final String users = "users";
   public static final String hypotheses = "hypotheses";
   public static final String lois = "lois";
+  public static final String tlois = "tlois";
   public static final String assertions = "assertions";
 
   public static String getHome() {
@@ -26,6 +27,10 @@ public class NameTokens {
   
   public static String getLOIs() {
     return lois;
+  }
+
+  public static String getTLOIs() {
+    return tlois;
   }
   
   public static String getAssertions() {

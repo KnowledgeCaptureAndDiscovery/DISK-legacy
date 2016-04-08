@@ -20,7 +20,8 @@
 	<properties>
 		<gwt.version>2.8.0-beta1</gwt.version>
 		<gwt-maven.version>2.7.0</gwt-maven.version>
-		<gwtp.version>1.5.2</gwtp.version>
+		<!-- gwt-maven.version>2.8.0-beta1</gwt-maven.version -->
+		<gwtp.version>1.5.3</gwtp.version>
 		<gin.version>2.1.2</gin.version>
 		<gwt.d3.version>1.2.0</gwt.d3.version>
 		<restygwt.version>2.1.1</restygwt.version>		
@@ -141,6 +142,12 @@
 			<version>${gwtp.version}</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.gwtplatform</groupId>
+			<artifactId>gwtp-mvp-shared</artifactId>
+			<version>${gwtp.version}</version>
+			<scope>provided</scope>
+		</dependency>		
 	        
 		<!-- RESTY GWT -->
 		<dependency>
@@ -180,7 +187,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
+				<version>3.5.1</version>
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>

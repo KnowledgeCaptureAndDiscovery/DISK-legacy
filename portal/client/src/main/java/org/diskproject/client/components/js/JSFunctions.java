@@ -2,6 +2,7 @@ package org.diskproject.client.components.js;
 
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.dom.client.Element;
+import com.vaadin.polymer.paper.PaperDialogScrollableElement;
 import com.vaadin.polymer.paper.PaperListboxElement;
 
 public class JSFunctions {
@@ -20,4 +21,13 @@ public class JSFunctions {
 			$wnd.Polymer.dom(menu).appendChild(item);
 		}
   }-*/;
+  
+  public static native void clearDialog(PaperDialogScrollableElement el) /*-{
+    $wnd.Polymer.dom(el).innerHTML = "";
+  }-*/;  
+  
+  public static native void addToDialog(PaperDialogScrollableElement el, 
+      Element item) /*-{
+    $wnd.Polymer.dom(el).appendChild(item);        
+  }-*/;  
 }

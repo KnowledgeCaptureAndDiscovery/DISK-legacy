@@ -1,18 +1,28 @@
 package org.diskproject.client.components.tree;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.diskproject.client.components.tree.events.HasTreeHandlers;
-import org.diskproject.client.components.tree.events.TreeItemDeletionEvent;
-import org.diskproject.client.components.tree.events.TreeItemDeletionHandler;
+import org.diskproject.client.components.tree.events.TreeItemActionEvent;
+import org.diskproject.client.components.tree.events.TreeItemActionHandler;
 import org.diskproject.client.components.tree.events.TreeItemSelectionEvent;
 import org.diskproject.client.components.tree.events.TreeItemSelectionHandler;
 
-import com.google.gwt.core.shared.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.MouseOutEvent;
+import com.google.gwt.event.dom.client.MouseOutHandler;
+import com.google.gwt.event.dom.client.MouseOverEvent;
+import com.google.gwt.event.dom.client.MouseOverHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.vaadin.polymer.PolymerWidget;
 import com.vaadin.polymer.iron.widget.IronFlexLayout;
+import com.vaadin.polymer.iron.widget.IronIcon;
+import com.vaadin.polymer.paper.widget.PaperButton;
+import com.vaadin.polymer.paper.widget.PaperIconButton;
 import com.vaadin.polymer.paper.widget.PaperItem;
 
 public class TreeWidget extends IronFlexLayout implements HasTreeHandlers {
@@ -20,13 +30,25 @@ public class TreeWidget extends IronFlexLayout implements HasTreeHandlers {
   private TreeNode root;
   private boolean showRoot;
   
+  private List<TreeAction> actions;
+  private IronFlexLayout buttons;
+  private TreeNode actionNode;
+  
   public TreeWidget(String html) {
     handlerManager = new HandlerManager(this);
-    showRoot = true;
+    showRoot = false;
+    actions = new ArrayList<TreeAction>();
+    
+    buttons = new IronFlexLayout();
+    buttons.addStyleName("action-buttons");
   }
   
   public void removeNode(TreeNode node) {
     this.root.removeNode(node.getId());
+    if(node.getParent() != null && node.getParent() != root) {
+      node.getParent().updateChildrenSection();
+      node.getParent().updateItem();
+    }
   }
   
   public void updateNode(String oldid, TreeNode node) {
@@ -49,15 +71,22 @@ public class TreeWidget extends IronFlexLayout implements HasTreeHandlers {
     this.root = root;
     this.clear();
     
-    if(showRoot)
+    root.updateChildrenSection();
+    if(showRoot) {
       this.add(root.getItem());
+      this.add(root.getChildrenSection());
+    }
+    else {
+      for(TreeNode n : root.getChildren()) {
+        this.add(n.getItem());
+        this.add(n.getChildrenSection());
+      }
+    }
   }
 
   public void addNode(TreeNode parent, final TreeNode node) {
     parent.addChild(node);
-    parent.getItem().add(node.getChildrenSection());
-    GWT.log("Adding "+node.getName()+" to "+parent.getName());
-    PaperItem item = node.getItem();
+    final PaperItem item = node.getItem();
     
     item.addClickHandler(new ClickHandler() {
       @Override
@@ -65,15 +94,81 @@ public class TreeWidget extends IronFlexLayout implements HasTreeHandlers {
         fireEvent(new TreeItemSelectionEvent(node));
       }
     });
-    node.getDeleteIcon().addClickHandler(new ClickHandler() {
+    
+    item.addDomHandler(new MouseOverHandler() {
       @Override
-      public void onClick(ClickEvent event) {
-        event.stopPropagation();
-        fireEvent(new TreeItemDeletionEvent(node));
+      public void onMouseOver(MouseOverEvent event) {
+        actionNode = node;
+        item.add(buttons);
       }
-    });
+    }, MouseOverEvent.getType());
+    
+    item.addDomHandler(new MouseOutHandler() {
+      @Override
+      public void onMouseOut(MouseOutEvent event) {
+        actionNode = null;
+        buttons.removeFromParent();
+      }
+    }, MouseOutEvent.getType()); 
+    
   }
 
+  public List<TreeAction> getActions() {
+    return actions;
+  }
+
+  public void setActions(List<TreeAction> actions) {
+    this.actions = actions;
+    this.setActionMenu();
+  }
+  
+  public void addDeleteAction() {
+    TreeAction deleteAction = new TreeAction("delete", null, 
+        "icons:cancel", "red-button");
+    this.actions.add(deleteAction);
+    this.setActionMenu();
+  }
+  
+  public void addCustomAction(String id, String text, String icon, String style) {
+    TreeAction action = new TreeAction(id, text, icon, style);
+    this.actions.add(action); 
+    this.setActionMenu();
+  }
+  
+  private void setActionMenu() {
+    buttons.clear();
+    for(final TreeAction action : this.actions) { 
+      PolymerWidget button;
+      if(action.getText() == null) {
+        PaperIconButton ib = new PaperIconButton();
+        ib.setTitle(action.getId().toUpperCase());
+        ib.setIcon(action.getIcon());
+        ib.addStyleName(action.getIconStyle());
+        button = ib;
+      }
+      else {
+        PaperButton pb = new PaperButton(action.getText());
+        if(action.getIcon() != null) {
+          IronIcon icon = new IronIcon();
+          icon.setIcon(action.getIcon());
+          icon.addStyleName(action.getIconStyle());
+          pb.add(icon);
+        }
+        button = pb;
+      }
+      
+      button.addClickHandler(new ClickHandler() {
+        @Override
+        public void onClick(ClickEvent event) {
+          event.stopPropagation();
+          if(actionNode != null)
+            fireEvent(new TreeItemActionEvent(actionNode, action));
+        }
+      });  
+      buttons.add(button);
+    }
+  }
+  
   @Override
   public void fireEvent(GwtEvent<?> event) {
     handlerManager.fireEvent(event);
@@ -86,8 +181,8 @@ public class TreeWidget extends IronFlexLayout implements HasTreeHandlers {
   }
 
   @Override
-  public HandlerRegistration addTreeItemDeletionHandler(
-      TreeItemDeletionHandler handler) {
-    return handlerManager.addHandler(TreeItemDeletionEvent.TYPE, handler);
+  public HandlerRegistration addTreeItemActionHandler(
+      TreeItemActionHandler handler) {
+    return handlerManager.addHandler(TreeItemActionEvent.TYPE, handler);
   }
 }

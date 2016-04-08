@@ -38,6 +38,7 @@ public class LOIEditor extends Composite
   
   boolean editmode;
   boolean metamode;
+  int loadcount=0;
   
   @UiField PaperInputElement name;
   @UiField PaperTextareaElement description;
@@ -65,7 +66,7 @@ public class LOIEditor extends Composite
     this.loi = loi;
     name.setValue(loi.getName());
     description.setValue(loi.getDescription());
-    if(loi.getQuery() != null)
+    if(loi.getQuery() != null && loadcount==3)
       query.setValue(loi.getQuery());
     workflowlist.loadBindingsList(loi.getWorkflows());
     metaworkflowlist.loadBindingsList(loi.getMetaWorkflows());  
@@ -76,10 +77,21 @@ public class LOIEditor extends Composite
   }
   
   private void loadVocabularies() {
-    query.loadVocabulary("bio", KBConstants.OMICSURI());
-    query.loadVocabulary("hyp", KBConstants.HYPURI());
-    query.loadUserVocabulary("user", userid, domain);
+    loadcount=0;
+    query.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
+    query.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
+    query.loadUserVocabulary("user", userid, domain, vocabLoaded);
   }
+  
+  private Callback<String, Throwable> vocabLoaded = 
+      new Callback<String, Throwable>() {
+    public void onSuccess(String result) {
+      loadcount++;
+      if(loi != null && loi.getQuery() != null && loadcount==3)
+        query.setValue(loi.getQuery());
+    }
+    public void onFailure(Throwable reason) {}
+  };
   
   private void loadWorkflows() {
     DiskREST.listWorkflows(new Callback<List<Workflow>, Throwable>() {

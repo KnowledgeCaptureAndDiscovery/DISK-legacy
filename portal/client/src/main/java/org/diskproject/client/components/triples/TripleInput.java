@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.diskproject.client.components.customise.GWTCodeMirror;
+import org.diskproject.client.place.NameTokens;
 import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
 import org.diskproject.shared.classes.common.Triple;
@@ -37,6 +38,11 @@ public class TripleInput extends GWTCodeMirror {
   Map<String, Property> allprops;
   Map<String, Individual> allinds;
   Map<String, Type> alltypes;
+  
+  String username;
+  String domain;
+  
+  List<Triple> triples;
   
   TripleUtil util;
   boolean showInfoGutter;
@@ -95,6 +101,11 @@ public class TripleInput extends GWTCodeMirror {
     return locations;
   }
   
+  public void setDomainInformation(String username, String domain) {
+    this.username = username;
+    this.domain = domain;
+  }
+  
   ValueChangeHandler<String> changeHandler = new ValueChangeHandler<String>() {
     @Override
     public void onValueChange(ValueChangeEvent<String> event) {
@@ -107,18 +118,26 @@ public class TripleInput extends GWTCodeMirror {
   private void showInfoGutters(List<Triple> triples) {
     int i=0; 
     for(final Triple t : triples) {
-      PaperIconButtonElement icon = Polymer.createElement(PaperIconButtonElement.TAG);
-      icon.setIcon("icons:info");
-      setInfoGutter(i, (Element)icon);
-      icon.addEventListener("click", new EventListener() {
-        @Override
-        public void handleEvent(Event event) {
-          dialog.clear();
-          dialog.add(new HTML(util.toString(t)));
-          dialog.add(new HTML("<b>Confidence:</b> 0.87<br/><b>Provenance:</b> Dummy"));
-          dialog.open();
-        }
-      });
+      if(t.getDetails() != null) {
+        PaperIconButtonElement icon = Polymer.createElement(PaperIconButtonElement.TAG);        
+        icon.setIcon("icons:info");
+        setInfoGutter(i, (Element)icon);
+        icon.addEventListener("click", new EventListener() {
+          @Override
+          public void handleEvent(Event event) {
+            dialog.clear();
+            dialog.add(new HTML(util.toString(t)));
+            dialog.add(new HTML("<b>Confidence: </b>" +
+                t.getDetails().getConfidenceValue()+ "<br/> " +
+                "<a href='#" + NameTokens.tlois + "/" + username + "/" + domain +
+                "/" + t.getDetails().getTriggeredLOI() +"'>Click for Provenance details</a>"));
+            dialog.open();
+          }
+        });
+      }
+      else {
+        setInfoGutter(i, null);
+      }
       i++;
     }
   }
@@ -251,6 +270,9 @@ public class TripleInput extends GWTCodeMirror {
   
   public String getTripleString(List<Triple> triples) {
     String triplestr = "";
+    if(triples == null)
+      return triplestr;
+    
     boolean done = false;
     for(Triple t : triples) {
       if(done) 
@@ -268,9 +290,12 @@ public class TripleInput extends GWTCodeMirror {
 //  }
   
   public void setValue(List<Triple> triples) {
-    this.setValue(this.getTripleString(triples));
-    if(this.showInfoGutter)
-      showInfoGutters(triples);
+    this.triples = triples;
+    if(this.triples != null) {
+      this.setValue(this.getTripleString(triples));
+      if(this.showInfoGutter)
+        showInfoGutters(triples);
+    }
   }
   
   public void setDefaultNamespace(String ns) {
@@ -281,34 +306,44 @@ public class TripleInput extends GWTCodeMirror {
     return vocabularies.get(prefix);
   }
   
-  public void loadVocabulary(final String prefix, final String uri) {
+  public void loadVocabulary(final String prefix, final String uri, 
+      final Callback<String, Throwable> callback) {
     DiskREST.getVocabulary(new Callback<Vocabulary, Throwable>() {
       @Override
       public void onSuccess(Vocabulary result) {
         vocabularies.put(prefix, result);
         util.addNamespacePrefix(prefix, result.getNamespace());
         loadTerms(prefix, result);
+        if(callback != null)
+          callback.onSuccess(prefix);
       }      
       @Override
       public void onFailure(Throwable reason) {
         AppNotification.notifyFailure("Could not load vocabulary for "+uri
             +" : " + reason.getMessage());
+        if(callback != null)
+          callback.onFailure(reason);
       }
     }, uri, false);
   }
   
-  public void loadUserVocabulary(final String prefix, String userid, String domain) {
+  public void loadUserVocabulary(final String prefix, String userid, String domain,
+      final Callback<String, Throwable> callback) {
     DiskREST.getUserVocabulary(new Callback<Vocabulary, Throwable>() {
       @Override
       public void onSuccess(Vocabulary result) {
         vocabularies.put(prefix, result);
         util.addNamespacePrefix(prefix, result.getNamespace());        
         loadTerms(prefix, result);
+        if(callback != null)
+          callback.onSuccess(prefix);
       }      
       @Override
       public void onFailure(Throwable reason) {
         AppNotification.notifyFailure("Could not load user vocabulary"
             +" : " + reason.getMessage());
+        if(callback != null)
+          callback.onFailure(reason);
       }      
     }, userid, domain, false);
   }

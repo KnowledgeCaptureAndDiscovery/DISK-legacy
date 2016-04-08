@@ -5,6 +5,6 @@ import com.google.gwt.event.shared.HandlerRegistration;
 public interface HasListHandlers {
   public HandlerRegistration addListItemSelectionHandler(
       ListItemSelectionHandler handler);
-  public HandlerRegistration addListItemDeletionHandler(
-      ListItemDeletionHandler handler);  
+  public HandlerRegistration addListItemActionHandler(
+      ListItemActionHandler handler);  
 }

@@ -38,7 +38,7 @@ public class ApplicationView extends ViewImpl implements
   @UiField public static PaperToastElement toast;
   
   @UiField public static DivElement 
-    hypothesesMenu, loisMenu, assertionsMenu;
+    hypothesesMenu, loisMenu, tloisMenu, assertionsMenu;
   
   @UiField SimplePanel sidebar;
   @UiField SimplePanel toolbar;
@@ -120,20 +120,27 @@ public class ApplicationView extends ViewImpl implements
     }
   }
 
-  @Override
-  public void initializeParameters(String userid, String domain, String[] params, boolean edit, 
+  public void initializeParameters(String userid, String domain, 
+      String[] params, boolean edit, 
+      SimplePanel sidebar, SimplePanel toolbar) {
+    this.initializeParameters(userid, domain, null, params, 
+        edit, sidebar, toolbar);
+  }
+  
+  public void initializeParameters(String userid, String domain, 
+      final String nametoken, final String[] params, boolean edit, 
       SimplePanel sidebar, SimplePanel toolbar) {
     toolbar.clear();
     toolbar.add(new HTML("<h3>DISK Home</h3>"));
     toggleLoginLogoutButtons();
-    
-    final String nametoken = params[0]; 
+     
     Polymer.ready(drawer, new Function<Object, Object>() {
       @Override
       public Object call(Object arg) {
         drawer.closeDrawer();
         hypothesesMenu.removeClassName("activeMenu");
         loisMenu.removeClassName("activeMenu");
+        tloisMenu.removeClassName("activeMenu");
         assertionsMenu.removeClassName("activeMenu");
         
         DivElement menu = null;
@@ -141,15 +148,41 @@ public class ApplicationView extends ViewImpl implements
           menu = hypothesesMenu;
         else if(nametoken.equals(NameTokens.lois))
           menu = loisMenu;
+        else if(nametoken.equals(NameTokens.tlois))
+          menu = tloisMenu;        
         else if(nametoken.equals(NameTokens.assertions))
           menu = assertionsMenu;
-        if(menu != null)
+        
+        clearMenuClasses(hypothesesMenu);
+        clearMenuClasses(loisMenu);
+        clearMenuClasses(tloisMenu);
+        clearMenuClasses(assertionsMenu);
+        
+        if(menu != null) {
           menu.addClassName("activeMenu");
+          if(params.length > 0) {
+            addClassToMenus("hiddenMenu");
+            menu.addClassName("activeItemMenu");
+            menu.removeClassName("hiddenMenu");
+          }
+        }
         
         return null;
       }
     });
-      
+  }
+  
+  private void clearMenuClasses(DivElement menu) {
+    menu.removeClassName("activeMenu");
+    menu.removeClassName("hiddenMenu");
+    menu.removeClassName("activeItemMenu");    
+  }
+  
+  private void addClassToMenus(String cls) {
+    hypothesesMenu.addClassName(cls);
+    loisMenu.addClassName(cls);
+    tloisMenu.addClassName(cls);
+    assertionsMenu.addClassName(cls);
   }
   
   private void toggleLoginLogoutButtons() {
@@ -163,7 +196,7 @@ public class ApplicationView extends ViewImpl implements
       loginanchor.setVisible(false);
       registeranchor.setHTML("<div>Change user details</div>");
       logoutanchor.setVisible(true);
-      logoutanchor.setText("Logout " + session.getUsername());
+      logoutanchor.setHTML("<div>Logout " + session.getUsername() + "</div>");
     }
   }
 

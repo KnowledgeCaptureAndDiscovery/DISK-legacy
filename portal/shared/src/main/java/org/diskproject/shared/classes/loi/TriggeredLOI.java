@@ -1,14 +1,14 @@
 package org.diskproject.shared.classes.loi;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import org.diskproject.shared.classes.util.GUID;
+import org.diskproject.shared.classes.workflow.VariableBinding;
 
 public class TriggeredLOI {
   public static enum Status {
-    QUEUED, RUNNING, FINISHED
+    QUEUED, RUNNING, FAILED, SUCCESSFUL
   };
   
   String id;
@@ -35,16 +35,14 @@ public class TriggeredLOI {
     this.parentHypothesisId = hypothesisId;
     workflows = new ArrayList<WorkflowBindings>();
     metaWorkflows = new ArrayList<WorkflowBindings>();
-    this.copyWorkflowBindings(loi.getWorkflows(), this.workflows);
-    this.copyWorkflowBindings(loi.getMetaWorkflows(), this.metaWorkflows);
   }
   
-  private void copyWorkflowBindings(List<WorkflowBindings> fromlist,
+  public void copyWorkflowBindings(List<WorkflowBindings> fromlist,
       List<WorkflowBindings> tolist) {
     for(WorkflowBindings from : fromlist) {
       WorkflowBindings to = new WorkflowBindings();
       to.setWorkflow(from.getWorkflow());
-      to.setBindings(new HashMap<String, String>(from.getBindings()));
+      to.setBindings(new ArrayList<VariableBinding>(from.getBindings()));
       tolist.add(to);
     }
   }

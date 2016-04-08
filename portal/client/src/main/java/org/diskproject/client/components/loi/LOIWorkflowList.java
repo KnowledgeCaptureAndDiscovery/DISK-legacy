@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.diskproject.client.components.list.ListNode;
 import org.diskproject.client.components.list.ListWidget;
-import org.diskproject.client.components.list.events.ListItemDeletionEvent;
+import org.diskproject.client.components.list.events.ListItemActionEvent;
 import org.diskproject.client.components.list.events.ListItemSelectionEvent;
 import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.workflow.Workflow;
@@ -17,6 +17,7 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiConstructor;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.polymer.iron.widget.event.IronOverlayClosedEvent;
@@ -37,6 +38,9 @@ public class LOIWorkflowList extends Composite {
   
   public @UiConstructor LOIWorkflowList(boolean metamode, String label) {
     initWidget(uiBinder.createAndBindUi(this)); 
+    
+    workflowlist.addCustomAction("link", null, "icons:link", "blue-button");
+    workflowlist.addDeleteAction();
     
     bindingseditor.setMetamode(metamode);
     this.label.setInnerText(label);
@@ -72,10 +76,16 @@ public class LOIWorkflowList extends Composite {
   }
   
   @UiHandler("workflowlist")
-  void onWorkflowListItemDeleted(ListItemDeletionEvent event) {
+  void onWorkflowListItemAction(ListItemActionEvent event) {
     ListNode node = event.getItem();
-    if(workflowlist.getNode(node.getId()) != null)
-      workflowlist.removeNode(node);
+    if(event.getAction().getId().equals("delete")) {
+      if(workflowlist.getNode(node.getId()) != null)
+        workflowlist.removeNode(node);
+    }
+    else if(event.getAction().getId().equals("link")) {
+      String link = ((WorkflowBindings)node.getData()).getWorkflowLink();
+      Window.open(link, "_blank", "");
+    }
   }
   
   @UiHandler("addwflowbutton")

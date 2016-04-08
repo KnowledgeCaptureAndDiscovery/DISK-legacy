@@ -2,21 +2,94 @@
 
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui"
+	xmlns:l='urn:import:org.diskproject.client.components.loader'	
 	xmlns:p='urn:import:com.vaadin.polymer.paper.widget'
+	xmlns:lw='urn:import:org.diskproject.client.components.list'	
 	xmlns:tr='urn:import:org.diskproject.client.components.triples'	
 	xmlns:n='urn:import:com.vaadin.polymer.neon.widget'
 	>
 
 	<g:HTMLPanel>
 		<style is="custom-style">
+            .list .item {
+                @apply(--layout-horizontal);
+                margin: 16px 16px 0 16px;
+                padding: 20px;
+                background-color: #eee;
+                border: 1px solid #e5e5e5;
+            }
+            .list paper-item .name {
+                font-size: 14px;
+                font-weight: bold;
+            }
+            .list paper-item .description {
+                font-size: 12px;
+                color: gray;
+                text-overflow: ellipsis;
+            }
+            .list paper-item {
+                border-top: 1px dotted #e5e5e5;
+                padding: 2px;
+                font-size: 13px;
+                min-height: 32px;
+            }
+            .list paper-item.both-borders {
+                border-bottom: 1px dotted #e5e5e5;
+            }
+            .list paper-item:first-of-type {
+                border-top: 0px;
+            }
+            .list paper-item iron-icon {
+                margin-right: 8px;
+                margin-left: 8px;
+                min-width: 18px;
+                width: 18px;
+                height: 18px;
+            }
+            .list paper-item iron-icon.transparent {
+                opacity: 0;
+            }
+            div.padded {
+                padding-left: 10px;
+                padding-right: 10px;
+            }      
+            .list paper-item.header {
+                font-weight: 500;
+                background-color: #f5f5f5;
+                cursor: default;
+                font-size: 13px;
+            }
+            paper-item.no-padding {
+            	padding: 0px;
+            }
+            paper-icon-button.blue {
+            	color: var(--paper-green-500);
+            }
+            .list paper-item iron-icon.blue {
+                background-color: transparent;
+                border: 0px;
+            }
+			.list paper-item iron-icon.blue {
+                background-color: transparent;
+                border: 0px;
+            }
             div.content {
-                padding: 0px 10px;
-            }		
+            	padding: 0px;
+            }
+            div.outlined {
+                border-radius: 8px;
+                border: 1px solid #e5e5e5;
+                margin: 10px;
+			}            
 		</style>
+		<l:Loader ui:field="loader" />
+		<div class="outlined">
+			<lw:ListWidget ui:field="datalist" styleName="list" />
+		</div>
 		<g:HTMLPanel ui:field="form" styleName="padded">
 			<div class="vertical center-justified layout">
 				<div class="vertical-section">
-					<label class="small-grey">Triples (Ctrl-Space for suggestions)</label>
+					<label class="small-grey">Metadata (Ctrl-Space for suggestions)</label>
 					<tr:TripleInput ui:field="triples" />
 				</div>
 			</div>

@@ -196,6 +196,11 @@ paper-toast {
 	z-index: 300;
 }
 
+.tree>paper-item:first-child, 
+.list>paper-item:first-child {
+	border-top: 0px !important;
+}
+
 vaadin-combo-box-overlay.vaadin-combo-box {
 	z-index: 200 !important;
 }

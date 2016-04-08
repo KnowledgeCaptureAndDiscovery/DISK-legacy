@@ -9,9 +9,9 @@
 	<g:HTMLPanel>
 		<div class="vertical center-justified layout">
 			<div class="vertical-section">
-				<paper-input label="Name" required="true" autoValidate="true"
-					ui:field="name" />
-				<paper-textarea label="Description" required="true"
+				<paper-input label="Short Description" required="true" 
+					autoValidate="true" ui:field="name" />
+				<paper-textarea label="Long Description" required="true"
 					autoValidate="true" ui:field="description" />
 				<label class="small-grey">Triples (Ctrl-Space for suggestions)</label>
 				<tr:HypothesisTripleInput ui:field="triples" />
@@ -24,10 +24,16 @@
 			</p:PaperButton>
 			<p:PaperButton ui:field="runbutton">
 				<iron-icon icon="done" />
-				Analyze
+				Query
 			</p:PaperButton>
 		</div>
 		
-		<p:PaperDialog ui:field="triggerdialog" />		
+		<p:PaperDialog ui:field="triggerdialog">
+			<p:PaperDialogScrollable ui:field="dialogcontent">
+			</p:PaperDialogScrollable>
+			<div class="buttons">
+				<p:PaperButton attributes="dialog-dismiss">Close</p:PaperButton>
+			</div>
+		</p:PaperDialog>		
 	</g:HTMLPanel>
 </ui:UiBinder>
