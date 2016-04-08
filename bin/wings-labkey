@@ -215,7 +215,7 @@ def ms2_analysis(input_file, fasta_file, protocol_file, base_url=None, username=
                     client.download_other_file(destination=destination,
                                                file_location=tsv_url % (grouping, str(int(expanded)), row_id),
                                                overwrite=True)
-                    tsv_url = 'exportProteinGroups.view?grouping=%s&expanded%s&run=%d&exportFormat=TSV'
+                    tsv_url = 'exportProteinGroups.view?grouping=%s&expanded=%s&run=%d&exportFormat=TSV'
                     os.rename(os.path.join(destination, tsv_url % (grouping, str(int(expanded)), row_id)),
                               os.path.join(destination, os.path.basename('%s.tsv' % output_prefix)))
 
