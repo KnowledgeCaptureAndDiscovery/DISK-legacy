@@ -24,6 +24,24 @@ public class Vocabulary {
     this.properties = new HashMap<String, Property>();
     this.individuals = new HashMap<String, Individual>();
   }
+  
+  public void refreshChildren() {
+    for(Type type : this.types.values()) {
+      type.getChildren().clear();
+    }
+    for(Type type : this.types.values()) {
+      Type ptype = this.getType(type.getParent());
+      if(ptype != null) {
+        ptype.getChildren().add(type.getId());
+      }
+    }
+  }
+  
+  public void mergeWith(Vocabulary vocab) {
+    this.types.putAll(vocab.getTypes());
+    this.properties.putAll(vocab.getProperties());
+    this.individuals.putAll(vocab.getIndividuals());
+  }
 
   public String getNamespace() {
     return namespace;

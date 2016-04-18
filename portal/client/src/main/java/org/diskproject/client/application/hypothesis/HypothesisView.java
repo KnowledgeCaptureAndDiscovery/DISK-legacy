@@ -33,6 +33,7 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
+import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
@@ -56,13 +57,17 @@ public class HypothesisView extends ApplicationSubviewImpl
   @UiField PaperFab addicon;
   @UiField HTMLPanel matchlist;
   
+  List<TreeItem> treelist;
+  List<TriggeredLOI> tloilist; 
+  
   interface Binder extends UiBinder<Widget, HypothesisView> {
   }
 
   @Inject
   public HypothesisView(Binder binder) {
     initWidget(binder.createAndBindUi(this));
-    tree.addCustomAction("query", null, "icons:explore", "green-button");
+    tree.addCustomAction("query", null, "icons:explore", 
+        "green-button query-action");
     tree.addDeleteAction();
   }
   
@@ -109,10 +114,21 @@ public class HypothesisView extends ApplicationSubviewImpl
     DiskREST.listHypotheses(new Callback<List<TreeItem>, Throwable>() {
       @Override
       public void onSuccess(List<TreeItem> result) {
-        loadHypothesisTree(result);
-        loader.setVisible(false);  
-        addicon.setVisible(true);
-        tree.setVisible(true);
+        treelist = result;
+        loadHypothesisTLOITree();
+      }
+      @Override
+      public void onFailure(Throwable reason) {
+        loader.setVisible(false);   
+        AppNotification.notifyFailure(reason.getMessage());
+        GWT.log("Failed", reason);
+      }
+    });
+    DiskREST.listTriggeredLOIs(new Callback<List<TriggeredLOI>, Throwable>() {
+      @Override
+      public void onSuccess(List<TriggeredLOI> result) {
+        tloilist = result;
+        loadHypothesisTLOITree();
       }
       @Override
       public void onFailure(Throwable reason) {
@@ -123,7 +139,14 @@ public class HypothesisView extends ApplicationSubviewImpl
     });
   }
   
-  private void loadHypothesisTree(List<TreeItem> treelist) {
+  private void loadHypothesisTLOITree() {
+    if(treelist == null || tloilist == null)
+      return;
+    
+    loader.setVisible(false);  
+    addicon.setVisible(true);
+    tree.setVisible(true);
+    
     TreeNode root = new TreeNode("Hypotheses", "Hypotheses", 
         "A List of Hypotheses");
     
@@ -134,18 +157,39 @@ public class HypothesisView extends ApplicationSubviewImpl
           item.getName(), 
           item.getDescription());
       node.setIcon("icons:help-outline");
-      node.setExpandedIcon("icons:help");
+      node.setExpandedIcon("icons:help-outline");
       node.setIconStyle("orange");
+      node.setType(NameTokens.hypotheses);
       map.put(item.getId(), node);
     }
-    for(TreeItem item : treelist) {
-      TreeNode node = map.get(item.getId());
-      TreeNode parent = root;
-      if(map.containsKey(item.getParentId()))
-        parent = map.get(item.getParentId());
+    for(TriggeredLOI item : tloilist) {
+      TreeNode node = new TreeNode(
+          item.getId(),
+          new HTML(item.getHeaderHTML()));
+      node.setName(item.getName(), false);
+      node.setIcon("icons:explore");
+      node.setExpandedIcon("icons:explore");
+      node.setIconStyle("orange");
+      node.setType(NameTokens.tlois);
       
+      TreeNode parent = root;
+      if(map.containsKey(item.getParentHypothesisId()))
+        parent = map.get(item.getParentHypothesisId());
       parent.setExpanded(true);      
       tree.addNode(parent, node);
+      
+      for(String hypid : item.getResultingHypothesisIds()) {
+        if(map.containsKey(hypid)) {
+          TreeNode child = map.get(hypid);
+          node.setExpanded(true);      
+          tree.addNode(node, child);
+        }
+      }
+    }    
+    for(TreeItem item : this.treelist) {
+      TreeNode node = map.get(item.getId());
+      if(node.getParent() == null)      
+        tree.addNode(root, node);
     }
     tree.setRoot(root);
   }
@@ -200,21 +244,17 @@ public class HypothesisView extends ApplicationSubviewImpl
       tviewer.initialize(userid, domain);
       tviewer.load(tloi);
       
-      /*ListNode node = new ListNode(tloi.getId(), tviewer);
-      node.setData(tloi);*/
-      /*node.setIcon("icons:explore");
-      node.setIconStyle("orange");
-      matchlist.addNode(node);*/
-      
       final HTMLPanel panel = new HTMLPanel("");
       panel.setStyleName("bordered-section");
       panel.add(tviewer);
-      PaperButton button = new PaperButton("Trigger");
-      IronIcon icon = new IronIcon();
-      icon.setIcon("check");
-      button.add(icon);
       
-      panel.add(button);
+      HTMLPanel buttonPanel = new HTMLPanel("");
+      buttonPanel.setStyleName("horizontal end-justified layout");      
+      PaperButton button = new PaperButton();
+      IronIcon icon = new IronIcon();
+      icon.setIcon("build");
+      button.add(icon);
+      button.add(new InlineHTML("Trigger"));
       button.addClickHandler(new ClickHandler() {
         @Override
         public void onClick(ClickEvent event) {
@@ -222,6 +262,8 @@ public class HypothesisView extends ApplicationSubviewImpl
           matchlist.remove(panel);
         }
       });
+      buttonPanel.add(button);
+      panel.add(buttonPanel);            
       matchlist.add(panel);
     }
   }
@@ -257,7 +299,7 @@ public class HypothesisView extends ApplicationSubviewImpl
     form.setNamespace(this.getNamespace(id));    
     form.load(hypothesis);
     
-    History.newItem(this.getHistoryToken(id), false);
+    History.newItem(this.getHistoryToken(NameTokens.hypotheses, id), false);
   }
   
   @UiHandler("form")
@@ -291,8 +333,8 @@ public class HypothesisView extends ApplicationSubviewImpl
   @UiHandler("tree")
   void onTreeItemSelected(TreeItemSelectionEvent event) {
     TreeNode node = event.getItem();
-    String token = this.getHistoryToken(node.getId());
-    History.newItem(token);
+    String token = this.getHistoryToken(node.getType(), node.getId());
+    History.newItem(token); 
   }
   
   @UiHandler("tree")
@@ -300,21 +342,37 @@ public class HypothesisView extends ApplicationSubviewImpl
     final TreeNode node = event.getItem();
     if(event.getAction().getId().equals("delete")) {
       if(Window.confirm("Are you sure you want to delete " + node.getName())) {
-        DiskREST.deleteHypothesis(node.getId(), new Callback<Void, Throwable>() {
-          @Override
-          public void onFailure(Throwable reason) {
-            AppNotification.notifyFailure(reason.getMessage());
-          }
-          @Override
-          public void onSuccess(Void result) {
-            AppNotification.notifySuccess("Deleted", 500);
-            tree.removeNode(node);
-          }
-        });
+        if(node.getType().equals(NameTokens.hypotheses)) {
+          DiskREST.deleteHypothesis(node.getId(), new Callback<Void, Throwable>() {
+            @Override
+            public void onFailure(Throwable reason) {
+              AppNotification.notifyFailure(reason.getMessage());
+            }
+            @Override
+            public void onSuccess(Void result) {
+              AppNotification.notifySuccess("Deleted", 500);
+              tree.removeNode(node);
+            }
+          });
+        }
+        else if(node.getType().equals(NameTokens.tlois)) {
+          DiskREST.deleteTriggeredLOI(node.getId(), new Callback<Void, Throwable>() {
+            @Override
+            public void onFailure(Throwable reason) {
+              AppNotification.notifyFailure(reason.getMessage());
+            }
+            @Override
+            public void onSuccess(Void result) {
+              AppNotification.notifySuccess("Deleted", 500);
+              tree.removeNode(node);
+            }
+          });
+        }
       }
     }
     else if(event.getAction().getId().equals("query")) {
-      String token = this.getHistoryToken(node.getId()) + "/query";
+      String token = 
+          this.getHistoryToken(NameTokens.hypotheses, node.getId()) + "/query";
       History.newItem(token);
     }
   }
@@ -335,8 +393,8 @@ public class HypothesisView extends ApplicationSubviewImpl
     // TODO: Modify sidebar
   }
   
-  private String getHistoryToken(String id) {    
-    return NameTokens.getHypotheses()+"/" + this.userid+"/"+this.domain + "/" + id;    
+  private String getHistoryToken(String type, String id) {    
+    return type+"/" + this.userid+"/"+this.domain + "/" + id;    
   }
   
   private String getNamespace(String id) {

@@ -6,6 +6,8 @@ import java.util.List;
 import org.diskproject.shared.classes.util.GUID;
 import org.diskproject.shared.classes.workflow.VariableBinding;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class TriggeredLOI {
   public static enum Status {
     QUEUED, RUNNING, FAILED, SUCCESSFUL
@@ -18,13 +20,14 @@ public class TriggeredLOI {
 
   String loiId;
   String parentHypothesisId;
-  String resultingHypothesisId;
+  List<String> resultingHypothesisIds;
   List<WorkflowBindings> workflows;
   List<WorkflowBindings> metaWorkflows;
 
   public TriggeredLOI() {
     workflows = new ArrayList<WorkflowBindings>();
     metaWorkflows = new ArrayList<WorkflowBindings>();
+    resultingHypothesisIds = new ArrayList<String>();
   }
   
   public TriggeredLOI(LineOfInquiry loi, String hypothesisId) {
@@ -35,6 +38,7 @@ public class TriggeredLOI {
     this.parentHypothesisId = hypothesisId;
     workflows = new ArrayList<WorkflowBindings>();
     metaWorkflows = new ArrayList<WorkflowBindings>();
+    resultingHypothesisIds = new ArrayList<String>();
   }
   
   public void copyWorkflowBindings(List<WorkflowBindings> fromlist,
@@ -42,6 +46,7 @@ public class TriggeredLOI {
     for(WorkflowBindings from : fromlist) {
       WorkflowBindings to = new WorkflowBindings();
       to.setWorkflow(from.getWorkflow());
+      to.setMeta(from.getMeta());
       to.setBindings(new ArrayList<VariableBinding>(from.getBindings()));
       tolist.add(to);
     }
@@ -95,12 +100,16 @@ public class TriggeredLOI {
     this.parentHypothesisId = parentHypothesisId;
   }
 
-  public String getResultingHypothesisId() {
-    return resultingHypothesisId;
+  public List<String> getResultingHypothesisIds() {
+    return resultingHypothesisIds;
   }
 
-  public void setResultingHypothesisId(String resultingHypothesisId) {
-    this.resultingHypothesisId = resultingHypothesisId;
+  public void setResultingHypothesisIds(List<String> resultingHypothesisIds) {
+    this.resultingHypothesisIds = resultingHypothesisIds;
+  }
+  
+  public void addResultingHypothesisId(String resultingHypothesisId) {
+    this.resultingHypothesisIds.add(resultingHypothesisId);
   }
 
   public List<WorkflowBindings> getWorkflows() {
@@ -117,6 +126,30 @@ public class TriggeredLOI {
 
   public void setMetaWorkflows(List<WorkflowBindings> metaWorkflows) {
     this.metaWorkflows = metaWorkflows;
+  }
+  
+  @JsonIgnore
+  public String getHeaderHTML() {
+    String extra ="", extracls="";
+    if(status != null) {
+      String icon = "icons:hourglass-empty";
+      if(status == Status.SUCCESSFUL) {
+        icon = "icons:check";
+      }
+      else if(status == Status.FAILED) {
+        icon = "icons:clear";
+      }
+      extra = " <iron-icon class='"+status+"' icon='"+icon+"' />";
+      extracls = " " +status;
+    }
+
+    String html = "<div class='name" + extracls+ "'>"+ name + extra +"</div>";
+    html += "<div class='description'>";
+    if(description != null)
+      html += description;
+    html += "</div>";
+
+    return html;
   }
 
 }

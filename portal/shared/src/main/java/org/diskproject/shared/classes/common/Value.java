@@ -48,9 +48,9 @@ public class Value {
   
   public String toString() {
     if(this.type == Type.URI)
-      return this.value.toString();
+      return "<" + this.value.toString() + ">";
     else {
-      return "\"" + this.value.toString() + "\"^^" + this.getDatatype();
+      return "\"" + this.value.toString() + "\"^^<" + this.getDatatype() +">";
     }
   }
 }

@@ -26,7 +26,6 @@ import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.vocabulary.Vocabulary;
 import org.diskproject.shared.classes.workflow.Variable;
-import org.diskproject.shared.classes.workflow.VariableBinding;
 import org.diskproject.shared.classes.workflow.Workflow;
 import org.diskproject.shared.classes.workflow.WorkflowRun;
 
@@ -309,18 +308,7 @@ public class DiskResource implements DiskService {
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @PathParam("id") String id) {
-    return WingsAdapter.get().getWorkflowInputs(username, domain, id);    
-  }
-  
-  @GET
-  @Override
-  @Path("{username}/{domain}/workflows/{id}/run")
-  public String runWorkflow(
-      @PathParam("username") String username, 
-      @PathParam("domain") String domain,
-      @PathParam("id") String id,
-      @JsonProperty("bindings") List<VariableBinding> bindings) {
-    return WingsAdapter.get().runWorkflow(username, domain, id, bindings);
+    return WingsAdapter.get().getWorkflowVariables(username, domain, id);    
   }
   
   @GET

@@ -105,6 +105,7 @@ public class LOIEditor extends Composite
         });
         workflowlist.setWorkflowList(result);
         metaworkflowlist.setWorkflowList(result);
+        metaworkflowlist.setWorkflowSource(workflowlist);
       }      
       @Override
       public void onFailure(Throwable reason) {

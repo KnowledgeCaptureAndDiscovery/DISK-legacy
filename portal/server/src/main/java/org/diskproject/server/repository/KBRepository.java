@@ -22,6 +22,8 @@ public class KBRepository {
   protected HashMap<String, KBObject> pmap, cmap;
   
   protected void setConfiguration(String onturi) {
+    if(Config.get() == null)
+      return;
     PropertyListConfiguration props = Config.get().getProperties();
     this.server = props.getString("server");
     tdbdir = props.getString("storage.tdb");
@@ -39,6 +41,9 @@ public class KBRepository {
   }
   
   protected void initializeKB() {
+    if(this.tdbdir == null)
+      return;
+    
     this.fac = new OntFactory(OntFactory.JENA, tdbdir);
     try {
       ontkb = fac.getKB(this.onturi, OntSpec.PELLET, false, true);

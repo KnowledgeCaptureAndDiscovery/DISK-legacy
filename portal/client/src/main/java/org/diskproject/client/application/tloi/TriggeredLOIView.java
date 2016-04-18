@@ -13,6 +13,7 @@ import org.diskproject.client.place.NameTokens;
 import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
+import org.diskproject.shared.classes.loi.TriggeredLOI.Status;
 
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
@@ -21,6 +22,7 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -119,7 +121,21 @@ public class TriggeredLOIView extends ApplicationSubviewImpl
       @Override
       public void onSuccess(TriggeredLOI tloi) {
         loader.setVisible(false);
-        reloadbutton.setVisible(true);
+        if(tloi.getStatus() != null && 
+            (tloi.getStatus() == Status.QUEUED ||
+            tloi.getStatus() == Status.RUNNING)) {
+          reloadbutton.setVisible(true);
+          Timer timer = new Timer() {
+            public void run() {
+                showTLOI(tloiId);
+            }
+          };
+          timer.schedule(5000);
+        }
+        else {
+          reloadbutton.setVisible(false);
+        }
+        
         viewer.setVisible(true);
         viewer.load(tloi);
       }

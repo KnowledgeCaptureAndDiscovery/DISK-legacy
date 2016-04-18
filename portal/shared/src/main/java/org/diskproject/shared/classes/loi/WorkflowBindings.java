@@ -14,10 +14,12 @@ public class WorkflowBindings {
   List<VariableBinding> bindings;
   
   WorkflowRun run;
+  MetaWorkflowDetails meta;
 
   public WorkflowBindings() {
     bindings = new ArrayList<VariableBinding>();
     run = new WorkflowRun();
+    meta = new MetaWorkflowDetails();
   }
   
   public String getWorkflow() {
@@ -51,6 +53,26 @@ public class WorkflowBindings {
   public void setBindings(List<VariableBinding> bindings) {
     this.bindings = bindings;
   }
+  
+  @JsonIgnore
+  public List<String> getVariableBindings(String variable) {
+    List<String> bindings = new ArrayList<String>();
+    for(VariableBinding vb : this.bindings) {
+      if(vb.getVariable().equals(variable))
+        bindings.add(vb.getBinding());
+    }
+    return bindings;
+  }
+  
+  @JsonIgnore
+  public List<String> getBindingVariables(String binding) {
+    List<String> variables = new ArrayList<String>();
+    for(VariableBinding vb : this.bindings) {
+      if(vb.getVariable().equals(binding))
+        variables.add(vb.getVariable());
+    }
+    return variables;
+  }
 
   @JsonIgnore
   public String getBindingsDescription() {
@@ -62,6 +84,56 @@ public class WorkflowBindings {
       description += vbinding.getVariable() + " = " + vbinding.getBinding();
       i++;
     }
+    if(this.meta.getHypothesis() != null) {
+      if(i > 0)
+        description += ", ";
+      description += this.meta.getHypothesis() + " = [Hypothesis]";
+      i++;
+    }
+    if(this.meta.getRevisedHypothesis() != null) {
+      if(i > 0)
+        description += ", ";
+      description += this.meta.getRevisedHypothesis() + " = [Revised Hypothesis]";
+      i++;
+    }
+    
     return description;
-  }  
+  }
+  
+  public MetaWorkflowDetails getMeta() {
+    return meta;
+  }
+
+  public void setMeta(MetaWorkflowDetails meta) {
+    this.meta = meta;
+  }
+
+  @JsonIgnore
+  public String getHTML() {
+    String id = this.getWorkflow();
+    
+    String status = this.getRun().getStatus();
+    String extra = "";
+    String extracls = "";
+    
+    if(status != null) {
+      String icon = "icons:hourglass-empty";
+      if(status.equals("SUCCESS")) {
+        icon = "icons:check";
+      }
+      else if(status.equals("FAILURE")) {
+        icon = "icons:clear";
+      }
+      extra = " <iron-icon class='"+status+"' icon='"+icon+"' />";
+      extracls = " " +status;
+    }
+    
+    String html = "<div class='name" + extracls+ "'>"+ id + extra +"</div>";
+    html += "<div class='description'>";
+    String description = this.getBindingsDescription();
+    if(!description.equals(""))
+      html += "<b>Variable Bindings:</b> "+description + "<br />";
+    html += "</div>";
+    return html;
+  }
 }

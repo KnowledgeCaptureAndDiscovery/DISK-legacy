@@ -19,7 +19,6 @@ import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.vocabulary.Vocabulary;
 import org.diskproject.shared.classes.workflow.Variable;
-import org.diskproject.shared.classes.workflow.VariableBinding;
 import org.diskproject.shared.classes.workflow.Workflow;
 import org.diskproject.shared.classes.workflow.WorkflowRun;
 import org.fusesource.restygwt.client.DirectRestService;
@@ -202,15 +201,7 @@ public interface DiskService extends DirectRestService {
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @PathParam("id") String id);
-  
-  @GET
-  @Path("{username}/{domain}/workflows/{id}")
-  public String runWorkflow(
-      @PathParam("username") String username, 
-      @PathParam("domain") String domain,
-      @PathParam("id") String id,
-      @JsonProperty("bindings") List<VariableBinding> bindings);
-  
+
   @GET
   @Path("{username}/{domain}/runs/{id}")
   public WorkflowRun monitorWorkflow(

@@ -33,7 +33,7 @@
 			<artifactId>javax.ws.rs-api</artifactId>
 			<version>${javax.rs-api.version}</version>
 		</dependency>
-
+		
 		<!-- RESTY GWT -->
 		<dependency>
 			<groupId>org.fusesource.restygwt</groupId>

@@ -116,12 +116,23 @@
 			    text-overflow: ellipsis;
 			    font-family: 'Roboto', 'Noto', sans-serif;
 			    -webkit-font-smoothing: antialiased;
-			    font-size: 16px;
 			    font-weight: 400;
 			    line-height: 24px;
 			    font-size: 12px;
 			    margin-top:5px;
 			}
+			label.large-grey {
+                color: #737373;
+			    white-space: nowrap;
+			    overflow: hidden;
+			    text-overflow: ellipsis;
+			    font-family: 'Roboto', 'Noto', sans-serif;
+			    -webkit-font-smoothing: antialiased;
+			    font-weight: 400;
+			    line-height: 24px;
+			    font-size: 14px;
+			    margin-top:5px;
+			}			
 			.error {
 				color: red;
 				border-bottom: 1px dotted red;
@@ -158,6 +169,13 @@
             	padding: 0px;
             	margin-right:5px;
             }
+            paper-item .action-buttons iron-icon {
+            	min-width: 18px;
+            	width: 18px;
+            	height: 18px;
+            	padding: 0px;
+            	margin-right:5px;
+            }
             
             paper-icon-button.red-button {
             	--paper-icon-button: {
@@ -167,6 +185,16 @@
             		color: var(--paper-red-600);
             	}
             	--paper-icon-button-ink-color: var(--paper-red-200);
+			}
+			
+			paper-button.blue-button {
+				--paper-button-ink-color: var(--paper-blue-200);
+			}
+			paper-button.blue-button:hover {
+				color: var(--paper-blue-600);
+			}
+			paper-button.blue-button {
+				color: var(--paper-grey-600);
 			}
             paper-icon-button.blue-button {
             	--paper-icon-button: {
@@ -238,6 +266,29 @@
 			div.hiddenMenu {
 				display: none;
 			}
+            .SUCCESS, .SUCCESSFUL,
+            .SUCCESS a, .SUCCESSFUL a {
+            	color: green;
+			}
+			.FAILURE, .FAILED,
+			.FAILURE a, .FAILURE a {
+            	color: maroon;
+			}
+			.QUEUED, .RUNNING,
+			.QUEUED a, .RUNNING a {
+            	color: #888;
+			}
+			
+            .list paper-item .name,
+            .tree paper-item .name {
+                font-size: 14px;
+                font-weight: bold;
+            }
+            .description {
+                font-size: 12px;
+                color: #999;
+                /*font-style: italic;*/
+            }
 		</style>
 		
 		<paper-drawer-panel class="flex" ui:field="drawer">
@@ -264,17 +315,17 @@
 						<div class="layout horizontal center" ui:field="loisMenu">
 							<iron-icon class="backbutton grey" icon="icons:chevron-left" />			
 							<iron-icon class="green" icon="icons:explore" />
-							 Lines of Inquiry (LOIs)
+							 Lines of Inquiry
 						</div>
 					</g:Anchor>
-					<g:Anchor 
+					<!-- g:Anchor 
 					href="#{nameTokens.getTLOIs}/{config.getWingsUserid}/{config.getWingsDomain}">
 						<div class="layout horizontal center" ui:field="tloisMenu">
 							<iron-icon class="backbutton grey" icon="icons:chevron-left" />			
 							<iron-icon class="orange" icon="icons:explore" />
 							 Triggered LOIs
 						</div>
-					</g:Anchor>					
+					</g:Anchor-->					
 					<g:Anchor 
 					href="#{nameTokens.getAssertions}/{config.getWingsUserid}/{config.getWingsDomain}">
 						<div class="layout horizontal center" ui:field="assertionsMenu">

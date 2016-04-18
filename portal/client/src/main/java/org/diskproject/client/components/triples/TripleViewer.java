@@ -8,6 +8,7 @@ import org.diskproject.shared.classes.util.KBConstants;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.vaadin.polymer.paper.widget.PaperDialog;
@@ -66,8 +67,7 @@ public class TripleViewer extends HTMLPanel {
         gutter.add(icon);
       }
       gutter.add(new HTML(num+""));
-
-      HTMLPanel triple = new HTMLPanel(tripleString);
+      HTMLPanel triple = new HTMLPanel(SafeHtmlUtils.fromString(tripleString));
       triple.setStyleName("triple-text");
       
       line.add(gutter);

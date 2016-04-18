@@ -5,6 +5,7 @@ public class Variable {
   String type;
   int dimensionality;
   boolean param;
+  boolean input;
 
   public String getName() {
     return name;
@@ -36,5 +37,13 @@ public class Variable {
 
   public void setParam(boolean param) {
     this.param = param;
+  }
+
+  public boolean isInput() {
+    return input;
+  }
+
+  public void setInput(boolean input) {
+    this.input = input;
   }
 }

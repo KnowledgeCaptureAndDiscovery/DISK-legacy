@@ -43,6 +43,8 @@ public class AssertionView extends ApplicationSubviewImpl
   @UiField ListWidget datalist;
   @UiField TripleInput triples;
   
+  Vocabulary vocab;
+  
   Graph graph;
   
   interface Binder extends UiBinder<Widget, AssertionView> {
@@ -57,6 +59,7 @@ public class AssertionView extends ApplicationSubviewImpl
     loadcount=0;
     triples.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
     triples.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
+    triples.loadVocabulary("disk", KBConstants.DISKURI(), vocabLoaded);
     triples.loadUserVocabulary("", userid, domain, vocabLoaded);
   }
   
@@ -64,8 +67,15 @@ public class AssertionView extends ApplicationSubviewImpl
       new Callback<String, Throwable>() {
     public void onSuccess(String result) {
       loadcount++;
-      if(graph != null && loadcount == 3) {
-        showAssertions();
+      if(loadcount == 4) {
+        vocab = new Vocabulary();
+        vocab.mergeWith(triples.getVocabulary("bio"));
+        vocab.mergeWith(triples.getVocabulary("hyp"));
+        vocab.mergeWith(triples.getVocabulary("disk"));
+        vocab.mergeWith(triples.getVocabulary(""));
+        vocab.refreshChildren();
+        if(graph != null) 
+          showAssertions();
       }
     }
     public void onFailure(Throwable reason) {}
@@ -98,45 +108,48 @@ public class AssertionView extends ApplicationSubviewImpl
   
   void loadAssertions() { 
     loader.setVisible(true);
-    Polymer.ready(form.getElement(), new Function<Object, Object>() {
+    DiskREST.listAssertions(new Callback<Graph, Throwable>() {
       @Override
-      public Object call(Object o) {
-        DiskREST.listAssertions(new Callback<Graph, Throwable>() {
-          @Override
-          public void onSuccess(final Graph result) {
-            loader.setVisible(false);
-            form.setVisible(true);
-            graph = result;
-            if(graph != null && loadcount == 3)
-              showAssertions();
-          }
-          @Override
-          public void onFailure(Throwable reason) {
-            loader.setVisible(false);
-            AppNotification.notifyFailure(reason.getMessage());
-          }      
-        });
-        return null;
+      public void onSuccess(final Graph result) {
+        loader.setVisible(false);
+        form.setVisible(true);
+        graph = result;
+        if(graph != null && loadcount == 4)
+          showAssertions();
       }
+      @Override
+      public void onFailure(Throwable reason) {
+        loader.setVisible(false);
+        AppNotification.notifyFailure(reason.getMessage());
+      }      
     });
   }
 
   private void showAssertions() {
-    // Show triples in the editor
-    if(graph != null)
-      triples.setValue(graph.getTriples());
-    
-    // Show data list
-    datalist.clear();
-
-    String parentTypeId = KBConstants.DISKNS()+"Data";
-    List<Individual> datasets = new ArrayList<Individual>();
-    Vocabulary bio = triples.getVocabulary("bio");
-    Vocabulary user = triples.getVocabulary("");
-    for(Type type : bio.getTypes().values()) {
-      if(parentTypeId.equals(type.getParent())) {
-        datasets.addAll(user.getIndividualsOfType(type));
+    Polymer.ready(triples.getElement(), new Function<Object, Object>() {
+      @Override
+      public Object call(Object arg) {
+        // Show triples in the editor
+        if(graph != null)
+          triples.setValue(graph.getTriples());
+        
+        // Show data list
+        datalist.clear();
+        showDataList();
+        loader.setVisible(false);  
+        datalist.setVisible(true);
+        
+        return null;
       }
+    });
+  }
+  
+  private void showDataList() {
+    List<Individual> datasets = new ArrayList<Individual>();        
+    String parentTypeId = KBConstants.DISKNS()+"Data";
+    Type topDataType = vocab.getType(parentTypeId);
+    for(Type subtype : vocab.getSubTypes(topDataType)) {
+      datasets.addAll(vocab.getIndividualsOfType(subtype));
     }
     for(Individual dataset : datasets) {
       String dname = "<b>" + dataset.getName() + "</b>";
@@ -147,15 +160,12 @@ public class AssertionView extends ApplicationSubviewImpl
       node.setIcon("icons:list");
       node.setIconStyle("blue");
       datalist.addNode(node);
-    }
-    loader.setVisible(false);  
-    datalist.setVisible(true);
+    }    
   }
   
   @UiHandler("savebutton")
   void onSaveButtonClicked(ClickEvent event) {
-    Graph graph = new Graph();
-    graph.setTriples(triples.getTriples());
+    this.graph.setTriples(triples.getTriples());
     //GWT.log(graph.getTriples().toString());
     
     if(!this.triples.validate()) {
@@ -166,6 +176,8 @@ public class AssertionView extends ApplicationSubviewImpl
       @Override
       public void onSuccess(Void result) {
         AppNotification.notifySuccess("Saved", 500);
+        loadcount--;
+        triples.loadUserVocabulary("", userid, domain, true, vocabLoaded);
       }        
       @Override
       public void onFailure(Throwable reason) {

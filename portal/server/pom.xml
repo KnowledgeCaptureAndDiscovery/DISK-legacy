@@ -26,6 +26,7 @@
 		<wings-ontapi.version>4.0-SNAPSHOT</wings-ontapi.version>
 		<jbcrypt.version>0.3m</jbcrypt.version>		
 		<java.version>1.7</java.version>
+		<httpclient.version>4.5.2</httpclient.version>
 		<webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -112,6 +113,18 @@
 			<groupId>org.mindrot</groupId>
 			<artifactId>jbcrypt</artifactId>
 			<version>${jbcrypt.version}</version>
+		</dependency>
+		
+		<!-- HTTP Client -->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>${httpclient.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpmime</artifactId>
+			<version>${httpclient.version}</version>
 		</dependency>
 		
 	</dependencies>

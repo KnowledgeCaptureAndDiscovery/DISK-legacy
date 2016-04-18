@@ -11,6 +11,7 @@ import org.diskproject.client.place.NameTokens;
 import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
 import org.diskproject.shared.classes.common.Triple;
+import org.diskproject.shared.classes.util.KBConstants;
 import org.diskproject.shared.classes.vocabulary.Individual;
 import org.diskproject.shared.classes.vocabulary.Property;
 import org.diskproject.shared.classes.vocabulary.Type;
@@ -329,6 +330,12 @@ public class TripleInput extends GWTCodeMirror {
   
   public void loadUserVocabulary(final String prefix, String userid, String domain,
       final Callback<String, Throwable> callback) {
+    this.loadUserVocabulary(prefix, userid, domain, false, callback);
+  }
+  
+  public void loadUserVocabulary(final String prefix, String userid, String domain,
+      boolean reload,
+      final Callback<String, Throwable> callback) {
     DiskREST.getUserVocabulary(new Callback<Vocabulary, Throwable>() {
       @Override
       public void onSuccess(Vocabulary result) {
@@ -345,7 +352,7 @@ public class TripleInput extends GWTCodeMirror {
         if(callback != null)
           callback.onFailure(reason);
       }      
-    }, userid, domain, false);
+    }, userid, domain, reload);
   }
   
   void loadTerms(String prefix, Vocabulary vocab) {
@@ -354,6 +361,10 @@ public class TripleInput extends GWTCodeMirror {
     for(Individual ind : vocab.getIndividuals().values())
       allinds.put(prefix+":"+ind.getName(), ind);
     for(Property prop : vocab.getProperties().values())
-      allprops.put(prefix+":"+prop.getName(), prop);    
+      allprops.put(prefix+":"+prop.getName(), prop);
+    
+    Property subcProp = new Property();
+    subcProp.setId(KBConstants.RDFSNS() + "subClassOf");
+    allprops.put("rdfs:subClassOf", subcProp);
   }
 }

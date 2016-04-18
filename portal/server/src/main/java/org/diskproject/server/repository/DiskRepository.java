@@ -15,18 +15,20 @@ import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
 import org.diskproject.shared.classes.common.Triple;
 import org.diskproject.shared.classes.common.TripleDetails;
+import org.diskproject.shared.classes.common.TripleUtil;
 import org.diskproject.shared.classes.common.Value;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
+import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.loi.TriggeredLOI.Status;
-import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.util.GUID;
 import org.diskproject.shared.classes.util.KBConstants;
 import org.diskproject.shared.classes.vocabulary.Individual;
 import org.diskproject.shared.classes.vocabulary.Property;
 import org.diskproject.shared.classes.vocabulary.Vocabulary;
 import org.diskproject.shared.classes.vocabulary.Type;
+import org.diskproject.shared.classes.workflow.Variable;
 import org.diskproject.shared.classes.workflow.VariableBinding;
 import org.diskproject.shared.classes.workflow.WorkflowRun;
 
@@ -60,6 +62,13 @@ public class DiskRepository extends KBRepository {
     initializeKB();
     monitor = Executors.newScheduledThreadPool(2);
     executor = Executors.newFixedThreadPool(2);
+  }
+  
+  public void shutdownExecutors() {
+    if(monitor != null)
+      monitor.shutdownNow();
+    if(executor != null)
+      executor.shutdownNow();
   }
   
   public String DOMURI(String username, String domain) {
@@ -99,9 +108,11 @@ public class DiskRepository extends KBRepository {
   
   public void initializeKB() {
     super.initializeKB();
+    if(fac == null)
+      return;
     try {
-      this.hypontkb = fac.getKB(KBConstants.HYPURI(), OntSpec.PELLET, false, true);
-      this.omicsontkb = fac.getKB(KBConstants.OMICSURI(), OntSpec.PELLET, false, true);
+      this.hypontkb = fac.getKB(KBConstants.HYPURI(), OntSpec.PLAIN, false, true);
+      this.omicsontkb = fac.getKB(KBConstants.OMICSURI(), OntSpec.PLAIN, false, true);
       
       this.vocabularies = new HashMap<String, Vocabulary>();
       this.vocabularies.put(KBConstants.DISKURI(),
@@ -131,7 +142,7 @@ public class DiskRepository extends KBRepository {
   public Vocabulary getUserVocabulary(String username, String domain) {
     String url = this.ASSERTIONSURI(username, domain);
     try {
-      KBAPI kb = this.fac.getKB(url, OntSpec.PELLET, true);
+      KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
       return this.initializeVocabularyFromKB(kb, url + "#");
     } catch (Exception e) {
       e.printStackTrace();
@@ -142,8 +153,7 @@ public class DiskRepository extends KBRepository {
   public Vocabulary initializeVocabularyFromKB(KBAPI kb, String ns) {
     Vocabulary vocabulary = new Vocabulary(ns);
     this.fetchPropertiesFromKB(kb, vocabulary);
-    this.fetchTypesFromKB(kb, vocabulary);
-    this.fetchIndividualsFromKB(kb, vocabulary);
+    this.fetchTypesAndIndividualsFromKB(kb, vocabulary);
     return vocabulary;
   }
   
@@ -172,39 +182,7 @@ public class DiskRepository extends KBRepository {
     }
   }
   
-  private void fetchTypesFromKB(KBAPI kb, Vocabulary vocabulary) {
-    try {
-      KBObject topcls = kb.getConcept(owlns + "Thing");
-      this.fetchTypesFromKB(topcls, kb, vocabulary);
-    }
-    catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
-  
-  private Type fetchTypesFromKB(KBObject cls, KBAPI kb, Vocabulary vocabulary) {
-    String clsid = cls.getID();
-    Type type = new Type();
-    type.setId(clsid);
-    type.setName(cls.getName());
-    type.setLabel(kb.getLabel(cls));
-    for(KBObject subcls : kb.getSubClasses(cls, true)) {
-      Type subtype = this.fetchTypesFromKB(subcls, kb, vocabulary);
-      if(subtype == null)
-        continue;
-      //if(clsid.startsWith(vocabulary.getNamespace()))
-      if(!clsid.startsWith(KBConstants.OWLNS()))
-        subtype.setParent(clsid);
-      if(subtype.getId().startsWith(vocabulary.getNamespace())) {
-        type.addChild(subtype.getId());
-        vocabulary.addType(subtype);
-      }
-    }
-
-    return type;
-  }
-  
-  private void fetchIndividualsFromKB(KBAPI kb, Vocabulary vocabulary) {
+  private void fetchTypesAndIndividualsFromKB(KBAPI kb, Vocabulary vocabulary) {
     try {
       KBObject typeprop = kb.getProperty(KBConstants.RDFNS()+"type");
       for(KBTriple t : kb.genericTripleQuery(null, typeprop, null)) {
@@ -214,6 +192,8 @@ public class DiskRepository extends KBRepository {
           continue;
         if(typeobj.getNamespace().equals(KBConstants.OWLNS()))
           continue;
+        
+        // Add individual
         Individual ind = new Individual();
         ind.setId(inst.getID());
         ind.setName(inst.getName());
@@ -222,7 +202,58 @@ public class DiskRepository extends KBRepository {
         if(label == null)
           label = inst.getName();
         ind.setLabel(label);
-        vocabulary.addIndividual(ind);        
+        vocabulary.addIndividual(ind);   
+        
+        // Add asserted types
+        if(!typeobj.getID().startsWith(vocabulary.getNamespace()))
+          continue;
+        String clsid = typeobj.getID();
+        Type type = new Type();
+        type.setId(clsid);
+        type.setName(typeobj.getName());
+        type.setLabel(kb.getLabel(typeobj));
+        vocabulary.addType(type);
+      }
+      
+      // Add types not asserted
+      KBObject clsobj = kb.getProperty(KBConstants.OWLNS()+"Class");
+      for(KBTriple t : kb.genericTripleQuery(null, typeprop, clsobj)) {
+        KBObject cls = t.getSubject();        
+        if(!cls.getID().startsWith(vocabulary.getNamespace()))
+          continue;
+        if(cls.getNamespace().equals(KBConstants.OWLNS()))
+          continue;
+        
+        String clsid = cls.getID();
+        Type type = vocabulary.getType(clsid);
+        if(type == null) {
+          type = new Type();
+          type.setId(clsid);
+          type.setName(cls.getName());
+          type.setLabel(kb.getLabel(cls));
+          vocabulary.addType(type);
+        }
+      }
+      
+      // Add type hierarchy
+      KBObject subclsprop = kb.getProperty(KBConstants.RDFSNS()+"subClassOf");
+      for(KBTriple t : kb.genericTripleQuery(null, subclsprop, null)) {
+        KBObject subcls = t.getSubject();
+        KBObject cls = t.getObject();
+        String clsid = cls.getID();
+
+        Type subtype = vocabulary.getType(subcls.getID());
+        if(subtype == null)
+          continue;
+
+        if(!clsid.startsWith(KBConstants.OWLNS()))
+          subtype.setParent(clsid);
+        
+        Type type = vocabulary.getType(cls.getID());
+        if(type != null && 
+            subtype.getId().startsWith(vocabulary.getNamespace())) {
+          type.addChild(subtype.getId());
+        }
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -698,9 +729,12 @@ public class DiskRepository extends KBRepository {
           bindings.getWorkflow());
       String workflowuri = WingsAdapter.get().WFLOWURI(username, domain, 
           bindings.getWorkflow());      
-      KBObject bindingobj = kb.createObjectOfClass(workflowid, 
+      KBObject bindingobj = kb.createObjectOfClass(null, 
           cmap.get("WorkflowBindings"));
       kb.addPropertyValue(loiitem, bindingprop, bindingobj);
+      
+      kb.setPropertyValue(bindingobj, pmap.get("hasWorkflow"), 
+          kb.getResource(workflowid));
       
       // Get Run details
       if(bindings.getRun() != null) {
@@ -730,6 +764,15 @@ public class DiskRepository extends KBRepository {
         
         kb.addPropertyValue(bindingobj, pmap.get("hasVariableBinding"), varbindingobj);
       }
+     
+      String hypid = bindings.getMeta().getHypothesis();
+      String revhypid = bindings.getMeta().getRevisedHypothesis();
+      if(hypid != null)
+        kb.setPropertyValue(bindingobj, pmap.get("hasHypothesisVariable"), 
+            kb.getResource(workflowuri + "#" + hypid));
+      if(revhypid != null)
+        kb.setPropertyValue(bindingobj, pmap.get("hasRevisedHypothesisVariable"), 
+            kb.getResource(workflowuri + "#" + revhypid));
     }
   }
 
@@ -806,7 +849,9 @@ public class DiskRepository extends KBRepository {
       bindings.setRun(run);
       
       // Workflow details
-      bindings.setWorkflow(wbobj.getName());
+      KBObject workflowobj = kb.getPropertyValue(wbobj, pmap.get("hasWorkflow"));
+      if(workflowobj != null)
+        bindings.setWorkflow(workflowobj.getName());
       bindings.setWorkflowLink(
           WingsAdapter.get().getWorkflowLink(username, domain, wbobj.getName()));
       
@@ -819,6 +864,16 @@ public class DiskRepository extends KBRepository {
         vbinding.setBinding(bindobj.getValueAsString());
         bindings.getBindings().add(vbinding);
       }
+      
+      KBObject hypobj = kb.getPropertyValue(wbobj, 
+          pmap.get("hasHypothesisVariable"));
+      if(hypobj != null) 
+         bindings.getMeta().setHypothesis(hypobj.getName());
+      KBObject revhypobj = kb.getPropertyValue(wbobj, 
+          pmap.get("hasRevisedHypothesisVariable"));
+      if(revhypobj != null) 
+         bindings.getMeta().setRevisedHypothesis(revhypobj.getName());      
+
       list.add(bindings);
     }
     return list;
@@ -952,9 +1007,8 @@ public class DiskRepository extends KBRepository {
     if(pobj != null) 
       tloi.setParentHypothesisId(pobj.getName());
     
-    KBObject robj = kb.getPropertyValue(obj, pmap.get("hasResultingHypothesis"));
-    if(robj != null) 
-      tloi.setResultingHypothesisId(robj.getName());
+    for(KBObject robj : kb.getPropertyValues(obj, pmap.get("hasResultingHypothesis")))
+      tloi.addResultingHypothesisId(robj.getName());
     
     KBObject stobj = kb.getPropertyValue(obj, pmap.get("hasTriggeredLOIStatus"));
     if(stobj != null) 
@@ -1009,9 +1063,9 @@ public class DiskRepository extends KBRepository {
         KBObject hobj = kb.getResource(hypns + tloi.getParentHypothesisId());
         kb.setPropertyValue(tloiitem, pmap.get("hasParentHypothesis"), hobj);
       }
-      if(tloi.getResultingHypothesisId() != null) {
-        KBObject hobj = kb.getResource(hypns + tloi.getResultingHypothesisId());
-        kb.setPropertyValue(tloiitem, pmap.get("hasResultingHypothesis"), hobj);
+      for(String hypid : tloi.getResultingHypothesisIds()) {
+        KBObject hobj = kb.getResource(hypns + hypid);
+        kb.addPropertyValue(tloiitem, pmap.get("hasResultingHypothesis"), hobj);
       }
       if(tloi.getStatus() != null) {
         KBObject stobj = kb.createLiteral(tloi.getStatus().toString());
@@ -1039,7 +1093,54 @@ public class DiskRepository extends KBRepository {
     return null;
   }
   
-  private String createDummyHypothesis(String username, String domain, TriggeredLOI tloi) {
+  private String fetchOutputHypothesis(String username, String domain, 
+      WorkflowBindings bindings, TriggeredLOI tloi) {
+    String varname = bindings.getMeta().getRevisedHypothesis();
+    Map<String, String> varmap = WingsAdapter.get().getRunVariableBindings(
+        username, domain, bindings.getRun().getId());
+    if(varmap.containsKey(varname)) {
+      String dataid = varmap.get(varname);
+      String dataname = dataid.replaceAll(".*#", "");
+      String content = WingsAdapter.get().fetchDataFromWings(username, domain, dataid);
+      
+      List<String> workflows = new ArrayList<String>();
+      for(WorkflowBindings wb : tloi.getWorkflows())
+        workflows.add(wb.getWorkflow());
+      String meta = bindings.getWorkflow();
+      
+      Hypothesis parentHypothesis = 
+          this.getHypothesis(username, domain, tloi.getParentHypothesisId());
+      Hypothesis newHypothesis = new Hypothesis();
+      newHypothesis.setId(dataname);
+      newHypothesis.setName("[Revision] " + parentHypothesis.getName());
+      String description = "Followed the line of inquiry: \""+tloi.getName()+"\" to run workflows: " + workflows
+          + ", then run meta workflow: [" + meta + "] and generate/modify hypothesis.";
+      newHypothesis.setDescription(description);
+      newHypothesis.setParentId(parentHypothesis.getId());
+      
+      List<Triple> triples = new ArrayList<Triple>();
+      TripleUtil util = new TripleUtil();
+      for(String line : content.split("\\n")) {
+        String[] parts = line.split("\\s+", 4);
+        TripleDetails details = new TripleDetails();
+        details.setConfidenceValue(Double.parseDouble(parts[3]));
+        details.setTriggeredLOI(tloi.getId());
+        Triple t = util.fromString(parts[0] + " " + parts[1] + " " + parts[2]);
+        t.setDetails(details);
+        triples.add(t);
+      }
+      Graph newgraph = new Graph();
+      newgraph.setTriples(triples);
+      newHypothesis.setGraph(newgraph);
+      
+      this.addHypothesis(username, domain, newHypothesis);
+      return newHypothesis.getId();      
+    }
+    return null;
+  }
+  
+/*  private String createDummyHypothesis(String username, String domain, 
+      WorkflowBindings bindings, TriggeredLOI tloi) {
     Hypothesis parentHypothesis = 
         this.getHypothesis(username, domain, tloi.getParentHypothesisId());
     Hypothesis newHypothesis = new Hypothesis();
@@ -1064,7 +1165,7 @@ public class DiskRepository extends KBRepository {
     
     this.addHypothesis(username, domain, newHypothesis);
     return newHypothesis.getId();
-  }
+  }*/
   
   class TLOIExecutionThread implements Runnable {
     String username;
@@ -1085,25 +1186,64 @@ public class DiskRepository extends KBRepository {
       try {
         System.out.println("Running execution thread");
         
+        WingsAdapter wings = WingsAdapter.get();
+        
         List<WorkflowBindings> wflowBindings = tloi.getWorkflows();
         if(this.metamode)
           wflowBindings = tloi.getMetaWorkflows();
         
         // Start off workflows from tloi
         for(WorkflowBindings bindings : wflowBindings) {
+          // Get workflow input details
+          Map<String, Variable> inputs = 
+              wings.getWorkflowInputs(username, domain, bindings.getWorkflow());
           List<VariableBinding> vbindings = bindings.getBindings();
+          List<VariableBinding> sendbindings = new ArrayList<VariableBinding>(vbindings);
+          
+          // Special processing for Meta Workflows
           if(this.metamode) {
+            // Replace workflow ids with workflow run ids in Variable Bindings
             for(VariableBinding vbinding : vbindings) {
               String runid = getWorkflowExecutionRun(tloi, vbinding.getBinding());
               vbinding.setBinding(runid);
             }
+            // Upload hypothesis to Wings as a file, and add to Variable Bindings
+            String hypVarId = bindings.getMeta().getHypothesis();
+            if(hypVarId != null && inputs.containsKey(hypVarId)) {
+              Variable hypVar = inputs.get(hypVarId);
+              String hypId = tloi.getParentHypothesisId();
+              Hypothesis hypothesis = 
+                  getHypothesis(username, domain, tloi.getParentHypothesisId());
+              String contents = "";
+              for(Triple t : hypothesis.getGraph().getTriples())
+                contents += t.toString() + "\n";
+
+              if(hypVar.getType() == null) {
+                System.err.println("Couldn't retrieve hypothesis type information");
+                continue;
+              }
+              String dataid = 
+                  wings.addDataToWings(username, domain, hypId, hypVar.getType(), contents);
+              if(dataid == null) {
+                System.err.println("Couldn't add hypothesis to wings");
+                continue;
+              }
+              VariableBinding hypBinding = new VariableBinding();
+              hypBinding.setVariable(hypVarId);
+              hypBinding.setBinding(dataid.replaceAll("^.*#", ""));
+              sendbindings.add(hypBinding);
+            }
+            else {
+              System.err.println("Workflow doesn't have hypothesis information");
+              continue;
+            }
           }
+          // Execute workflow
           System.out.println("Executing "+bindings.getWorkflow()+" with:\n"+vbindings);
-          String runid = WingsAdapter.get().runWorkflow(username, domain, 
-              bindings.getWorkflow(), vbindings);
-          if(runid != null) {
+          String runid = wings.runWorkflow(username, domain, bindings.getWorkflow(), 
+              sendbindings, inputs);
+          if(runid != null)
             bindings.getRun().setId(runid.replaceAll("^.*#", ""));
-          }
         }
         tloi.setStatus(Status.RUNNING);
         updateTriggeredLOI(username, domain, tloi.getId(), tloi);
@@ -1170,16 +1310,20 @@ public class DiskRepository extends KBRepository {
           if(wstatus.getStatus().equals("SUCCESS")) {
             numFinished++;
             numSuccessful++;
+            
+            if(metamode) {
+              // Fetch the output hypothesis file, and create a new hypothesis
+              String hypId = fetchOutputHypothesis(username, domain, bindings, tloi);
+              //String hypId = createDummyHypothesis(username, domain, bindings, tloi);
+              if(hypId != null)
+                tloi.addResultingHypothesisId(hypId);
+            }            
           }
         }
         // If all the workflows are successfully finished
         if(numSuccessful == wflowBindings.size()) {
           if(metamode) {
             overallStatus = Status.SUCCESSFUL;
-            // TODO: Fetch the output hypothesis, and create a new one
-            // TODO: Creating a dummy hypothesis for now
-            String hypId = createDummyHypothesis(username, domain, tloi);
-            tloi.setResultingHypothesisId(hypId);
           }
           else {
             overallStatus = Status.RUNNING;

@@ -14,9 +14,53 @@
 			.workflowCombo {
 				width: calc(100% - 32px)
 			}
-			paper-icon-button.linkicon {
-				margin-top: 25px;
+			.full-width {
+				width: 100%;
 			}
+			paper-icon-button.linkicon {
+				margin-top: 16px;
+			}
+			.varbindings {
+				display: table;
+				width: 100%;
+			}
+			.varbindings-row {
+				display: table-row;
+			}
+			.varbindings-cell {
+				display: table-cell;
+				vertical-align: middle;
+			}
+			.small-grey {
+				color: grey;
+				font-size: 12px;
+			}
+			.section {
+				border: 1px solid #EEE;
+				border-radius: 3px;
+				margin-top: 10px;
+				padding: 5px;
+				padding-bottom: 10px;
+			}
+			.heading {
+				color: grey;
+				padding: 4px;
+				font-size: 12px;
+				margin: -5px;
+				margin-bottom: 0px;
+				background-color: #F8F8F8;
+				border-bottom: 1px solid #EEE;
+			}
+			.heading paper-icon-button {
+				padding: 2px;
+				margin-left: 2px;
+				height: 20px;
+			}
+			vaadin-combo-box {
+				--paper-input-container: {
+					padding: 0px;
+				}
+			}			
 		</style>
 		<div class="vertical center-justified layout">
 			<div class="horizontal layout">
@@ -26,15 +70,27 @@
 					addStyleNames="linkicon smallicon blue-button" icon="link" />
 			</div>
 
-			<g:HTMLPanel ui:field="varsection">
+			<g:HTMLPanel ui:field="varsection" addStyleNames="section">
+				<div class="heading">
 				<div class="horizontal layout">
-					<label class="small-grey">Variable Bindings</label>
+					Variable Bindings
 					<p:PaperIconButton ui:field="addbindingbutton"
 						addStyleNames="smallicon green-button" icon="add-circle" />
 				</div>
-				<g:HTMLPanel addStyleNames="vertical center-justified layout" 
-					ui:field="varbindings" />
+				</div>
+				<g:HTMLPanel addStyleNames="varbindings" ui:field="varbindings" />
 			</g:HTMLPanel>
+		
+			<g:HTMLPanel ui:field="metasection"  addStyleNames="section">
+				<div class="heading">Hypotheses</div>
+				<div class="vertical layout">
+					<v:VaadinComboBox addStyleNames="full-width"
+						label="Hypothesis Variable" ui:field="hypothesismenu" />
+					<v:VaadinComboBox addStyleNames="full-width"
+						label="Revised Hypothesis Variable" ui:field="revhypothesismenu" />
+				</div>
+			</g:HTMLPanel>
+						
 			<div class="buttons">
 				<p:PaperButton attributes="dialog-dismiss">Cancel</p:PaperButton>
 				<p:PaperButton attributes="dialog-confirm">

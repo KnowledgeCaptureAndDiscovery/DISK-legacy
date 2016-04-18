@@ -17,17 +17,6 @@
                 background-color: #eee;
                 border: 1px solid #ddd;
             }
-            .list paper-item .name {
-                font-size: 14px;
-                font-weight: bold;
-            }
-            .list paper-item .description {
-                font-size: 12px;
-                color: gray;
-                text-overflow: ellipsis;
-                /*font-style: italic;*/
-            }
-            
             .list iron-collapse.pad {
                 margin-left: 20px;
             }
@@ -93,20 +82,16 @@
 			.list paper-item iron-icon.blue {
                 background-color: transparent;
                 border: 0px;
-            }
-            .SUCCESS, .SUCCESSFUL {
-            	color: green;
-			}
-			.FAILURE, .FAILED {
-            	color: maroon;
-			}            
+            }         
 		</style>
 		<l:Loader ui:field="loader" />
 		<lw:ListWidget ui:field="tloilist" styleName="list" />
 		<tloi:TriggeredLOIViewer ui:field="viewer" styleName="padded" />
-		<p:PaperButton ui:field="reloadbutton">
-			Reload		
-			<iron-icon icon="refresh" />
-		</p:PaperButton>		
+		<div class="horizontal end-justified layout">
+			<p:PaperButton ui:field="reloadbutton">
+				<iron-icon icon="refresh" />
+				Reload
+			</p:PaperButton>
+		</div>		
 	</g:HTMLPanel>
 </ui:UiBinder>

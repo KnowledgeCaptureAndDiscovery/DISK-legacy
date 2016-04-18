@@ -1,7 +1,6 @@
 package org.diskproject.client.components.list;
 
 import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.polymer.iron.widget.IronIcon;
 import com.vaadin.polymer.paper.widget.PaperItem;
 
@@ -10,7 +9,8 @@ public class ListNode implements Comparable<ListNode> {
   String name;
   String description;
   Object data;
-  Widget content;
+  String type;
+  HTML content;
   
   PaperItem item;
   IronIcon icon;
@@ -24,7 +24,7 @@ public class ListNode implements Comparable<ListNode> {
     this.setContent(name,  description);
   }
   
-  public ListNode(String id, Widget content) {
+  public ListNode(String id, HTML content) {
     this.id = id;
     this.content = content;
     this.icon = new IronIcon();
@@ -33,7 +33,10 @@ public class ListNode implements Comparable<ListNode> {
   private void setContent(String name, String description) {
     String html = "<div class='name'>" + this.name + "</div>";
     html += "<div class='description'>"+this.description+"</div>";
-    this.content = new HTML(html);
+    if(this.content != null)
+      this.content.setHTML(html);
+    else
+      this.content = new HTML(html);
   }
 
   public IronIcon getIcon() {
@@ -60,18 +63,20 @@ public class ListNode implements Comparable<ListNode> {
     return name;
   }
 
-  public void setName(String name) {
+  public void setName(String name, boolean update) {
     this.name = name;
-    this.setContent(name, description);
+    if(update)
+      this.setContent(name, description);
   }
 
   public String getDescription() {
     return description;
   }
 
-  public void setDescription(String description) {
+  public void setDescription(String description, boolean update) {
     this.description = description;
-    this.setContent(name, description);
+    if(update)
+      this.setContent(name, description);
   }
 
   public Object getData() {
@@ -80,6 +85,24 @@ public class ListNode implements Comparable<ListNode> {
 
   public void setData(Object data) {
     this.data = data;
+  }
+
+  public String getType() {
+    return type;
+  }
+
+  public void setType(String type) {
+    this.type = type;
+    if(item != null)
+      item.addStyleName(this.type);
+  }
+
+  public HTML getContent() {
+    return content;
+  }
+
+  public void setContent(HTML content) {
+    this.content = content;
   }
 
   public PaperItem getItem() {
@@ -100,6 +123,10 @@ public class ListNode implements Comparable<ListNode> {
       item.add(icon);
     }
     item.add(content);
+    
+    if(this.type != null)
+      item.setStyleName(this.type);
+    
     return this.item;
   }
   

@@ -19,6 +19,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.polymer.iron.widget.event.IronOverlayClosedEvent;
 import com.vaadin.polymer.paper.widget.PaperDialog;
@@ -36,6 +37,8 @@ public class LOIWorkflowList extends Composite {
   @UiField PaperIconButton addwflowbutton;
   @UiField LabelElement label;
   
+  LOIWorkflowList source;
+  
   public @UiConstructor LOIWorkflowList(boolean metamode, String label) {
     initWidget(uiBinder.createAndBindUi(this)); 
     
@@ -48,6 +51,20 @@ public class LOIWorkflowList extends Composite {
 
   public void setWorkflowList(List<Workflow> list) {
     bindingseditor.setWorkflowList(list);
+  }
+  
+  public void updateSourceWorkflows() {
+    if(this.source != null) {
+      List<String> metalist = new ArrayList<String>();
+      for(WorkflowBindings bindings : source.getBindingsList()) {
+        metalist.add(bindings.getWorkflow());
+      }
+      bindingseditor.setSourceWorkflows(metalist);        
+    }
+  }
+  
+  public void setWorkflowSource(LOIWorkflowList source) {
+    this.source = source;
   }
   
   public List<WorkflowBindings> getBindingsList() {
@@ -71,6 +88,7 @@ public class LOIWorkflowList extends Composite {
   void onWorkflowListItemSelected(ListItemSelectionEvent event) {
     WorkflowBindings bindings = (WorkflowBindings)event.getItem().getData();
     update = event.getItem();    
+    this.updateSourceWorkflows();
     bindingseditor.loadWorkflowBindings(bindings);
     workflowdialog.open();
   }
@@ -91,6 +109,7 @@ public class LOIWorkflowList extends Composite {
   @UiHandler("addwflowbutton")
   void onAddWorkflowButtonClicked(ClickEvent event) {
     update = null;
+    this.updateSourceWorkflows();
     bindingseditor.loadWorkflowBindings(null);
     workflowdialog.open();
   }
@@ -110,12 +129,10 @@ public class LOIWorkflowList extends Composite {
   private void addWorkflowBindingsToList(WorkflowBindings bindings, 
       ListNode tnode) {
     String id = bindings.getWorkflow();
-    String description = bindings.getBindingsDescription();
-    if(!description.equals(""))
-      description = "<b>Variable Bindings:</b> "+description;
-    
+    String html = bindings.getHTML();
+
     if(tnode == null) {
-      tnode = new ListNode(id, id, description);
+      tnode = new ListNode(id, new HTML(html));
       tnode.setIcon("dashboard");
       tnode.setIconStyle("green");
       tnode.setData(bindings);
@@ -124,8 +141,7 @@ public class LOIWorkflowList extends Composite {
     else {
       String oldid = tnode.getId();
       tnode.setId(id);
-      tnode.setName(id);
-      tnode.setDescription(description);
+      tnode.getContent().setHTML(html);
       tnode.setData(bindings);
       workflowlist.updateNode(oldid, tnode);
     }    

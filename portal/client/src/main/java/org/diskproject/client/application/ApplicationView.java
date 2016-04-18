@@ -38,7 +38,7 @@ public class ApplicationView extends ViewImpl implements
   @UiField public static PaperToastElement toast;
   
   @UiField public static DivElement 
-    hypothesesMenu, loisMenu, tloisMenu, assertionsMenu;
+    hypothesesMenu, loisMenu, assertionsMenu;
   
   @UiField SimplePanel sidebar;
   @UiField SimplePanel toolbar;
@@ -140,7 +140,7 @@ public class ApplicationView extends ViewImpl implements
         drawer.closeDrawer();
         hypothesesMenu.removeClassName("activeMenu");
         loisMenu.removeClassName("activeMenu");
-        tloisMenu.removeClassName("activeMenu");
+        //tloisMenu.removeClassName("activeMenu");
         assertionsMenu.removeClassName("activeMenu");
         
         DivElement menu = null;
@@ -149,13 +149,14 @@ public class ApplicationView extends ViewImpl implements
         else if(nametoken.equals(NameTokens.lois))
           menu = loisMenu;
         else if(nametoken.equals(NameTokens.tlois))
-          menu = tloisMenu;        
+          //menu = tloisMenu;
+          menu = hypothesesMenu;
         else if(nametoken.equals(NameTokens.assertions))
           menu = assertionsMenu;
         
         clearMenuClasses(hypothesesMenu);
         clearMenuClasses(loisMenu);
-        clearMenuClasses(tloisMenu);
+        //clearMenuClasses(tloisMenu);
         clearMenuClasses(assertionsMenu);
         
         if(menu != null) {
@@ -181,7 +182,7 @@ public class ApplicationView extends ViewImpl implements
   private void addClassToMenus(String cls) {
     hypothesesMenu.addClassName(cls);
     loisMenu.addClassName(cls);
-    tloisMenu.addClassName(cls);
+    //tloisMenu.addClassName(cls);
     assertionsMenu.addClassName(cls);
   }
   

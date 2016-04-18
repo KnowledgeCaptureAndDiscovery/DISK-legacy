@@ -18,6 +18,7 @@ import com.google.gwt.event.dom.client.MouseOverHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.user.client.ui.InlineHTML;
 import com.vaadin.polymer.PolymerWidget;
 import com.vaadin.polymer.iron.widget.IronFlexLayout;
 import com.vaadin.polymer.iron.widget.IronIcon;
@@ -124,7 +125,7 @@ public class TreeWidget extends IronFlexLayout implements HasTreeHandlers {
   
   public void addDeleteAction() {
     TreeAction deleteAction = new TreeAction("delete", null, 
-        "icons:cancel", "red-button");
+        "icons:cancel", "red-button delete-action");
     this.actions.add(deleteAction);
     this.setActionMenu();
   }
@@ -147,13 +148,14 @@ public class TreeWidget extends IronFlexLayout implements HasTreeHandlers {
         button = ib;
       }
       else {
-        PaperButton pb = new PaperButton(action.getText());
+        PaperButton pb = new PaperButton();
+        pb.addStyleName(action.getIconStyle());
         if(action.getIcon() != null) {
           IronIcon icon = new IronIcon();
           icon.setIcon(action.getIcon());
-          icon.addStyleName(action.getIconStyle());
           pb.add(icon);
         }
+        pb.add(new InlineHTML(action.getText()));
         button = pb;
       }
       

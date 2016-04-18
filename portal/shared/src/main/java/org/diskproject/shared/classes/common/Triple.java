@@ -39,6 +39,6 @@ public class Triple {
   }
 
   public String toString() {
-    return this.subject+" "+this.predicate+" "+this.object;
+    return "<" + this.subject+"> <"+this.predicate+"> "+this.object;
   }
 }

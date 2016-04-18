@@ -13,7 +13,7 @@
 					autoValidate="true" ui:field="name" />
 				<paper-textarea label="Long Description" required="true"
 					autoValidate="true" ui:field="description" />
-				<label class="small-grey">Triples (Ctrl-Space for suggestions)</label>
+				<label class="small-grey">Formal Description (Ctrl-Space for suggestions)</label>
 				<tr:HypothesisTripleInput ui:field="triples" />
 			</div>
 		</div>

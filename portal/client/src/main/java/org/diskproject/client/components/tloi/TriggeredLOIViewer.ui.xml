@@ -36,7 +36,8 @@
 			}
 			div.triple {
 				line-height: 1.8em;
-				font-family: Monospace, Fixed;
+				font-family: verdana, arial, helvetica, sans-serif;
+				font-size: 13px;
 				display:table-row;
 			}
 			div.padded {
@@ -56,24 +57,16 @@
             	}
             	--paper-icon-button-ink-color: var(--paper-green-200)				
 			}
-			.content a:hover {
+			.section a:hover {
 				text-decoration: underline;
+			}
+			.no-run-link .run-link {
+				display: none;
 			}
 		</style>
 		<div class="vertical layout section">
-			<div class="name" ui:field="name" />
-			<div class="description" ui:field="description" />
+			<div ui:field="header" />
 
-			<label class="small-grey">Workflows</label>
-			<div class="bordered-list">
-				<lw:ListWidget ui:field="workflowlist" styleName="list" />
-			</div>
-			
-			<label class="small-grey">Meta-Workflows</label>
-			<div class="bordered-list">
-				<lw:ListWidget ui:field="metaworkflowlist" styleName="list" />
-			</div>
-			
 			<div ui:field="hypothesisSection">
 				<label class="small-grey">Hypothesis</label>
 				<div class="bordered-list padded">				
@@ -82,13 +75,20 @@
 				</div>
 			</div>
 			
-			<div ui:field="revHypothesisSection">
-				<label class="small-grey">Revised Hypothesis</label>
-				<div class="bordered-list padded">				
-					<div><a ui:field="revHypothesisLink" /></div>
-					<tr:TripleViewer ui:field="revHypothesis" />
-				</div>
+			<label class="small-grey">Triggered Line of Inquiry</label>
+			<div><a ui:field="loiLink" /></div>
+			
+			<label class="small-grey">Triggered Workflows</label>
+			<div class="bordered-list">
+				<lw:ListWidget ui:field="workflowlist" styleName="list" />
 			</div>
+			
+			<label class="small-grey">Triggered Meta-Workflows</label>
+			<div class="bordered-list">
+				<lw:ListWidget ui:field="metaworkflowlist" styleName="list" />
+			</div>
+			
+			<g:HTMLPanel ui:field="revHypothesisSection" />
 		</div>
 	</g:HTMLPanel>
 </ui:UiBinder>

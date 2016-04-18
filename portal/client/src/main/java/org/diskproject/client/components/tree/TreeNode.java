@@ -17,6 +17,8 @@ public class TreeNode implements Comparable<TreeNode> {
   String name;
   String description;
   Object data;
+  String type;
+  HTML content;
   
   PaperItem item;
   IronCollapse childrenSection;
@@ -34,6 +36,26 @@ public class TreeNode implements Comparable<TreeNode> {
     this.id = id;
     this.name = name;
     this.description = description;
+    this.setContent(name, description);
+    this.initialize();
+  }
+  
+  public TreeNode(String id, HTML content) {
+    this.id = id;
+    this.content = content;
+    this.initialize();
+  }
+  
+  private void setContent(String name, String description) {
+    String html = "<div class='name'>" + this.name + "</div>";
+    html += "<div class='description'>"+this.description+"</div>";
+    if(this.content != null)
+      this.content.setHTML(html);
+    else
+      this.content = new HTML(html);
+  }
+  
+  private void initialize() {
     this.icon = new IronIcon();
     this.children = new ArrayList<TreeNode>();
     this.nodemap = new HashMap<String, TreeNode>();
@@ -54,7 +76,7 @@ public class TreeNode implements Comparable<TreeNode> {
     });
     
     this.item = new PaperItem();
-    this.updateItem();
+    this.updateItem();    
   }
 
   public IronIcon getIcon() {
@@ -86,16 +108,20 @@ public class TreeNode implements Comparable<TreeNode> {
     return name;
   }
 
-  public void setName(String name) {
+  public void setName(String name, boolean update) {
     this.name = name;
+    if(update)
+      this.setContent(name, this.description);
   }
 
   public String getDescription() {
     return description;
   }
 
-  public void setDescription(String description) {
+  public void setDescription(String description, boolean update) {
     this.description = description;
+    if(update)
+      this.setContent(this.name, description);
   }
 
   public Object getData() {
@@ -106,6 +132,15 @@ public class TreeNode implements Comparable<TreeNode> {
     this.data = data;
   }
   
+  public String getType() {
+    return type;
+  }
+
+  public void setType(String type) {
+    this.type = type;
+    item.addStyleName(this.type);
+  }
+
   public PaperItem getItem() {
     return this.item;
   }
@@ -117,10 +152,11 @@ public class TreeNode implements Comparable<TreeNode> {
     item.clear();
     item.add(collapser);
     item.add(icon);
-    String html = "<div class='name'>" + this.name + "</div>";
-    html += "<div class='description'>"+this.description+"</div>";
-    item.add(new HTML(html));
+    item.add(content);
     this.setIcons();
+
+    if(this.type != null)
+      item.addStyleName(this.type);
     
     return this.item;
   }

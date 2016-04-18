@@ -1,34 +1,19 @@
 package org.diskproject.client.application.users;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.diskproject.client.application.ApplicationSubviewImpl;
 import org.diskproject.client.authentication.SessionStorage;
-import org.diskproject.client.place.NameTokens;
-import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.UserREST;
 import org.diskproject.shared.classes.users.UserCredentials;
 import org.diskproject.shared.classes.users.UserSession;
 
 import com.google.gwt.core.client.Callback;
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.editor.client.Editor;
-import com.google.gwt.editor.client.EditorError;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.History;
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 import com.vaadin.polymer.paper.PaperInputElement;
-import com.vaadin.polymer.paper.widget.PaperInput;
 
 public class UserView extends ApplicationSubviewImpl 
   implements UserPresenter.MyView {
