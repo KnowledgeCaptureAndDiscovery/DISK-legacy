@@ -331,7 +331,8 @@ public class WingsAdapter {
       wflowstatus.setId(runid);
       
       JsonParser jsonParser = new JsonParser();
-      JsonObject expobj = jsonParser.parse(runjson).getAsJsonObject();
+      JsonObject runobj = jsonParser.parse(runjson).getAsJsonObject();
+      JsonObject expobj = runobj.get("execution").getAsJsonObject();
       String status = 
           expobj.get("runtimeInfo").getAsJsonObject().get("status").getAsString();
       wflowstatus.setStatus(status);
