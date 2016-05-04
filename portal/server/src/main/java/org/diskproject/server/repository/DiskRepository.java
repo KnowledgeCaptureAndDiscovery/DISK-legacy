@@ -853,7 +853,7 @@ public class DiskRepository extends KBRepository {
       if(workflowobj != null)
         bindings.setWorkflow(workflowobj.getName());
       bindings.setWorkflowLink(
-          WingsAdapter.get().getWorkflowLink(username, domain, wbobj.getName()));
+          WingsAdapter.get().getWorkflowLink(username, domain, workflowobj.getName()));
       
       // Variable binding details
       for(KBObject vbobj : kb.getPropertyValues(wbobj, pmap.get("hasVariableBinding"))) {

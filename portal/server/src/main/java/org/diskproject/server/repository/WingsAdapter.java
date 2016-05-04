@@ -104,24 +104,6 @@ public class WingsAdapter {
   public String RUNID(String username, String domain, String id) {
     return this.RUNURI(username, domain, id) + "#" + id;
   }
-  
-  /*public List<Workflow> getWorkflowList(String username, String domain) {
-    String pageid = "users/"+username+"/"+domain+"/workflows/getTemplatesListJSON";
-    String listjson = this.get(username, pageid, null);
-    if(listjson == null)
-      return null;
-    
-    List<Workflow> workflowList = new ArrayList<Workflow>();
-    Type type = new TypeToken<List<String>>(){}.getType();
-    List<String> list = json.fromJson(listjson, type);
-    for(String wflowid : list) {
-      Workflow wflow = new Workflow();
-      wflow.setName(wflowid.replaceAll("^.*#", ""));
-      wflow.setLink(this.getWorkflowLink(username, domain, wflow.getName()));
-      workflowList.add(wflow);
-    }
-    return workflowList;
-  }*/
 
   public List<Workflow> getWorkflowList(String username, String domain) {
     String liburi = this.WFLOWURI(username, domain) + "/library.owl";
@@ -135,6 +117,7 @@ public class WingsAdapter {
         KBObject tobj = triple.getSubject();
         Workflow wflow = new Workflow();
         wflow.setName(tobj.getName());
+        wflow.setLink(this.getWorkflowLink(username, domain, wflow.getName()));
         list.add(wflow);
       }
       return list;
