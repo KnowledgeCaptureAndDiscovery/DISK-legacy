@@ -109,7 +109,7 @@
 					margin-right: 5px;
 				}
 			}
-            label.small-grey {
+            .small-grey {
                 color: #737373;
 			    white-space: nowrap;
 			    overflow: hidden;
@@ -121,7 +121,7 @@
 			    font-size: 12px;
 			    margin-top:5px;
 			}
-			label.large-grey {
+			.large-grey {
                 color: #737373;
 			    white-space: nowrap;
 			    overflow: hidden;

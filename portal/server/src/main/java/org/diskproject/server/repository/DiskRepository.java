@@ -1243,7 +1243,7 @@ public class DiskRepository extends KBRepository {
           String runid = wings.runWorkflow(username, domain, bindings.getWorkflow(), 
               sendbindings, inputs);
           if(runid != null)
-            bindings.getRun().setId(runid.replaceAll("^.*#", ""));
+            bindings.getRun().setId(runid);//.replaceAll("^.*#", ""));
         }
         tloi.setStatus(Status.RUNNING);
         updateTriggeredLOI(username, domain, tloi.getId(), tloi);
@@ -1293,8 +1293,9 @@ public class DiskRepository extends KBRepository {
             numFinished++;
             continue;
           }
+          String rname = runid.replaceAll("^.*#", "");
           WorkflowRun wstatus = 
-              WingsAdapter.get().getWorkflowRunStatus(this.username, this.domain, runid);
+              WingsAdapter.get().getWorkflowRunStatus(this.username, this.domain, rname);
           bindings.setRun(wstatus);
           
           if(wstatus.getStatus().equals("FAILURE")) {

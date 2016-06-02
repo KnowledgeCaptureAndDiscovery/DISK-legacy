@@ -41,6 +41,8 @@ public class TriggeredLOIView extends ApplicationSubviewImpl
   @UiField TriggeredLOIViewer viewer;
   @UiField PaperButton reloadbutton;
   
+  Timer timer;
+  
   interface Binder extends UiBinder<Widget, TriggeredLOIView> {
   }
 
@@ -81,6 +83,10 @@ public class TriggeredLOIView extends ApplicationSubviewImpl
     viewer.setVisible(false);
     tloilist.setVisible(false);
     reloadbutton.setVisible(false);
+    if(timer != null) {
+      timer.cancel();
+      timer = null;
+    }
   }
   
   private void showTLOIList() {
@@ -125,7 +131,11 @@ public class TriggeredLOIView extends ApplicationSubviewImpl
             (tloi.getStatus() == Status.QUEUED ||
             tloi.getStatus() == Status.RUNNING)) {
           reloadbutton.setVisible(true);
-          Timer timer = new Timer() {
+          if(timer != null) {
+            timer.cancel();
+            timer = null;
+          }
+          timer = new Timer() {
             public void run() {
                 showTLOI(tloiId);
             }

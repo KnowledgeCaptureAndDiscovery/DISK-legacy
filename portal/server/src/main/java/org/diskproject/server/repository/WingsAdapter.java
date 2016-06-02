@@ -175,9 +175,8 @@ public class WingsAdapter {
   }
   
   public Map<String, String> getRunVariableBindings(
-      String username, String domain, String rname) {
-    String runid = RUNID(username, domain, rname);
-    String runuri = RUNURI(username, domain, rname);
+      String username, String domain, String runid) {
+    String runuri = runid.replace("#.*", "");
     try {
       OntFactory fac = new OntFactory(OntFactory.JENA);
       KBAPI kb = fac.getKB(runuri, OntSpec.PLAIN);
@@ -311,7 +310,7 @@ public class WingsAdapter {
         return null;
       
       WorkflowRun wflowstatus = new WorkflowRun();
-      wflowstatus.setId(runid);
+      wflowstatus.setId(execid);
       
       JsonParser jsonParser = new JsonParser();
       JsonObject runobj = jsonParser.parse(runjson).getAsJsonObject();
