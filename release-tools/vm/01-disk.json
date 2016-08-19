@@ -1,0 +1,75 @@
+{
+  "variables": {
+    "base_ovf_path": "",
+    "vm_name": "DISKVM",
+    "vm_version": ""
+  },
+  "builders": [
+    {
+      "name": "aws",
+      "type": "virtualbox-ovf",
+      "source_path": "{{ user `base_ovf_path` }}",
+      "ssh_username": "root",
+      "ssh_password": "vagrant",
+      "ssh_port": 22,
+      "http_directory": "http",
+      "shutdown_command": "/sbin/halt -h --poweroff",
+      "shutdown_timeout": "5m",
+      "guest_additions_mode": "disable",
+      "headless": true,
+      "format": "ova",
+      "output_directory": "output/{{ build_name }}",
+      "vm_name": "{{ user `vm_name` }}-{{ user `vm_version` }}",
+      "vboxmanage": [
+        [ "modifyvm", "{{ .Name }}", "--cpus", "1" ],
+        [ "modifyvm", "{{ .Name }}", "--memory", "1024" ]
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "start_retry_timeout": "5m",
+      "scripts": [
+        "scripts/commons/update.sh"
+      ]
+    },
+    {
+      "type": "shell",
+      "environment_vars": [
+        "USERNAME=disk",
+        "PASSWD=D!sk123",
+        "TOMCAT_HOME=/usr/share/tomcat",
+        "ROOT_PASSWORD=W1ng5!",
+        "LABKEY_VERSION=LabKey16.1-42836.12-community-bin",
+        "LABKEY_HOME=/usr/local/labkey",
+        "JDBC_USER=labkey",
+        "JDBC_PASSWORD=labkey123",
+        "PHANTOMJS_VERSION=2.1.1"
+      ],
+      "scripts": [
+        "scripts/disk/basics.sh",
+        "scripts/disk/ssl.sh",
+        "scripts/disk/disk.sh",
+        "scripts/disk/wings.sh",
+        "scripts/disk/tpp.sh",
+        "scripts/disk/labkey.sh",
+        "scripts/aws/cloud-init.sh",
+        "scripts/aws/secure-root.sh",
+        "scripts/commons/cleanup.sh",
+        "scripts/commons/zero.sh"
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "amazon-import",
+      "skip_clean": false,
+      "region": "us-west-2",
+      "s3_bucket_name": "disk-vm-bucket",
+      "only": [
+        "aws"
+      ]
+    }
+  ]
+}
