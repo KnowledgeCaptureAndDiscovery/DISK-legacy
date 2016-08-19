@@ -9,4 +9,7 @@
 build
 dist
 tmp
+output/
+packer_cache/
+log-*.txt
 
