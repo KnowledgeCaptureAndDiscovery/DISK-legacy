@@ -33,7 +33,6 @@ from labkey.exceptions import ServerNotFoundError, QueryNotFoundError, RequestEr
 
 def file_exists(*files):
     missing = []
-
     for f in files:
         if not os.path.isfile(f):
             missing.append(os.path.abspath(f))
@@ -408,7 +407,7 @@ class Labkey(object):
     def _trigger_ms2_analysis(self, input_file, input_location, protocol_name, search_engine, run_search=True):
         params = {
             'path': input_location,
-            'file': os.path.basename(input_file),
+            'file': [os.path.basename(one_input_file) for one_input_file in input_file],
             'protocol': protocol_name,
             'runSearch': run_search,
             'Accept': 'application/json'
@@ -446,9 +445,10 @@ class Labkey(object):
 
         if upload is True:
             # Upload input file
-            self._log.debug('uploading input-file %r to server at %r' % (input_file, input_location))
-            self.upload_file(input_location, input_file, create=True, overwrite=True)
-            self._log.info('successfully uploaded input-file')
+            for one_input_file in input_file: 
+                self._log.debug('uploading input-file %r to server at %r' % (one_input_file, input_location))
+                self.upload_file(input_location, one_input_file, create=True, overwrite=True)
+                self._log.info('successfully uploaded input-file')
 
             # Upload FASTA file
             self._log.debug('uploading fasta-file %r to server at %r' % (fasta_file, fasta_location))
@@ -465,8 +465,29 @@ class Labkey(object):
 
         try:
             # Trigger Run
-            input_name = os.path.join(input_location, os.path.splitext(os.path.basename(input_file))[0])
             protocol_name = os.path.splitext(os.path.basename(protocol_file))[0]
+            input_name = ""
+            input_file_prefix = ""
+            if len(input_file) <=1:
+		one_input_file=input_file[0]
+                input_file_prefix = os.path.splitext(os.path.basename(one_input_file))[0]
+		input_name = input_location #temp
+		# If only one file is present in directory, labkey jobname: dest_dirname (protocol_name)
+		# If > 1 files, then labkey jobname: dest_dirname/fileprefix (protocol_name)
+		#dest_dir_url = self._session.get(self._construct_url('_webdav', self.project_name, '@files', input_location))
+		#headers = {'Depth': '1'}
+		#dest_dir_url = self._session.request('PROPFIND',
+                #                         	self._construct_url('_webdav', self.project_name, '@files', input_location), headers=headers)
+		#print dest_dir_url.content
+		print input_file_prefix
+		#count_files_in_dest_dir = len([filename for filename in os.listdir(dest_dir_url) if os.path.isfile(os.path.join(dest_dir_url, filename))])
+		#if count_files_in_dest_dir <=1:
+		#    input_name = input_location	
+		#else: 
+                #    input_name = os.path.join(input_location, input_file_prefix)
+            else:
+		input_file_prefix = "all"
+                input_name = input_location
 
             self._log.info('triggering MS2 analysis run with search-engine %r' % search_engine)
             self._trigger_ms2_analysis(input_file, input_location, protocol_name, search_engine)
@@ -474,7 +495,7 @@ class Labkey(object):
             rv = (
                 '%s (%s)' % (input_name, protocol_name),
                 os.path.join(input_location, search_engine, protocol_name,
-                             os.path.splitext(os.path.basename(input_file))[0])
+                             input_file_prefix)
             )
 
             return rv
