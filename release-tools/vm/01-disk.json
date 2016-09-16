@@ -54,6 +54,7 @@
         "scripts/disk/wings.sh",
         "scripts/disk/tpp.sh",
         "scripts/disk/labkey.sh",
+        "scripts/disk/zhang.sh",
         "scripts/aws/cloud-init.sh",
         "scripts/aws/secure-root.sh",
         "scripts/commons/cleanup.sh",

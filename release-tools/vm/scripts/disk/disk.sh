@@ -12,4 +12,3 @@ CATALINA_OPTS = -Xms128m -Xmx2048m -XX:-HeapDumpOnOutOfMemoryError
 EOT
 
 systemctl restart tomcat
-
