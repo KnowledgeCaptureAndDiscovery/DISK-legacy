@@ -40,4 +40,4 @@ EOT
 make all install
 
 cd ../../..
-rm --recursive --force TPP-4.8.0 TPP_4.8.0.tgz
+rm --recursive --force TPP-4.8.0 TPP_4.8.0-src.tgz
