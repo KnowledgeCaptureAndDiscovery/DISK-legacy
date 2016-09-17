@@ -119,7 +119,7 @@ JAVA_VERSION=`java -version 2>&1 | head -1 | sed -e 's/.*"\(.*\)_.*"/\1/g'`
 yum -y install numpy scipy python-zmq java-${JAVA_VERSION}-openjdk-devel Cython MySQL-python gcc-c++
 pip install matplotlib
 pip install cellprofiler
-yum -y remove gcc-c++
+yum -y remove gcc-c++ Cython
 
 
 # -----
