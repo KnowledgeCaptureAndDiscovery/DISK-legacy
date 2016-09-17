@@ -17,7 +17,7 @@ SAMTOOLS_VERSION='1.3.1'
 
 curl --location \
      --output samtools-${SAMTOOLS_VERSION}.tar.bz2 \
-     "https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2"
+     "https://github.com/samtools/samtools/releases/download/${SAMTOOLS_VERSION}/samtools-${SAMTOOLS_VERSION}.tar.bz2"
 tar jxvf samtools-${SAMTOOLS_VERSION}.tar.bz2
 
 cd samtools-${SAMTOOLS_VERSION}
