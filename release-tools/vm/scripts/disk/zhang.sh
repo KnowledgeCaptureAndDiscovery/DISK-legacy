@@ -9,6 +9,7 @@ set -e
 
 
 yum -y install gcc ncurses-devel
+pip install --upgrade Pillow
 
 
 # ---------
