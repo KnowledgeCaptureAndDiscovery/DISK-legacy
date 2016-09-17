@@ -135,7 +135,6 @@ pip install RSeQC
 
 yum -y install R-devel openssl-devel libcurl-devel
 
-
 Rscript - << EOT
 install.packages("codetools", repos='http://cran.us.r-project.org')
 install.packages("devtools", repos='http://cran.us.r-project.org')
