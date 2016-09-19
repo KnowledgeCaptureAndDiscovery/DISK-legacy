@@ -13,8 +13,8 @@ class LabkeyInit(unittest.TestCase):
         self.driver = self._get_driver()
 
     def _get_driver(self):
-        #return webdriver.PhantomJS(service_args=['--ignore-ssl-errors=yes'])
-        return webdriver.Firefox()
+        return webdriver.PhantomJS(service_args=['--ignore-ssl-errors=yes'])
+        #return webdriver.Firefox()
 
     def __url(self, resource, base=None):
         base = base if base else self.base_url

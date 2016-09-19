@@ -13,7 +13,7 @@ fi
 # Variables
 #----------
 
-export AWS_PROFILE='vm-import@ikcap'
+export AWS_PROFILE='vm-import@stanford'
 export AWS_DEFAULT_PROFILE=${AWS_PROFILE}
 
 URL='http://mirrors.usc.edu/pub/linux/distributions/centos/7/isos/x86_64'
@@ -43,11 +43,13 @@ packer build -var "iso_url=${URL}" \
 # Step 2: Build AWS VM (only for releases)
 #-----------------------------------------
 
+BUCKET="disk-vms"
 AWS_OUT_FILE="output/aws/${VM_NAME}-${VM_VERSION}.ova"
 
 packer build -var "base_ovf_path=${BASE_OUT_FILE}" \
              -var "vm_name=${VM_NAME}" \
              -var "vm_version=${VM_VERSION}" \
+             -var "bucket=${BUCKET}" \
              -parallel=false \
              -machine-readable \
              $@ 01-disk.json | tee log-01.txt

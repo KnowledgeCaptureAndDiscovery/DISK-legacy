@@ -40,7 +40,7 @@ curl --output ${TOMCAT_HOME}/lib/tomcat-dbcp-${TOMCAT_VERSION}.jar \
 mkdir --parent ${LABKEY_HOME}
 
 curl --output ${LABKEY_VERSION}.tar.gz \
-     http://labkey.s3.amazonaws.com/downloads/general/r/16.1/${LABKEY_VERSION}.tar.gz
+     http://labkey.s3.amazonaws.com/downloads/general/r/16.2/${LABKEY_VERSION}.tar.gz
 
 tar zxvf ${LABKEY_VERSION}.tar.gz
 cd  ${LABKEY_VERSION}
@@ -116,8 +116,7 @@ class LabkeyInit(unittest.TestCase):
         self.driver = self._get_driver()
 
     def _get_driver(self):
-        #return webdriver.PhantomJS(service_args=['--ignore-ssl-errors=yes'])
-        return webdriver.Firefox()
+        return webdriver.PhantomJS(service_args=['--ignore-ssl-errors=yes'])
 
     def __url(self, resource, base=None):
         base = base if base else self.base_url

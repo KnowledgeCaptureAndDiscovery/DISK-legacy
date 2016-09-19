@@ -12,16 +12,74 @@ WINGS_DIR='/opt/wings'
 mkdir --parent ${WINGS_DIR}/storage/default ${WINGS_DIR}/server
 chown -R tomcat:tomcat ${WINGS_DIR}
 
-curl --output /etc/tomcat/Catalina/localhost/wings-portal.xml \
-     "http://www.wings-workflows.org/downloads/docker/latest/portal/wings-portal.xml"
+cat > /etc/tomcat/Catalina/localhost/wings-portal.xml <<EOT
+<Context docBase="${WINGS_DIR}/server" debug="0" reloadable="true" crossContext="true">
+   <Parameter name="config.file" value="${WINGS_DIR}/storage/default/portal.properties"/>
+   <ResourceLink name="users" global="UserDatabase"/>
+</Context>
+EOT
 
-curl --output ${WINGS_DIR}/storage/default/portal.properties \
-     "http://www.wings-workflows.org/downloads/docker/latest/portal/portal.properties"
+cat > ${WINGS_DIR}/storage/default/portal.properties <<EOT
+{
+    storage =
+    {
+        local = ${WINGS_DIR}/storage/default;
+        tdb = ${WINGS_DIR}/storage/default/TDB;
+    }
+
+    server = http://localhost:8080;
+    graphviz = /usr/bin/dot;
+    light-reasoner = true;
+
+    ontology =
+    {
+        data = http://www.wings-workflows.org/ontology/data.owl;
+        component = http://www.wings-workflows.org/ontology/component.owl;
+        workflow = http://www.wings-workflows.org/ontology/workflow.owl;
+        execution = http://www.wings-workflows.org/ontology/execution.owl;
+    }
+
+    execution =
+    {
+        engine =
+        {
+            name = Local;
+            implementation = edu.isi.wings.execution.engine.api.impl.local.LocalExecutionEngine;
+            type = BOTH;
+        }
+
+        engine =
+        {
+            name = Distributed;
+            implementation = edu.isi.wings.execution.engine.api.impl.distributed.DistributedExecutionEngine;
+            type = BOTH;
+        }
+
+
+        engine =
+        {
+            name = Pegasus;
+            implementation = edu.isi.wings.execution.engine.api.impl.pegasus.PegasusExecutionEngine;
+            type = BOTH;
+            properties =
+            {
+                pegasus =
+                {
+                    home         = /usr;
+                    storage-dir  = /lfs/pegasus/storage;
+                    site-catalog = /etc/pegasus/local.sites.xml;
+                    site         = condor_pool;
+                }
+            }
+        }
+    }
+}
+EOT
 
 cd ${WINGS_DIR}/server
 
 curl --output wings-portal.war \
-     "http://www.wings-workflows.org/downloads/docker/latest/portal/wings-portal.war"
+     "http://www.wings-workflows.org/downloads/aws/latest/portal/wings-portal.war"
 unzip wings-portal.war
 rm wings-portal.war
 

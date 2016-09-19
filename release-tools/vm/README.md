@@ -7,7 +7,7 @@
 
 ```bash
 cat >> ~/.aws/config <<EOT
-[profile vm-import@ikcap]
+[profile vm-import@stanford]
 output = text
 region = us-west-2
 EOT
@@ -15,7 +15,7 @@ EOT
 
 ```bash
 cat >> ~/.aws/credentials <<EOT
-[vm-import@ikcap]
+[vm-import@stanford]
 aws_access_key_id = <ACCESS_KEY>
 aws_secret_access_key = <SECRET_ACCESS_KEY>
 EOT
@@ -24,7 +24,7 @@ EOT
 # Generate VMs
 
 ```bash
-export AWS_DEFAULT_PROFILE='vm-import@ikcap'
+export AWS_DEFAULT_PROFILE='vm-import@stanford'
 ./build-vm.sh <DISK_VERSION>
 ```
 

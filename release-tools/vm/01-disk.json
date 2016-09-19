@@ -2,7 +2,8 @@
   "variables": {
     "base_ovf_path": "",
     "vm_name": "DISKVM",
-    "vm_version": ""
+    "vm_version": "",
+    "bucket": "disk-vm-bucket"
   },
   "builders": [
     {
@@ -41,7 +42,7 @@
         "PASSWD=D!sk123",
         "TOMCAT_HOME=/usr/share/tomcat",
         "ROOT_PASSWORD=W1ng5!",
-        "LABKEY_VERSION=LabKey16.1-42836.12-community-bin",
+        "LABKEY_VERSION=LabKey16.2-45209.14-community-bin",
         "LABKEY_HOME=/usr/local/labkey",
         "JDBC_USER=labkey",
         "JDBC_PASSWORD=labkey123",
@@ -67,7 +68,7 @@
       "type": "amazon-import",
       "skip_clean": false,
       "region": "us-west-2",
-      "s3_bucket_name": "disk-vm-bucket",
+      "s3_bucket_name": "{{ user `bucket` }}",
       "only": [
         "aws"
       ]
