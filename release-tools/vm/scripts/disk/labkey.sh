@@ -46,7 +46,7 @@ tar --gzip --extract --verbose --file ${LABKEY_VERSION}.tar.gz
 cd  ${LABKEY_VERSION}
 
 cp tomcat-lib/{ant.jar,jtds.jar,mail.jar,mysql.jar,postgresql.jar,labkeyBootstrap.jar} ${TOMCAT_HOME}/lib/
-cp --recursive --force {bin,labkeywebapp,modules,pipeline-lib} ${LABKEY_HOME}
+cp --recursive --force {labkeywebapp,modules,pipeline-lib} ${LABKEY_HOME}
 chown --recursive tomcat:tomcat ${LABKEY_HOME}/{labkeywebapp,modules}
 
 sed -e "s#@@appDocBase@@#${LABKEY_HOME}\/labkeywebapp#g" \
@@ -251,8 +251,8 @@ class LabkeyInit(unittest.TestCase):
     def test_init(self):
         try:
             self.account_setup()
+            self.enable_ssl()
             self.create_project_folder()
-            #self.enable_ssl()
             self.logout()
         except Exception as e:
             #self.driver.save_screenshot('ss.png')
@@ -292,33 +292,35 @@ rm --recursive --force \
 # -------------------------------------------------------------------------------
 
 su - postgres --command "psql --dbname ${JDBC_USER}" <<EOT
-#UPDATE prop.properties p
-#SET    value = ''
-#WHERE  (SELECT s.category
-#        FROM   prop.propertysets s
-#        WHERE  s.set = p.set) = 'SiteConfig'
-#       AND p.name = 'defaultDomain';
+/*
+UPDATE prop.properties p
+SET    value = ''
+WHERE  (SELECT s.category
+        FROM   prop.propertysets s
+        WHERE  s.set = p.set) = 'SiteConfig'
+       AND p.name = 'defaultDomain';
 
-#UPDATE prop.properties p
-#SET    value = 'https://localhost:8443'
-#WHERE  (SELECT s.category
-#        FROM   prop.propertysets s
-#        WHERE  s.set = p.set) = 'SiteConfig'
-#       AND p.name = 'baseServerURL';
+UPDATE prop.properties p
+SET    value = 'https://localhost:8443'
+WHERE  (SELECT s.category
+        FROM   prop.propertysets s
+        WHERE  s.set = p.set) = 'SiteConfig'
+       AND p.name = 'baseServerURL';
 
-#UPDATE prop.properties p
-#SET    value = TRUE
-#WHERE  (SELECT s.category
-#        FROM   prop.propertysets s
-#        WHERE  s.set = p.set) = 'SiteConfig'
-#       AND p.name = 'sslRequired';
+UPDATE prop.properties p
+SET    value = TRUE
+WHERE  (SELECT s.category
+        FROM   prop.propertysets s
+        WHERE  s.set = p.set) = 'SiteConfig'
+       AND p.name = 'sslRequired';
 
-#UPDATE prop.properties p
-#SET    value = '8443'
-#WHERE  (SELECT s.category
-#        FROM   prop.propertysets s
-#        WHERE  s.set = p.set) = 'SiteConfig'
-#       AND p.name = 'sslPort';
+UPDATE prop.properties p
+SET    value = '8443'
+WHERE  (SELECT s.category
+        FROM   prop.propertysets s
+        WHERE  s.set = p.set) = 'SiteConfig'
+       AND p.name = 'sslPort';
+*/
 
 UPDATE prop.properties p
 SET    value = value || ':/usr/local/tpp/bin'

@@ -148,8 +148,8 @@ class LabkeyInit(unittest.TestCase):
     def test_init(self):
         try:
             self.account_setup()
+            self.enable_ssl()
             self.create_project_folder()
-            #self.enable_ssl()
             self.logout()
         except Exception as e:
             #self.driver.save_screenshot('ss.png')
