@@ -71,7 +71,7 @@ NEW_AMI=`aws ec2 copy-image --source-region 'us-west-2' \
 aws ec2 wait image-available --image-id "${NEW_AMI}"
 
 # Make it public
-aws ec2 modify-image-attribute --image-id "${NEW_AMI}" --launch-permission "{\"Add\": [{\"Group\":\"all\"}]}"
+#aws ec2 modify-image-attribute --image-id "${NEW_AMI}" --launch-permission "{\"Add\": [{\"Group\":\"all\"}]}"
 
 # De-register Old AMI
 aws ec2 deregister-image --image-id "${AMI_ID}"
