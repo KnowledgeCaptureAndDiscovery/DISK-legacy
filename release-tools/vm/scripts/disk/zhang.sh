@@ -160,3 +160,17 @@ biocLite("limma")
 biocLite("ComplexHeatmap")
 biocLite("ConsensusClusterPlus")
 EOT
+
+
+# --------------
+# WINGS - Labkey
+# --------------
+
+git clone https://github.com/IKCAP/DISK.git
+
+cd DISK
+
+python setup.py install
+
+cd ..
+rm --recursive --force DISK
