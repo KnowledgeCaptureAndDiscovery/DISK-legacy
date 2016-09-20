@@ -42,7 +42,7 @@ mkdir --parent ${LABKEY_HOME}
 curl --output ${LABKEY_VERSION}.tar.gz \
      http://labkey.s3.amazonaws.com/downloads/general/r/16.2/${LABKEY_VERSION}.tar.gz
 
-tar --gzip --extract --verbose ${LABKEY_VERSION}.tar.gz
+tar --gzip --extract --verbose --file ${LABKEY_VERSION}.tar.gz
 cd  ${LABKEY_VERSION}
 
 cp tomcat-lib/{ant.jar,jtds.jar,mail.jar,mysql.jar,postgresql.jar,labkeyBootstrap.jar} ${TOMCAT_HOME}/lib/

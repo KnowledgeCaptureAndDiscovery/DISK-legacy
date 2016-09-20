@@ -30,7 +30,7 @@ curl --location \
      --output TPP_4.8.0-src.tgz \
      "http://downloads.sourceforge.net/project/sashimi/Trans-Proteomic Pipeline (TPP)/TPP v4.8 (philae) rev 0/TPP_4.8.0-src.tgz?r=https://sourceforge.net/projects/sashimi/&ts=`date +\"%s\"`&use_mirror=iweb"
 
-tar --gzip --extract --verbose TPP_4.8.0-src.tgz
+tar --gzip --extract --verbose --file TPP_4.8.0-src.tgz
 cd  TPP-4.8.0/trans_proteomic_pipeline/src
 
 cat > Makefile.config.incl <<EOT
