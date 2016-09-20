@@ -81,7 +81,7 @@ cd ${WINGS_DIR}/server
 curl --output wings-portal.war \
      "http://www.wings-workflows.org/downloads/aws/latest/portal/wings-portal.war"
 unzip wings-portal.war
-rm wings-portal.war
+rm --force wings-portal.war
 
 sed -i 's/Resource name="UserDatabase" auth/Resource name="UserDatabase" readonly="false" auth/' /etc/tomcat/server.xml
 sed -i 's/<\/tomcat-users>/  <user username="admin" password="4dm1n!23" roles="WingsUser,WingsAdmin"\/>\n<\/tomcat-users>/' /etc/tomcat/tomcat-users.xml
