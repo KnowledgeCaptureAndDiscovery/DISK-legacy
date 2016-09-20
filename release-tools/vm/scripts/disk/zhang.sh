@@ -11,7 +11,6 @@ set -e
 yum -y install gcc ncurses-devel
 pip install --upgrade Pillow
 
-
 # ---------
 # SAM tools
 # ---------
@@ -21,7 +20,7 @@ SAMTOOLS_VERSION='1.3.1'
 curl --location \
      --output samtools-${SAMTOOLS_VERSION}.tar.bz2 \
      "https://github.com/samtools/samtools/releases/download/${SAMTOOLS_VERSION}/samtools-${SAMTOOLS_VERSION}.tar.bz2"
-tar jxvf samtools-${SAMTOOLS_VERSION}.tar.bz2
+tar --bzip2 --extract --verbose samtools-${SAMTOOLS_VERSION}.tar.bz2
 
 cd samtools-${SAMTOOLS_VERSION}
 
@@ -42,7 +41,7 @@ BCFTOOLS_VERSION='1.3.1'
 curl --location \
      --output bcftools-${BCFTOOLS_VERSION}.tar.bz2 \
      "https://github.com/samtools/bcftools/releases/download/${BCFTOOLS_VERSION}/bcftools-${BCFTOOLS_VERSION}.tar.bz2"
-tar jxvf bcftools-${BCFTOOLS_VERSION}.tar.bz2
+tar --bzip2 --extract --verbose bcftools-${BCFTOOLS_VERSION}.tar.bz2
 
 cd bcftools-${BCFTOOLS_VERSION}
 
@@ -80,7 +79,7 @@ TOPHAT2_VERSION='2.1.1'
 curl --location \
      --output tophat-${TOPHAT2_VERSION}.Linux_x86_64.tar.gz \
      "https://ccb.jhu.edu/software/tophat/downloads/tophat-${TOPHAT2_VERSION}.Linux_x86_64.tar.gz"
-tar xxvf tophat-${TOPHAT2_VERSION}.Linux_x86_64.tar.gz
+tar --gzip --extract --verbose tophat-${TOPHAT2_VERSION}.Linux_x86_64.tar.gz
 
 cd tophat-${TOPHAT2_VERSION}.Linux_x86_64
 
@@ -100,7 +99,7 @@ CUFFLINKS_VERSION='2.2.1'
 curl --location \
      --output cufflinks-${CUFFLINKS_VERSION}.Linux_x86_64.tar.gz \
      "http://cole-trapnell-lab.github.io/cufflinks/assets/downloads/cufflinks-${CUFFLINKS_VERSION}.Linux_x86_64.tar.gz"
-tar zxvf cufflinks-${CUFFLINKS_VERSION}.Linux_x86_64.tar.gz
+tar --gzip --extract --verbose cufflinks-${CUFFLINKS_VERSION}.Linux_x86_64.tar.gz
 
 cd cufflinks-${CUFFLINKS_VERSION}.Linux_x86_64
 
