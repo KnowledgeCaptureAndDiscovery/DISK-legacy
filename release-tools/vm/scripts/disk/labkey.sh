@@ -114,9 +114,11 @@ class LabkeyInit(unittest.TestCase):
     def setUp(self):
         self.base_url = 'http://localhost:8080/labkey'
         self.driver = self._get_driver()
+        self.driver.set_window_size(1024, 768)
 
     def _get_driver(self):
         return webdriver.PhantomJS(service_args=['--ignore-ssl-errors=yes'])
+        #return webdriver.Firefox()
 
     def __url(self, resource, base=None):
         base = base if base else self.base_url
@@ -250,9 +252,10 @@ class LabkeyInit(unittest.TestCase):
         try:
             self.account_setup()
             self.create_project_folder()
-            self.enable_ssl()
+            #self.enable_ssl()
             self.logout()
         except Exception as e:
+            #self.driver.save_screenshot('ss.png')
             print self.driver.page_source
             print self.driver.current_url
             raise
@@ -289,33 +292,33 @@ rm --recursive --force \
 # -------------------------------------------------------------------------------
 
 su - postgres --command "psql --dbname ${JDBC_USER}" <<EOT
-UPDATE prop.properties p
-SET    value = ''
-WHERE  (SELECT s.category
-        FROM   prop.propertysets s
-        WHERE  s.set = p.set) = 'SiteConfig'
-       AND p.name = 'defaultDomain';
+#UPDATE prop.properties p
+#SET    value = ''
+#WHERE  (SELECT s.category
+#        FROM   prop.propertysets s
+#        WHERE  s.set = p.set) = 'SiteConfig'
+#       AND p.name = 'defaultDomain';
 
-UPDATE prop.properties p
-SET    value = 'https://localhost:8443'
-WHERE  (SELECT s.category
-        FROM   prop.propertysets s
-        WHERE  s.set = p.set) = 'SiteConfig'
-       AND p.name = 'baseServerURL';
+#UPDATE prop.properties p
+#SET    value = 'https://localhost:8443'
+#WHERE  (SELECT s.category
+#        FROM   prop.propertysets s
+#        WHERE  s.set = p.set) = 'SiteConfig'
+#       AND p.name = 'baseServerURL';
 
-UPDATE prop.properties p
-SET    value = TRUE
-WHERE  (SELECT s.category
-        FROM   prop.propertysets s
-        WHERE  s.set = p.set) = 'SiteConfig'
-       AND p.name = 'sslRequired';
+#UPDATE prop.properties p
+#SET    value = TRUE
+#WHERE  (SELECT s.category
+#        FROM   prop.propertysets s
+#        WHERE  s.set = p.set) = 'SiteConfig'
+#       AND p.name = 'sslRequired';
 
-UPDATE prop.properties p
-SET    value = '8443'
-WHERE  (SELECT s.category
-        FROM   prop.propertysets s
-        WHERE  s.set = p.set) = 'SiteConfig'
-       AND p.name = 'sslPort';
+#UPDATE prop.properties p
+#SET    value = '8443'
+#WHERE  (SELECT s.category
+#        FROM   prop.propertysets s
+#        WHERE  s.set = p.set) = 'SiteConfig'
+#       AND p.name = 'sslPort';
 
 UPDATE prop.properties p
 SET    value = value || ':/usr/local/tpp/bin'
@@ -324,15 +327,5 @@ WHERE  p.name = 'pipelineToolsDirectory';
 EOT
 
 systemctl restart tomcat
-
-#clean up
-#systemctl stop  postgresql-9.5
-#systemctl start  postgresql-9.5
-#su - postgres --command psql <<EOT
-#DROP DATABASE labkey;
-#CREATE DATABASE labkey;
-#GRANT  ALL PRIVILEGES ON DATABASE labkey TO labkey;
-#EOT
-#systemctl restart  postgresql-9.5
 
 pip uninstall --yes selenium

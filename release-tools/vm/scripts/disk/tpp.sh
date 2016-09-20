@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 
 # ----------------------------------------------------------------------------
 # TPP
@@ -20,9 +22,6 @@
 #      zlib     www.gzip.org/zlib
 #      libbz2   www.bzip.org
 #
-#  * yum install curl-devel libxml2-devel make gcc gcc-c++ subversion expat-devel gd gd-devel zlib-devel bzip2-devel mcrypt gnuplot libxslt swig perl-XML-Parser
-
-#yum -y install perl-IO-Compress gnuplot gd-devel libpng-devel
 
 yum -y install bzip2 patch perl-XML-Parser perl-CGI perl-IO-Compress
 

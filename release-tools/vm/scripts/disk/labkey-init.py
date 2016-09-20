@@ -11,6 +11,7 @@ class LabkeyInit(unittest.TestCase):
     def setUp(self):
         self.base_url = 'http://localhost:8080/labkey'
         self.driver = self._get_driver()
+        self.driver.set_window_size(1024, 768)
 
     def _get_driver(self):
         return webdriver.PhantomJS(service_args=['--ignore-ssl-errors=yes'])
@@ -148,9 +149,10 @@ class LabkeyInit(unittest.TestCase):
         try:
             self.account_setup()
             self.create_project_folder()
-            self.enable_ssl()
+            #self.enable_ssl()
             self.logout()
         except Exception as e:
+            #self.driver.save_screenshot('ss.png')
             print self.driver.page_source
             print self.driver.current_url
             raise
