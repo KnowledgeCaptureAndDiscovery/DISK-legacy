@@ -70,6 +70,8 @@ sed -e 's#<Connector port="8080"#<Connector port="8080" compressableMimeType="te
 cd ..
 rm --recursive --force ${LABKEY_VERSION} ${LABKEY_VERSION}.tar.gz
 
+systemctl restart tomcat
+
 #sed -e 's#<Connector port="8080"#<Connector port="80" compressableMimeType="text/html, text/xml, text/javascript, text/plain, text/css, application/json"#g' \
 #    -e 's#<Connector port="80"#<Connector port="80" noCompressionUserAgents="gozilla, traviata"#g' \
 #    -e 's#<Connector port="80"#<Connector port="80" compressionMinSize="2048"#g' \
