@@ -24,7 +24,7 @@ yum -y install ant maven
 yum -y install python-setuptools python-virtualenv
 yum -y install R graphviz
 yum -y install tomcat tomcat-native
-yum -y install nfs-utils
+yum -y install lvm2 nfs-utils
 
 systemctl enable  tomcat
 systemctl start   tomcat
