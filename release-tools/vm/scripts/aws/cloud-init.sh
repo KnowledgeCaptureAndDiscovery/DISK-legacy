@@ -80,7 +80,17 @@ system_info:
 EOT
 
 
-cat > /etc/cloud/cloud.cfg.d/01-growpart.cfg << EOT
+cat > /etc/cloud/cloud.cfg.d/01-mounts.cfg << EOT
+# Reference:
+# http://cloudinit.readthedocs.io/en/latest/topics/examples.html#adjust-mount-points-mounted
+
+mounts:
+ - [ ephemeral0, null ]
+
+EOT
+
+
+cat > /etc/cloud/cloud.cfg.d/02-growpart.cfg << EOT
 #cloud-config
 #
 # growpart entry is a dict, if it is not present at all

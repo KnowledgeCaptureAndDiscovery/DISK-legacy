@@ -10,9 +10,9 @@ set -e
 WINGS_DIR='/opt/wings'
 
 mkdir --parent ${WINGS_DIR}/storage/default ${WINGS_DIR}/server
-chown -R tomcat:tomcat ${WINGS_DIR}
+chown --recursive tomcat:tomcat ${WINGS_DIR}
 
-cat > /etc/tomcat/Catalina/localhost/wings-portal.xml <<EOT
+cat > /etc/tomcat/Catalina/localhost/wings-portal.xml << EOT
 <Context docBase="${WINGS_DIR}/server" debug="0" reloadable="true" crossContext="true">
    <Parameter name="config.file" value="${WINGS_DIR}/storage/default/portal.properties"/>
    <ResourceLink name="users" global="UserDatabase"/>

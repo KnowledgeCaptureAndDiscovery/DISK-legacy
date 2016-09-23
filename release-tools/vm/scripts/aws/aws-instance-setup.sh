@@ -1,212 +1,245 @@
 #!/bin/bash
-#
-# aws-instance-setup
-#
-# chkconfig: 2345 45 25
-# description:
 
-### BEGIN INIT INFO
-# Provides: page-setup
-# Required-Start: $local_fs $network $syslog
-# Required-Stop: $local_fs $syslog
-# Should-Start: $syslog
-# Should-Stop: $network $syslog
-# Default-Start: 2 3 4 5
-# Default-Stop: 0 1 6
-# Short-Description: PAGE VM Setup
-# Description:
-### END INIT INFO
+set -e
 
-# source function library
-. /etc/rc.d/init.d/functions
+
+# Create systemd unit file
+
+cat > /usr/lib/systemd/system/aws-instance-setup.service << EOT
+# ----------------------------------------------------
+# AWS Instance Setup Unit (aws-instance-setup.service)
+#  - Setup scratch on Ephemeral
+#  - Configure HTCondor
+#  - Setup storage on EFS
+#  - Configure Swap space
+# ----------------------------------------------------
+
+[Unit]
+Description=AWS Instance Setup
+Before=condor.service tomcat.service
+After=cloud-init.service
+
+[Service]
+Type=oneshot
+ExecStart=/etc/init.d/aws-instance-setup start
+ExecStop=ExecStart=/etc/init.d/aws-instance-setup stop
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOT
+
+
+cat > /etc/init.d/aws-instance-setup << EOF
+#!/bin/bash
+
+set -e
+
 
 RETVAL=0
-
-VOLUME_GROUP="vg01"
-LOGICAL_VOLUME="lvol01"
-DIR="/scratch"
-
-runlevel=$(set -- $(runlevel); eval "echo \$$#" )
+VOLUME_GROUP='vg01'
+LOGICAL_VOLUME='lvol01'
+SCRATCH_DIR='/scratch'
+STORAGE_DIR='/efs'
 
 
 configure_me()
 {
-    # get the user data
-    curl --silent --output /etc/user-data http://169.254.169.254/2009-04-04/user-data
-    touch /etc/user-data
-    if grep 10. /etc/user-data > /dev/null 2>&1; then
-        MASTER_IP=`cat /etc/user-data`
+    USER_DATA='/var/lib/cloud/instance/user-data.txt'
+
+    if [ -e \${USER_DATA} ]; then
+        source \${USER_DATA}
     fi
 
+    echo "Mount ephemeral disks"
     mount_ephemeral_disks
 
-    # this is placeholder. till we really need to configure condor stuff
+    echo "Mount EFS disk"
+    mount_efs_disk
+
+    echo "Basic HTCondor setup"
     condor_basic_setup
 
-    MY_IP=`ifconfig eth0 | grep "inet addr:" | sed 's/.*inet addr://' | sed 's/ .*//'`
+    MY_IP=\`ifconfig eth0 | grep "inet " | sed 's/.*inet //' | sed 's/ .*//'\`
 
-    if [ "x$MASTER_IP" != "x" ]; then
-        setup_worker $MY_IP $MASTER_IP
+    if [ "x\${MASTER_IP}" != "x" ]; then
+        echo "Configure HTCondor as Worker node"
+        setup_worker \${MY_IP} \${MASTER_IP}
     else
-        setup_master $MY_IP
+        echo "Configure HTCondor as Master node"
+        setup_master \${MY_IP}
     fi
 
-    echo "Setting up swap space"
+    echo "configure swap space"
     setup_swap_space
-
-    # the base Page Large VM has a 12GB on /dev/xvda2
-    # mount as /software
-    #if [ -e /dev/xvda2 ] && [ ! -e /software ]; then
-    if [ -e /dev/xvda2 ]; then
-	mkdir -p /software
-	mount /dev/xvda2 /software/
-    fi
 }
 
-setup_swap_space()
-{
-    #turn of existing swap partitions if any
-    swapoff -a
-
-    SWAP_DIR=/tmp
-    if [ -d /scratch ]; then
-    	SWAP_DIR=/scratch
-    fi
-
-    dd if=/dev/zero of=$SWAP_DIR/myswapfile bs=1M count=3072
-    chmod 600 $SWAP_DIR/myswapfile
-    mkswap $SWAP_DIR/myswapfile
-    swapon $SWAP_DIR/myswapfile
-}
 
 mount_ephemeral_disks()
 {
-    #should have a matching stop method
-    mount_ephemeral_disks_lvm
-}
+    # Unmount ephemeral storage
+    umount /mnt 2>/dev/null || /bin/true
 
+    # Remove existing volume group
+    umount \${SCRATCH_DIR} 2>/dev/null || /bin/true
 
-mount_ephemeral_disks_lvm(){
+    # Remove the logical volume
+    /sbin/lvremove --force /dev/\${VOLUME_GROUP}/\${LOGICAL_VOLUME} 2>/dev/null || /bin/true
 
-    #mounts all ephemeral storage to a single /scratch via lvm
+    # Deactivate the volume group
+    /sbin/vgchange --activate n \${VOLUME_GROUP} 2>/dev/null || /bin/true
 
-    #unmount any ephemeral storage mounted automatically
-    umount /mnt/ || true
+    # Remove the volume group if exists
+    /sbin/vgremove \${VOLUME_GROUP} 2>/dev/null || /bin/true
+
+    BD_META_URL='http://169.254.169.254/latest/meta-data/block-device-mapping/'
 
     LVM_DEVICES=()
-    # m3-xlarge instances have xvdb and xvdc
-    for DEV in xvdf xvdg xvdh xvdi xvdj xvdk xvdb xvdc; do
-	    if [ -e /dev/$DEV ]; then
-            VALID_DEV_COUNT=$(($VALID_DEV_COUNT + 1))
-            LVM_DEVICES+=("/dev/$DEV")
-	    fi
+    for DEVICE in \`curl --silent \${BD_META_URL} | grep ephemeral\`; do
+        DEVICE=\`curl --silent \${BD_META_URL}\${DEVICE}\`
+        DEVICE="/dev/xvd\${DEVICE:(-1)}"
+
+        if [ -e \${DEVICE} ]; then
+            VALID_DEV_COUNT=\$((\$VALID_DEV_COUNT + 1))
+            LVM_DEVICES+=(\${DEVICE})
+        fi
     done
 
+    # Remove the physical volumes
+    /sbin/pvremove \${LVM_DEVICES[@]} 2>/dev/null || /bin/true
 
-    # remove existing volume groups if they exist
-    umount /scratch 2>/dev/null || /bin/true
-    # remove the logical volume
-    yes | /sbin/lvremove /dev/$VOLUME_GROUP/$LOGICAL_VOLUME 2>/dev/null || /bin/true
-    # deactivate the volume group
-    /sbin/vgchange -a n $VOLUME_GROUP 2>/dev/null || /bin/true
-    # remove the volume group if exists
-    yes | /sbin/vgremove $VOLUME_GROUP 2>/dev/null || /bin/true
-    # remove the physical volumes
-    /sbin/pvremove ${LVM_DEVICES[@]} 2>/dev/null || /bin/true
-
-    # do the lvm setup
-    for DEVICE in "${LVM_DEVICES[@]}"; do
-        # create physical volume corresponding to each device
-	    /sbin/pvcreate $DEVICE
+    # LVM Setup
+    for DEVICE in "\${LVM_DEVICES[@]}"; do
+        # Create physical volume
+        /sbin/pvcreate --yes \${DEVICE}
     done
 
-    LVM_NUM=${#LVM_DEVICES[@]}
-    if [ $LVM_NUM -gt 0 ]; then
-        # we can setup /scratch via LVM
+    LVM_NUM=\${#LVM_DEVICES[@]}
+    if [ \${LVM_NUM} -gt 0 ]; then
+        # Create the volume group
+        /sbin/vgcreate \${VOLUME_GROUP} \${LVM_DEVICES[@]}
 
-        #create the volume group corresponding to all the  physical volumes
-        /sbin/vgcreate $VOLUME_GROUP ${LVM_DEVICES[@]}
+        # Activate the volume group
+        /sbin/vgchange --activate y \${VOLUME_GROUP}
 
-        #activate the volume group
-        /sbin/vgchange -a y $VOLUME_GROUP
+        # Create a logical volume
+        yes | /sbin/lvcreate --extents 100%FREE --name \${LOGICAL_VOLUME} \${VOLUME_GROUP}
 
-        # create a logical volume with as much space as free
-        /sbin/lvcreate -l100%FREE -n $LOGICAL_VOLUME $VOLUME_GROUP
-        mkfs.ext4 /dev/$VOLUME_GROUP/$LOGICAL_VOLUME
-        mkdir -p /scratch
-        mount /dev/$VOLUME_GROUP/$LOGICAL_VOLUME $DIR
-        chown -R  page:page $DIR
+        # Format the logical volume
+        mkfs.ext4 /dev/\${VOLUME_GROUP}/\${LOGICAL_VOLUME}
+
+        mkdir --parent \${SCRATCH_DIR}
+
+        mount /dev/\${VOLUME_GROUP}/\${LOGICAL_VOLUME} \${SCRATCH_DIR}
+
+        chown --recursive tomcat:tomcat \${SCRATCH_DIR}
     fi
 
+}
+
+mount_efs_disk()
+{
+    if [ "x\${EFS_ID}" != "x" ]; then
+        echo "Configure EFS \${EFS_ID}"
+        mkdir --parent \${STORAGE_DIR}
+        mount --types nfs4 \\
+              --options nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 \\
+              \`curl --silent http://169.254.169.254/latest/meta-data/placement/availability-zone\`.\${EFS_ID}.efs.us-west-2.amazonaws.com:/ \${STORAGE_DIR}
+    fi
 }
 
 condor_basic_setup()
 {
-    return 0
+    cat > /etc/condor/config.d/01-common << EOT
+UID_DOMAIN = *
+FILESYSTEM_DOMAIN = *
+EOT
+
+    rm --force /etc/condor/config.d/02-mode
 }
 
 setup_master()
 {
-    MY_IP=$1
+    MY_IP=\$1
+    cat > /etc/condor/config.d/02-mode << EOT
+# Master Node Configuration
+# https://twiki.grid.iu.edu/bin/view/Documentation/Release3/InstallCondor
+DAEMON_LIST = MASTER, COLLECTOR, NEGOTIATOR, SCHEDD
+EOT
+}
+
+setup_worker()
+{
+    MY_IP=\$1
+    MASTER_IP=\$2
+
+    cat > /etc/condor/config.d/02-mode << EOT
+# Worker Node Configuration
+# https://twiki.grid.iu.edu/bin/view/Documentation/Release3/InstallCondor
+DAEMON_LIST = MASTER, STARTD
+
+CONDOR_HOST = \${MASTER_IP}
+EOT
     return 0
 }
 
-setup_worker() {
-    MY_IP=$1
-    MASTER_IP=$2
-    return 0
+setup_swap_space()
+{
+    # Turn off existing swap partitions
+    swapoff --all
+
+    SWAP_DIR='/tmp'
+    if [ -d \${SCRATCH_DIR} ]; then
+        SWAP_DIR="\${SCRATCH_DIR}"
+    fi
+
+    dd if=/dev/zero of=\${SWAP_DIR}/swap-file bs=1M count=3072
+    chmod 600 \${SWAP_DIR}/swap-file
+    mkswap \${SWAP_DIR}/swap-file
+    swapon \${SWAP_DIR}/swap-file
 }
 
 start()
 {
     echo -n "Setting up AWS instance: "
-    configure_me && success || failure
-    RETVAL=$?
+    configure_me
+    RETVAL=\$?
     echo
-    return $RETVAL
+    return \${RETVAL}
 }
 
 stop()
 {
-    stop_with_lvm
+    # Turns off all swap partitions
+    swapoff --all
+
+    # Turns on swap partitions listed in /etc/fstab
+    swapon --all
+
+    # Unmount Ephemeral storage
+    if [ -d \${SCRATCH_DIR} ]; then
+        umount \${SCRATCH_DIR} 2>/dev/null || /bin/true
+        /sbin/vgchange --activate n \${VOLUME_GROUP}
+    fi
+
+    # Unmount EFS storage
+    if [ -d \${SCRATCH_DIR} ]; then
+        umount \${STORAGE_DIR} 2>/dev/null || /bin/true
+    fi
 }
 
-stop_with_lvm()
+restart()
 {
-    SWAP_DIR=/tmp
-	if [ -d /scratch ]; then
-	    SWAP_DIR=/scratch
-	fi
-
-	swapoff $SWAP_DIR/myswapfile
-
-	#unmount the /scratch dir if exists
-	if [ -d /scratch ]; then
-	    umount /scratch
-	    #/scratch also means we have lvm setup
-	    /sbin/vgchange -a n $VOLUME_GROUP
-	fi
-
-    return 0
-}
-
-reload()
-{
-    start
-    stop
-}
-
-restart() {
     stop
     start
 }
 
-force_reload() {
-    restart
-}
 
+# ----
+# Main
+# ----
 
-case "$1" in
+case "\$1" in
     start)
         start
         ;;
@@ -216,11 +249,15 @@ case "$1" in
     restart)
         restart
         ;;
-    reload)
-        reload
-        ;;
     *)
-        echo $"Usage: $0 {start|stop|restart|reload}"
+        echo \$"Usage: \$0 {start|stop|restart}"
         RETVAL=2
 esac
-exit $RETVAL
+
+exit \${RETVAL}
+
+EOF
+
+chmod +x /etc/init.d/aws-instance-setup
+
+systemctl enable aws-instance-setup
