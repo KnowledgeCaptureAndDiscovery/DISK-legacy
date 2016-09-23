@@ -158,8 +158,8 @@ EOT
         chown --recursive condor:condor \${SCRATCH_DIR}/condor
 
         cat >> /etc/condor/config.d/01-common << EOT
-SPOOL = \${SCRATCH_DIR}/spool
-EXECUTE = \${SCRATCH_DIR}/execute
+SPOOL = \${SCRATCH_DIR}/condor/spool
+EXECUTE = \${SCRATCH_DIR}/condor/execute
 EOT
     fi
 

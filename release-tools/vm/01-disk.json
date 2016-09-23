@@ -57,6 +57,7 @@
         "scripts/disk/labkey.sh",
         "scripts/disk/zhang.sh",
         "scripts/aws/cloud-init.sh",
+        "scripts/aws/aws-instance-setup.sh",
         "scripts/aws/secure-root.sh",
         "scripts/commons/cleanup.sh",
         "scripts/commons/zero.sh"
