@@ -155,6 +155,12 @@ DAEMON_LIST = MASTER, STARTD
 
 CONDOR_HOST = ${MASTER_IP}
 EOT
+
+    systemctl stop    tomcat
+    systemctl disable tomcat
+    systemctl stop    postgresql-9.5
+    systemctl disable postgresql-9.5
+
     return 0
 }
 
