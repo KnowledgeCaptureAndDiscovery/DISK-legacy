@@ -131,8 +131,6 @@ mount_ephemeral_disks()
         mkdir --parent \${SCRATCH_DIR}
 
         mount /dev/\${VOLUME_GROUP}/\${LOGICAL_VOLUME} \${SCRATCH_DIR}
-
-        chown --recursive tomcat:tomcat \${SCRATCH_DIR}
     fi
 
 }
@@ -154,6 +152,16 @@ condor_basic_setup()
 UID_DOMAIN = *
 FILESYSTEM_DOMAIN = *
 EOT
+
+    if [ -d \${SCRATCH_DIR} ]; then
+        mkdir --parent \${SCRATCH_DIR}/condor/{spool,execute}
+        chown --recursive condor:condor \${SCRATCH_DIR}/condor
+
+        cat >> /etc/condor/config.d/01-common << EOT
+SPOOL = \${SCRATCH_DIR}/spool
+EXECUTE = \${SCRATCH_DIR}/execute
+EOT
+    fi
 
     rm --force /etc/condor/config.d/02-mode
 }
