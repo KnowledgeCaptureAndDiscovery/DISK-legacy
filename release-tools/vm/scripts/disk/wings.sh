@@ -8,27 +8,30 @@ set -e
 # -----
 
 WINGS_DIR='/opt/wings'
+EFS_DIR='/efs'
+EFS_WINGS_DIR="${EFS_DIR}/wings"
+EFS_PEGASUS_DIR="${EFS_DIR}/pegasus"
 
-mkdir --parent ${WINGS_DIR}/storage/default ${WINGS_DIR}/server
+mkdir --parent ${WINGS_DIR}/server
 chown --recursive tomcat:tomcat ${WINGS_DIR}
 
 cat > /etc/tomcat/Catalina/localhost/wings-portal.xml << EOT
 <Context docBase="${WINGS_DIR}/server" debug="0" reloadable="true" crossContext="true">
-   <Parameter name="config.file" value="${WINGS_DIR}/storage/default/portal.properties"/>
+   <Parameter name="config.file" value="${WINGS_DIR}/server/portal.properties"/>
    <ResourceLink name="users" global="UserDatabase"/>
 </Context>
 EOT
 
-cat > ${WINGS_DIR}/storage/default/portal.properties <<EOT
+cat > ${WINGS_DIR}/server/portal.properties <<EOT
 {
     storage =
     {
-        local = ${WINGS_DIR}/storage/default;
-        tdb = ${WINGS_DIR}/storage/default/TDB;
+        local = ${EFS_WINGS_DIR}/storage/default;
+        tdb   = ${EFS_WINGS_DIR}/storage/default/TDB;
     }
 
-    server = http://localhost:8080;
-    graphviz = /usr/bin/dot;
+    server         = http://localhost:8080;
+    graphviz       = /usr/bin/dot;
     light-reasoner = true;
 
     ontology =
@@ -66,7 +69,7 @@ cat > ${WINGS_DIR}/storage/default/portal.properties <<EOT
                 pegasus =
                 {
                     home         = /usr;
-                    storage-dir  = /lfs/pegasus/storage;
+                    storage-dir  = ${EFS_PEGASUS_DIR}/storage;
                     site-catalog = /etc/pegasus/local.sites.xml;
                     site         = condor_pool;
                 }
