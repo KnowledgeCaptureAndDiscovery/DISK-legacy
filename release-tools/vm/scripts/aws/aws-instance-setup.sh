@@ -195,6 +195,8 @@ NUM_SLOTS = 1
 NUM_SLOTS_TYPE_1 = 1
 SLOT_TYPE_1 = 100%
 SLOT_TYPE_1_PARTITIONABLE = TRUE
+
+JOB_DEFAULT_REQUESTMEMORY = ifthenelse(MemoryUsage =!= UNDEFINED,MemoryUsage,4096)
 EOT
 
     systemctl stop    tomcat
