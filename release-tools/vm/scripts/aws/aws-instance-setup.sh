@@ -187,6 +187,14 @@ setup_worker()
 DAEMON_LIST = MASTER, STARTD
 
 CONDOR_HOST = \${MASTER_IP}
+
+# Dynamic Slot Configuration
+# http://research.cs.wisc.edu/htcondor/manual/latest/3_5Policy_Configuration.html
+
+NUM_SLOTS = 1
+NUM_SLOTS_TYPE_1 = 1
+SLOT_TYPE_1 = 100%
+SLOT_TYPE_1_PARTITIONABLE = TRUE
 EOT
 
     systemctl stop    tomcat
