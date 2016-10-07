@@ -140,6 +140,11 @@ setup_master()
 # Master Node Configuration
 # https://twiki.grid.iu.edu/bin/view/Documentation/Release3/InstallCondor
 DAEMON_LIST = MASTER, COLLECTOR, NEGOTIATOR, SCHEDD
+
+# Dynamic Slot Configuration
+# http://research.cs.wisc.edu/htcondor/manual/latest/3_5Policy_Configuration.html
+
+JOB_DEFAULT_REQUESTMEMORY = ifthenelse(MemoryUsage =!= UNDEFINED,MemoryUsage,4096)
 EOT
 }
 
@@ -162,9 +167,6 @@ NUM_SLOTS = 1
 NUM_SLOTS_TYPE_1 = 1
 SLOT_TYPE_1 = 100%
 SLOT_TYPE_1_PARTITIONABLE = TRUE
-
-JOB_DEFAULT_REQUESTMEMORY = ifthenelse(MemoryUsage =!= UNDEFINED,MemoryUsage,4096)
-
 EOT
 
     systemctl stop    tomcat
