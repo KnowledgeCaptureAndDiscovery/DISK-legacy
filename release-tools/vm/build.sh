@@ -15,6 +15,8 @@ fi
 
 export AWS_PROFILE='vm-import@stanford'
 export AWS_DEFAULT_PROFILE=${AWS_PROFILE}
+export AWS_POLL_DELAY_SECONDS=3
+export AWS_TIMEOUT_SECONDS=600
 
 URL='http://mirrors.usc.edu/pub/linux/distributions/centos/7/isos/x86_64'
 ISO=`curl --silent ${URL}/sha256sum.txt | grep 'NetInstall'`

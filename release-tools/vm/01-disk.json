@@ -1,42 +1,56 @@
 {
-  "variables": {
-    "base_ovf_path": "",
-    "vm_name": "DISKVM",
-    "vm_version": "",
-    "bucket": "disk-vm-bucket"
-  },
   "builders": [
     {
-      "name": "aws",
-      "type": "virtualbox-ovf",
-      "source_path": "{{ user `base_ovf_path` }}",
-      "ssh_username": "root",
-      "ssh_password": "vagrant",
-      "ssh_port": 22,
-      "http_directory": "http",
-      "shutdown_command": "/sbin/halt -h --poweroff",
-      "shutdown_timeout": "5m",
+      "format": "ova",
       "guest_additions_mode": "disable",
       "headless": true,
-      "format": "ova",
+      "http_directory": "http",
+      "name": "aws",
       "output_directory": "output/{{ build_name }}",
-      "vm_name": "{{ user `vm_name` }}-{{ user `vm_version` }}",
+      "shutdown_command": "/sbin/halt -h --poweroff",
+      "shutdown_timeout": "5m",
+      "source_path": "{{ user `base_ovf_path` }}",
+      "ssh_password": "vagrant",
+      "ssh_port": 22,
+      "ssh_username": "root",
+      "type": "virtualbox-ovf",
       "vboxmanage": [
-        [ "modifyvm", "{{ .Name }}", "--cpus", "1" ],
-        [ "modifyvm", "{{ .Name }}", "--memory", "1024" ]
-      ]
+        [
+          "modifyvm",
+          "{{ .Name }}",
+          "--cpus",
+          "1"
+        ],
+        [
+          "modifyvm",
+          "{{ .Name }}",
+          "--memory",
+          "1024"
+        ]
+      ],
+      "vm_name": "{{ user `vm_name` }}-{{ user `vm_version` }}"
+    }
+  ],
+  "post-processors": [
+    {
+      "only": [
+        "aws"
+      ],
+      "region": "us-west-2",
+      "s3_bucket_name": "{{ user `bucket` }}",
+      "skip_clean": false,
+      "type": "amazon-import"
     }
   ],
   "provisioners": [
     {
-      "type": "shell",
-      "start_retry_timeout": "5m",
       "scripts": [
         "scripts/commons/update.sh"
-      ]
+      ],
+      "start_retry_timeout": "5m",
+      "type": "shell"
     },
     {
-      "type": "shell",
       "environment_vars": [
         "USERNAME=disk",
         "PASSWD=D!sk123",
@@ -61,18 +75,15 @@
         "scripts/aws/secure-root.sh",
         "scripts/commons/cleanup.sh",
         "scripts/commons/zero.sh"
-      ]
+      ],
+      "type": "shell"
     }
   ],
-  "post-processors": [
-    {
-      "type": "amazon-import",
-      "skip_clean": false,
-      "region": "us-west-2",
-      "s3_bucket_name": "{{ user `bucket` }}",
-      "only": [
-        "aws"
-      ]
-    }
-  ]
+  "variables": {
+    "base_ovf_path": "",
+    "bucket": "disk-vm-bucket",
+    "vm_name": "DISKVM",
+    "vm_version": ""
+  }
 }
+

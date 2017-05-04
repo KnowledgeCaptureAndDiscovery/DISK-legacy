@@ -8,7 +8,7 @@ set -e
 # -------------
 
 
-yum -y install gcc ncurses-devel
+yum -y install gcc ncurses-devel ImageMagick
 pip install --upgrade Pillow
 
 # ---------
@@ -118,7 +118,10 @@ JAVA_VERSION=`java -version 2>&1 | head -1 | sed -e 's/.*"\(.*\)_.*"/\1/g'`
 
 yum -y install numpy scipy python-zmq java-${JAVA_VERSION}-openjdk-devel Cython MySQL-python gcc-c++
 pip install matplotlib
-pip install cellprofiler
+git clone https://github.com/CellProfiler/CellProfiler.git /usr/local/cellprofiler
+pushd /usr/local/cellprofiler > /dev/null
+pip install -e . --process-dependency-links
+popd > /dev/null
 yum -y remove gcc-c++ Cython
 
 
@@ -152,6 +155,8 @@ install.packages("circlize", repos='http://cran.us.r-project.org')
 install.packages("corrplot", repos='http://cran.us.r-project.org')
 install.packages("Hmisc", repos='http://cran.us.r-project.org')
 install.packages("gdata", repos='http://cran.us.r-project.org')
+install.packages("factoextra", dependencies=TRUE, repos='http://cran.rstudio.com/', type='source')
+install.packages("scagnostics", repos='http://cran.us.r-project.org')
 source('http://bioconductor.org/biocLite.R')
 biocLite()
 biocLite("customProDB")
@@ -160,6 +165,72 @@ biocLite("limma")
 biocLite("ComplexHeatmap")
 biocLite("ConsensusClusterPlus")
 EOT
+
+
+# --------
+# MSGFPlus
+# --------
+
+curl --location \
+     --output MSGFPlus.zip \
+     "https://omics.pnl.gov/sites/default/files/MSGFPlus.zip"
+unzip -o -d /usr/local/msgfplus MSGFPlus.zip
+rm --force MSGFPlus.zip
+
+
+# ------------
+# ProteoWizard
+# ------------
+
+curl --location \
+     --request POST \
+     --form "downloadtype=bt17" \
+     --output "pwiz-bin-linux-x86_64-gcc48-release-3_0_10800.tar.bz2" \
+     "http://data.mallicklab.com/download.php"
+mkdir /usr/local/proteowizard
+tar jxvf pwiz-bin-linux-x86_64-gcc48-release-3_0_10800.tar.bz2 --directory=/usr/local/proteowizard
+rm --force pwiz-bin-linux-x86_64-gcc48-release-3_0_10800.tar.bz2
+cat > /etc/profile.d/proteowizard.sh << EOT
+export PATH=/usr/local/proteowizard:$PATH
+EOT
+
+
+# -----------
+# bumbershoot
+# -----------
+
+curl --location \
+     --request POST \
+     --form "downloadtype=ProteoWizard_Bumbershoot_Linux_X86_64" \
+     --output "bumbershoot-bin-linux-gcc48-release-3_0_10800.tar.bz2" \
+     "http://data.mallicklab.com/download.php"
+mkdir /usr/local/bumbershoot
+tar jxvf bumbershoot-bin-linux-gcc48-release-3_0_10800.tar.bz2 --directory=/usr/local/bumbershoot
+rm --force pwiz-bin-linux-x86_64-gcc48-release-3_0_10800.tar.bz2
+cat > /etc/profile.d/bumbershoot.sh << EOT
+export PATH=/usr/local/bumbershoot:$PATH
+EOT
+
+
+# -------
+# bftools
+# -------
+
+curl --location \
+     --output bftools.zip \
+     "http://downloads.openmicroscopy.org/latest/bio-formats5.4/artifacts/bftools.zip"
+unzip -o -d /usr/local bftools.zip
+rm --force bftools.zip
+cat > /etc/profile.d/bftools.sh << EOT
+export PATH=/usr/local/bftools:$PATH
+EOT
+
+
+# ---------
+# biopython
+# ---------
+
+pip install biopython
 
 
 # --------------

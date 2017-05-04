@@ -82,7 +82,8 @@ EOT
 cd ${WINGS_DIR}/server
 
 curl --output wings-portal.war \
-     "http://www.wings-workflows.org/downloads/aws/latest/portal/wings-portal.war"
+     "http://www.isi.edu/~mayani/wings-portal.war"
+
 unzip wings-portal.war
 rm --force wings-portal.war
 
