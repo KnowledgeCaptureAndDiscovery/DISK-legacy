@@ -16,7 +16,7 @@ done
 
 yum clean all
 
-rm --recursive --force /root/* /var/lib/dhclient/* /tmp/*
+rm --recursive --force /root/* /var/lib/dhclient/* /var/log/tomcat/* /tmp/*
 
 truncate --size 0 `find /var/log -type f | xargs`
 
