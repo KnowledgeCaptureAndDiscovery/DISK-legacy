@@ -122,7 +122,7 @@ git clone https://github.com/CellProfiler/CellProfiler.git /usr/local/cellprofil
 pushd /usr/local/cellprofiler > /dev/null
 pip install -e . --process-dependency-links
 popd > /dev/null
-yum -y remove gcc-c++ Cython
+yum -y remove Cython
 
 
 # -----
@@ -231,6 +231,33 @@ EOT
 # ---------
 
 pip install biopython
+
+
+# ----
+# RSEM
+# ----
+
+curl --location \
+     --output RSEM-1.3.0.tar.gz \
+     "https://github.com/deweylab/RSEM/archive/v1.3.0.tar.gz"
+tar zxvf RSEM-1.3.0.tar.gz
+cd RSEM-1.3.0
+make
+make ebseq
+make install
+cd ..
+rm --recursive --force RSEM-1.3.0.tar.gz RSEM-1.3.0
+yum -y remove gcc-c++
+
+
+# ------
+# MuTect
+# ------
+
+yum -y install java-1.7.0-openjdk
+cat > /etc/profile.d/java-7.sh << EOT
+alias java7=/usr/lib/jvm/jre-1.7.0/bin/java
+EOT
 
 
 # --------------
