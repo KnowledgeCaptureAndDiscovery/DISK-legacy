@@ -32,7 +32,6 @@ cat > ${WINGS_DIR}/server/portal.properties <<EOT
 
     server         = http://localhost:8080;
     graphviz       = /usr/bin/dot;
-    light-reasoner = true;
 
     ontology =
     {
