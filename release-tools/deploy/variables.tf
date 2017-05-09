@@ -1,8 +1,12 @@
 variable "disk_version" {
-  default = "1.1"
+  default = "1.2"
 }
 
-variable "worker_count" {
+variable "aws_ami" {
+  default = "ami-8a31abea"
+}
+
+variable "workers" {
   description = "No. of worker instances to start"
   default = 0
 }
@@ -20,10 +24,6 @@ variable "aws_region" {
 variable "key_name" {
   description = "Desired name of AWS key pair"
   default = "wings_test"
-}
-
-variable "aws_ami" {
-  default = "ami-57a43f37"
 }
 
 variable "aws_instance_type" {

@@ -58,7 +58,7 @@ resource "aws_instance" "disk-worker" {
   key_name      = "${var.key_name}"
   user_data     = "EFS_ID='${var.aws_efs_id}'\nMASTER_IP='${aws_instance.disk-master.private_ip}'"
 
-  count         = "${var.worker_count}"
+  count         = "${var.workers}"
 
   security_groups = [
     "disk-worker",

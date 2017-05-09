@@ -44,26 +44,26 @@ terraform destroy
 Use plan command to see how your command will affect the AWS resources
 
 ```bash
-terraform plan -var "worker_count=0"
+terraform plan -var "workers=0"
 ```
 
 # Start master with one worker
 
 ```bash
-terraform apply -var "worker_count=1"
+terraform apply -var "workers=1"
 ```
 
 # Increase no. of workers
 
 ```bash
 # Worker count must be more than current worker count
-terraform apply -var "worker_count=2"
+terraform apply -var "workers=2"
 ```
 
 # Decrease no. of workers
 
 ```bash
 # Worker count must be less than current worker count
-terraform apply -var "worker_count=0"
+terraform apply -var "workers=0"
 ```
 
