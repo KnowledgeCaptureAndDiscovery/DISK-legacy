@@ -69,7 +69,7 @@ cat > ${WINGS_DIR}/server/portal.properties <<EOT
                 {
                     home         = /usr;
                     storage-dir  = ${EFS_PEGASUS_DIR}/storage;
-                    site-catalog = /etc/pegasus/local.sites.xml;
+                    site-catalog = ${EFS_PEGASUS_DIR}/pegasus/sites.xml;
                     site         = condor_pool;
                 }
             }
