@@ -21,6 +21,9 @@ configure_me()
     echo "Mount ephemeral disks"
     mount_ephemeral_disks
 
+    echo "Setup TMPDIR"
+    setup_tmp_dir
+
     echo "Mount EFS disk"
     mount_efs_disk
 
@@ -100,6 +103,26 @@ mount_ephemeral_disks()
         mount /dev/${VOLUME_GROUP}/${LOGICAL_VOLUME} ${SCRATCH_DIR}
     fi
 
+}
+
+setup_tmp_dir()
+{
+    TMP_DIR='/tmp'
+    if [ -d ${SCRATCH_DIR} ]; then
+        TMP_DIR="${SCRATCH_DIR}/tmp"
+
+        if [ ! -d ${TMP_DIR} ]; then
+            mkdir --parent ${TMP_DIR}
+            chmod 777 ${TMP_DIR}
+            chmod o+t ${TMP_DIR}
+
+            cat > /etc/environment << EOT
+export TMPDIR=${TMP_DIR}
+EOT
+        fi
+    fi
+
+    return 0
 }
 
 mount_efs_disk()
