@@ -119,6 +119,12 @@ setup_tmp_dir()
             cat > /etc/environment << EOT
 export TMPDIR=${TMP_DIR}
 EOT
+            cat > /etc/profile.d/tmpdir.sh << EOT
+export TMPDIR=${TMP_DIR}
+EOT
+            cat > /etc/profile.d/tmpdir.csh << EOT
+setenv TMPDIR ${TMP_DIR}
+EOT
         fi
     fi
 
