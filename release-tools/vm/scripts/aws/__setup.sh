@@ -125,6 +125,8 @@ EOT
             cat > /etc/profile.d/tmpdir.csh << EOT
 setenv TMPDIR ${TMP_DIR}
 EOT
+
+            mount --bind ${TMP_DIR} /tmp
         fi
     fi
 

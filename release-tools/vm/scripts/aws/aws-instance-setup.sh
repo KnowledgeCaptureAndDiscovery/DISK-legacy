@@ -16,7 +16,7 @@ cat > /usr/lib/systemd/system/aws-instance-setup.service << EOT
 
 [Unit]
 Description=AWS Instance Setup
-Before=condor.service tomcat.service
+Before=condor.service tomcat.service postgresql-9.5.service
 After=cloud-init.service
 
 [Service]
@@ -158,6 +158,8 @@ EOT
             cat > /etc/profile.d/tmpdir.csh << EOT
 setenv TMPDIR \${TMP_DIR}
 EOT
+
+            mount --bind \${TMP_DIR} /tmp
         fi
     fi
 
