@@ -120,7 +120,7 @@ cat > /etc/cloud/cloud.cfg.d/02-growpart.cfg << EOT
 #
 growpart:
   mode: auto
-  devices: ['/storage']
+  devices: ['/']
   ignore_growroot_disabled: false
 
 EOT
