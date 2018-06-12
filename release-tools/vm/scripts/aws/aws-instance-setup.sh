@@ -251,7 +251,7 @@ setup_swap_space()
         SWAP_DIR="\${SCRATCH_DIR}"
     fi
 
-    dd if=/dev/zero of=\${SWAP_DIR}/swap-file bs=1M count=3072
+    dd if=/dev/zero of=\${SWAP_DIR}/swap-file bs=1M count=4096
     chmod 600 \${SWAP_DIR}/swap-file
     mkswap \${SWAP_DIR}/swap-file
     swapon \${SWAP_DIR}/swap-file
