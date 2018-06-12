@@ -48,6 +48,7 @@
         "scripts/commons/update.sh"
       ],
       "start_retry_timeout": "5m",
+      "expect_disconnect": true,
       "type": "shell"
     },
     {
@@ -60,9 +61,11 @@
         "LABKEY_HOME=/usr/local/labkey",
         "JDBC_USER=labkey",
         "JDBC_PASSWORD=labkey123",
-        "PHANTOMJS_VERSION=2.1.1"
+        "PHANTOMJS_VERSION=2.1.1",
+        "SWAP_FILE=/tmp/swap-file"
       ],
       "scripts": [
+        "scripts/commons/swap-on.sh",
         "scripts/disk/basics.sh",
         "scripts/disk/ssl.sh",
         "scripts/disk/disk.sh",
@@ -73,6 +76,7 @@
         "scripts/aws/cloud-init.sh",
         "scripts/aws/aws-instance-setup.sh",
         "scripts/aws/secure-root.sh",
+        "scripts/commons/swap-off.sh",
         "scripts/commons/cleanup.sh",
         "scripts/commons/zero.sh"
       ],
