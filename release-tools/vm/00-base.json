@@ -5,7 +5,7 @@
         "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/{{ user `ks_cfg` }}.cfg<enter><wait>"
       ],
       "boot_wait": "10s",
-      "disk_size": 20480,
+      "disk_size": 11264,
       "guest_additions_mode": "disable",
       "guest_os_type": "RedHat_64",
       "headless": true,
@@ -50,6 +50,7 @@
         "scripts/commons/update.sh"
       ],
       "start_retry_timeout": "5m",
+      "expect_disconnect": true,
       "type": "shell"
     }
   ],
