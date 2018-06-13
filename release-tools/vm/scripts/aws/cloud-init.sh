@@ -2,6 +2,8 @@
 
 set -e
 
+# https://bugzilla.redhat.com/show_bug.cgi?id=1187057
+pip uninstall --yes urllib3
 
 yum -y install cloud-init
 
