@@ -120,6 +120,7 @@ yum -y install numpy scipy python-zmq java-${JAVA_VERSION}-openjdk-devel Cython 
 pip install matplotlib
 git clone https://github.com/CellProfiler/CellProfiler.git /usr/local/cellprofiler
 pushd /usr/local/cellprofiler > /dev/null
+git checkout v3.0.0
 pip install -e . --process-dependency-links
 popd > /dev/null
 yum -y remove Cython
@@ -129,6 +130,7 @@ yum -y remove Cython
 # RSeQC
 # -----
 
+yum -y install lzo-devel
 pip install RSeQC
 
 
@@ -173,6 +175,7 @@ EOT
 
 curl --location \
      --output MSGFPlus.zip \
+     --header "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36" \
      "https://omics.pnl.gov/sites/default/files/MSGFPlus.zip"
 unzip -o -d /usr/local/msgfplus MSGFPlus.zip
 rm --force MSGFPlus.zip
