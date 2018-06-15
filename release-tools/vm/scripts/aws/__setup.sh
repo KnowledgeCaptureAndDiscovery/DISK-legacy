@@ -36,11 +36,14 @@ configure_me()
         echo "Configure HTCondor as Worker node"
         setup_worker ${MY_IP} ${MASTER_IP}
     else
+        echo "Mount Tomcat temp"
+        mount_tomcat_temp_disk
+
         echo "Configure HTCondor as Master node"
         setup_master ${MY_IP}
     fi
 
-    echo "configure swap space"
+    echo "Configure swap space"
     setup_swap_space
 }
 
@@ -144,6 +147,19 @@ mount_efs_disk()
     fi
 }
 
+mount_tomcat_temp_disk()
+{
+    TOMCAT_CACHE_DIR='/var/cache/tomcat/temp'
+    TOMCAT_EFS_DIR='/efs/temp'
+
+    if [ ! -d ${TOMCAT_EFS_DIR} ]; then
+        mkdir --parent ${TOMCAT_EFS_DIR}
+        chown tomcat:tomcat ${TOMCAT_EFS_DIR}
+    fi
+
+    mount --bind ${TOMCAT_EFS_DIR} ${TOMCAT_CACHE_DIR}
+}
+
 condor_basic_setup()
 {
     cat > /etc/condor/config.d/01-common << EOT
@@ -241,7 +257,7 @@ stop()
     # Turns on swap partitions listed in /etc/fstab
     swapon --all
 
-    # Unmount Ephemeral storage
+    # Unmount ephemeral storage
     if [ -d ${SCRATCH_DIR} ]; then
         umount ${SCRATCH_DIR} 2>/dev/null || /bin/true
         /sbin/vgchange --activate n ${VOLUME_GROUP}
