@@ -82,22 +82,6 @@ rm --recursive --force ${LABKEY_VERSION} ${LABKEY_VERSION}.tar.gz
 
 systemctl restart tomcat
 
-#sed -e 's#<Connector port="8080"#<Connector port="80" compressableMimeType="text/html, text/xml, text/javascript, text/plain, text/css, application/json"#g' \
-#    -e 's#<Connector port="80"#<Connector port="80" noCompressionUserAgents="gozilla, traviata"#g' \
-#    -e 's#<Connector port="80"#<Connector port="80" compressionMinSize="2048"#g' \
-#    -e 's#<Connector port="80"#<Connector port="80" compression="on"#g' \
-#    -e 's#<Connector port="80"#<Connector port="80" URIEncoding="UTF-8"#g' \
-#    -e 's#<Connector port="80"#<Connector port="80" useBodyEncodingForURI="true"#g' \
-#    -e 's#  redirectPort="8443"#  redirectPort="443"#g' \
-#    -e 's#<!-- Define an AJP 1.3 Connector on port 8009 -->#aaa\n    <!-- Define an AJP 1.3 Connector on port 8009 -->#' \
-#    -e 's#aaa#<Connector port="443" compressableMimeType="text/html, text/xml, text/javascript, text/plain, text/css, application/json"#' \
-#    -e 's#<Connector port="443"#<Connector port="443" noCompressionUserAgents="gozilla, traviata"#g' \
-#    -e 's#<Connector port="443"#<Connector port="443" compressionMinSize="2048"#g' \
-#    -e 's#<Connector port="443"#<Connector port="443" compression="on"#g' \
-#    -e 's#<Connector port="443"#<Connector port="443" URIEncoding="UTF-8"#g' \
-#    -e 's#<Connector port="443"#<Connector port="443" useBodyEncodingForURI="true"#g' \
-#    ${TOMCAT_HOME}/conf/server.xml.bak > ${TOMCAT_HOME}/conf/server.xml
-
 
 # -------------------------------------------------------------------------------
 # Labkey Initialization
