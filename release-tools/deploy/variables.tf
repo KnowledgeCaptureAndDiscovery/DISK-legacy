@@ -8,22 +8,22 @@ variable "aws_ami" {
 
 variable "workers" {
   description = "No. of worker instances to start"
-  default = 0
+  default     = 0
 }
 
 variable "delete_volumes" {
   description = "Should the volumes be deleted on termination?"
-  default = true
+  default     = true
 }
 
 variable "aws_region" {
   description = "AWS region to launch servers."
-  default = "us-west-2"
+  default     = "us-west-2"
 }
 
 variable "key_name" {
   description = "Desired name of AWS key pair"
-  default = "wings_test"
+  default     = "wings_test"
 }
 
 variable "aws_instance_type" {
@@ -70,6 +70,6 @@ variable "aws_device_map" {
     "w",
     "x",
     "y",
-    "z"
+    "z",
   ]
 }

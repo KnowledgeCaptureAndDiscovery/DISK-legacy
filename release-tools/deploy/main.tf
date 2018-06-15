@@ -19,7 +19,6 @@ provider "aws" {
   region  = "${var.aws_region}"
 }
 
-
 # Start DISK Master
 resource "aws_instance" "disk-master" {
   ami           = "${var.aws_ami}"
@@ -29,7 +28,7 @@ resource "aws_instance" "disk-master" {
 
   security_groups = [
     "disk-master",
-    "disk-master-worker"
+    "disk-master-worker",
   ]
 
   root_block_device {
@@ -37,12 +36,12 @@ resource "aws_instance" "disk-master" {
   }
 
   ephemeral_block_device {
-    device_name = "/dev/sdb",
+    device_name  = "/dev/sdb"
     virtual_name = "ephemeral0"
   }
 
   ephemeral_block_device {
-    device_name = "/dev/sdc",
+    device_name  = "/dev/sdc"
     virtual_name = "ephemeral1"
   }
 
@@ -58,11 +57,11 @@ resource "aws_instance" "disk-worker" {
   key_name      = "${var.key_name}"
   user_data     = "EFS_ID='${var.aws_efs_id}'\nMASTER_IP='${aws_instance.disk-master.private_ip}'"
 
-  count         = "${var.workers}"
+  count = "${var.workers}"
 
   security_groups = [
     "disk-worker",
-    "disk-master-worker"
+    "disk-master-worker",
   ]
 
   root_block_device {
@@ -70,12 +69,12 @@ resource "aws_instance" "disk-worker" {
   }
 
   ephemeral_block_device {
-    device_name = "/dev/sdb",
+    device_name  = "/dev/sdb"
     virtual_name = "ephemeral0"
   }
 
   ephemeral_block_device {
-    device_name = "/dev/sdc",
+    device_name  = "/dev/sdc"
     virtual_name = "ephemeral1"
   }
 
