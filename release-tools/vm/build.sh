@@ -72,7 +72,8 @@ NEW_AMI=`aws ec2 copy-image --source-region 'us-west-2' \
                    --name "DISK VM ${VM_VERSION}" \
                    --description "DISK VM ${VM_VERSION}"`
 
-aws ec2 wait image-available --image-id "${NEW_AMI}"
+WAIT="aws ec2 wait image-available --image-id ${NEW_AMI}"
+$WAIT || $WAIT
 
 # Get snapshot associated with old AMI
 SNAP_ID=`aws ec2 describe-images --image-ids ${AMI_ID} --query 'Images[*].BlockDeviceMappings[*].Ebs.SnapshotId'`
