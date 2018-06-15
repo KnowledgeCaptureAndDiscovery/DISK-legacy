@@ -52,6 +52,30 @@
       "start_retry_timeout": "5m",
       "expect_disconnect": true,
       "type": "shell"
+    },
+    {
+      "environment_vars": [
+        "TOMCAT_HOME=/usr/share/tomcat",
+        "ROOT_PASSWORD=W1ng5!",
+        "LABKEY_VERSION=LabKey16.2-45209.14-community-bin",
+        "LABKEY_HOME=/usr/local/labkey",
+        "JDBC_USER=labkey",
+        "JDBC_PASSWORD=labkey123",
+        "PHANTOMJS_VERSION=2.1.1",
+        "SWAP_FILE=/tmp/swap-file"
+      ],
+      "scripts": [
+        "scripts/commons/swap-on.sh",
+        "scripts/disk/basics.sh",
+        "scripts/disk/ssl.sh",
+        "scripts/disk/disk.sh",
+        "scripts/disk/wings.sh",
+        "scripts/disk/tpp.sh",
+        "scripts/disk/labkey.sh",
+        "scripts/disk/zhang.sh",
+        "scripts/commons/swap-off.sh"
+      ],
+      "type": "shell"
     }
   ],
   "variables": {
@@ -62,4 +86,3 @@
     "vm_version": ""
   }
 }
-
