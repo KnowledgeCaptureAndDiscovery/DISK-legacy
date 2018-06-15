@@ -8,6 +8,16 @@ set -e
 # http://www.liquidweb.com/kb/how-to-install-and-connect-to-postgresql-on-centos-7/
 # ---------------------------------------------------------------------------------
 
+groupadd --gid 26 postgres
+
+useradd --comment "PostgreSQL Server" \
+        --home-dir /var/lib/pgsql \
+        --no-create-home \
+        --uid 26 \
+        --gid 26 \
+        --shell /bin/bash \
+        postgres
+
 yum -y install https://download.postgresql.org/pub/repos/yum/9.5/redhat/rhel-7-x86_64/pgdg-centos95-9.5-2.noarch.rpm
 yum -y install postgresql95-server
 
