@@ -19,6 +19,16 @@ yum -y update
 # Basics
 # ------
 
+groupadd --gid 91 tomcat
+
+useradd --comment "Apache Tomcat" \
+        --home-dir /usr/share/tomcat \
+        --no-create-home \
+        --uid 91 \
+        --gid 91 \
+        --shell /sbin/nologin \
+        tomcat
+
 yum -y install subversion git
 yum -y install ant maven
 yum -y install python-setuptools python-virtualenv
