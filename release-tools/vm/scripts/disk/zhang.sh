@@ -194,7 +194,7 @@ mkdir /usr/local/proteowizard
 tar jxvf pwiz-bin-linux-x86_64-gcc48-release-3_0_10800.tar.bz2 --directory=/usr/local/proteowizard
 rm --force pwiz-bin-linux-x86_64-gcc48-release-3_0_10800.tar.bz2
 cat > /etc/profile.d/proteowizard.sh << EOT
-export PATH=/usr/local/proteowizard:$PATH
+export PATH=/usr/local/proteowizard:\$PATH
 EOT
 
 
@@ -211,7 +211,7 @@ mkdir /usr/local/bumbershoot
 tar jxvf bumbershoot-bin-linux-gcc48-release-3_0_10800.tar.bz2 --directory=/usr/local/bumbershoot
 rm --force pwiz-bin-linux-x86_64-gcc48-release-3_0_10800.tar.bz2
 cat > /etc/profile.d/bumbershoot.sh << EOT
-export PATH=/usr/local/bumbershoot:$PATH
+export PATH=/usr/local/bumbershoot:\$PATH
 EOT
 
 
@@ -225,7 +225,7 @@ curl --location \
 unzip -o -d /usr/local bftools.zip
 rm --force bftools.zip
 cat > /etc/profile.d/bftools.sh << EOT
-export PATH=/usr/local/bftools:$PATH
+export PATH=/usr/local/bftools:\$PATH
 EOT
 
 

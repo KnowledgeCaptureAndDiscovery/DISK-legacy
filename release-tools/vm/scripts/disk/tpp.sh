@@ -38,5 +38,9 @@ XML_ONLY = 1
 EOT
 make all install
 
+cat > /etc/profile.d/tpp.sh << EOT
+export PATH=/usr/local/tpp/bin:\$PATH
+EOT
+
 cd ../../..
 rm --recursive --force TPP-4.8.0 TPP_4.8.0-src.tgz
