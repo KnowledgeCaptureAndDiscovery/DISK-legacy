@@ -5,7 +5,7 @@ set -e
 # https://bugzilla.redhat.com/show_bug.cgi?id=1187057
 pip uninstall --yes urllib3
 
-yum -y install cloud-init
+yum -y install cloud-init cloud-utils-growpart
 
 cat > /etc/cloud/cloud.cfg << EOT
 users:
