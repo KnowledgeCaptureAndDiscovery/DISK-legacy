@@ -22,7 +22,7 @@ yum -y update
 groupadd --gid 91 tomcat
 
 useradd --comment "Apache Tomcat" \
-        --home-dir /usr/share/tomcat \
+        --home-dir ${TOMCAT_HOME} \
         --no-create-home \
         --uid 91 \
         --gid 91 \
