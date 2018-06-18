@@ -32,7 +32,7 @@ curl --location \
 tar --gzip --extract --verbose --file TPP_4.8.0-src.tgz
 cd  TPP-4.8.0/trans_proteomic_pipeline/src
 
-cat > Makefile.config.incl <<EOT
+cat > Makefile.config.incl << EOT
 TPP_ROOT = /usr/local/tpp/
 XML_ONLY = 1
 EOT
