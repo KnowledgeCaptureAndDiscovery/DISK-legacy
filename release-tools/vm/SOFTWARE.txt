@@ -38,3 +38,4 @@
 15. biopython (http://biopython.org/wiki/Download)
 16. RSEM (https://deweylab.github.io/RSEM/)
 17. TPP 4.8.0
+18. graphviz
