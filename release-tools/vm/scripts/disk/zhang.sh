@@ -110,6 +110,25 @@ cd ..
 rm --recursive --force cufflinks-${CUFFLINKS_VERSION}.Linux_x86_64*
 
 
+# ---------
+# BED Tools
+# ---------
+
+BEDTOOLS_VERSION='2.27.1'
+
+curl --location \
+     --output bedtools2.tar.gz \
+     "https://github.com/arq5x/bedtools2/releases/download/v${BEDTOOLS_VERSION}/bedtools-${BEDTOOLS_VERSION}.tar.gz"
+tar --gzip --extract --verbose --file bedtools2.tar.gz
+
+cd bedtools2
+make
+make install
+
+cd ..
+rm --recursive --force bedtools2*
+
+
 # -------------
 # Cell Profiler
 # -------------
