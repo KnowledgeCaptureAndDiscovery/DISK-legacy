@@ -272,16 +272,6 @@ rm --recursive --force RSEM-1.3.0.tar.gz RSEM-1.3.0
 yum -y remove gcc-c++
 
 
-# ------
-# MuTect
-# ------
-
-yum -y install java-1.7.0-openjdk
-cat > /etc/profile.d/java-7.sh << EOT
-alias java7=/usr/lib/jvm/jre-1.7.0/bin/java
-EOT
-
-
 # --------------
 # WINGS - Labkey
 # --------------
