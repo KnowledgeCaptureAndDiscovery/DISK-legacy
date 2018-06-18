@@ -27,14 +27,14 @@ perl -pi.bak -e "s/^(host.*)ident/\1md5/g" /var/lib/pgsql/9.5/data/pg_hba.conf
 systemctl enable  postgresql-9.5
 systemctl start   postgresql-9.5
 
-su - postgres --command psql <<EOT
+su - postgres --command psql << EOT
 ALTER  USER     postgres     WITH ENCRYPTED PASSWORD '${ROOT_PASSWORD}';
 CREATE USER     ${JDBC_USER} WITH ENCRYPTED PASSWORD '${JDBC_PASSWORD}';
 CREATE DATABASE labkey;
 GRANT  ALL PRIVILEGES ON DATABASE labkey TO labkey;
 EOT
 
-cat > ~root/.pgpass <<EOT
+cat > ~root/.pgpass << EOT
 localhost:*:*:postgres:${ROOT_PASSWORD}
 EOT
 chmod 600 ~root/.pgpass
@@ -100,7 +100,7 @@ tar --bzip2 --extract --verbose --file phantomjs-${PHANTOMJS_VERSION}-linux-x86_
 mkdir ${LABKEY_HOME}/files
 chown --recursive tomcat:tomcat ${LABKEY_HOME}/files
 
-cat > /tmp/labkey-init.py <<EOT
+cat > /tmp/labkey-init.py << EOT
 #!/usr/bin/env python
 
 import unittest
@@ -291,7 +291,7 @@ rm --recursive --force \
 # https://www.labkey.org/home/Documentation/wiki-page.view?name=stagingServerTips
 # -------------------------------------------------------------------------------
 
-su - postgres --command "psql --dbname ${JDBC_USER}" <<EOT
+su - postgres --command "psql --dbname ${JDBC_USER}" << EOT
 /*
 UPDATE prop.properties p
 SET    value = ''
