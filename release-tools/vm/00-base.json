@@ -25,13 +25,13 @@
           "modifyvm",
           "{{ .Name }}",
           "--cpus",
-          "1"
+          "4"
         ],
         [
           "modifyvm",
           "{{ .Name }}",
           "--memory",
-          "1024"
+          "4096"
         ]
       ],
       "virtualbox_version_file": ".vbox_version",
