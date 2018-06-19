@@ -21,7 +21,7 @@ provider "aws" {
 
 # Start DISK Master
 resource "aws_instance" "disk-master" {
-  ami           = "${var.aws_ami}"
+  ami           = "${data.aws_ami.disk-ami.id}"
   instance_type = "${var.aws_instance_type}"
   key_name      = "${var.key_name}"
   user_data     = "EFS_ID='${var.aws_efs_id}'"
@@ -52,7 +52,7 @@ resource "aws_instance" "disk-master" {
 
 # Start DISK Worker
 resource "aws_instance" "disk-worker" {
-  ami           = "${var.aws_ami}"
+  ami           = "${data.aws_ami.disk-ami.id}"
   instance_type = "${var.aws_instance_type}"
   key_name      = "${var.key_name}"
   user_data     = "EFS_ID='${var.aws_efs_id}'\nMASTER_IP='${aws_instance.disk-master.private_ip}'"

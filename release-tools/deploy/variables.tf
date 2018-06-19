@@ -2,8 +2,20 @@ variable "disk_version" {
   default = "1.2"
 }
 
-variable "aws_ami" {
-  default = "ami-8a31abea"
+data "aws_ami" "disk-ami" {
+  most_recent = true
+
+  owners = [
+    "self",
+  ]
+
+  filter {
+    name = "name"
+
+    values = [
+      "DISK VM ${var.disk_version}",
+    ]
+  }
 }
 
 variable "workers" {
