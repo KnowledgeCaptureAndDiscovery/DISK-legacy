@@ -88,9 +88,6 @@ systemctl restart tomcat
 # https://www.labkey.org/home/Documentation/wiki-page.view?name=stagingServerTips
 # -------------------------------------------------------------------------------
 
-easy_install pip
-pip install --upgrade pip setuptools
-
 pip install selenium
 curl --output phantomjs-${PHANTOMJS_VERSION}-linux-x86_64.tar.bz2 \
     --location "https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-${PHANTOMJS_VERSION}-linux-x86_64.tar.bz2"

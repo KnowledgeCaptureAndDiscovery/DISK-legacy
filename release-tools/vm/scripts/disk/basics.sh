@@ -36,5 +36,8 @@ yum -y install R graphviz
 yum -y install tomcat tomcat-native
 yum -y install lvm2 nfs-utils
 
+easy_install pip
+pip install --upgrade pip setuptools
+
 systemctl enable  tomcat
 systemctl start   tomcat
