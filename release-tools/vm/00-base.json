@@ -56,12 +56,6 @@
     {
       "environment_vars": [
         "TOMCAT_HOME=/usr/share/tomcat",
-        "ROOT_PASSWORD=W1ng5!",
-        "LABKEY_VERSION=LabKey16.2-45209.14-community-bin",
-        "LABKEY_HOME=/usr/local/labkey",
-        "JDBC_USER=labkey",
-        "JDBC_PASSWORD=labkey123",
-        "PHANTOMJS_VERSION=2.1.1",
         "SWAP_FILE=/tmp/swap-file"
       ],
       "scripts": [
@@ -71,7 +65,6 @@
         "scripts/disk/disk.sh",
         "scripts/disk/wings.sh",
         "scripts/disk/tpp.sh",
-        "scripts/disk/labkey.sh",
         "scripts/disk/zhang.sh",
         "scripts/commons/swap-off.sh"
       ],

@@ -272,17 +272,3 @@ make install
 cd ..
 rm --recursive --force RSEM-1.3.0.tar.gz RSEM-1.3.0
 yum -y remove gcc-c++
-
-
-# --------------
-# WINGS - Labkey
-# --------------
-
-git clone https://github.com/IKCAP/DISK.git
-
-cd DISK
-
-python setup.py install
-
-cd ..
-rm --recursive --force DISK

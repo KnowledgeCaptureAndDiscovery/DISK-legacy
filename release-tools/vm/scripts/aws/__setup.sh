@@ -218,8 +218,6 @@ EOT
 
     systemctl stop    tomcat
     systemctl disable tomcat
-    systemctl stop    postgresql-9.5
-    systemctl disable postgresql-9.5
 
     return 0
 }

@@ -16,7 +16,7 @@ cat > /usr/lib/systemd/system/aws-instance-setup.service << EOT
 
 [Unit]
 Description=AWS Instance Setup
-Before=condor.service tomcat.service postgresql-9.5.service
+Before=condor.service tomcat.service
 After=cloud-init.service
 
 [Service]
@@ -250,8 +250,6 @@ EOT
 
     systemctl stop    tomcat
     systemctl disable tomcat
-    systemctl stop    postgresql-9.5
-    systemctl disable postgresql-9.5
 
     return 0
 }
