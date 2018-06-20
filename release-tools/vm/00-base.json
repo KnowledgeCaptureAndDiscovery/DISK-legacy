@@ -82,7 +82,6 @@
     "iso_name": "CentOS-7-x86_64-NetInstall-1511.iso",
     "iso_url": "http://mirrors.usc.edu/pub/linux/distributions/centos/7/isos/x86_64",
     "ks_cfg": "base",
-    "out_file": "base",
-    "vm_version": ""
+    "out_file": "base"
   }
 }

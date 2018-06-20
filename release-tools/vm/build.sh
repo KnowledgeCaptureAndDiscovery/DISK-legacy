@@ -30,14 +30,13 @@ shift
 # Step 1: Build Base Box
 #-----------------------
 
-BASE_OUT_FILE="output/base/disk-vm-${VM_VERSION}.ovf"
+BASE_OUT_FILE="output/base/disk-vm-base.ovf"
 
 if [ ! -f "${BASE_OUT_FILE}" ]; then
 
     packer build -var "iso_url=${URL}" \
                  -var "iso_name=${ISO_NAME}" \
                  -var "out_file=`basename ${BASE_OUT_FILE} .ovf`" \
-                 -var "vm_version=${VM_VERSION}" \
                  -machine-readable \
                  $@ 00-base.json | tee log-00.txt
 
