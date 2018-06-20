@@ -1,9 +1,3 @@
-#terraform {
-#  backend "local" {
-#    path = "state/t.tfstate"
-#  }
-#}
-
 terraform {
   backend "s3" {
     region  = "us-west-2"
@@ -23,15 +17,17 @@ provider "aws" {
 resource "aws_instance" "disk-master" {
   ami           = "${data.aws_ami.disk-ami.id}"
   instance_type = "${var.aws_instance_type}"
+  subnet_id     = "${aws_subnet.disk-vpc-subnet.id}"
   key_name      = "${var.key_name}"
-  user_data     = "EFS_ID='${var.aws_efs_id}'"
+  user_data     = "EFS_ID='${aws_efs_file_system.disk-efs.id}'"
 
-  security_groups = [
-    "disk-master",
-    "disk-master-worker",
+  vpc_security_group_ids = [
+    "${aws_security_group.disk-master.id}",
+    "${aws_security_group.disk-master-worker.id}",
   ]
 
   root_block_device {
+    volume_size           = "${var.aws_instance_root_volume_size}"
     delete_on_termination = "${var.delete_volumes}"
   }
 
@@ -44,6 +40,11 @@ resource "aws_instance" "disk-master" {
     device_name  = "/dev/sdc"
     virtual_name = "ephemeral1"
   }
+
+  depends_on = [
+    "aws_internet_gateway.disk-internet-gateway",
+    "aws_efs_mount_target.efs-mount-target",
+  ]
 
   tags {
     Name = "disk-${var.disk_version}-master"
@@ -54,17 +55,19 @@ resource "aws_instance" "disk-master" {
 resource "aws_instance" "disk-worker" {
   ami           = "${data.aws_ami.disk-ami.id}"
   instance_type = "${var.aws_instance_type}"
+  subnet_id     = "${aws_subnet.disk-vpc-subnet.id}"
   key_name      = "${var.key_name}"
-  user_data     = "EFS_ID='${var.aws_efs_id}'\nMASTER_IP='${aws_instance.disk-master.private_ip}'"
+  user_data     = "EFS_ID='${aws_efs_file_system.disk-efs.id}'\nMASTER_IP='${aws_instance.disk-master.private_ip}'"
 
   count = "${var.workers}"
 
-  security_groups = [
-    "disk-worker",
-    "disk-master-worker",
+  vpc_security_group_ids = [
+    "${aws_security_group.disk-worker.id}",
+    "${aws_security_group.disk-master-worker.id}",
   ]
 
   root_block_device {
+    volume_size           = "${var.aws_instance_root_volume_size}"
     delete_on_termination = "${var.delete_volumes}"
   }
 
@@ -77,6 +80,11 @@ resource "aws_instance" "disk-worker" {
     device_name  = "/dev/sdc"
     virtual_name = "ephemeral1"
   }
+
+  depends_on = [
+    "aws_internet_gateway.disk-internet-gateway",
+    "aws_efs_mount_target.efs-mount-target",
+  ]
 
   tags {
     Name = "disk-${var.disk_version}-worker"
