@@ -242,7 +242,7 @@ setup_swap_space()
 
 start()
 {
-    echo -n "Setting up AWS instance: "
+    echo -n "Start: AWS Instance Setup"
     configure_me
     RETVAL=$?
     echo
@@ -251,6 +251,8 @@ start()
 
 stop()
 {
+    echo -n "Stop: AWS Instance Setup"
+
     # Turns off all swap partitions
     swapoff --all
 
