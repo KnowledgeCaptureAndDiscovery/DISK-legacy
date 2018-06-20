@@ -259,14 +259,12 @@ stop()
 
     # Unmount ephemeral storage
     if [ -d ${SCRATCH_DIR} ]; then
-        umount ${SCRATCH_DIR} 2>/dev/null || /bin/true
+        umount --force ${SCRATCH_DIR} 2>/dev/null || /bin/true
         /sbin/vgchange --activate n ${VOLUME_GROUP}
     fi
 
     # Unmount EFS storage
-    if [ -d ${SCRATCH_DIR} ]; then
-        umount ${STORAGE_DIR} 2>/dev/null || /bin/true
-    fi
+    umount --force ${STORAGE_DIR} 2>/dev/null || /bin/true
 }
 
 restart()
