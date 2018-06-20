@@ -22,7 +22,7 @@ After=cloud-init.service
 [Service]
 Type=oneshot
 ExecStart=/etc/init.d/aws-instance-setup start
-ExecStop=ExecStart=/etc/init.d/aws-instance-setup stop
+ExecStop=/etc/init.d/aws-instance-setup stop
 User=root
 
 [Install]
