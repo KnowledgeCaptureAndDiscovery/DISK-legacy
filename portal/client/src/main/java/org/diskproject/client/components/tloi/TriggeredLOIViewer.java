@@ -2,6 +2,7 @@ package org.diskproject.client.components.tloi;
 
 import java.util.List;
 
+import org.diskproject.client.Config;
 import org.diskproject.client.components.list.ListNode;
 import org.diskproject.client.components.list.ListWidget;
 import org.diskproject.client.components.list.events.ListItemActionEvent;
@@ -126,11 +127,17 @@ public class TriggeredLOIViewer extends Composite {
       public void onSuccess(Hypothesis result) {
         anchor.setHref(getHypothesisLink(id));
         anchor.setInnerText(result.getName());
-        if(result.getGraph() != null)
+        if(result.getGraph() != null) {
+          tv.setDefaultNamespace(getNamespace(id));
           tv.load(result.getGraph().getTriples());
+        }
       }
       public void onFailure(Throwable reason) {}
     });  
+  }
+  
+  private String getNamespace(String id) {
+    return Config.getServerURL() + "/"+username+"/"+domain + "/hypotheses/" + id + "#";
   }
   
   private String getHypothesisLink(String id) {

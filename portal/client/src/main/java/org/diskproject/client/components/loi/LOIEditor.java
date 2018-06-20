@@ -7,7 +7,7 @@ import java.util.List;
 import org.diskproject.client.components.loi.events.HasLOIHandlers;
 import org.diskproject.client.components.loi.events.LOISaveEvent;
 import org.diskproject.client.components.loi.events.LOISaveHandler;
-import org.diskproject.client.components.triples.TripleInput;
+import org.diskproject.client.components.triples.SparqlInput;
 import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
@@ -42,7 +42,8 @@ public class LOIEditor extends Composite
   
   @UiField PaperInputElement name;
   @UiField PaperTextareaElement description;
-  @UiField TripleInput query;
+  @UiField SparqlInput hypothesisQuery;
+  @UiField SparqlInput dataQuery;
   @UiField LOIWorkflowList workflowlist, metaworkflowlist;
   
   LineOfInquiry loi;
@@ -66,29 +67,38 @@ public class LOIEditor extends Composite
     this.loi = loi;
     name.setValue(loi.getName());
     description.setValue(loi.getDescription());
-    if(loi.getQuery() != null && loadcount==3)
-      query.setValue(loi.getQuery());
+    if(loi.getHypothesisQuery() != null && loadcount==6)
+      hypothesisQuery.setValue(loi.getHypothesisQuery());
+    if(loi.getHypothesisQuery() != null && loadcount==6)
+      dataQuery.setValue(loi.getDataQuery());    
     workflowlist.loadBindingsList(loi.getWorkflows());
     metaworkflowlist.loadBindingsList(loi.getMetaWorkflows());  
   }
   
   public void setNamespace(String ns) {
-    query.setDefaultNamespace(ns);
+    hypothesisQuery.setDefaultNamespace(ns);
+    dataQuery.setDefaultNamespace(ns);
   }
   
   private void loadVocabularies() {
     loadcount=0;
-    query.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
-    query.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
-    query.loadUserVocabulary("user", userid, domain, vocabLoaded);
+    hypothesisQuery.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
+    hypothesisQuery.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
+    hypothesisQuery.loadUserVocabulary("user", userid, domain, vocabLoaded);
+    
+    dataQuery.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
+    dataQuery.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
+    dataQuery.loadUserVocabulary("user", userid, domain, vocabLoaded);
   }
   
   private Callback<String, Throwable> vocabLoaded = 
       new Callback<String, Throwable>() {
     public void onSuccess(String result) {
       loadcount++;
-      if(loi != null && loi.getQuery() != null && loadcount==3)
-        query.setValue(loi.getQuery());
+      if(loi != null && loi.getHypothesisQuery() != null && loadcount==6)
+        hypothesisQuery.setValue(loi.getHypothesisQuery());
+      if(loi != null && loi.getDataQuery() != null && loadcount==6)
+        dataQuery.setValue(loi.getDataQuery());
     }
     public void onFailure(Throwable reason) {}
   };
@@ -118,15 +128,17 @@ public class LOIEditor extends Composite
   void onSaveButtonClicked(ClickEvent event) {   
     boolean ok1 = this.name.validate();
     boolean ok2 = this.description.validate();
-    boolean ok3 = this.query.validate();
-    if(!ok1 || !ok2 || !ok3) {
+    boolean ok3 = this.hypothesisQuery.validate();
+    boolean ok4 = this.dataQuery.validate();
+    if(!ok1 || !ok2 || !ok3 || !ok4) {
       AppNotification.notifyFailure("Please fix errors before saving");
       return;
     }
     
     loi.setDescription(description.getValue());
     loi.setName(name.getValue());
-    loi.setQuery(query.getValue());
+    loi.setHypothesisQuery(hypothesisQuery.getValue());
+    loi.setDataQuery(dataQuery.getValue());
     loi.setWorkflows(workflowlist.getBindingsList());
     loi.setMetaWorkflows(metaworkflowlist.getBindingsList());
     

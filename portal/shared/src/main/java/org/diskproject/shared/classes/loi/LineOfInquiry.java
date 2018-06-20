@@ -7,7 +7,8 @@ public class LineOfInquiry {
   String id;
   String name;
   String description;
-  String query;
+  String hypothesisQuery;
+  String dataQuery;
   List<WorkflowBindings> workflows;
   List<WorkflowBindings> metaWorkflows;
 
@@ -39,14 +40,22 @@ public class LineOfInquiry {
     this.description = description;
   }  
 
-  public String getQuery() {
-    return query;
+  public String getHypothesisQuery() {
+    return hypothesisQuery;
   }
 
-  public void setQuery(String query) {
-    this.query = query;
+  public void setHypothesisQuery(String query) {
+    this.hypothesisQuery = query;
   }
 
+  public String getDataQuery() {
+    return dataQuery;
+  }
+
+  public void setDataQuery(String dataQuery) {
+    this.dataQuery = dataQuery;
+  }
+  
   public List<WorkflowBindings> getWorkflows() {
     return workflows;
   }

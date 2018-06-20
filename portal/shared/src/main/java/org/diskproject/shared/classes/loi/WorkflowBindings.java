@@ -1,6 +1,7 @@
 package org.diskproject.shared.classes.loi;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.diskproject.shared.classes.workflow.VariableBinding;
@@ -8,7 +9,7 @@ import org.diskproject.shared.classes.workflow.WorkflowRun;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public class WorkflowBindings {
+public class WorkflowBindings implements Comparable<WorkflowBindings>{
   String workflow;
   String workflowLink;
   List<VariableBinding> bindings;
@@ -78,6 +79,8 @@ public class WorkflowBindings {
   public String getBindingsDescription() {
     String description = "";
     int i=0;
+    Collections.sort(bindings);
+    description += "{";
     for(VariableBinding vbinding : bindings) {
       if(i > 0)
         description += ", ";
@@ -96,8 +99,12 @@ public class WorkflowBindings {
       description += this.meta.getRevisedHypothesis() + " = [Revised Hypothesis]";
       i++;
     }
-    
+    description += "}";
     return description;
+  }
+  
+  public String toString() {
+    return this.getBindingsDescription();
   }
   
   public MetaWorkflowDetails getMeta() {
@@ -136,4 +143,9 @@ public class WorkflowBindings {
     html += "</div>";
     return html;
   }
+
+  public int compareTo(WorkflowBindings o) {
+    return this.toString().compareTo(o.toString());
+  }
+  
 }

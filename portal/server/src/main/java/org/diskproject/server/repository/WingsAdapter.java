@@ -362,7 +362,7 @@ public class WingsAdapter {
     formdata.add(new BasicNameValuePair("query", query));
     formdata.add(new BasicNameValuePair("format", "json"));
     String resultjson = this.get(username, pageid, formdata);
-    if(resultjson == null)
+    if(resultjson == null || resultjson.equals(""))
       return null;
     
     // Check the variable bindings to see if this matches the values that we have

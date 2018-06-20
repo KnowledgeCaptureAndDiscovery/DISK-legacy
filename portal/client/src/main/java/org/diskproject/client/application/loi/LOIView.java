@@ -154,7 +154,7 @@ public class LOIView extends ApplicationSubviewImpl
 
     LineOfInquiry loi = new LineOfInquiry();
     loi.setId(id);
-    loi.setQuery("");
+    loi.setHypothesisQuery("");
     form.setNamespace(this.getNamespace(id));
     form.load(loi);
     

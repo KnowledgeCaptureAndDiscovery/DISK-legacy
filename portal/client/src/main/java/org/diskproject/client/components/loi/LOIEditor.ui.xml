@@ -27,9 +27,12 @@
 			<paper-textarea label="Long Description" required="true"
 				autoValidate="true" ui:field="description" />
 
-			<label class="small-grey">Query (Ctrl-Space for suggestions)</label>
-			<tr:SparqlInput ui:field="query" />
+			<label class="small-grey">Hypothesis Pattern (Ctrl-Space for suggestions)</label>
+			<tr:SparqlInput ui:field="hypothesisQuery" />
 
+			<label class="small-grey">Data Query Pattern (Ctrl-Space for suggestions)</label>
+			<tr:SparqlInput ui:field="dataQuery" />
+			
 			<loi:LOIWorkflowList ui:field="workflowlist" 
 				metamode="false" label="Workflows to Run"/>
 

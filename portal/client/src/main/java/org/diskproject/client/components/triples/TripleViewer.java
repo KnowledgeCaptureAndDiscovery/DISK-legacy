@@ -38,6 +38,10 @@ public class TripleViewer extends HTMLPanel {
         username + "/" + domain + "/assertions#");
   }
   
+  public void setDefaultNamespace(String ns) {
+    tripleUtil.addNamespacePrefix("", ns);
+  }
+  
   public void load(List<Triple> triples) {
     this.clear();
     

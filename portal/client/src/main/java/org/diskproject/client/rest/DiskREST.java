@@ -27,24 +27,33 @@ import com.google.gwt.core.client.GWT;
 public class DiskREST {
   public static DiskService diskService;
 
-  static class VocabularyCallback {
-    String uri;    
-    Callback<Vocabulary, Throwable> callback;
-    public VocabularyCallback(String uri, 
-        Callback<Vocabulary, Throwable> callback) {
-      this.uri = uri;
-      this.callback = callback;
+  static class VocabularyCallbacks {
+    List<Callback<Vocabulary, Throwable>> callbacks;
+    public VocabularyCallbacks() {
+      callbacks = new ArrayList<Callback<Vocabulary, Throwable>>();
+    };
+    public void add(Callback<Vocabulary, Throwable> callback) {
+      this.callbacks.add(callback);
+    }
+    public boolean isEmpty() {
+      return this.callbacks.isEmpty();
+    }
+    public void clear() {
+      this.callbacks.clear();
+    }
+    public List<Callback<Vocabulary, Throwable>> getCallbacks() {
+      return this.callbacks;
     }
   };
   
   private static Vocabulary user_vocabulary;
-  private static ArrayList<VocabularyCallback> user_vocabulary_callbacks =
-      new ArrayList<VocabularyCallback>();
+  private static VocabularyCallbacks user_vocabulary_callbacks =
+      new VocabularyCallbacks();
   
   private static Map<String, Vocabulary> vocabularies = 
       new HashMap<String, Vocabulary>();
-  private static ArrayList<VocabularyCallback> vocabulary_callbacks =
-      new ArrayList<VocabularyCallback>(); 
+  private static Map<String, VocabularyCallbacks> vocabulary_callbacks =
+      new HashMap<String, VocabularyCallbacks>(); 
   
   private static List<Workflow> workflows = 
       new ArrayList<Workflow>();
@@ -76,31 +85,34 @@ public class DiskREST {
    */
   public static void getVocabulary(
       final Callback<Vocabulary, Throwable> callback,
-      String uri,
+      final String uri,
       boolean reload) {
     if(vocabularies.containsKey(uri) && !reload) {
       callback.onSuccess(vocabularies.get(uri));
     }
     else {
-      if(vocabulary_callbacks.isEmpty()) {
-        vocabulary_callbacks.add(new VocabularyCallback(uri, callback));        
+      if(!vocabulary_callbacks.containsKey(uri)) {  
+        vocabulary_callbacks.put(uri, new VocabularyCallbacks());
+        vocabulary_callbacks.get(uri).add(callback);
+        
         REST.withCallback(new MethodCallback<Map<String, Vocabulary>>() {
           @Override
           public void onSuccess(Method method, Map<String, Vocabulary> vocabs) {
             vocabularies = vocabs;
-            for(VocabularyCallback vcb : vocabulary_callbacks)
-              vcb.callback.onSuccess(vocabularies.get(vcb.uri));
-            vocabulary_callbacks.clear();
+            for(Callback<Vocabulary, Throwable> cb : 
+                vocabulary_callbacks.get(uri).getCallbacks())
+              cb.onSuccess(vocabularies.get(uri));
+            vocabulary_callbacks.get(uri).clear();
           }
           @Override
           public void onFailure(Method method, Throwable exception) {
             AppNotification.notifyFailure("Could not load vocabularies");
             callback.onFailure(exception);
           }
-        }).call(getDiskService()).getVocabularies();        
+        }).call(getDiskService()).getVocabularies();
       }
       else {
-        vocabulary_callbacks.add(new VocabularyCallback(uri, callback));
+        vocabulary_callbacks.get(uri).add(callback);
       }
     }
   }
@@ -114,13 +126,14 @@ public class DiskREST {
     }
     else {
       if(user_vocabulary_callbacks.isEmpty()) {
-        user_vocabulary_callbacks.add(new VocabularyCallback(null, callback));        
+        user_vocabulary_callbacks.add(callback);        
         REST.withCallback(new MethodCallback<Vocabulary>() {
           @Override
           public void onSuccess(Method method, Vocabulary vocab) {
             user_vocabulary = vocab;
-            for(VocabularyCallback vcb : user_vocabulary_callbacks)
-              vcb.callback.onSuccess(user_vocabulary);
+            for(Callback<Vocabulary, Throwable> vcb : 
+                user_vocabulary_callbacks.getCallbacks())
+              vcb.onSuccess(user_vocabulary);
             user_vocabulary_callbacks.clear();
           }
           @Override
@@ -131,7 +144,7 @@ public class DiskREST {
         }).call(getDiskService()).getUserVocabulary(username, domain);        
       }
       else {
-        vocabulary_callbacks.add(new VocabularyCallback(null, callback));
+        user_vocabulary_callbacks.add(callback);
       }
     }
   }

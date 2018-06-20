@@ -1,7 +1,9 @@
 package org.diskproject.server.repository;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -10,7 +12,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang.SerializationUtils;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
 import org.diskproject.shared.classes.common.Triple;
@@ -60,7 +65,7 @@ public class DiskRepository extends KBRepository {
   public DiskRepository() {
     setConfiguration(KBConstants.DISKURI());
     initializeKB();
-    monitor = Executors.newScheduledThreadPool(2);
+    monitor = Executors.newScheduledThreadPool(10);
     executor = Executors.newFixedThreadPool(2);
   }
   
@@ -473,82 +478,199 @@ public class DiskRepository extends KBRepository {
     }
   }
   
+  private String getQueryBindings(String queryPattern, 
+      Pattern variablePattern, Map<String, String> variableBindings) {
+    String pattern = "";
+    for(String line : queryPattern.split("\\n")) {
+      line = line.trim();
+      if(line.equals(""))
+        continue;
+      if(variableBindings != null) {
+        Matcher mat = variablePattern.matcher(line);
+        int diff = 0;
+        while(mat.find()) {
+          if(variableBindings.containsKey(mat.group(1))) {
+            String varbinding = variableBindings.get(mat.group(1));
+            int st = mat.start(1);
+            int end = mat.end(1);
+            line = line.substring(0, st-1+diff) + varbinding +
+                line.substring(end+diff);
+            diff += varbinding.length() - (end - st) - 1;
+          }
+        }
+      }
+      if(line.contains("?")) {
+        // Only have relevant lines in query containing variables
+        pattern += line;
+        if(!line.matches(".+\\.\\s*$"))
+          pattern += " .";
+        pattern += "\n";
+      }
+    }
+    return pattern;
+  }
+  
+  private String filterQueryBindings(String queryPattern, String namespace) {
+    String pattern = "";
+    Map<String, Boolean> lineExists = new HashMap<String, Boolean>();
+
+    for(String line : queryPattern.split("\\n")) {
+      line = line.trim();
+      if(lineExists.containsKey(line))
+        continue;
+      if(line.equals(""))
+        continue;
+      if(line.matches(".*\\s+" + namespace + ".*"))
+        continue;
+      if(line.matches("^" + namespace + ".*"))
+        continue;
+      lineExists.put(line, true);
+      pattern += line + "\n";
+    }
+    return pattern; 
+  }
+  
+  private String getSparqlQuery(String queryPattern, String assertionsUri) { 
+    return "PREFIX bio: <"+KBConstants.OMICSNS()+">\n" +
+        "PREFIX hyp: <"+KBConstants.HYPNS()+">\n" +
+        "PREFIX xsd: <"+KBConstants.XSDNS()+">\n" +
+        "PREFIX user: <"+assertionsUri+"#>\n\n" +
+        "SELECT *\n" +
+        "WHERE { \n" + queryPattern + "}\n";
+  }
+  
+  private String getPrefixedItem(KBObject item, Map<String, String> nsmap) {
+    if(item.isLiteral())
+      return item.getValueAsString();
+    else {
+      if(item.getID().equals(KBConstants.RDFNS()+"type"))
+        return "a";
+      String valns = item.getNamespace();
+      if(nsmap.containsKey(valns))
+        return nsmap.get(valns) + item.getName();
+      else
+        return "<" + item.getID() + ">";
+    }
+  }
+  
   public List<TriggeredLOI> queryHypothesis(String username, String domain, 
       String id) {
     String hypuri = this.HYPURI(username, domain) + "/" + id;
-    String omicsont = KBConstants.OMICSURI();
-    String hypont = KBConstants.HYPURI();    
     String assertions = this.ASSERTIONSURI(username, domain);
     
-    List<TriggeredLOI> tlois = new ArrayList<TriggeredLOI>();
+    Map<String, String> nsmap = new HashMap<String, String>();
+    nsmap.put(KBConstants.OMICSNS(), "bio:");
+    nsmap.put(KBConstants.HYPNS(), "hyp:");
+    nsmap.put(KBConstants.XSDNS(), "xsd:");
+    nsmap.put(assertions+"#", "user:");
+    nsmap.put(hypuri + "#", "?");
     
+    List<TriggeredLOI> tlois = new ArrayList<TriggeredLOI>();
     try {
-      KBAPI kb = this.fac.getKB(OntSpec.PLAIN);
-      kb.importFrom(this.fac.getKB(omicsont, OntSpec.PLAIN));
-      kb.importFrom(this.fac.getKB(hypont, OntSpec.PLAIN));
-      kb.importFrom(this.fac.getKB(assertions, OntSpec.PLAIN));
-      kb.importFrom(this.fac.getKB(hypuri, OntSpec.PLAIN));
+      KBAPI queryKb = this.fac.getKB(OntSpec.PLAIN);
+      KBAPI hypkb = this.fac.getKB(hypuri, OntSpec.PLAIN);
+      queryKb.importFrom(this.omicsontkb);
+      queryKb.importFrom(this.hypontkb);
+      queryKb.importFrom(hypkb);
+      queryKb.importFrom(this.fac.getKB(assertions, OntSpec.PLAIN));
       
+      Pattern varPattern = Pattern.compile("\\?(.+?)\\b");
+      
+      String hypPattern = "";
+      for(KBTriple t : hypkb.getAllTriples()) {
+        String subject = this.getPrefixedItem(t.getSubject(), nsmap);
+        String predicate = this.getPrefixedItem(t.getPredicate(), nsmap);
+        String object = this.getPrefixedItem(t.getObject(), nsmap);
+        hypPattern += subject + " " + predicate + " " + object + " .\n";
+      }
+
       for(TreeItem item : this.listLOIs(username, domain)) {
         LineOfInquiry loi = this.getLOI(username, domain, item.getId());
-
-        String loiquery = loi.getQuery();
-        if(loiquery == null || loiquery.equals(""))
+        
+        String hypothesisQuery = loi.getHypothesisQuery();
+        
+        String dataQuery = loi.getDataQuery();
+        if(hypothesisQuery == null || hypothesisQuery.equals("")
+            || dataQuery == null || dataQuery.equals(""))
           continue;
         
-        String where = "";
-        for(String line : loiquery.split("\\n")) {
-          line = line.trim();
-          if(line.equals(""))
-            continue;
-          where += line + " .\n";
-        }
+        hypothesisQuery = this.getQueryBindings(hypothesisQuery, null, null);
         
-        String sparqlQuery = "PREFIX bio: <"+KBConstants.OMICSNS()+">\n" +
-            "PREFIX hyp: <"+KBConstants.HYPNS()+">\n" +
-            "PREFIX xsd: <"+KBConstants.XSDNS()+">\n" +
-            "PREFIX user: <"+assertions+"#>\n\n" +
-            "SELECT *\n" +
-            "WHERE { \n" + where + "}\n";
+        String hypSparqlQuery = 
+            this.getSparqlQuery(hypothesisQuery, assertions);
         
-        TriggeredLOI tloi = null; 
-        for(ArrayList<SparqlQuerySolution> solutions : kb.sparqlQuery(sparqlQuery)) {
-          if(tloi == null) {
-            tloi = new TriggeredLOI(loi, id);
-            tloi.copyWorkflowBindings(loi.getMetaWorkflows(), tloi.getMetaWorkflows());            
-          }
-          
-          Map<String, String> varbindings = new HashMap<String, String>();
-          for(SparqlQuerySolution solution : solutions) {
+        for(ArrayList<SparqlQuerySolution> hypothesisSolutions : queryKb.sparqlQuery(hypSparqlQuery)) {
+          Map<String, String> hypVarBindings = new HashMap<String, String>();
+          for(SparqlQuerySolution solution : hypothesisSolutions) {
             String value;
             if(solution.getObject().isLiteral())
               value = solution.getObject().getValueAsString();
-            else
-              value = solution.getObject().getName();
-            varbindings.put("?" + solution.getVariable(), value);
+            else {
+              String valns = solution.getObject().getNamespace();
+              if(nsmap.containsKey(valns))
+                value = nsmap.get(valns) + solution.getObject().getName();
+              else
+                value = "<" + solution.getObject().getID() + ">";
+            }
+            hypVarBindings.put(solution.getVariable(), value);
           }
           
-          for(WorkflowBindings bindings : loi.getWorkflows()) {
-            WorkflowBindings newbindings = new WorkflowBindings();
-            newbindings.setWorkflow(bindings.getWorkflow());
-            ArrayList<VariableBinding> vbindings = 
-                new ArrayList<VariableBinding>(bindings.getBindings());
+          String boundHypothesisQuery =
+              this.getQueryBindings(hypothesisQuery, varPattern, hypVarBindings);
+          String boundDataQuery = 
+              this.getQueryBindings(dataQuery, varPattern, hypVarBindings);
+          
+          boundDataQuery =  hypPattern + boundHypothesisQuery + boundDataQuery;          
+          boundDataQuery = this.filterQueryBindings(boundDataQuery, "hyp:");
+          String dataSparqlQuery = 
+              this.getSparqlQuery(boundDataQuery, assertions);
+          
+          
+          TriggeredLOI tloi = null; 
+          for(ArrayList<SparqlQuerySolution> dataSolutions : queryKb.sparqlQuery(dataSparqlQuery)) {
+            // TODO: What to do with multiple data solutions ?
+            // - Separate triggered line of inquiries for each one ?
+            // - Multiple workflows in the same triggered line of inquiry ?
+            // - What if workflows take collections as input ?
             
-            for(VariableBinding vbinding : vbindings) {
-              String bindingstr = vbinding.getBinding();
-              String newval;
-              if(bindingstr.startsWith("?") && varbindings.containsKey(bindingstr))
-                newval = varbindings.get(bindingstr);
-              else
-                newval = bindingstr;
-              vbinding.setBinding(newval);
+            if(tloi == null) {
+              tloi = new TriggeredLOI(loi, id);
+              tloi.copyWorkflowBindings(loi.getMetaWorkflows(), tloi.getMetaWorkflows());            
             }
-            newbindings.setBindings(vbindings);
-            tloi.getWorkflows().add(newbindings);
+            
+            Map<String, String> dataVarBindings = new HashMap<String, String>();
+            for(SparqlQuerySolution solution : dataSolutions) {
+              String value;
+              if(solution.getObject().isLiteral())
+                value = solution.getObject().getValueAsString();
+              else
+                value = solution.getObject().getName();
+              dataVarBindings.put(solution.getVariable(), value);
+            }
+            
+            for(WorkflowBindings bindings : loi.getWorkflows()) {
+              WorkflowBindings newbindings = new WorkflowBindings();
+              newbindings.setWorkflow(bindings.getWorkflow());
+              
+              @SuppressWarnings("unchecked")
+              ArrayList<VariableBinding> vbindings = 
+                  (ArrayList<VariableBinding>) SerializationUtils.clone((Serializable)bindings.getBindings());
+              
+              for(VariableBinding vbinding : vbindings) {
+                String binding = vbinding.getBinding();
+                Matcher mat = varPattern.matcher(binding);
+                if(mat.find() && dataVarBindings.containsKey(mat.group(1))) {
+                  binding = mat.replaceAll(dataVarBindings.get(mat.group(1)));
+                }
+                vbinding.setBinding(binding);
+              }
+              newbindings.setBindings(vbindings);
+              tloi.getWorkflows().add(newbindings);
+            }
           }
+          if(tloi != null)
+            tlois.add(tloi);
         }
-        if(tloi != null)
-          tlois.add(tloi);
       }
     }
     catch (Exception e) {
@@ -660,9 +782,61 @@ public class DiskRepository extends KBRepository {
       KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
       kb.delete(); 
       this.addAssertion(username, domain, assertions);
+
+      // Re-run hypotheses if needed
+      this.requeryHypotheses(username, domain);
+      
     } catch (Exception e) {
       e.printStackTrace();
     }   
+  }
+  
+  private void requeryHypotheses(String username, String domain) {
+    // Cache already run/queries hypotheses (check tlois)
+    HashMap<String, Boolean> tloikeys = new HashMap<String, Boolean>();
+    List<String> bindkeys = new ArrayList<String>();
+    HashMap<String, TriggeredLOI> tloimap = new HashMap<String, TriggeredLOI>();
+    for(TriggeredLOI tloi : this.listTriggeredLOIs(username, domain)) {
+      if(!tloi.getStatus().equals(TriggeredLOI.Status.FAILED)) {
+        TriggeredLOI fulltloi = this.getTriggeredLOI(username, domain, tloi.getId());
+        String key = fulltloi.toString();
+        tloikeys.put(key, true);
+        
+        if(tloi.getStatus().equals(TriggeredLOI.Status.SUCCESSFUL) &&
+            fulltloi.getResultingHypothesisIds().size() > 0) {
+          String partkey = "";
+          for(WorkflowBindings wb : fulltloi.getWorkflows())
+            partkey += wb.toString();
+          bindkeys.add(partkey);
+          tloimap.put(partkey, fulltloi);
+        }
+      }
+    }
+    Collections.sort(bindkeys);
+    
+    // Get all Hypotheses
+    for(TreeItem hypitem : this.listHypotheses(username, domain)) {
+      // Run/Query only top-level hypotheses
+      if(hypitem.getParentId() == null) {
+        List<TriggeredLOI> tlois = this.queryHypothesis(username, domain, hypitem.getId());
+        Collections.sort(tlois);
+        for(TriggeredLOI tloi : tlois) {
+          String key = tloi.toString();
+          if(tloikeys.containsKey(key))
+            continue;
+          
+          for(String partkey: bindkeys) {
+            if(key.contains(partkey)) {
+              TriggeredLOI curtloi = tloimap.get(partkey);
+              if(curtloi.getLoiId().equals(tloi.getLoiId()))
+                tloi.setParentHypothesisId(
+                    tloimap.get(partkey).getResultingHypothesisIds().get(0));
+            }
+          }
+          this.addTriggeredLOI(username, domain, tloi);
+        }
+      }
+    }
   }
   
   public void deleteAssertion(String username, String domain, Graph assertion) {
@@ -700,10 +874,14 @@ public class DiskRepository extends KBRepository {
         kb.setLabel(loiitem, loi.getName());
       if(loi.getDescription() != null)
         kb.setComment(loiitem, loi.getDescription());
-      if(loi.getQuery() != null) {
-        KBObject valobj = loikb.createLiteral(loi.getQuery());
-        loikb.setPropertyValue(floiitem, pmap.get("hasPatternQuery"), valobj);
+      if(loi.getHypothesisQuery() != null) {
+        KBObject valobj = loikb.createLiteral(loi.getHypothesisQuery());
+        loikb.setPropertyValue(floiitem, pmap.get("hasHypothesisQuery"), valobj);
       }
+      if(loi.getDataQuery() != null) {
+        KBObject valobj = loikb.createLiteral(loi.getDataQuery());
+        loikb.setPropertyValue(floiitem, pmap.get("hasDataQuery"), valobj);
+      }      
       this.storeWorkflowBindingsInKB(loikb, floiitem, 
           pmap.get("hasWorkflowBindings"),
           loi.getWorkflows(), username, domain);
@@ -812,9 +990,13 @@ public class DiskRepository extends KBRepository {
       loi.setDescription(kb.getComment(loiitem));
       
       KBObject floiitem = loikb.getIndividual(fullid);
-      KBObject queryobj = loikb.getPropertyValue(floiitem, pmap.get("hasPatternQuery"));
-      if(queryobj != null)
-        loi.setQuery(queryobj.getValueAsString());
+      KBObject hqueryobj = loikb.getPropertyValue(floiitem, pmap.get("hasHypothesisQuery"));
+      if(hqueryobj != null)
+        loi.setHypothesisQuery(hqueryobj.getValueAsString());
+      
+      KBObject dqueryobj = loikb.getPropertyValue(floiitem, pmap.get("hasDataQuery"));
+      if(dqueryobj != null)
+        loi.setDataQuery(dqueryobj.getValueAsString());
       
       loi.setWorkflows(this.getWorkflowBindingsFromKB(username, domain, 
           loikb, floiitem, pmap.get("hasWorkflowBindings")));
@@ -1085,12 +1267,15 @@ public class DiskRepository extends KBRepository {
     return true;     
   }
   
-  private String getWorkflowExecutionRun(TriggeredLOI tloi, String workflow) {
+  private String getWorkflowExecutionRunIds(TriggeredLOI tloi, String workflow) {
+    String runids = null;
     for(WorkflowBindings bindings : tloi.getWorkflows()) {
-      if(bindings.getWorkflow().equals(workflow))
-        return bindings.getRun().getId();
+      if(bindings.getWorkflow().equals(workflow)) {
+        runids = (runids == null) ? "" : runids + ", ";
+        runids += bindings.getRun().getId();
+      }
     }
-    return null;
+    return runids;
   }
   
   private String fetchOutputHypothesis(String username, String domain, 
@@ -1103,9 +1288,21 @@ public class DiskRepository extends KBRepository {
       String dataname = dataid.replaceAll(".*#", "");
       String content = WingsAdapter.get().fetchDataFromWings(username, domain, dataid);
       
-      List<String> workflows = new ArrayList<String>();
-      for(WorkflowBindings wb : tloi.getWorkflows())
-        workflows.add(wb.getWorkflow());
+      HashMap<String, Integer> workflows = new HashMap<String, Integer>();
+      for(WorkflowBindings wb : tloi.getWorkflows()) {
+        String wid = wb.getWorkflow();
+        if(workflows.containsKey(wid))
+          workflows.put(wid, workflows.get(wid)+1);
+        else
+          workflows.put(wid, 1);
+      }
+      String wflows = "";
+      for(String wid: workflows.keySet()) {
+        if(!wflows.equals("")) 
+          wflows += ", ";
+        int num = workflows.get(wid);
+        wflows += (num > 1 ? num : "a") +" "+wid+" workflow" + (num > 1 ? "s" : "");
+      }
       String meta = bindings.getWorkflow();
       
       Hypothesis parentHypothesis = 
@@ -1113,8 +1310,8 @@ public class DiskRepository extends KBRepository {
       Hypothesis newHypothesis = new Hypothesis();
       newHypothesis.setId(dataname);
       newHypothesis.setName("[Revision] " + parentHypothesis.getName());
-      String description = "Followed the line of inquiry: \""+tloi.getName()+"\" to run workflows: " + workflows
-          + ", then run meta workflow: [" + meta + "] and generate/modify hypothesis.";
+      String description = "Followed the line of inquiry: \""+tloi.getName()+"\" to run " + wflows
+          + ", then run " + meta + " meta-workflow, to create a revised hypothesis.";
       newHypothesis.setDescription(description);
       newHypothesis.setParentId(parentHypothesis.getId());
       
@@ -1204,8 +1401,8 @@ public class DiskRepository extends KBRepository {
           if(this.metamode) {
             // Replace workflow ids with workflow run ids in Variable Bindings
             for(VariableBinding vbinding : vbindings) {
-              String runid = getWorkflowExecutionRun(tloi, vbinding.getBinding());
-              vbinding.setBinding(runid);
+              String runids = getWorkflowExecutionRunIds(tloi, vbinding.getBinding());
+              vbinding.setBinding(runids);
             }
             // Upload hypothesis to Wings as a file, and add to Variable Bindings
             String hypVarId = bindings.getMeta().getHypothesis();
@@ -1276,7 +1473,7 @@ public class DiskRepository extends KBRepository {
     @Override
     public void run() {
       try {
-        System.out.println("Running monitoring thread");
+        //System.out.println("Running monitoring thread");
 
         // Check workflow runs from tloi
         List<WorkflowBindings> wflowBindings = tloi.getWorkflows();

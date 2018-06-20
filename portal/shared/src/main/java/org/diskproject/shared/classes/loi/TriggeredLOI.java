@@ -1,6 +1,7 @@
 package org.diskproject.shared.classes.loi;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.diskproject.shared.classes.util.GUID;
@@ -8,7 +9,7 @@ import org.diskproject.shared.classes.workflow.VariableBinding;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public class TriggeredLOI {
+public class TriggeredLOI implements Comparable<TriggeredLOI> {
   public static enum Status {
     QUEUED, RUNNING, FAILED, SUCCESSFUL
   };
@@ -150,6 +151,19 @@ public class TriggeredLOI {
     html += "</div>";
 
     return html;
+  }
+  
+  public String toString() {
+    Collections.sort(this.workflows);
+    //Collections.sort(this.metaWorkflows);
+    return this.getLoiId() + "-" 
+        + this.getParentHypothesisId() + "-" 
+        + this.getWorkflows();
+        //+ "-" + this.getMetaWorkflows();
+  }
+
+  public int compareTo(TriggeredLOI o) {
+    return this.toString().compareTo(o.toString());
   }
 
 }

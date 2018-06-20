@@ -47,11 +47,30 @@ public class KBRepository {
     this.fac = new OntFactory(OntFactory.JENA, tdbdir);
     try {
       ontkb = fac.getKB(this.onturi, OntSpec.PELLET, false, true);
+      
+      // Temporary hacks
+      this.temporaryHacks();
+      
       pmap = new HashMap<String, KBObject>();
       cmap = new HashMap<String, KBObject>();
       this.cacheKBTerms(ontkb);
     } catch (Exception e) {
       e.printStackTrace();
+    }
+  }
+  
+  private void temporaryHacks() {
+    this.hackInDataProperty("hasHypothesisQuery", "LineOfInquiry", "string");
+    this.hackInDataProperty("hasDataQuery", "LineOfInquiry", "string");    
+  }
+  
+  private void hackInDataProperty(String prop, String domain, String range) {
+    String ns = onturi + "#";
+    if(!this.ontkb.containsResource(ns+prop)) {
+      this.ontkb.createDatatypeProperty(ns+prop);
+      this.ontkb.setPropertyDomain(ns+prop, ns+domain);
+      this.ontkb.setPropertyRange(ns+prop, ns+range);
+      this.ontkb.save();
     }
   }
   

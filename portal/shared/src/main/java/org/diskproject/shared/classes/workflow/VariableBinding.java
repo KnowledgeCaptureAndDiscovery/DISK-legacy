@@ -1,6 +1,10 @@
 package org.diskproject.shared.classes.workflow;
 
-public class VariableBinding {
+import java.io.Serializable;
+
+public class VariableBinding implements Serializable, Comparable<VariableBinding> {
+  private static final long serialVersionUID = -847994634505985728L;
+  
   String variable;
   String binding;
 
@@ -23,4 +27,9 @@ public class VariableBinding {
   public String toString() {
     return variable+" = "+binding;
   }
+
+  public int compareTo(VariableBinding o) {
+    return this.toString().compareTo(o.toString());
+  }
+
 }
