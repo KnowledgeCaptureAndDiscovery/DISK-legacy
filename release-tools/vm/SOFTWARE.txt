@@ -1,0 +1,41 @@
+1. ImageMagick
+2. Samtools 1.3.1 (https://github.com/samtools/samtools/releases/download/1.3.1/)
+3. BCFtools 1.3.1 (https://github.com/samtools/bcftools/releases/download/1.3.1)
+4. Bowtie 2.2.9 (http://downloads.sourceforge.net/project/bowtie-bio/bowtie2/2.2.9/)
+5. Tophat 2.1.1 (https://ccb.jhu.edu/software/tophat/downloads/tophat-2.1.1.Linux_x86_64.tar.gz)
+6. Cufflinks 2.2.1 (http://cole-trapnell-lab.github.io/cufflinks/assets/downloads/cufflinks-2.2.1.Linux_x86_64.tar.gz)
+7. BEDTools 2.27.1 (https://github.com/arq5x/bedtools2/releases/download/v2.27.1/)
+8. Cellprofiler 3.0.0 (https://github.com/CellProfiler/CellProfiler.git)
+9. RSeQC 2.6.4
+10. R 3.5.0
+    10a. codetools
+    10b. devtools
+    10c. curl
+    10d. kassambara/easyGgplot2 (http://www.sthda.com/english/wiki/easyggplot2)
+    10e. ggplot2
+    10f. reshape
+    10g. reshape2
+    10h. dplyr
+    10i. Vennerable
+    10j. PerformanceAnalytics
+    10k. psych
+    10l. circlize
+    10m. corrplot
+    10n. Hmisc
+    10o. gdata
+    10p. factoextra
+    10q. scagnostics
+    10r. biocLite
+    10s. customProDB
+    10t. Rsubread (https://bioconductor.org/packages/release/bioc/html/Rsubread.html)
+    10u. limma
+    10v. ComplexHeatmap (https://bioconductor.org/packages/release/bioc/html/ComplexHeatmap.html)
+    10w. ConsensusClusterPlus (https://www.bioconductor.org/packages/release/bioc/html/ConsensusClusterPlus.html)
+11. MSGFPlus (https://omics.pnl.gov/software/ms-gf)
+12. Proteowizard (http://data.mallicklab.com/download.php)
+13. bumbershoot (http://data.mallicklab.com/download.php)
+14. bftools (http://downloads.openmicroscopy.org/latest/bio-formats5.4/artifacts/bftools.zip)
+15. biopython (http://biopython.org/wiki/Download)
+16. RSEM (https://deweylab.github.io/RSEM/)
+17. TPP 4.8.0
+18. graphviz

@@ -1,0 +1,88 @@
+{
+  "builders": [
+    {
+      "boot_command": [
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/{{ user `ks_cfg` }}.cfg<enter><wait>"
+      ],
+      "boot_wait": "10s",
+      "disk_size": 11264,
+      "guest_additions_mode": "disable",
+      "guest_os_type": "RedHat_64",
+      "headless": true,
+      "http_directory": "http",
+      "iso_checksum_type": "sha256",
+      "iso_checksum_url": "{{ user `iso_url` }}/sha256sum.txt",
+      "iso_url": "{{ user `iso_url` }}/{{ user `iso_name` }}",
+      "output_directory": "output/base",
+      "shutdown_command": "/sbin/halt -h --poweroff",
+      "ssh_password": "vagrant",
+      "ssh_port": 22,
+      "ssh_username": "root",
+      "ssh_wait_timeout": "10000s",
+      "type": "virtualbox-iso",
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{ .Name }}",
+          "--cpus",
+          "1"
+        ],
+        [
+          "modifyvm",
+          "{{ .Name }}",
+          "--memory",
+          "2048"
+        ]
+      ],
+      "virtualbox_version_file": ".vbox_version",
+      "vm_name": "{{ user `out_file` }}"
+    }
+  ],
+  "provisioners": [
+    {
+      "environment_vars": [
+        "USERNAME=disk",
+        "PASSWD=D!sk123"
+      ],
+      "scripts": [
+        "scripts/disk/user.sh",
+        "scripts/disk/pegasus.sh",
+        "scripts/commons/update.sh"
+      ],
+      "start_retry_timeout": "5m",
+      "expect_disconnect": true,
+      "type": "shell"
+    },
+    {
+      "environment_vars": [
+        "TOMCAT_HOME=/usr/share/tomcat",
+        "ROOT_PASSWORD=W1ng5!",
+        "LABKEY_VERSION=LabKey16.2-45209.14-community-bin",
+        "LABKEY_HOME=/usr/local/labkey",
+        "JDBC_USER=labkey",
+        "JDBC_PASSWORD=labkey123",
+        "PHANTOMJS_VERSION=2.1.1",
+        "SWAP_FILE=/tmp/swap-file"
+      ],
+      "scripts": [
+        "scripts/commons/swap-on.sh",
+        "scripts/disk/basics.sh",
+        "scripts/disk/ssl.sh",
+        "scripts/disk/disk.sh",
+        "scripts/disk/wings.sh",
+        "scripts/disk/tpp.sh",
+        "scripts/disk/labkey.sh",
+        "scripts/disk/zhang.sh",
+        "scripts/commons/swap-off.sh"
+      ],
+      "type": "shell"
+    }
+  ],
+  "variables": {
+    "iso_name": "CentOS-7-x86_64-NetInstall-1511.iso",
+    "iso_url": "http://mirrors.usc.edu/pub/linux/distributions/centos/7/isos/x86_64",
+    "ks_cfg": "base",
+    "out_file": "base",
+    "vm_version": ""
+  }
+}

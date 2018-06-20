@@ -9,4 +9,8 @@
 build
 dist
 tmp
-
+output/
+packer_cache/
+log-*.txt
+.terraform
+terraform.tfstate.backup

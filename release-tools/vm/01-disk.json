@@ -1,0 +1,71 @@
+{
+  "builders": [
+    {
+      "format": "ova",
+      "guest_additions_mode": "disable",
+      "headless": true,
+      "http_directory": "http",
+      "name": "aws",
+      "output_directory": "output/{{ build_name }}",
+      "shutdown_command": "/sbin/halt -h --poweroff",
+      "shutdown_timeout": "5m",
+      "source_path": "{{ user `base_ovf_path` }}",
+      "ssh_password": "vagrant",
+      "ssh_port": 22,
+      "ssh_username": "root",
+      "type": "virtualbox-ovf",
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{ .Name }}",
+          "--cpus",
+          "1"
+        ],
+        [
+          "modifyvm",
+          "{{ .Name }}",
+          "--memory",
+          "1024"
+        ]
+      ],
+      "vm_name": "{{ user `vm_name` }}-{{ user `vm_version` }}"
+    }
+  ],
+  "post-processors": [
+    {
+      "only": [
+        "aws"
+      ],
+      "region": "us-west-2",
+      "s3_bucket_name": "{{ user `bucket` }}",
+      "skip_clean": false,
+      "type": "amazon-import"
+    }
+  ],
+  "provisioners": [
+    {
+      "scripts": [
+        "scripts/commons/update.sh"
+      ],
+      "start_retry_timeout": "5m",
+      "expect_disconnect": true,
+      "type": "shell"
+    },
+    {
+      "scripts": [
+        "scripts/aws/cloud-init.sh",
+        "scripts/aws/aws-instance-setup.sh",
+        "scripts/aws/secure-root.sh",
+        "scripts/commons/cleanup.sh",
+        "scripts/commons/zero.sh"
+      ],
+      "type": "shell"
+    }
+  ],
+  "variables": {
+    "base_ovf_path": "",
+    "bucket": "disk-vm-bucket",
+    "vm_name": "DISKVM",
+    "vm_version": ""
+  }
+}
