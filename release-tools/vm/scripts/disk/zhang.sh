@@ -259,6 +259,8 @@ pip install biopython
 # RSEM
 # ----
 
+yum -y install perl-Env
+
 curl --location \
      --output RSEM-1.3.0.tar.gz \
      "https://github.com/deweylab/RSEM/archive/v1.3.0.tar.gz"
