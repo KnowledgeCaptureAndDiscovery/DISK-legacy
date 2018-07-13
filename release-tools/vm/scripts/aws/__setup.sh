@@ -218,8 +218,6 @@ EOT
 
     systemctl stop    tomcat
     systemctl disable tomcat
-    systemctl stop    postgresql-9.5
-    systemctl disable postgresql-9.5
 
     return 0
 }
@@ -242,7 +240,7 @@ setup_swap_space()
 
 start()
 {
-    echo -n "Setting up AWS instance: "
+    echo -n "Start: AWS Instance Setup"
     configure_me
     RETVAL=$?
     echo
@@ -251,6 +249,8 @@ start()
 
 stop()
 {
+    echo -n "Stop: AWS Instance Setup"
+
     # Turns off all swap partitions
     swapoff --all
 
@@ -259,14 +259,12 @@ stop()
 
     # Unmount ephemeral storage
     if [ -d ${SCRATCH_DIR} ]; then
-        umount ${SCRATCH_DIR} 2>/dev/null || /bin/true
+        umount --force ${SCRATCH_DIR} 2>/dev/null || /bin/true
         /sbin/vgchange --activate n ${VOLUME_GROUP}
     fi
 
     # Unmount EFS storage
-    if [ -d ${SCRATCH_DIR} ]; then
-        umount ${STORAGE_DIR} 2>/dev/null || /bin/true
-    fi
+    umount --force ${STORAGE_DIR} 2>/dev/null || /bin/true
 }
 
 restart()

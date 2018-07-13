@@ -1,7 +1,3 @@
-variable "disk_version" {
-  default = "1.2"
-}
-
 data "aws_ami" "disk-ami" {
   most_recent = true
 
@@ -16,6 +12,12 @@ data "aws_ami" "disk-ami" {
       "DISK VM ${var.disk_version}",
     ]
   }
+}
+
+data "aws_availability_zones" "available" {}
+
+variable "disk_version" {
+  default = "1.4"
 }
 
 variable "workers" {
@@ -40,6 +42,10 @@ variable "key_name" {
 
 variable "aws_instance_type" {
   default = "m3.xlarge"
+}
+
+variable "aws_instance_root_volume_size" {
+  default = "20"
 }
 
 variable "aws_efs_id" {
