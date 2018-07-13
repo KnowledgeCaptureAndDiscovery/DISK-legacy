@@ -18,7 +18,7 @@ import javax.ws.rs.core.SecurityContext;
 
 import org.diskproject.server.repository.DiskRepository;
 import org.diskproject.server.repository.WingsAdapter;
-import org.diskproject.shared.api.DiskService;
+import org.diskproject.shared.api.DiskService1;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Path("")
 @Produces("application/json")
 @Consumes("application/json")
-public class DiskResource implements DiskService {
+public class DiskResource implements DiskService1 {
 
   @Context
   HttpServletResponse response;
@@ -46,7 +46,7 @@ public class DiskResource implements DiskService {
   DiskRepository repo;
   
   public DiskResource() {
-    this.repo = DiskRepository.get();
+    this.repo = DiskRepository.get(); //Here
   }
   /*
    * Vocabulary

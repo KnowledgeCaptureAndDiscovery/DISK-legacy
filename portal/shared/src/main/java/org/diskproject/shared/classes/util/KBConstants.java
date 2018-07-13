@@ -2,6 +2,7 @@ package org.diskproject.shared.classes.util;
 
 public class KBConstants {
   private static String diskuri = "http://disk-project.org/ontology/disk";
+  private static String neurouri = "https://w3id.org/disk/ontology/neuro";
   private static String omicsuri = "http://disk-project.org/ontology/omics";
   private static String hypuri = "http://disk-project.org/ontology/hypothesis";
 
@@ -27,6 +28,14 @@ public class KBConstants {
 
   public static String OMICSNS() {
     return omicsuri + "#";
+  }
+
+  public static String NEUROURI() {
+    return neurouri;
+  }
+
+  public static String NEURONS() {
+    return neurouri + "#";
   }
 
   public static String HYPURI() {

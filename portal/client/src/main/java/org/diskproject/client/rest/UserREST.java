@@ -5,7 +5,7 @@ import java.util.List;
 import org.diskproject.client.Config;
 import org.diskproject.client.authentication.AuthenticatedDispatcher;
 import org.diskproject.client.authentication.SessionStorage;
-import org.diskproject.shared.api.UserService;
+import org.diskproject.shared.api.UserService1;
 import org.diskproject.shared.classes.users.UserCredentials;
 import org.diskproject.shared.classes.users.UserSession;
 import org.fusesource.restygwt.client.Defaults;
@@ -17,14 +17,14 @@ import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 
 public class UserREST {
-  public static UserService userService;
+  public static UserService1 userService;
 
-  public static UserService getUserService() {
+  public static UserService1 getUserService() {
     if(userService == null) {
       Defaults.setServiceRoot(Config.getServerURL());
       Defaults.setDateFormat(null);
       Defaults.setDispatcher(new AuthenticatedDispatcher());
-      userService = GWT.create(UserService.class);
+      userService = GWT.create(UserService1.class);
     }
     return userService;
   }

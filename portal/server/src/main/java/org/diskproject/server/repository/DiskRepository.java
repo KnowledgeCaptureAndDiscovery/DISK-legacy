@@ -1,11 +1,27 @@
 package org.diskproject.server.repository;
 
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -14,6 +30,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Scanner;
 
 import org.apache.commons.lang.SerializationUtils;
 import org.diskproject.shared.classes.common.Graph;
@@ -51,6 +68,7 @@ public class DiskRepository extends KBRepository {
   
   protected KBAPI hypontkb;
   protected KBAPI omicsontkb;
+  protected KBAPI neuroontkb;
   
   Map<String, Vocabulary> vocabularies;
   ScheduledExecutorService monitor;
@@ -58,13 +76,13 @@ public class DiskRepository extends KBRepository {
 
   public static DiskRepository get() {
     if(singleton == null)
-      singleton = new DiskRepository();
+      singleton = new DiskRepository();  //Here
     return singleton;
   }
 
   public DiskRepository() {
     setConfiguration(KBConstants.DISKURI());
-    initializeKB();
+    initializeKB();			//Here
     monitor = Executors.newScheduledThreadPool(10);
     executor = Executors.newFixedThreadPool(2);
   }
@@ -107,6 +125,8 @@ public class DiskRepository extends KBRepository {
       this.hypontkb.delete();
     if(this.omicsontkb != null)
       this.omicsontkb.delete();
+    if(this.neuroontkb != null)
+      this.neuroontkb.delete();
     
     this.initializeKB();
   }
@@ -118,17 +138,74 @@ public class DiskRepository extends KBRepository {
     try {
       this.hypontkb = fac.getKB(KBConstants.HYPURI(), OntSpec.PLAIN, false, true);
       this.omicsontkb = fac.getKB(KBConstants.OMICSURI(), OntSpec.PLAIN, false, true);
+      String DownloadPath = "C:/Users/rrreg/neuroOnt.xml";
+      downloadOntology(KBConstants.NEUROURI(), DownloadPath);
+      InputStream is = new FileInputStream(new File(DownloadPath));
+      this.neuroontkb = fac.getKB(is, KBConstants.NEURONS(),OntSpec.PLAIN);
       
       this.vocabularies = new HashMap<String, Vocabulary>();
       this.vocabularies.put(KBConstants.DISKURI(),
-          this.initializeVocabularyFromKB(this.ontkb, KBConstants.DISKNS()));      
+          this.initializeVocabularyFromKB(this.ontkb, KBConstants.DISKNS())); 
+  //Here   
       this.vocabularies.put(KBConstants.OMICSURI(), 
           this.initializeVocabularyFromKB(this.omicsontkb, KBConstants.OMICSNS()));
+      this.vocabularies.put(KBConstants.NEUROURI(), 
+          this.initializeVocabularyFromKB(this.neuroontkb, KBConstants.NEURONS()));
       this.vocabularies.put(KBConstants.HYPURI(),
-          this.initializeVocabularyFromKB(this.hypontkb, KBConstants.HYPNS()));      
+          this.initializeVocabularyFromKB(this.hypontkb, KBConstants.HYPNS()));     
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+  
+  /**
+   * Method that will download an ontology given its URI, doing content negotiation
+   * The ontology will be downloaded in the first serialization available
+   * (see Constants.POSSIBLE_VOCAB_SERIALIZATIONS)
+   * @param uri the URI of the ontology
+   * @param downloadPath path where the ontology will be saved locally.
+   * 
+   * We must use this for the neuro ontology because KBAPIJena is not able to read the given neuro ontology
+   * 
+   */
+  public static void downloadOntology(String uri, String downloadPath){
+	  String [] POSSIBLE_VOCAB_SERIALIZATIONS = new String []{"application/rdf+xml","text/turtle","text/n3"};
+      for(String serialization: POSSIBLE_VOCAB_SERIALIZATIONS){
+              System.out.println("Attempting to download vocabulary in "+serialization);
+              try{
+                  URL url = new URL(uri);
+                  HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                  connection.setRequestMethod("GET");
+                  connection.setInstanceFollowRedirects(true);
+                  connection.setRequestProperty("Accept", serialization);
+                  int status = connection.getResponseCode();
+                  boolean redirect = false;
+                  if(status != HttpURLConnection.HTTP_OK){
+                      if (status == HttpURLConnection.HTTP_MOVED_TEMP
+			|| status == HttpURLConnection.HTTP_MOVED_PERM
+				|| status == HttpURLConnection.HTTP_SEE_OTHER)
+                          redirect = true;                        
+                  }
+                  //there are some vocabularies with multiple redirections:
+                  //301 -> 303 -> owl
+                  while(redirect){
+                      String newUrl = connection.getHeaderField("Location");
+                      connection = (HttpURLConnection) new URL(newUrl).openConnection();
+                      connection.setRequestProperty("Accept", serialization);
+                      status = connection.getResponseCode();
+                      if(status != HttpURLConnection.HTTP_MOVED_TEMP && 
+                              status != HttpURLConnection.HTTP_MOVED_PERM && 
+                              status != HttpURLConnection.HTTP_SEE_OTHER)
+                          redirect=false;
+                  }
+                  InputStream in = (InputStream) connection.getInputStream();
+                  Files.copy(in, Paths.get(downloadPath), StandardCopyOption.REPLACE_EXISTING);
+                  in.close();
+                  break; //if the vocabulary is downloaded, then we don't download it for the other serializations
+              }catch(Exception e){
+                  System.err.println("Failed to download vocabulary in "+serialization);
+              }
+          }
   }
   
   
@@ -158,7 +235,7 @@ public class DiskRepository extends KBRepository {
   public Vocabulary initializeVocabularyFromKB(KBAPI kb, String ns) {
     Vocabulary vocabulary = new Vocabulary(ns);
     this.fetchPropertiesFromKB(kb, vocabulary);
-    this.fetchTypesAndIndividualsFromKB(kb, vocabulary);
+    this.fetchTypesAndIndividualsFromKB(kb, vocabulary);	//Here
     return vocabulary;
   }
   
@@ -190,14 +267,17 @@ public class DiskRepository extends KBRepository {
   private void fetchTypesAndIndividualsFromKB(KBAPI kb, Vocabulary vocabulary) {
     try {
       KBObject typeprop = kb.getProperty(KBConstants.RDFNS()+"type");
+      vocabulary.getNamespace();//These two lines allow the disk ontology to be
+      TimeUnit.SECONDS.sleep(1);//loaded properly. Without them, the disk ontology's
+      //classes are not loaded.
       for(KBTriple t : kb.genericTripleQuery(null, typeprop, null)) {
         KBObject inst = t.getSubject();
-        KBObject typeobj = t.getObject();        
-        if(!inst.getID().startsWith(vocabulary.getNamespace()))
+        KBObject typeobj = t.getObject();    
+	try{    
+        if(!inst.getID().startsWith(vocabulary.getNamespace()))		//Null Pointer Exception
           continue;
         if(typeobj.getNamespace().equals(KBConstants.OWLNS()))
           continue;
-        
         // Add individual
         Individual ind = new Individual();
         ind.setId(inst.getID());
@@ -218,12 +298,28 @@ public class DiskRepository extends KBRepository {
         type.setName(typeobj.getName());
         type.setLabel(kb.getLabel(typeobj));
         vocabulary.addType(type);
+	}
+	catch(Exception e)
+	{ 
+	     // Verified that exception is not abnormal
+	     // System.out.println(t);
+	     // System.out.println(inst);
+	     // e.printStackTrace();
+	}
       }
-      
       // Add types not asserted
       KBObject clsobj = kb.getProperty(KBConstants.OWLNS()+"Class");
+      if(vocabulary.getNamespace().indexOf("neuro")!=-1)
+	{
+     System.out.println("kb.genericTripleQuery(null, typeprop, null):"+kb.genericTripleQuery(null, typeprop, null));
+          TimeUnit.SECONDS.sleep(1);
+	 System.out.println("kb.genericTripleQuery(null, typeprop, clsobj):"+kb.genericTripleQuery(null, typeprop, clsobj));
+         TimeUnit.SECONDS.sleep(1);
+     System.out.println("vocabulary.getIndividuals()"+vocabulary.getIndividuals());
+	}
       for(KBTriple t : kb.genericTripleQuery(null, typeprop, clsobj)) {
-        KBObject cls = t.getSubject();        
+        KBObject cls = t.getSubject(); 
+	try{       
         if(!cls.getID().startsWith(vocabulary.getNamespace()))
           continue;
         if(cls.getNamespace().equals(KBConstants.OWLNS()))
@@ -238,6 +334,16 @@ public class DiskRepository extends KBRepository {
           type.setLabel(kb.getLabel(cls));
           vocabulary.addType(type);
         }
+	}
+	catch(Exception e)
+	{ 
+		if(vocabulary.getNamespace().indexOf("neuro")!=-1)
+		{
+	     System.out.println(t);
+	     System.out.println(cls);
+	     e.printStackTrace();
+		}
+	}
       }
       
       // Add type hierarchy
@@ -532,6 +638,7 @@ public class DiskRepository extends KBRepository {
   
   private String getSparqlQuery(String queryPattern, String assertionsUri) { 
     return "PREFIX bio: <"+KBConstants.OMICSNS()+">\n" +
+	"PREFIX neuro: <"+KBConstants.NEURONS()+">\n" +
         "PREFIX hyp: <"+KBConstants.HYPNS()+">\n" +
         "PREFIX xsd: <"+KBConstants.XSDNS()+">\n" +
         "PREFIX user: <"+assertionsUri+"#>\n\n" +
@@ -560,6 +667,7 @@ public class DiskRepository extends KBRepository {
     
     Map<String, String> nsmap = new HashMap<String, String>();
     nsmap.put(KBConstants.OMICSNS(), "bio:");
+    nsmap.put(KBConstants.NEURONS(), "neuro:");
     nsmap.put(KBConstants.HYPNS(), "hyp:");
     nsmap.put(KBConstants.XSDNS(), "xsd:");
     nsmap.put(assertions+"#", "user:");
@@ -570,6 +678,7 @@ public class DiskRepository extends KBRepository {
       KBAPI queryKb = this.fac.getKB(OntSpec.PLAIN);
       KBAPI hypkb = this.fac.getKB(hypuri, OntSpec.PLAIN);
       queryKb.importFrom(this.omicsontkb);
+      queryKb.importFrom(this.neuroontkb);
       queryKb.importFrom(this.hypontkb);
       queryKb.importFrom(hypkb);
       queryKb.importFrom(this.fac.getKB(assertions, OntSpec.PLAIN));
@@ -755,6 +864,21 @@ public class DiskRepository extends KBRepository {
     }
     return null;
   }
+
+public void addQueries(String username, String domain, List <String> ToBeQueried)
+{
+	try{
+
+	String [] temp;
+	for(int i = 0; i < ToBeQueried.size(); i++)
+	{
+	     temp = DataQuery.queryFor(ToBeQueried.get(i));
+	     WingsAdapter.get().addOrUpdateData(username, domain, "EnigmaQuery"+ToBeQueried.get(i),"DataObject",temp[1]);
+	}
+	}
+catch(Exception e)
+{e.printStackTrace();}
+}
   
   public void addAssertion(String username, String domain, Graph assertion) {
     String url = this.ASSERTIONSURI(username, domain);
@@ -781,10 +905,38 @@ public class DiskRepository extends KBRepository {
     try {
       KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
       kb.delete(); 
-      this.addAssertion(username, domain, assertions);
-
-      // Re-run hypotheses if needed
-      this.requeryHypotheses(username, domain);
+      List <Triple> UITriples = assertions.getTriples();
+      HashSet <String> toQuery = new HashSet<String>();
+      String temp;
+      String [] temp2;
+      Triple tri;
+      for(int i = 0; i < UITriples.size(); i++)
+      {
+	  temp = UITriples.get(i).getSubject();
+	  if(temp.indexOf("EnigmaQuery")!=-1)
+	  {	
+	     temp = temp.substring(temp.indexOf("EnigmaQuery")+11).replace("|", "/");
+	     temp = DataQuery.toMachineReadableQuery(temp); 
+	     UITriples.get(i).setSubject(this.ASSERTIONSURI(username, domain)+"#EnigmaQuery"+temp);
+	     toQuery.add(temp);
+	     temp2 = DataQuery.queryFor(temp);
+	     System.out.println("here we are:" + temp2[1]);
+	   //  temp2 = temp2[1].split("\",\"");
+	  //   tri = new Triple();
+	  //   tri.setSubject(this.ASSERTIONSURI(username, domain)+"#"+temp2.length);
+         //    tri.setPredicate(UITriples.get(i).getPredicate());
+	//     tri.setObject(UITriples.get(i).getObject());
+	//     UITriples.add(tri);
+	     
+	  }
+      }
+      List<String> ToBeQueried = new ArrayList<String>();
+      for (String strTemp : toQuery)  
+          ToBeQueried.add(strTemp);
+        this.addQueries(username,domain, ToBeQueried);
+        this.addAssertion(username, domain, assertions);
+        // Re-run hypotheses if needed
+        this.requeryHypotheses(username, domain);
       
     } catch (Exception e) {
       e.printStackTrace();

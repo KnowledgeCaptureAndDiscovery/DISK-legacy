@@ -1,5 +1,5 @@
 var CONFIG = {
-	SERVER : "http://disk-project.org/disk-server",
+	SERVER : "http://localhost:8080/disk-server",
 	TITLE : "Disk",
 	COLORS : {
 		base : "#5D7BA0", // Background color for Top Banner, and Headers

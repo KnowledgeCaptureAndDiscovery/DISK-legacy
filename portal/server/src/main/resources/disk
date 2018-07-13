@@ -1,0 +1,542 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="http://localhost:8080/ontology/disk#"
+     xml:base="http://localhost:8080/ontology/disk"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:terms="http://purl.org/dc/terms/"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:vann="http://purl.org/vocab/vann/"
+     xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <owl:Ontology rdf:about="http://localhost:8080/ontology/disk">
+        <dc:creator>Yolanda Gil</dc:creator>
+        <terms:license rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://creativecommons.org/licenses/by-nc-sa/2.0/</terms:license>
+        <vann:preferredNamespaceUri rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">https://mmisw.org/ont/~reginawang/disk#</vann:preferredNamespaceUri>
+        <terms:title xml:lang="en">The DISK Ontology</terms:title>
+        <dc:creator>Varun Ratnakar</dc:creator>
+        <vann:preferredNamespacePrefix>disk</vann:preferredNamespacePrefix>
+        <owl:versionInfo>1.0.0</owl:versionInfo>
+        <rdfs:label xml:lang="en">DISK Ontology</rdfs:label>
+        <terms:abstract xml:lang="en">
+The DISK Ontology aims to represent the components in a Line of Inquiry (e.g., hypothesis, metaworkflows, workflows, etc.), along with their relationships and main interactions. It also aims to represents hypothesis and their revisions. The ontology is aligned to the W3C PROV standard
+</terms:abstract>
+        <dc:creator>Daniel Garijo</dc:creator>
+    </owl:Ontology>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://www.w3.org/ns/prov#has_provenance -->
+
+    <owl:ObjectProperty rdf:about="http://www.w3.org/ns/prov#has_provenance">
+        <rdfs:isDefinedBy rdf:resource="http://www.w3.org/ns/prov#"/>
+        <rdfs:label xml:lang="en">has provenance</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.w3.org/ns/prov#wasDerivedFrom -->
+
+    <owl:ObjectProperty rdf:about="http://www.w3.org/ns/prov#wasDerivedFrom">
+        <rdfs:isDefinedBy rdf:resource="http://www.w3.org/ns/prov#"/>
+        <rdfs:label xml:lang="en">was derived from</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://www.w3.org/ns/prov#wasRevisionOf -->
+
+    <owl:ObjectProperty rdf:about="http://www.w3.org/ns/prov#wasRevisionOf">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/ns/prov#wasDerivedFrom"/>
+        <rdfs:isDefinedBy rdf:resource="http://www.w3.org/ns/prov#"/>
+        <rdfs:label xml:lang="en">was revision of</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#createdFrom -->
+
+    <owl:ObjectProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#createdFrom">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/ns/prov#wasDerivedFrom"/>
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#Data"/>
+        <rdfs:comment xml:lang="en">
+Property that states from where these data have been created (e-g-, workflow, metaworkflow, line of inquiry, etc.)
+</rdfs:comment>
+        <rdfs:label xml:lang="en">created from</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasConfidenceReport -->
+
+    <owl:ObjectProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasConfidenceReport">
+        <rdfs:domain>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement"/>
+                    <rdf:Description rdf:about="https://mmisw.org/ont/~reginawang/disk#Hypothesis"/>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:domain>
+        <rdfs:range rdf:resource="https://mmisw.org/ont/~reginawang/disk#ConfidenceReport"/>
+        <rdfs:label xml:lang="en">
+Property that links the hypothesis or statement to the ConfidenceReport that supports them
+</rdfs:label>
+        <rdfs:label xml:lang="en">has confidence report</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasExecution -->
+
+    <owl:ObjectProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasExecution">
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#WorkflowBinding"/>
+        <rdfs:range rdf:resource="http://www.wings-workflows.org/ontology/execution.owl#Execution"/>
+        <rdfs:comment xml:lang="en">
+Property that links a workflow bundle to the execution results of the workflow
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has execution</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasHypothesis -->
+
+    <owl:ObjectProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasHypothesis">
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#TriggeredLineOfInquiry"/>
+        <rdfs:range rdf:resource="https://mmisw.org/ont/~reginawang/disk#Hypothesis"/>
+        <rdfs:comment xml:lang="en">
+property that links a triggered line of inquiry to the hypothesis that matched to it.
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has hypothesis</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasHypothesisVariable -->
+
+    <owl:ObjectProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasHypothesisVariable">
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#MetaWorkflow"/>
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#WorkflowBinding"/>
+        <rdfs:comment xml:lang="en">
+This property is used to identify which variables in the hypothesis are used in the workflows.
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has hypothesis variable</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasLineOfInquiry -->
+
+    <owl:ObjectProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasLineOfInquiry">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/ns/prov#wasDerivedFrom"/>
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#TriggeredLineOfInquiry"/>
+        <rdfs:range rdf:resource="https://mmisw.org/ont/~reginawang/disk#LineOfInquiry"/>
+        <rdfs:comment xml:lang="en">
+Property that links a triggered line of inquiry to the original line of inquiry from which it was derived
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has line of inquiry</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasMetaWorkflowBinding -->
+
+    <owl:ObjectProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasMetaWorkflowBinding">
+        <rdfs:subPropertyOf rdf:resource="https://mmisw.org/ont/~reginawang/disk#hasWorkflowBinding"/>
+        <rdfs:domain>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="https://mmisw.org/ont/~reginawang/disk#LineOfInquiry"/>
+                    <rdf:Description rdf:about="https://mmisw.org/ont/~reginawang/disk#TriggeredLineOfInquiry"/>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:domain>
+        <rdfs:range rdf:resource="https://mmisw.org/ont/~reginawang/disk#WorkflowBinding"/>
+        <rdfs:comment xml:lang="en">
+The workflow bindings associated to a metaworkflow, i.e., a workflow and a variable binding
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has metaworkflow binding</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasParentHypothesis -->
+
+    <owl:ObjectProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasParentHypothesis">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/ns/prov#wasRevisionOf"/>
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#Hypothesis"/>
+        <rdfs:range rdf:resource="https://mmisw.org/ont/~reginawang/disk#Hypothesis"/>
+        <rdfs:comment xml:lang="en">
+Property that links to the parent hypothesis from which the current hypothesis has been derived
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has parent hypothesis</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasResultingHypothesis -->
+
+    <owl:ObjectProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasResultingHypothesis">
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#TriggeredLineOfInquiry"/>
+        <rdfs:range rdf:resource="https://mmisw.org/ont/~reginawang/disk#Hypothesis"/>
+        <rdfs:comment xml:lang="en">
+Property that links a triggered line of inquiry to the hypothesis revision that resulted from its analysis
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has resulting hypothesis</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasRevisedHypothesisVariable -->
+
+    <owl:ObjectProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasRevisedHypothesisVariable">
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#MetaWorkflow"/>
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#WorkflowBinding"/>
+        <rdfs:comment xml:lang="en">
+Property that links a metaworkflow to its revised hypothesis variable.
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has revised hypothesis variable</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasTriggeredLineOfInquiry -->
+
+    <owl:ObjectProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasTriggeredLineOfInquiry">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/ns/prov#has_provenance"/>
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#ConfidenceReport"/>
+        <rdfs:range rdf:resource="https://mmisw.org/ont/~reginawang/disk#TriggeredLineOfInquiry"/>
+        <rdfs:comment xml:lang="en">
+Property that links a confidence report to the triggered line of inquiry that contains all the provenance for the report&apos;s value.
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has triggered line of inquiry</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasVariable -->
+
+    <owl:ObjectProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasVariable">
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#VariableBinding"/>
+        <rdfs:range rdf:resource="http://www.wings-workflows.org/ontology/workflow.owl#Variable"/>
+        <rdfs:comment xml:lang="en">
+Property that links a variable binding to its corresponding variable
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has variable</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasVariableBinding -->
+
+    <owl:ObjectProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasVariableBinding">
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#WorkflowBinding"/>
+        <rdfs:range rdf:resource="https://mmisw.org/ont/~reginawang/disk#VariableBinding"/>
+        <rdfs:comment xml:lang="en">
+Property that links a Workflow binding to it correspondent variable binding
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has variable binding</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasWorkflow -->
+
+    <owl:ObjectProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasWorkflow">
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#WorkflowBinding"/>
+        <rdfs:range rdf:resource="http://www.wings-workflows.org/ontology/workflow.owl#Workflow"/>
+        <rdfs:comment xml:lang="en">
+Property that links a Workflow bindong to its associated workflow
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has workflow</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasWorkflowBinding -->
+
+    <owl:ObjectProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasWorkflowBinding">
+        <rdfs:domain>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="https://mmisw.org/ont/~reginawang/disk#LineOfInquiry"/>
+                    <rdf:Description rdf:about="https://mmisw.org/ont/~reginawang/disk#TriggeredLineOfInquiry"/>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:domain>
+        <rdfs:range rdf:resource="https://mmisw.org/ont/~reginawang/disk#WorkflowBinding"/>
+        <rdfs:comment xml:lang="en">
+Property that links a line of inquiry or executed line of inquiry to the workflow bindings present on it
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has workflow bindings</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Data properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasBindingValue -->
+
+    <owl:DatatypeProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasBindingValue">
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#VariableBinding"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <rdfs:comment xml:lang="en">
+Property that links a binding to its associated value
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has binding value</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasConfidenceValue -->
+
+    <owl:DatatypeProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasConfidenceValue">
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#ConfidenceReport"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+        <rdfs:comment xml:lang="en">
+Property that binds a confidence report to its confidence value
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has confidence value</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasDataQuery -->
+
+    <owl:DatatypeProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasDataQuery">
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#LineOfInquiry"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <rdfs:comment xml:lang="en">
+Property that links a line of inquiry to the data query text associated to it
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has data query</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#hasHypothesisQuery -->
+
+    <owl:DatatypeProperty rdf:about="https://mmisw.org/ont/~reginawang/disk#hasHypothesisQuery">
+        <rdfs:domain rdf:resource="https://mmisw.org/ont/~reginawang/disk#LineOfInquiry"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <rdfs:comment xml:lang="en">
+Property that links a line of inquiry to the hypothesis query text
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has hypothesis query</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement -->
+
+    <owl:Class rdf:about="http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement">
+        <rdfs:isDefinedBy rdf:resource="https://www.w3.org/TR/rdf-schema/"/>
+        <rdfs:label xml:lang="en">Statement</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.w3.org/ns/prov#Plan -->
+
+    <owl:Class rdf:about="http://www.w3.org/ns/prov#Plan">
+        <rdfs:isDefinedBy rdf:resource="http://www.w3.org/ns/prov#"/>
+        <rdfs:label xml:lang="en">Plan</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.w3.org/ns/prov/#Bundle -->
+
+    <owl:Class rdf:about="http://www.w3.org/ns/prov/#Bundle">
+        <rdfs:comment xml:lang="en">
+A bundle is a named set of provenance descriptions, and is itself an entity, so allowing provenance of provenance to be expressed.
+</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="http://www.w3.org/ns/prov#"/>
+        <rdfs:label xml:lang="en">Bundle</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.wings-workflows.org/ontology/execution.owl#Execution -->
+
+    <owl:Class rdf:about="http://www.wings-workflows.org/ontology/execution.owl#Execution">
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/ns/prov/#Bundle"/>
+        <rdfs:comment xml:lang="en">An execution of a workflow</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="http://www.wings-workflows.org/ontology/execution.owl#"/>
+        <rdfs:label xml:lang="en">Execution</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.wings-workflows.org/ontology/workflow.owl#Variable -->
+
+    <owl:Class rdf:about="http://www.wings-workflows.org/ontology/workflow.owl#Variable">
+        <rdfs:comment xml:lang="en">Variable of a workflow template</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="http://www.wings-workflows.org/ontology/workflow.owl#"/>
+        <rdfs:label xml:lang="en">Variable</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.wings-workflows.org/ontology/workflow.owl#Workflow -->
+
+    <owl:Class rdf:about="http://www.wings-workflows.org/ontology/workflow.owl#Workflow">
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/ns/prov#Plan"/>
+        <rdfs:comment xml:lang="en">
+Workflows define the set of computational tasks and dependencies needed to carry out in silico experiments
+</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="http://www.wings-workflows.org/ontology/workflow.owl#"/>
+        <rdfs:label xml:lang="en">Workflow</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#ConfidenceReport -->
+
+    <owl:Class rdf:about="https://mmisw.org/ont/~reginawang/disk#ConfidenceReport">
+        <rdfs:comment xml:lang="en">
+A confidence report groups the confidence value and the link to the triggered line of inquiry of a given statement or hypothesis
+</rdfs:comment>
+        <rdfs:label xml:lang="en">Confidence report</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#Data -->
+
+    <owl:Class rdf:about="https://mmisw.org/ont/~reginawang/disk#Data">
+        <rdfs:comment xml:lang="en">
+The results produced as a result of executing a workflow from a given line of inquiry
+</rdfs:comment>
+        <rdfs:label xml:lang="en">Data</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#Hypothesis -->
+
+    <owl:Class rdf:about="https://mmisw.org/ont/~reginawang/disk#Hypothesis">
+        <rdfs:comment xml:lang="en">
+A hypothesis h consists of: 1. A hypothesis statement, which is a set of assertions about entities in the domain. For example, they express assertions such as “The mutant form of Protein ABCD is associated with colon cancer.” 2. A hypothesis qualification (confidence report) , which qualifies the veracity of the hypothesis based on the data and the analyses done so far. A typical qualification is a numeric confidence value. For example, for the hypothesis statement above we could have a confidence value of 0.7. Each of the statements of a hypothesis may have a different confidence value. 3. A hypothesis provenance, which is a record of the analyses that were carried out in support of the hypothesis statement. For example the provenance may include an analysis of mass spectrometry data for 25 patients with colon cancer and 25 healthy controls followed by clustering, cluster metrics and binary hypothesis testing. 4. A hypothesis history, which points to a prior hypothesis h’ that was revised to generate h. In our example, a prior hypothesis could be “Protein ABCD is associated with cancer.”
+</rdfs:comment>
+        <rdfs:label xml:lang="en">Hypothesis</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#LineOfInquiry -->
+
+    <owl:Class rdf:about="https://mmisw.org/ont/~reginawang/disk#LineOfInquiry">
+        <rdfs:comment xml:lang="en">
+A line of inquiry represents potential analyses that can be pursued to test a type of hypothesis. A line of inquiry consists of: 1. A hypothesis pattern, which represents the type of hypotheses that can be explored with this line of inquiry. An example of a hypothesis pattern is “Protein ?p is associated with cancer ?c”. This hypothesis pattern must be expressed in the same language as hypothesis statements, so that they can be matched against a user’s hypothesis. 2. A set of query patterns, representing the kinds of data relevant to testing the hypothesis pattern as a set of templates of queries to a data repository. Several kinds of data may be relevant, so there may be several query patterns. For example, “Retrieve data of mass spectrometry experiments of tumor samples from patients with cancer ?c”. 3. A set of workflows, which capture data analysis methods that can be applied to the data retrieved by the query patterns in order to test the hypothesis pattern. For example, a workflow to analyze mass spectrometry data could include steps such as matching proteins from either a patient’s custom database or on a reference human proteomic database to tandem mass spectrometry data. 4. A set of workflow mappings, indicating how the query patterns and the datasets retrieved should be used to instantiate the workflows above to create execution-ready workflows. 5. A set of meta-workflows, which describe how to aggregate the results of the workflow executions done to analyze the data. For example, suppose that one of the workflows in the line of inquiry is for analyzing protein mass spectrometry data for n patients finding evidence for the protein ?p with a p-value p1 and another workflow is for protein fluorescence data for m patients giving a p-value p1, then the meta-workflow would indicate how to combine that evidence into a joint confidence value. 6. A set of meta-workflow mappings, which describe how the results of the workflow executions are to be used to generate bindings for the inputs of the meta-workflows. 7. A set of priorities, which describe the relative importance of running different execution-ready workflows given the hypothesis at hand
+</rdfs:comment>
+        <rdfs:label xml:lang="en">Line of Inquiry</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#MetaWorkflow -->
+
+    <owl:Class rdf:about="https://mmisw.org/ont/~reginawang/disk#MetaWorkflow">
+        <rdfs:subClassOf rdf:resource="http://www.wings-workflows.org/ontology/workflow.owl#Workflow"/>
+        <rdfs:comment xml:lang="en">
+A metaworkflow is a special type of workflow which uses as inputs the results of other workflows
+</rdfs:comment>
+        <rdfs:label xml:lang="en">Metaworkflow</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#TriggeredLineOfInquiry -->
+
+    <owl:Class rdf:about="https://mmisw.org/ont/~reginawang/disk#TriggeredLineOfInquiry">
+        <rdfs:comment xml:lang="en">
+A triggered line of inquiry represents a strategy for exploring a hypothesis that is currently being explored by executing its associated workflows and metaworkflows. A triggered line of inquiry may require a long time to complete. When finished, the triggered line of inquiry will include pointers to the provenance of the workflows and metaworkflows that participated on the execution, as well as a confidence value on the original hypothesis.
+</rdfs:comment>
+        <rdfs:label xml:lang="en">Triggered line of inquiry</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#VariableBinding -->
+
+    <owl:Class rdf:about="https://mmisw.org/ont/~reginawang/disk#VariableBinding">
+        <rdfs:comment xml:lang="en">Contains a Variable and a binding value</rdfs:comment>
+        <rdfs:label xml:lang="en">Variable binding</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://mmisw.org/ont/~reginawang/disk#WorkflowBinding -->
+
+    <owl:Class rdf:about="https://mmisw.org/ont/~reginawang/disk#WorkflowBinding">
+        <rdfs:comment xml:lang="en">Contains a workflow and a variable binding</rdfs:comment>
+        <rdfs:label xml:lang="en">Workflow binding</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotations
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <rdf:Description rdf:about="https://mmisw.org/ont/~reginawang/disk#hasId">
+        <rdfs:label xml:lang="en">has id</rdfs:label>
+        <rdfs:comment xml:lang="en">
+Property that links to the ID of the described resource
+</rdfs:comment>
+    </rdf:Description>
+    <rdf:Description rdf:about="https://mmisw.org/ont/~reginawang/disk#hasRunLink">
+        <rdfs:comment xml:lang="en">
+Link to the execution of a workflow in the corresponding workflow system
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has run link</rdfs:label>
+    </rdf:Description>
+    <rdf:Description rdf:about="https://mmisw.org/ont/~reginawang/disk#hasStatus">
+        <rdfs:comment xml:lang="en">
+Property that indicates the status of the execution (whether it has been successful or not) or the triggered line of inquiry (i.e., ongoing, finished, etc.)
+</rdfs:comment>
+        <rdfs:label xml:lang="en">has run status</rdfs:label>
+    </rdf:Description>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 4.2.8.20170104-2310) https://github.com/owlcs/owlapi -->
+

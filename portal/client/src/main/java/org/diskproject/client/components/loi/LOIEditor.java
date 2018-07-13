@@ -83,10 +83,12 @@ public class LOIEditor extends Composite
   private void loadVocabularies() {
     loadcount=0;
     hypothesisQuery.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
+    hypothesisQuery.loadVocabulary("neuro", KBConstants.NEUROURI(), vocabLoaded);
     hypothesisQuery.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
     hypothesisQuery.loadUserVocabulary("user", userid, domain, vocabLoaded);
     
     dataQuery.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
+    dataQuery.loadVocabulary("neuro", KBConstants.NEUROURI(), vocabLoaded);
     dataQuery.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
     dataQuery.loadUserVocabulary("user", userid, domain, vocabLoaded);
   }

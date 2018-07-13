@@ -1,0 +1,254 @@
+@prefix : <https://mmisw.org/ont/~reginawang/disk/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: @base          <https://mmisw.org/ont/~reginawang/disk> .
+@prefix :      <https://mmisw.org/ont/~reginawang/disk/> .
+@prefix terms: <http://purl.org/dc/terms/> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vann:  <http://purl.org/vocab/vann/> .
+@prefix dc:    <http://purl.org/dc/elements/1.1/> .
+
+<http://www.w3.org/ns/prov#Plan>
+        a                 owl:Class ;
+        rdfs:isDefinedBy  <http://www.w3.org/ns/prov#> ;
+        rdfs:label        "Plan"@en .
+
+<http://www.w3.org/ns/prov/#Bundle>
+        a                 owl:Class ;
+        rdfs:comment      "A bundle is a named set of provenance descriptions, and is itself an entity, so allowing provenance of provenance to be expressed."@en ;
+        rdfs:isDefinedBy  <http://www.w3.org/ns/prov#> ;
+        rdfs:label        "Bundle"@en .
+
+<http://www.w3.org/ns/prov#has_provenance>
+        a                 owl:ObjectProperty ;
+        rdfs:isDefinedBy  <http://www.w3.org/ns/prov#> ;
+        rdfs:label        "has provenance"@en .
+
+<>      a                              owl:Ontology ;
+        rdfs:label                     "DISK Ontology"@en ;
+        dc:creator                     "Yolanda Gil" , "Varun Ratnakar" , "Daniel Garijo" ;
+        terms:abstract                 "The DISK Ontology aims to represent the components in a Line of Inquiry (e.g., hypothesis, metaworkflows, workflows, etc.), along with their relationships and main interactions. It also aims to represents hypothesis and their revisions. The ontology is aligned to the W3C PROV standard"@en ;
+        terms:license                  "http://creativecommons.org/licenses/by-nc-sa/2.0/"^^<http://www.w3.org/2001/XMLSchema#anyURI> ;
+        terms:title                    "The DISK Ontology"@en ;
+        vann:preferredNamespacePrefix  "disk" ;
+        vann:preferredNamespaceUri     "http://localhost:8080/ontology/disk#"^^<http://www.w3.org/2001/XMLSchema#anyURI> ;
+        owl:versionInfo                "1.0.0" .
+
+:hasLineOfInquiry  a        owl:ObjectProperty ;
+        rdfs:comment        "Property that links a triggered line of inquiry to the original line of inquiry from which it was derived"@en ;
+        rdfs:domain         :TriggeredLineOfInquiry ;
+        rdfs:label          "has line of inquiry"@en ;
+        rdfs:range          :LineOfInquiry ;
+        rdfs:subPropertyOf  <http://www.w3.org/ns/prov#wasDerivedFrom> .
+
+:Data   a             owl:Class ;
+        rdfs:comment  "The results produced as a result of executing a workflow from a given line of inquiry"@en ;
+        rdfs:label    "Data"@en .
+
+:hasVariable  a       owl:ObjectProperty ;
+        rdfs:comment  "Property that links a variable binding to its corresponding variable"@en ;
+        rdfs:domain   :VariableBinding ;
+        rdfs:label    "has variable"@en ;
+        rdfs:range    <http://www.wings-workflows.org/ontology/workflow.owl#Variable> .
+
+:ConfidenceReport  a  owl:Class ;
+        rdfs:comment  "A confidence report groups the confidence value and the link to the triggered line of inquiry of a given statement or hypothesis"@en ;
+        rdfs:label    "Confidence report"@en .
+
+:hasWorkflow  a       owl:ObjectProperty ;
+        rdfs:comment  "Property that links a Workflow bindong to its associated workflow"@en ;
+        rdfs:domain   :WorkflowBinding ;
+        rdfs:label    "has workflow"@en ;
+        rdfs:range    <http://www.wings-workflows.org/ontology/workflow.owl#Workflow> .
+
+<http://www.w3.org/ns/prov#wasRevisionOf>
+        a                   owl:ObjectProperty ;
+        rdfs:isDefinedBy    <http://www.w3.org/ns/prov#> ;
+        rdfs:label          "was revision of"@en ;
+        rdfs:subPropertyOf  <http://www.w3.org/ns/prov#wasDerivedFrom> .
+
+rdf:Statement  a          owl:Class ;
+        rdfs:isDefinedBy  <https://www.w3.org/TR/rdf-schema/> ;
+        rdfs:label        "Statement"@en .
+
+<http://www.w3.org/ns/prov#wasDerivedFrom>
+        a                 owl:ObjectProperty ;
+        rdfs:isDefinedBy  <http://www.w3.org/ns/prov#> ;
+        rdfs:label        "was derived from"@en .
+
+:hasVariableBinding  a  owl:ObjectProperty ;
+        rdfs:comment  "Property that links a Workflow binding to it correspondent variable binding"@en ;
+        rdfs:domain   :WorkflowBinding ;
+        rdfs:label    "has variable binding"@en ;
+        rdfs:range    :VariableBinding .
+
+:hasDataQuery  a      owl:DatatypeProperty ;
+        rdfs:comment  "Property that links a line of inquiry to the data query text associated to it"@en ;
+        rdfs:domain   :LineOfInquiry ;
+        rdfs:label    "has data query"@en ;
+        rdfs:range    <http://www.w3.org/2001/XMLSchema#string> .
+
+:hasId  a             owl:AnnotationProperty , owl:DatatypeProperty ;
+        rdfs:comment  "Property that links to the ID of the described resource"@en ;
+        rdfs:domain   :WorkflowBinding , owl:Thing ;
+        rdfs:label    "has id"@en ;
+        rdfs:range    <http://www.w3.org/2001/XMLSchema#string> .
+
+:hasTriggeredLineOfInquiry
+        a                   owl:ObjectProperty ;
+        rdfs:comment        "Property that links a confidence report to the triggered line of inquiry that contains all the provenance for the report's value."@en ;
+        rdfs:domain         :ConfidenceReport ;
+        rdfs:label          "has triggered line of inquiry"@en ;
+        rdfs:range          :TriggeredLineOfInquiry ;
+        rdfs:subPropertyOf  <http://www.w3.org/ns/prov#has_provenance> .
+
+:hasBindingValue  a   owl:DatatypeProperty ;
+        rdfs:comment  "Property that links a binding to its associated value"@en ;
+        rdfs:domain   :VariableBinding ;
+        rdfs:label    "has binding value"@en ;
+        rdfs:range    <http://www.w3.org/2001/XMLSchema#string> .
+
+<http://www.wings-workflows.org/ontology/workflow.owl#Variable>
+        a                 owl:Class ;
+        rdfs:comment      "Variable of a workflow template"@en ;
+        rdfs:isDefinedBy  <http://www.wings-workflows.org/ontology/workflow.owl#> ;
+        rdfs:label        "Variable"@en .
+
+:hasHypothesisQuery  a  owl:DatatypeProperty ;
+        rdfs:comment  "Property that links a line of inquiry to the hypothesis query text"@en ;
+        rdfs:domain   :LineOfInquiry ;
+        rdfs:label    "has hypothesis query"@en ;
+        rdfs:range    <http://www.w3.org/2001/XMLSchema#string> .
+
+<http://www.wings-workflows.org/ontology/workflow.owl#Workflow>
+        a                 owl:Class ;
+        rdfs:comment      "Workflows define the set of computational tasks and dependencies needed to carry out in silico experiments"@en ;
+        rdfs:isDefinedBy  <http://www.wings-workflows.org/ontology/workflow.owl#> ;
+        rdfs:label        "Workflow"@en ;
+        rdfs:subClassOf   <http://www.w3.org/ns/prov#Plan> .
+
+:createdFrom  a             owl:ObjectProperty ;
+        rdfs:comment        "Property that states from where these data have been created (e-g-, workflow, metaworkflow, line of inquiry, etc.)"@en ;
+        rdfs:domain         :Data ;
+        rdfs:label          "created from"@en ;
+        rdfs:subPropertyOf  <http://www.w3.org/ns/prov#wasDerivedFrom> .
+
+:MetaWorkflow  a         owl:Class ;
+        rdfs:comment     "A metaworkflow is a special type of workflow which uses as inputs the results of other workflows"@en ;
+        rdfs:label       "Metaworkflow"@en ;
+        rdfs:subClassOf  <http://www.wings-workflows.org/ontology/workflow.owl#Workflow> .
+
+:hasParentHypothesis  a     owl:ObjectProperty ;
+        rdfs:comment        "Property that links to the parent hypothesis from which the current hypothesis has been derived"@en ;
+        rdfs:domain         :Hypothesis ;
+        rdfs:label          "has parent hypothesis"@en ;
+        rdfs:range          :Hypothesis ;
+        rdfs:subPropertyOf  <http://www.w3.org/ns/prov#wasRevisionOf> .
+
+:hasRevisedHypothesisVariable
+        a             owl:AnnotationProperty , owl:ObjectProperty ;
+        rdfs:comment  "Property that links a metaworkflow to its revised hypothesis variable."@en ;
+        rdfs:domain   :MetaWorkflow , :WorkflowBinding ;
+        rdfs:label    "has revised hypothesis variable"@en ;
+        rdfs:range    <http://www.wings-workflows.org/ontology/workflow.owl#Variable> .
+
+:LineOfInquiry  a     owl:Class ;
+        rdfs:comment  "A line of inquiry represents potential analyses that can be pursued to test a type of hypothesis.  A line of inquiry consists of:\r\n1. A hypothesis pattern, which represents the type of hypotheses that can be explored with this line of inquiry.  An example of a hypothesis pattern is “Protein ?p is associated with cancer ?c”.  This hypothesis pattern must be expressed in the same language as hypothesis statements, so that they can be matched against a user’s hypothesis.\r\n2. A set of query patterns, representing the kinds of data relevant to testing the hypothesis pattern as a set of templates of queries to a data repository.  Several kinds of data may be relevant, so there may be several query patterns.  For example, “Retrieve data of mass spectrometry experiments of tumor samples from patients with cancer ?c”.  \r\n3. A set of workflows, which capture data analysis methods that can be applied to the data retrieved by the query patterns in order to test the hypothesis pattern.  For example, a workflow to analyze mass spectrometry data could include steps such as matching proteins from either a patient’s custom database or on a reference human proteomic database to tandem mass spectrometry data.\r\n4. A set of workflow mappings, indicating how the query patterns and the datasets retrieved should be used to instantiate the workflows above to create execution-ready workflows.  \r\n5. A set of meta-workflows, which describe how to aggregate the results of the workflow executions done to analyze the data.  For example, suppose that one of the workflows in the line of inquiry is for analyzing protein mass spectrometry data for n patients finding evidence for the protein ?p with a p-value p1 and another workflow is for protein fluorescence data for m patients giving a p-value p1, then the meta-workflow would indicate how to combine that evidence into a joint confidence value.\r\n6. A set of meta-workflow mappings, which describe how the results of the workflow executions are to be used to generate bindings for the inputs of the meta-workflows.\r\n7. A set of priorities, which describe the relative importance of running different execution-ready workflows given the hypothesis at hand"@en ;
+        rdfs:label    "Line of Inquiry"@en .
+
+:hasConfidenceReport  a  owl:ObjectProperty ;
+        rdfs:domain  [ a            owl:Class ;
+                       owl:unionOf  ( :Hypothesis rdf:Statement )
+                     ] ;
+        rdfs:label   "Property that links the hypothesis or statement to the ConfidenceReport that supports them"@en , "has confidence report"@en ;
+        rdfs:range   :ConfidenceReport .
+
+:hasHypothesis  a     owl:ObjectProperty ;
+        rdfs:comment  "property that links a triggered line of inquiry to the hypothesis that matched to it."@en ;
+        rdfs:domain   :TriggeredLineOfInquiry ;
+        rdfs:label    "has hypothesis"@en ;
+        rdfs:range    :Hypothesis .
+
+:hasMetaWorkflowBinding
+        a                   owl:ObjectProperty ;
+        rdfs:comment        "The workflow bindings associated to a metaworkflow, i.e., a workflow and a variable binding"@en ;
+        rdfs:domain         [ a            owl:Class ;
+                              owl:unionOf  ( :LineOfInquiry :TriggeredLineOfInquiry )
+                            ] ;
+        rdfs:label          "has metaworkflow binding"@en ;
+        rdfs:range          :WorkflowBinding ;
+        rdfs:subPropertyOf  :hasWorkflowBinding .
+
+:hasRunLink  a        owl:AnnotationProperty , owl:DatatypeProperty ;
+        rdfs:comment  "Link to the execution of a workflow in the corresponding workflow system"@en ;
+        rdfs:domain   :WorkflowBinding ;
+        rdfs:label    "has run link"@en .
+
+:TriggeredLineOfInquiry
+        a             owl:Class ;
+        rdfs:comment  "A triggered line of inquiry represents a strategy for exploring a hypothesis that is currently being explored by executing its associated workflows and metaworkflows. A triggered line of inquiry may require a long time to complete. When finished, the triggered line of inquiry will include pointers to the provenance of the workflows and metaworkflows that participated on the execution, as well as a confidence value on the original hypothesis."@en ;
+        rdfs:label    "Triggered line of inquiry"@en .
+
+:hasWorkflowBinding  a  owl:ObjectProperty ;
+        rdfs:comment  "Property that links a line of inquiry or executed line of inquiry to the workflow bindings present on it"@en ;
+        rdfs:domain   [ a            owl:Class ;
+                        owl:unionOf  ( :LineOfInquiry :TriggeredLineOfInquiry )
+                      ] ;
+        rdfs:label    "has workflow bindings"@en ;
+        rdfs:range    :WorkflowBinding .
+
+:hasExecution  a      owl:ObjectProperty ;
+        rdfs:comment  "Property that links a workflow bundle to the execution results of the workflow"@en ;
+        rdfs:domain   :WorkflowBinding ;
+        rdfs:label    "has execution"@en ;
+        rdfs:range    <http://www.wings-workflows.org/ontology/execution.owl#Execution> .
+
+:hasResultingHypothesis
+        a             owl:ObjectProperty ;
+        rdfs:comment  "Property that links a triggered line of inquiry to the hypothesis revision that resulted from its analysis"@en ;
+        rdfs:domain   :TriggeredLineOfInquiry ;
+        rdfs:label    "has resulting hypothesis"@en ;
+        rdfs:range    :Hypothesis .
+
+:VariableBinding  a   owl:Class ;
+        rdfs:comment  "Contains a Variable and a binding value"@en ;
+        rdfs:label    "Variable binding"@en .
+
+:hasStatus  a         owl:AnnotationProperty , owl:DatatypeProperty ;
+        rdfs:comment  "Property that indicates the status of the execution (whether it has been successful or not) or the triggered line of inquiry (i.e., ongoing, finished, etc.)"@en ;
+        rdfs:domain   :WorkflowBinding ;
+        rdfs:domain   []  ;
+        rdfs:label    "has run status"@en ;
+        rdfs:range    <http://www.w3.org/2001/XMLSchema#string> .
+
+:hasHypothesisVariable
+        a             owl:AnnotationProperty , owl:ObjectProperty ;
+        rdfs:comment  "This property is used to identify which variables in the hypothesis are used in the workflows."@en ;
+        rdfs:domain   :MetaWorkflow , :WorkflowBinding ;
+        rdfs:label    "has hypothesis variable"@en ;
+        rdfs:range    <http://www.wings-workflows.org/ontology/workflow.owl#Variable> .
+
+:hasConfidenceValue  a  owl:DatatypeProperty ;
+        rdfs:comment  "Property that binds a confidence report to its confidence value"@en ;
+        rdfs:domain   :ConfidenceReport ;
+        rdfs:label    "has confidence value"@en ;
+        rdfs:range    <http://www.w3.org/2001/XMLSchema#double> .
+
+:WorkflowBinding  a   owl:Class ;
+        rdfs:comment  "Contains a workflow and a variable binding"@en ;
+        rdfs:label    "Workflow binding"@en .
+
+:Hypothesis  a        owl:Class ;
+        rdfs:comment  "A hypothesis h consists of: \r\n1. A hypothesis statement, which is a set of assertions about entities in the domain.  For example, they express assertions such as “The mutant form of Protein ABCD is associated with colon cancer.”\r\n2. A hypothesis qualification (confidence report) , which qualifies the veracity of the hypothesis based on the data and the analyses done so far.  A typical qualification is a numeric confidence value.  For example, for the hypothesis statement above we could have a confidence value of 0.7. Each of the statements of a hypothesis may have a different confidence value.\r\n3. A hypothesis provenance, which is a record of the analyses that were carried out in support of the hypothesis statement.  For example the provenance may include an analysis of mass spectrometry data for 25 patients with colon cancer and 25 healthy controls followed by clustering, cluster metrics and binary hypothesis testing.\r\n4. A hypothesis history, which points to a prior hypothesis h’ that was revised to generate h.  In our example, a prior hypothesis could be “Protein ABCD is associated with cancer.”"@en ;
+        rdfs:label    "Hypothesis"@en .
+
+<http://www.wings-workflows.org/ontology/execution.owl#Execution>
+        a                 owl:Class ;
+        rdfs:comment      "An execution of a workflow"@en ;
+        rdfs:isDefinedBy  <http://www.wings-workflows.org/ontology/execution.owl#> ;
+        rdfs:label        "Execution"@en ;
+        rdfs:subClassOf   <http://www.w3.org/ns/prov/#Bundle> .

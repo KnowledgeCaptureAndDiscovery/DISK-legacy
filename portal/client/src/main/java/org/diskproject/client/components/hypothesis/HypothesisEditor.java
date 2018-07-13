@@ -74,6 +74,7 @@ public class HypothesisEditor extends Composite
     loadcount=0;
     triples.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
     triples.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
+    triples.loadVocabulary("neuro", KBConstants.NEUROURI(), vocabLoaded);
     triples.loadUserVocabulary("user", this.userid, this.domain, vocabLoaded);
   }
   

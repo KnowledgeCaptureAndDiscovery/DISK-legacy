@@ -73,6 +73,7 @@ public class WingsAdapter {
 
   public WingsAdapter() {
     this.sessions = new HashMap<String, String>();
+    System.out.println("Config.get().getProperties().getString(wings.server)"+Config.get().getProperties().getString("wings.server"));
     this.server = Config.get().getProperties().getString("wings.server");
     this.json = new Gson();
   }
@@ -491,6 +492,59 @@ public class WingsAdapter {
     List<NameValuePair> formdata = new ArrayList<NameValuePair>();
     formdata.add(new BasicNameValuePair("data_id", dataid));
     return this.get(username, getpage, formdata);
+  }
+
+
+public String addOrUpdateData(String username, String domain, 
+      String id, String type, String contents) {
+
+    String getpage = "users/"+username+"/"+domain+"/data/getDataJSON";
+    String postpage = "users/"+username+"/"+domain+"/data/addDataForType";
+    String uploadpage = "users/"+username+"/"+domain+"/upload";
+
+    // Add unique md5 hash to id based on contents
+    String md5 = DigestUtils.md5Hex(contents.getBytes());    
+    Pattern extensionPattern = Pattern.compile("^(.*)(\\..+)$");
+    Matcher mat = extensionPattern.matcher(id);
+    if(mat.find()) {
+      id = mat.group(1) + "-" + md5 + mat.group(2);
+    }
+    else 
+      id += "-" + md5;
+    
+    String dataid = this.DATAID(username, domain, id);
+    List<NameValuePair> formdata = new ArrayList<NameValuePair>();
+    formdata.add(new BasicNameValuePair("data_id", dataid));
+    String datajson = this.get(username, getpage, formdata);
+    String DataFromWings;
+    if(datajson != null && !datajson.trim().equals("null")) {
+      DataFromWings = fetchDataFromWings(username,domain,dataid);
+      if(contents.equals(DataFromWings))
+	 return dataid;
+    }
+
+    try {
+      File dir = File.createTempFile("tmp", "");
+      if(!dir.delete() || !dir.mkdirs()) {
+        System.err.println("Could not create temporary directory "+dir);
+        return null;
+      }
+      File f = new File(dir.getAbsolutePath() + "/" + id);
+      FileUtils.write(f, contents);
+      this.upload(username, uploadpage, "data", f);
+      f.delete();
+      
+      List<NameValuePair> data = new ArrayList<NameValuePair>();
+      data.add(new BasicNameValuePair("data_id", dataid));
+      data.add(new BasicNameValuePair("data_type", type));
+      String response = this.post(username, postpage, data);
+      if(response != null && response.equals("OK"))
+        return dataid;
+    }
+    catch (Exception e) {
+      e.printStackTrace();
+    }
+    return null;
   }
   
   public String addDataToWings(String username, String domain, 
