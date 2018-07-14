@@ -1,10 +1,10 @@
-@prefix ont: <http://localhost:8080/ontology/omics#> .
+@prefix ont: <http://disk-project.org/ontology/omics#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix : <http://localhost:8080/disk-client/admin/omics/hypothesisEGFRColon#> .
-@base <http://localhost:8080/disk-client/admin/omics/hypothesisEGFRColon> .
+@prefix : <http://disk-project.org/portal/admin/omics/hypothesisEGFRColon#> .
+@base <http://disk-project.org/portal/admin/omics/hypothesisEGFRColon> .
 
 :HypothesisEGFRColon a ont:Hypothesis .
 ont:EGFR ont:associatedWith ont:ColonCancer .

@@ -1,4 +1,4 @@
-@prefix : <https://mmisw.org/ont/~reginawang/omics/> .
+@prefix : <http://disk-project.org/ontology/omics#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
@@ -6,150 +6,97 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @base <http://disk-project.org/ontology/omics> .
 
-<http://disk-project.org/ontology/omics> rdf:type owl:Ontology .
+<http://disk-project.org/ontology/omics> a owl:Ontology .
 
-#################################################################
-#    Object Properties
-#################################################################
+# Object Properties
+# -----------------
+:associatedWith a owl:ObjectProperty .
 
-###  http://disk-project.org/ontology/omics#collectedFrom
-:collectedFrom rdf:type owl:ObjectProperty ;
-               rdfs:domain :Sample ;
+:collectedFrom a owl:ObjectProperty ;
+               rdfs:domain :Tissue ;               
                rdfs:range :Patient .
 
 
-###  http://disk-project.org/ontology/omics#experimentedOn
-:experimentedOn rdf:type owl:ObjectProperty ;
-                rdfs:domain :Experiment ,
-                            :Sample .
+:createdFrom a owl:ObjectProperty ;
+             rdfs:domain :Data ;             
+             rdfs:range :Workflow .
 
-
-###  http://disk-project.org/ontology/omics#hasDiagnosis
-:hasDiagnosis rdf:type owl:ObjectProperty ;
+:hasDiagnosis a owl:ObjectProperty ;              
               rdfs:domain :Patient ;
               rdfs:range :Diagnosis .
 
+:hasPatternGraph a owl:ObjectProperty ;
+                 rdfs:domain :LineOfInquiry ;                 
+                 rdfs:range :PatternGraph .
 
-###  http://disk-project.org/ontology/omics#isDiagnosedWith
-:isDiagnosedWith rdf:type owl:ObjectProperty ;
-                 rdfs:domain :Diagnosis ;
+:isDiagnosedWith a owl:ObjectProperty ;
+                 rdfs:domain :Diagnosis ;                 
                  rdfs:range :Cancer .
 
+:matchesWorkflow a owl:ObjectProperty ;
+                 rdfs:domain :LineOfInquiry ;                 
+                 rdfs:range :Workflow .
 
-###  http://disk-project.org/ontology/omics#producedData
-:producedData rdf:type owl:ObjectProperty ;
-              rdfs:domain :Experiment .
+:bindsTo a owl:ObjectProperty ;
+                 rdfs:domain :Variable ;                 
+                 rdfs:range :Variable .
 
-
-#################################################################
-#    Data properties
-#################################################################
-
-###  http://disk-project.org/ontology/omics#collectedAt
-:collectedAt rdf:type owl:DatatypeProperty ;
-             rdfs:domain :Sample ;
+# Data properties
+# ---------------
+:collectedAt a owl:DatatypeProperty ;
+             rdfs:domain :Tissue ;             
              rdfs:range xsd:dateTime .
 
 
-###  http://disk-project.org/ontology/omics#diagnosedAt
-:diagnosedAt rdf:type owl:DatatypeProperty ;
-             rdfs:domain :Diagnosis ;
+:diagnosedAt a owl:DatatypeProperty ;
+             rdfs:domain :Diagnosis ;             
              rdfs:range xsd:dateTime .
 
 
-#################################################################
-#    Classes
-#################################################################
+# Classes
+# -------
+:Cancer a owl:Class .
 
-###  http://disk-project.org/ontology/disk#Data
-<http://disk-project.org/ontology/disk#Data> rdf:type owl:Class .
+:Data a owl:Class .
 
+:Diagnosis a owl:Class .
 
-###  http://disk-project.org/ontology/omics#Cancer
-:Cancer rdf:type owl:Class .
+:Experiment a owl:Class .
 
+:Gene a owl:Class .
 
-###  http://disk-project.org/ontology/omics#Diagnosis
-:Diagnosis rdf:type owl:Class .
+:Graph a owl:Class .
 
+:Hypothesis a owl:Class ;            
+            rdfs:subClassOf :Graph .
 
-###  http://disk-project.org/ontology/omics#Experiment
-:Experiment rdf:type owl:Class .
-
-
-###  http://disk-project.org/ontology/omics#Gene
-:Gene rdf:type owl:Class .
+:LineOfInquiry a owl:Class ;               
+               rdfs:subClassOf :Graph .
 
 
-###  http://disk-project.org/ontology/omics#MassSpecData
-:MassSpecData rdf:type owl:Class ;
-              rdfs:subClassOf <http://disk-project.org/ontology/disk#Data> .
+:MassSpecData a owl:Class ;              
+              rdfs:subClassOf :Data .
+
+:Patient a owl:Class .
+
+:PatternGraph a owl:Class ;
+              rdfs:subClassOf :Graph .
+
+:Protein a owl:Class .
+
+:Tissue a owl:Class .
+
+:Variable a owl:Class .
+
+:Workflow a owl:Class ;         
+          rdfs:subClassOf :Graph .
 
 
-###  http://disk-project.org/ontology/omics#Patient
-:Patient rdf:type owl:Class .
 
+# Individuals
+# -----------
+:ColonCancer a :Cancer .
+:EGFR a :Protein .
+:KRAS a :Protein .
+:HNF4a a :Gene .
 
-###  http://disk-project.org/ontology/omics#Protein
-:Protein rdf:type owl:Class .
-
-
-###  http://disk-project.org/ontology/omics#RNASeq
-:RNASeq rdf:type owl:Class ;
-        rdfs:subClassOf <http://disk-project.org/ontology/disk#Data> .
-
-
-###  http://disk-project.org/ontology/omics#Sample
-:Sample rdf:type owl:Class .
-
-
-#################################################################
-#    Individuals
-#################################################################
-
-###  http://disk-project.org/ontology/omics#CEACAM6
-:CEACAM6 rdf:type owl:NamedIndividual ,
-                  :Protein .
-
-
-###  http://disk-project.org/ontology/omics#ColonCancer
-:ColonCancer rdf:type owl:NamedIndividual ,
-                      :Cancer .
-
-
-###  http://disk-project.org/ontology/omics#ColonCancerDummySubtype
-:ColonCancerDummySubtype rdf:type owl:NamedIndividual ,
-                                  :Cancer .
-
-
-###  http://disk-project.org/ontology/omics#DummyProtein
-:DummyProtein rdf:type owl:NamedIndividual ,
-                       :Protein .
-
-
-###  http://disk-project.org/ontology/omics#EGFR
-:EGFR rdf:type owl:NamedIndividual ,
-               :Protein .
-
-
-###  http://disk-project.org/ontology/omics#HNF4a
-:HNF4a rdf:type owl:NamedIndividual ,
-                :Gene .
-
-
-###  http://disk-project.org/ontology/omics#KRAS
-:KRAS rdf:type owl:NamedIndividual ,
-               :Protein .
-
-
-###  http://disk-project.org/ontology/omics#NACA2
-:NACA2 rdf:type owl:NamedIndividual ,
-                :Protein .
-
-
-###  http://disk-project.org/ontology/omics#PRKCDBP
-:PRKCDBP rdf:type owl:NamedIndividual ,
-                  :Protein .
-
-
-###  Generated by the OWL API (version 4.2.8.20170104-2310) https://github.com/owlcs/owlapi
