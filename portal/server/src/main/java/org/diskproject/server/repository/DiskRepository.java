@@ -30,6 +30,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.concurrent.TimeUnit;
 import java.util.Scanner;
 
 import org.apache.commons.lang.SerializationUtils;
@@ -140,6 +141,8 @@ public class DiskRepository extends KBRepository {
       this.omicsontkb = fac.getKB(KBConstants.OMICSURI(), OntSpec.PLAIN, false, true);
       String DownloadPath = "C:/Users/rrreg/neuroOnt.xml";
       downloadOntology(KBConstants.NEUROURI(), DownloadPath);
+      Scanner sc = new Scanner(new File(DownloadPath));
+      System.out.println(sc.useDelimiter("\\A").next());
       InputStream is = new FileInputStream(new File(DownloadPath));
       this.neuroontkb = fac.getKB(is, KBConstants.NEURONS(),OntSpec.PLAIN);
       
@@ -267,9 +270,8 @@ public class DiskRepository extends KBRepository {
   private void fetchTypesAndIndividualsFromKB(KBAPI kb, Vocabulary vocabulary) {
     try {
       KBObject typeprop = kb.getProperty(KBConstants.RDFNS()+"type");
-      vocabulary.getNamespace();//These two lines allow the disk ontology to be
-      TimeUnit.SECONDS.sleep(1);//loaded properly. Without them, the disk ontology's
-      //classes are not loaded.
+      vocabulary.getNamespace();
+      TimeUnit.SECONDS.sleep(1);
       for(KBTriple t : kb.genericTripleQuery(null, typeprop, null)) {
         KBObject inst = t.getSubject();
         KBObject typeobj = t.getObject();    

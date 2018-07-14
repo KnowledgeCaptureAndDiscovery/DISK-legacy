@@ -155,6 +155,7 @@
 			<artifactId>restygwt</artifactId>
 			<version>${restygwt.version}</version>
 			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 
 	<build>

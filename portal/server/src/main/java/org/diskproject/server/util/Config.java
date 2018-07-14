@@ -55,6 +55,8 @@ public class Config {
     }
     // Load properties from configFile
     PropertyListConfiguration props = new PropertyListConfiguration();
+    System.out.println("HttpServletRequest: "+request);
+    System.out.println("configFile"+configFile);
     try {
         props.load(configFile);
     } catch (Exception e) {

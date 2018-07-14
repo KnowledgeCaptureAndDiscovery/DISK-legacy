@@ -73,6 +73,7 @@ public class WingsAdapter {
 
   public WingsAdapter() {
     this.sessions = new HashMap<String, String>();
+    System.out.println("Config.get().getProperties()"+Config.get().getProperties());
     System.out.println("Config.get().getProperties().getString(wings.server)"+Config.get().getProperties().getString("wings.server"));
     this.server = Config.get().getProperties().getString("wings.server");
     this.json = new Gson();
