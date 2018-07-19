@@ -17,7 +17,7 @@ data "aws_ami" "disk-ami" {
 data "aws_availability_zones" "available" {}
 
 variable "disk_version" {
-  default = "1.4"
+  default = "1.5"
 }
 
 variable "workers" {
@@ -41,7 +41,7 @@ variable "key_name" {
 }
 
 variable "aws_instance_type" {
-  default = "m3.xlarge"
+  default = "m3.2xlarge"
 }
 
 variable "aws_instance_root_volume_size" {
@@ -56,7 +56,8 @@ variable "aws_ephemeral_count" {
   type = "map"
 
   default = {
-    m3.xlarge = 2
+    m3.xlarge  = 2
+    m3.2xlarge = 2
   }
 }
 
