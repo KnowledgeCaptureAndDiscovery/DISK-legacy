@@ -256,6 +256,21 @@ pip install biopython
 
 
 # ----
+# STAR
+# ----
+
+STAR_VERSION='2.6.0c'
+
+curl --location \
+     --output ${STAR_VERSION}.tar.gz \
+     "https://github.com/alexdobin/STAR/archive/${STAR_VERSION}.tar.gz"
+
+tar --gzip --extract --verbose --file ${STAR_VERSION}.tar.gz
+
+cp --recursive --force STAR-${STAR_VERSION}/bin/Linux_x86_64_static/* /usr/local/bin
+
+
+# ----
 # RSEM
 # ----
 

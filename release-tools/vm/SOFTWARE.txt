@@ -39,3 +39,4 @@
 16. RSEM (https://deweylab.github.io/RSEM/)
 17. TPP 4.8.0
 18. graphviz
+19. STAR (https://github.com/alexdobin/STAR)
