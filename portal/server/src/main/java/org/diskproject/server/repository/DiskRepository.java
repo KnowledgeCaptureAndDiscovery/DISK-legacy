@@ -30,7 +30,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.concurrent.TimeUnit;
 import java.util.Scanner;
 
 import org.apache.commons.lang.SerializationUtils;
@@ -82,7 +81,7 @@ public class DiskRepository extends KBRepository {
   }
 
   public DiskRepository() {
-    setConfiguration(KBConstants.DISKURI());
+    setConfiguration(KBConstants.DISKURI(),KBConstants.DISKNS());
     initializeKB();			//Here
     monitor = Executors.newScheduledThreadPool(10);
     executor = Executors.newFixedThreadPool(2);
@@ -137,25 +136,26 @@ public class DiskRepository extends KBRepository {
     if(fac == null)
       return;
     try {
-      this.hypontkb = fac.getKB(KBConstants.HYPURI(), OntSpec.PLAIN, false, true);
-      this.omicsontkb = fac.getKB(KBConstants.OMICSURI(), OntSpec.PLAIN, false, true);
-      String DownloadPath = "C:/Users/rrreg/neuroOnt.xml";
-      downloadOntology(KBConstants.NEUROURI(), DownloadPath);
-      Scanner sc = new Scanner(new File(DownloadPath));
-      System.out.println(sc.useDelimiter("\\A").next());
-      InputStream is = new FileInputStream(new File(DownloadPath));
-      this.neuroontkb = fac.getKB(is, KBConstants.NEURONS(),OntSpec.PLAIN);
-      
+
+   //   String DownloadPath = "C:/Users/rrreg/neuroOnt.ttl";
+   //   downloadOntology(KBConstants.NEUROURI(), DownloadPath);
+  //    InputStream is = new FileInputStream(new File(DownloadPath));
+      this.neuroontkb = fac.getKB(KBConstants.NEUROURI(), OntSpec.PLAIN, false, true);
       this.vocabularies = new HashMap<String, Vocabulary>();
-      this.vocabularies.put(KBConstants.DISKURI(),
-          this.initializeVocabularyFromKB(this.ontkb, KBConstants.DISKNS())); 
-  //Here   
-      this.vocabularies.put(KBConstants.OMICSURI(), 
-          this.initializeVocabularyFromKB(this.omicsontkb, KBConstants.OMICSNS()));
       this.vocabularies.put(KBConstants.NEUROURI(), 
           this.initializeVocabularyFromKB(this.neuroontkb, KBConstants.NEURONS()));
+//	  System.out.println("KBConstants.DISKNS(): "+KBConstants.DISKNS());
+//	  System.out.println("ontkb: "+this.ontkb);
+      this.hypontkb = fac.getKB(KBConstants.HYPURI(), OntSpec.PLAIN, false, true);
       this.vocabularies.put(KBConstants.HYPURI(),
-          this.initializeVocabularyFromKB(this.hypontkb, KBConstants.HYPNS()));     
+          this.initializeVocabularyFromKB(this.hypontkb, KBConstants.HYPNS()));   
+      this.omicsontkb = fac.getKB(KBConstants.OMICSURI(), OntSpec.PLAIN, false, true);
+      this.vocabularies.put(KBConstants.OMICSURI(), 
+          this.initializeVocabularyFromKB(this.omicsontkb, KBConstants.OMICSNS()));
+      System.out.println(KBConstants.DISKURI());
+      TimeUnit.SECONDS.sleep(3);
+      this.vocabularies.put(KBConstants.DISKURI(),
+              this.initializeVocabularyFromKB(this.ontkb, KBConstants.DISKNS())); 
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -206,6 +206,7 @@ public class DiskRepository extends KBRepository {
                   in.close();
                   break; //if the vocabulary is downloaded, then we don't download it for the other serializations
               }catch(Exception e){
+            	  e.printStackTrace();
                   System.err.println("Failed to download vocabulary in "+serialization);
               }
           }
@@ -236,10 +237,23 @@ public class DiskRepository extends KBRepository {
   }
   
   public Vocabulary initializeVocabularyFromKB(KBAPI kb, String ns) {
-    Vocabulary vocabulary = new Vocabulary(ns);
-    this.fetchPropertiesFromKB(kb, vocabulary);
+	  System.out.println(ns);
+	Vocabulary vocabulary = new Vocabulary(ns);
+	try{
     this.fetchTypesAndIndividualsFromKB(kb, vocabulary);	//Here
+    this.fetchPropertiesFromKB(kb, vocabulary);
+    System.out.println(ns+ " worked!");
     return vocabulary;
+	}
+	catch(Exception e)
+	{
+		e.printStackTrace();
+		vocabulary = new Vocabulary(ns);
+	    this.fetchTypesAndIndividualsFromKB(kb, vocabulary);	//Here
+	    this.fetchPropertiesFromKB(kb, vocabulary);
+	    System.out.println(ns+ " worked!");
+	    return vocabulary;
+	}
   }
   
   private void fetchPropertiesFromKB(KBAPI kb, Vocabulary vocabulary) {
@@ -311,15 +325,8 @@ public class DiskRepository extends KBRepository {
       }
       // Add types not asserted
       KBObject clsobj = kb.getProperty(KBConstants.OWLNS()+"Class");
-      if(vocabulary.getNamespace().indexOf("neuro")!=-1)
-	{
-     System.out.println("kb.genericTripleQuery(null, typeprop, null):"+kb.genericTripleQuery(null, typeprop, null));
-          TimeUnit.SECONDS.sleep(1);
-	 System.out.println("kb.genericTripleQuery(null, typeprop, clsobj):"+kb.genericTripleQuery(null, typeprop, clsobj));
-         TimeUnit.SECONDS.sleep(1);
-     System.out.println("vocabulary.getIndividuals()"+vocabulary.getIndividuals());
-	}
-      for(KBTriple t : kb.genericTripleQuery(null, typeprop, clsobj)) {
+
+ for(KBTriple t : kb.genericTripleQuery(null, typeprop, clsobj)) {
         KBObject cls = t.getSubject(); 
 	try{       
         if(!cls.getID().startsWith(vocabulary.getNamespace()))
@@ -476,7 +483,7 @@ public class DiskRepository extends KBRepository {
         Triple t = tripleMap.get(triplestr);
         
         KBObject conf = provkb.getPropertyValue(stobj, pmap.get("hasConfidenceValue"));
-        KBObject tloi = provkb.getPropertyValue(stobj, pmap.get("hasTriggeredLOI"));
+        KBObject tloi = provkb.getPropertyValue(stobj, pmap.get("hasTriggeredLineOfInquiry"));
         
         TripleDetails details = new TripleDetails();
         if(conf != null && conf.getValue() != null)
@@ -581,7 +588,7 @@ public class DiskRepository extends KBRepository {
         provkb.setPropertyValue(stobj, pmap.get("hasConfidenceValue"), 
             provkb.createLiteral(triple.getDetails().getConfidenceValue()));
       if(details.getTriggeredLOI() != null)
-        provkb.setPropertyValue(stobj, pmap.get("hasTriggeredLOI"), 
+        provkb.setPropertyValue(stobj, pmap.get("hasTriggeredLineOfInquiry"), 
             provkb.getResource(triple.getDetails().getTriggeredLOI()));          
     }
   }
@@ -787,6 +794,7 @@ public class DiskRepository extends KBRepository {
     catch (Exception e) {
       e.printStackTrace();
     }
+    System.out.println(tlois);
     return tlois;
   }
 
@@ -1037,10 +1045,10 @@ catch(Exception e)
         loikb.setPropertyValue(floiitem, pmap.get("hasDataQuery"), valobj);
       }      
       this.storeWorkflowBindingsInKB(loikb, floiitem, 
-          pmap.get("hasWorkflowBindings"),
+          pmap.get("hasWorkflowBinding"),
           loi.getWorkflows(), username, domain);
       this.storeWorkflowBindingsInKB(loikb, floiitem, 
-          pmap.get("hasMetaWorkflowBindings"),
+          pmap.get("hasMetaWorkflowBinding"),
           loi.getMetaWorkflows(), username, domain);          
 
       return kb.save() && loikb.save();
@@ -1062,7 +1070,7 @@ catch(Exception e)
       String workflowuri = WingsAdapter.get().WFLOWURI(username, domain, 
           bindings.getWorkflow());      
       KBObject bindingobj = kb.createObjectOfClass(null, 
-          cmap.get("WorkflowBindings"));
+          cmap.get("WorkflowBinding"));
       kb.addPropertyValue(loiitem, bindingprop, bindingobj);
       
       kb.setPropertyValue(bindingobj, pmap.get("hasWorkflow"), 
@@ -1071,11 +1079,11 @@ catch(Exception e)
       // Get Run details
       if(bindings.getRun() != null) {
         if(bindings.getRun().getId() != null) {
-          kb.setPropertyValue(bindingobj, pmap.get("hasRunId"), 
+          kb.setPropertyValue(bindingobj, pmap.get("hasId"), 
               kb.createLiteral(bindings.getRun().getId()));
         }
         if(bindings.getRun().getStatus() != null)
-          kb.setPropertyValue(bindingobj, pmap.get("hasRunStatus"), 
+          kb.setPropertyValue(bindingobj, pmap.get("hasStatus"), 
               kb.createLiteral(bindings.getRun().getStatus()));
         if(bindings.getRun().getLink() != null)
           kb.setPropertyValue(bindingobj, pmap.get("hasRunLink"), 
@@ -1091,7 +1099,7 @@ catch(Exception e)
         kb.setPropertyValue(varbindingobj, pmap.get("hasVariable"), 
             kb.getResource(workflowuri + "#" + varid));
         if(bindingValue != null)
-          kb.setPropertyValue(varbindingobj, pmap.get("hasBinding"), 
+          kb.setPropertyValue(varbindingobj, pmap.get("hasBindingValue"), 
               this.getKBValue(bindingValue, kb));  
         
         kb.addPropertyValue(bindingobj, pmap.get("hasVariableBinding"), varbindingobj);
@@ -1153,9 +1161,9 @@ catch(Exception e)
         loi.setDataQuery(dqueryobj.getValueAsString());
       
       loi.setWorkflows(this.getWorkflowBindingsFromKB(username, domain, 
-          loikb, floiitem, pmap.get("hasWorkflowBindings")));
+          loikb, floiitem, pmap.get("hasWorkflowBinding")));
       loi.setMetaWorkflows(this.getWorkflowBindingsFromKB(username, domain, 
-          loikb, floiitem, pmap.get("hasMetaWorkflowBindings")));      
+          loikb, floiitem, pmap.get("hasMetaWorkflowBinding")));      
       
       return loi;
     } catch (Exception e) {
@@ -1173,10 +1181,10 @@ catch(Exception e)
 
       // Workflow Run details
       WorkflowRun run = new WorkflowRun();
-      KBObject robj = kb.getPropertyValue(wbobj, pmap.get("hasRunId"));
+      KBObject robj = kb.getPropertyValue(wbobj, pmap.get("hasId"));
       if(robj != null) 
         run.setId(robj.getValue().toString());
-      KBObject statusobj = kb.getPropertyValue(wbobj, pmap.get("hasRunStatus"));
+      KBObject statusobj = kb.getPropertyValue(wbobj, pmap.get("hasStatus"));
       if(statusobj != null) 
         run.setStatus(statusobj.getValue().toString());
       KBObject linkobj = kb.getPropertyValue(wbobj, pmap.get("hasRunLink"));
@@ -1194,7 +1202,7 @@ catch(Exception e)
       // Variable binding details
       for(KBObject vbobj : kb.getPropertyValues(wbobj, pmap.get("hasVariableBinding"))) {
         KBObject varobj = kb.getPropertyValue(vbobj, pmap.get("hasVariable"));
-        KBObject bindobj = kb.getPropertyValue(vbobj, pmap.get("hasBinding"));
+        KBObject bindobj = kb.getPropertyValue(vbobj, pmap.get("hasBindingValue"));
         VariableBinding vbinding = new VariableBinding();
         vbinding.setVariable(varobj.getName());
         vbinding.setBinding(bindobj.getValueAsString());
@@ -1335,7 +1343,7 @@ catch(Exception e)
     tloi.setName(kb.getLabel(obj));
     tloi.setDescription(kb.getComment(obj));
 
-    KBObject lobj = kb.getPropertyValue(obj, pmap.get("hasLOI"));
+    KBObject lobj = kb.getPropertyValue(obj, pmap.get("hasLineOfInquiry"));
     if(lobj != null) 
       tloi.setLoiId(lobj.getName());
     
@@ -1346,16 +1354,16 @@ catch(Exception e)
     for(KBObject robj : kb.getPropertyValues(obj, pmap.get("hasResultingHypothesis")))
       tloi.addResultingHypothesisId(robj.getName());
     
-    KBObject stobj = kb.getPropertyValue(obj, pmap.get("hasTriggeredLOIStatus"));
+    KBObject stobj = kb.getPropertyValue(obj, pmap.get("hasTriggeredLineOfInquiryStatus"));
     if(stobj != null) 
       tloi.setStatus(Status.valueOf(stobj.getValue().toString()));
     
     if(tloikb != null) {
       KBObject floiitem = tloikb.getIndividual(id);
       tloi.setWorkflows(this.getWorkflowBindingsFromKB(username, domain, 
-          tloikb, floiitem, pmap.get("hasWorkflowBindings")));
+          tloikb, floiitem, pmap.get("hasWorkflowBinding")));
       tloi.setMetaWorkflows(this.getWorkflowBindingsFromKB(username, domain, 
-          tloikb, floiitem, pmap.get("hasMetaWorkflowBindings")));          
+          tloikb, floiitem, pmap.get("hasMetaWorkflowBinding")));          
     }
     return tloi;
   }
@@ -1393,7 +1401,7 @@ catch(Exception e)
       
       if(tloi.getLoiId() != null) {
         KBObject lobj = kb.getResource(loins + tloi.getLoiId());
-        kb.setPropertyValue(tloiitem, pmap.get("hasLOI"), lobj);
+        kb.setPropertyValue(tloiitem, pmap.get("hasLineOfInquiry"), lobj);
       }
       if(tloi.getParentHypothesisId() != null) {
         KBObject hobj = kb.getResource(hypns + tloi.getParentHypothesisId());
@@ -1405,13 +1413,13 @@ catch(Exception e)
       }
       if(tloi.getStatus() != null) {
         KBObject stobj = kb.createLiteral(tloi.getStatus().toString());
-        kb.setPropertyValue(tloiitem, pmap.get("hasTriggeredLOIStatus"), stobj);
+        kb.setPropertyValue(tloiitem, pmap.get("hasTriggeredLineOfInquiryStatus"), stobj);
       }
       this.storeWorkflowBindingsInKB(tloikb, ftloiitem, 
-          pmap.get("hasWorkflowBindings"),
+          pmap.get("hasWorkflowBinding"),
           tloi.getWorkflows(), username, domain);
       this.storeWorkflowBindingsInKB(tloikb, ftloiitem, 
-          pmap.get("hasMetaWorkflowBindings"),
+          pmap.get("hasMetaWorkflowBinding"),
           tloi.getMetaWorkflows(), username, domain);          
 
       return kb.save() && tloikb.save();

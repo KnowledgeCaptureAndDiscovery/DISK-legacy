@@ -1,6 +1,7 @@
 package org.diskproject.server.repository;
 
 import java.io.File;
+import java.util.concurrent.TimeUnit;
 import java.util.HashMap;
 
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
@@ -16,12 +17,13 @@ public class KBRepository {
   protected String server;
   protected String tdbdir;
   protected String onturi;
+  protected String ontns;
   protected OntFactory fac;
   protected String owlns, rdfns, rdfsns;
   protected KBAPI ontkb;
   protected HashMap<String, KBObject> pmap, cmap;
   
-  protected void setConfiguration(String onturi) {
+  protected void setConfiguration(String onturi, String ontns) {
     if(Config.get() == null)
       return;
     PropertyListConfiguration props = Config.get().getProperties();
@@ -38,6 +40,7 @@ public class KBRepository {
     rdfsns = KBConstants.RDFSNS();
     
     this.onturi = onturi;
+    this.ontns = ontns;
   }
   
   protected void initializeKB() {
@@ -47,13 +50,15 @@ public class KBRepository {
     this.fac = new OntFactory(OntFactory.JENA, tdbdir);
     try {
       ontkb = fac.getKB(this.onturi, OntSpec.PELLET, false, true);
-      
+      TimeUnit.SECONDS.sleep(2);
       // Temporary hacks
-      this.temporaryHacks();
+      // this.temporaryHacks();
       
       pmap = new HashMap<String, KBObject>();
       cmap = new HashMap<String, KBObject>();
       this.cacheKBTerms(ontkb);
+      System.out.println("pmap: "+pmap);
+      System.out.println("cmap: "+cmap);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -65,7 +70,7 @@ public class KBRepository {
   }
   
   private void hackInDataProperty(String prop, String domain, String range) {
-    String ns = onturi + "#";
+    String ns = ontns;
     if(!this.ontkb.containsResource(ns+prop)) {
       this.ontkb.createDatatypeProperty(ns+prop);
       this.ontkb.setPropertyDomain(ns+prop, ns+domain);

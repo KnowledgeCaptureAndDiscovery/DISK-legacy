@@ -1,10 +1,10 @@
 package org.diskproject.shared.classes.util;
 
 public class KBConstants {
-  private static String diskuri = "http://disk-project.org/ontology/disk";
-  private static String neurouri = "https://w3id.org/disk/ontology/neuro";
-  private static String omicsuri = "http://disk-project.org/ontology/omics";
-  private static String hypuri = "http://disk-project.org/ontology/hypothesis";
+  private static String diskuri = "https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/disk/1.1.0/ontology.ttl";
+  private static String neurouri = "https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/neuro/release/1.0.0/ontology.ttl";
+  private static String omicsuri = "https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/omics/0.0.1/ontology.owl";
+  private static String hypuri = "https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/hypothesis/0.0.1/ontology.owl";
 
   private static String owlns = "http://www.w3.org/2002/07/owl#";
   private static String rdfns = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
@@ -19,7 +19,7 @@ public class KBConstants {
   }
   
   public static String DISKNS() {
-    return diskuri + "#";
+    return "http://disk-project.org/ontology/disk#";
   }
   
   public static String OMICSURI() {
@@ -27,7 +27,7 @@ public class KBConstants {
   }
 
   public static String OMICSNS() {
-    return omicsuri + "#";
+    return "http://disk-project.org/ontology/omics#";
   }
 
   public static String NEUROURI() {
@@ -35,7 +35,7 @@ public class KBConstants {
   }
 
   public static String NEURONS() {
-    return neurouri + "#";
+    return "http://disk-project.org/ontology/neuro#";
   }
 
   public static String HYPURI() {
@@ -43,7 +43,7 @@ public class KBConstants {
   }
 
   public static String HYPNS() {
-    return hypuri + "#";
+    return "http://disk-project.org/ontology/hypothesis#";
   }
  
   public static String DCTERMSNS() {

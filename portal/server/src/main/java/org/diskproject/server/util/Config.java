@@ -55,8 +55,6 @@ public class Config {
     }
     // Load properties from configFile
     PropertyListConfiguration props = new PropertyListConfiguration();
-    System.out.println("HttpServletRequest: "+request);
-    System.out.println("configFile"+configFile);
     try {
         props.load(configFile);
     } catch (Exception e) {
@@ -83,6 +81,10 @@ public class Config {
     config.addProperty("storage.tdb", storageDir + File.separator + "TDB");
     config.addProperty("storage.db", storageDir + File.separator + "DB");
     config.addProperty("server", server);
+    config.addProperty("wings.server", "http://www.wings-workflows.org/wings-omics-portal");
+    config.addProperty("wings.passwords.ravali", "ravali123");
+    
+
 
     try {
         config.save("file://" + configFile);
