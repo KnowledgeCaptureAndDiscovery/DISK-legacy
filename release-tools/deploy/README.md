@@ -23,7 +23,7 @@ EOT
 # Initialize (one time only)
 
 ```bash
-cd <DISK>/release-tools/deploy 
+cd <DISK>/release-tools/deploy
 terraform init
 ```
 
@@ -31,12 +31,6 @@ terraform init
 
 ```bash
 terraform show
-```
-
-# Terminate all infrastructure 
-
-```bash
-terraform destroy
 ```
 
 # Plan
