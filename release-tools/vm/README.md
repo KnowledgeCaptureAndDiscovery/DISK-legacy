@@ -33,12 +33,3 @@ export AWS_DEFAULT_PROFILE='vm-import@stanford'
 1. Create a Minimal Cent OS 7 VM.
 2. Starting from Minimal VM from Stage 1, create VM for AWS EC2
 3. Execute AWS EC2 VM import process.
-
-
-# Configure AWS EC2 AMI
-
-1. Login to AWS
-2. Navigate to EC2 Dashboard
-3. Click Images > AMIs
-4. For the newly created VM, set the Name
-5. Mark the newly created VM, Public (Actions > Modify Image Permissions)
