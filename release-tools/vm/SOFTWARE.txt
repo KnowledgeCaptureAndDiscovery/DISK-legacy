@@ -31,6 +31,7 @@
     10u. limma
     10v. ComplexHeatmap (https://bioconductor.org/packages/release/bioc/html/ComplexHeatmap.html)
     10w. ConsensusClusterPlus (https://www.bioconductor.org/packages/release/bioc/html/ConsensusClusterPlus.html)
+    10x. edgeR (https://bioconductor.org/packages/release/bioc/html/edgeR.html)
 11. MSGFPlus (https://omics.pnl.gov/software/ms-gf)
 12. Proteowizard (http://data.mallicklab.com/download.php)
 13. bumbershoot (http://data.mallicklab.com/download.php)
@@ -40,3 +41,5 @@
 17. TPP 4.8.0
 18. graphviz
 19. STAR (https://github.com/alexdobin/STAR)
+20. deepTools (https://deeptools.readthedocs.io/en/develop/content/installation.html)
+21. Featurecounts (http://bioinf.wehi.edu.au/subread-package/)

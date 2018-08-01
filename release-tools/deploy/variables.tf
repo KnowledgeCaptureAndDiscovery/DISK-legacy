@@ -17,7 +17,7 @@ data "aws_ami" "disk-ami" {
 data "aws_availability_zones" "available" {}
 
 variable "disk_version" {
-  default = "1.5"
+  default = "1.6"
 }
 
 variable "workers" {

@@ -129,14 +129,36 @@ cd ..
 rm --recursive --force bedtools2*
 
 
+# -------
+# Subread
+# -------
+
+SUBREAD_VERSION='1.6.2'
+
+curl --location \
+     --output subread-${SUBREAD_VERSION}-source.tar.gz \
+     "https://downloads.sourceforge.net/project/subread/subread-${SUBREAD_VERSION}/subread-${SUBREAD_VERSION}-source.tar.gz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fsubread%2Ffiles%2Fsubread-${SUBREAD_VERSION}%2Fsubread-${SUBREAD_VERSION}-source.tar.gz%2Fdownload&ts=`date +\"%s\"`"
+tar --gzip --extract --verbose --file subread-${SUBREAD_VERSION}-source.tar.gz
+
+pushd subread-${SUBREAD_VERSION}-source/src > /dev/null
+make -f Makefile.Linux
+mkdir --parent /usr/local/subread
+mv ../bin /usr/local/subread
+popd > /dev/null
+rm --recursive --force subread-${SUBREAD_VERSION}*
+
+cat > /etc/profile.d/subread.sh << EOT
+export PATH=/usr/local/subread/bin:/usr/local/subread/bin/utilities:\$PATH
+EOT
+
+
 # -------------
 # Cell Profiler
 # -------------
 
 JAVA_VERSION=`java -version 2>&1 | head -1 | sed -e 's/.*"\(.*\)_.*"/\1/g'`
 
-yum -y install numpy scipy python-zmq java-${JAVA_VERSION}-openjdk-devel Cython MySQL-python gcc-c++
-pip install matplotlib
+yum -y install java-${JAVA_VERSION}-openjdk-devel Cython MySQL-python gcc-c++
 git clone https://github.com/CellProfiler/CellProfiler.git /usr/local/cellprofiler
 pushd /usr/local/cellprofiler > /dev/null
 git checkout v3.0.0
@@ -185,6 +207,7 @@ biocLite("Rsubread")
 biocLite("limma")
 biocLite("ComplexHeatmap")
 biocLite("ConsensusClusterPlus")
+biocLite("edgeR")
 EOT
 
 
@@ -253,6 +276,13 @@ EOT
 # ---------
 
 pip install biopython
+
+
+# ---------
+# deepTools
+# ---------
+
+pip install deeptools
 
 
 # ----
