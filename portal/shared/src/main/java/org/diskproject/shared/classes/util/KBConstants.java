@@ -3,7 +3,7 @@ package org.diskproject.shared.classes.util;
 public class KBConstants {
   private static String diskuri = "https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/disk/1.1.0/ontology.ttl";
   private static String neurouri = "https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/neuro/release/1.0.0/ontology.ttl";
-  private static String omicsuri = "https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/omics/0.0.1/ontology.owl";
+  private static String omicsuri = "https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/omics/release/0.0.0/ontology.owl";
   private static String hypuri = "https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/hypothesis/0.0.1/ontology.owl";
 
   private static String owlns = "http://www.w3.org/2002/07/owl#";
@@ -35,7 +35,7 @@ public class KBConstants {
   }
 
   public static String NEURONS() {
-    return "http://disk-project.org/ontology/neuro#";
+    return "https://w3id.org/disk/ontology/neuro#";
   }
 
   public static String HYPURI() {

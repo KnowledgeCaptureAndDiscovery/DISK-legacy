@@ -27,6 +27,7 @@ public class KBRepository {
     if(Config.get() == null)
       return;
     PropertyListConfiguration props = Config.get().getProperties();
+    System.out.println("props: "+props);
     this.server = props.getString("server");
     tdbdir = props.getString("storage.tdb");
     File tdbdirf = new File(tdbdir);

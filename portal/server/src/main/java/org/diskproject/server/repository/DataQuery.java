@@ -66,7 +66,7 @@ public class DataQuery {
 			// Make query machine readable and initialize variables
 			inputQuery = inputQuery.replace("|", "/");
 			int offset = 0;
-
+			
 			String query = toMachineReadableQuery(inputQuery).replace("-2F",
 					"/");
 			String MachineReadableQuery = "http://organicdatacuration.org/enigma_new/index.php/Special:Ask/"
@@ -100,7 +100,7 @@ public class DataQuery {
 								String data = pageNameToFileInformation(
 										SingleResult, webClient);
 								// Open new file in zip and save text into entry
-								str += data + "\",\"";
+								str += data + "\n\",\"\n";
 							}
 						}
 					} catch (Exception e) {
@@ -165,7 +165,10 @@ public class DataQuery {
 			TextPage pageTxt = (TextPage) webClient
 					.getPage("http://organicdatacuration.org" + file);
 
-			return pageTxt.getWebResponse().getContentAsString();
+			return SingleResult.replace("/", "").replace("\\", "")
+					.replace(":", "").replace("*", "").replace("?", "")
+					.replace("\"", "").replace("<", "").replace(">", "")
+					.replace("|", "")+ "\n\",\"\n" +pageTxt.getWebResponse().getContentAsString();
 			}
 			catch(Exception e)
 			{}

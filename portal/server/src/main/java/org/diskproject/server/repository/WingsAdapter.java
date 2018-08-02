@@ -29,12 +29,14 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.diskproject.server.util.Config;
 import org.diskproject.shared.classes.util.KBConstants;
@@ -76,9 +78,9 @@ public class WingsAdapter {
 		System.out.println("Config.get().getProperties()"
 				+ Config.get().getProperties());
 		System.out
-				.println("Config.get().getProperties().getString(wings.server)"
-						+ Config.get().getProperties()
-								.getString("wings.server"));
+		.println("Config.get().getProperties().getString(wings.server)"
+				+ Config.get().getProperties()
+				.getString("wings.server"));
 		this.server = Config.get().getProperties().getString("wings.server");
 		this.json = new Gson();
 	}
@@ -400,8 +402,10 @@ public class WingsAdapter {
 				continue;
 			String runid = qb.get("run").getAsJsonObject().get("value")
 					.getAsString();
+			System.out.println("qb: "+qb);
 			String bindstrs = qb.get("bindings").getAsJsonObject().get("value")
 					.getAsString();
+			System.out.println("bindstrs: "+bindstrs);
 			HashMap<String, String> keyvalues = new HashMap<String, String>();
 			for (String bindstr : bindstrs.split("\\|\\|")) {
 				String[] keyval = bindstr.split("=", 2);
@@ -443,342 +447,296 @@ public class WingsAdapter {
 			// Get data (first set)
 			String pageid = "users/" + username + "/" + domain
 					+ "/plan/getData";
-			String datajson = this.post(username, pageid, formdata);
-			formdata = this.getBindings(datajson, vbindings, formdata);
-			if (formdata == null)
-				return null;
-
-			// Get parameters (first set)
-			pageid = "users/" + username + "/" + domain + "/plan/getParameters";
-			String paramjson = this.post(username, pageid, formdata);
-			formdata = this.getBindings(paramjson, vbindings, formdata);
-			if (formdata == null)
-				return null;
-
-			// TODO: This should be called after getting expanded workflow.
-			// - Create mapping data from expanded workflow, and then check.
-			// - *NEEDED* to handle collections properly
-
-			String runid = this.getWorkflowRunWithSameBindings(username,
-					domain, wflowname, formdata);
-			if (runid != null) {
-				System.out.println("Found existing run : " + runid);
-				return runid;
+			// String datajson = this.post(username, pageid, formdata);
+			//System.out.println("datajson; getdata: "+ datajson);
+			System.out.println("variable bindings: "+ vbindings);
+			System.out.println("formadata: "+formdata);
+			int i;
+			for(i = 2;i < 5; i++)
+				try{
+					// datajson = this.post(username, pageid, formdata);
+					//System.out.println("datajson; getdata "+i+" :"+ datajson);
+					//formdata = this.getBindings(datajson, vbindings, formdata);
+				}
+			catch(Exception e){
+				System.out.println("tried "+i+" times");
+				e.printStackTrace();
+				if(i == 4)
+					return null;
 			}
-
-			// Get first expanded workflow
-			pageid = "users/" + username + "/" + domain + "/plan/getExpansions";
-			String expjson = this.post(username, pageid, formdata);
-			if (expjson == null)
+			if (formdata == null)
 				return null;
+		
 
-			JsonParser jsonParser = new JsonParser();
-			JsonObject expobj = jsonParser.parse(expjson).getAsJsonObject();
-			if (!expobj.get("success").getAsBoolean())
-				return null;
+		// Get parameters (first set)
+		pageid = "users/" + username + "/" + domain + "/plan/getParameters";
+		//String paramjson = this.post(username, pageid, formdata);
+	 //	formdata = this.getBindings(paramjson, vbindings, formdata);
+		if (formdata == null)
+			return null;
 
-			JsonObject dataobj = expobj.get("data").getAsJsonObject();
+		// TODO: This should be called after getting expanded workflow.
+		// - Create mapping data from expanded workflow, and then check.
+		// - *NEEDED* to handle collections properly
 
-			JsonArray templatesobj = dataobj.get("templates").getAsJsonArray();
-			if (templatesobj.size() == 0)
-				return null;
-
-			JsonObject templateobj = templatesobj.get(0).getAsJsonObject();
-			JsonObject seedobj = dataobj.get("seed").getAsJsonObject();
-
-			// Run the first Expanded workflow
-			formdata = new ArrayList<NameValuePair>();
-			formdata.add(new BasicNameValuePair("template_id", templateid));
-			formdata.add(new BasicNameValuePair("json", templateobj.get(
-					"template").toString()));
-			formdata.add(new BasicNameValuePair("constraints_json", templateobj
-					.get("constraints").toString()));
-			formdata.add(new BasicNameValuePair("seed_json", seedobj.get(
-					"template").toString()));
-			formdata.add(new BasicNameValuePair("seed_constraints_json",
-					seedobj.get("constraints").toString()));
-
-			pageid = "users/" + username + "/" + domain
-					+ "/executions/runWorkflow";
-			runid = this.post(username, pageid, formdata);
-
-			// Return the run id
+		String runid = this.getWorkflowRunWithSameBindings(username,
+				domain, wflowname, formdata);
+		if (runid != null) {
+			System.out.println("Found existing run : " + runid);
 			return runid;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	public String fetchDataFromWings(String username, String domain,
-			String dataid) {
-		String getpage = "users/" + username + "/" + domain + "/data/fetch";
-
-		// Check for data already present on the server
-		List<NameValuePair> formdata = new ArrayList<NameValuePair>();
-		formdata.add(new BasicNameValuePair("data_id", dataid));
-		return this.get(username, getpage, formdata);
-	}
-
-	public String addOrUpdateData(String username, String domain, String id,
-			String type, String contents) {
-
-		String getpage = "users/" + username + "/" + domain
-				+ "/data/getDataJSON";
-		String postpage = "users/" + username + "/" + domain
-				+ "/data/addDataForType";
-		String uploadpage = "users/" + username + "/" + domain + "/upload";
-
-		// Add unique md5 hash to id based on contents
-		String md5 = DigestUtils.md5Hex(contents.getBytes());
-		Pattern extensionPattern = Pattern.compile("^(.*)(\\..+)$");
-		Matcher mat = extensionPattern.matcher(id);
-		if (mat.find()) {
-			id = mat.group(1) + "-" + md5 + mat.group(2);
-		} else
-			id += "-" + md5;
-
-		String dataid = this.DATAID(username, domain, id);
-		List<NameValuePair> formdata = new ArrayList<NameValuePair>();
-		formdata.add(new BasicNameValuePair("data_id", dataid));
-		String datajson = this.get(username, getpage, formdata);
-		String DataFromWings;
-		if (datajson != null && !datajson.trim().equals("null")) {
-			DataFromWings = fetchDataFromWings(username, domain, dataid);
-			if (contents.equals(DataFromWings))
-				return dataid;
 		}
 
-		try {
-			System.out.println("creating data file");
-			File dir = File.createTempFile("uploadQueryTmp", "");
-			System.out.println("file name: "+ "/"+id);
-			if (!dir.delete() || !dir.mkdirs()) {
-				System.err.println("Could not create temporary directory "
-						+ dir);
-				return null;
-			}
-			System.out.println("absoloute path: "+dir.getAbsolutePath().replace("\\", "/") + "/" + id);
-			File f = new File(dir.getAbsolutePath().replace("\\", "/") + "/" + id);
-			FileUtils.write(f, contents);
-			System.out.println("upload result: "+this.upload(username, uploadpage, "DataObject", f));
-
-			List<NameValuePair> data = new ArrayList<NameValuePair>();
-			data.add(new BasicNameValuePair("data_id", dataid));
-			data.add(new BasicNameValuePair("data_type", type));
-			String response = this.post(username, postpage, data);
-			System.out.println("this.post(username, postpage, data) response: "
-					+ response);
-			if (response != null && response.equals("OK"))
-				return dataid;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		System.out.println("leeg me cuz it not saving");
-		return null;
-	}
-
-	public String addDataToWings(String username, String domain, String id,
-			String type, String contents) {
-
-		String getpage = "users/" + username + "/" + domain
-				+ "/data/getDataJSON";
-		String postpage = "users/" + username + "/" + domain
-				+ "/data/addDataForType";
-		String uploadpage = "users/" + username + "/" + domain + "/upload";
-
-		// Add unique md5 hash to id based on contents
-		String md5 = DigestUtils.md5Hex(contents.getBytes());
-		Pattern extensionPattern = Pattern.compile("^(.*)(\\..+)$");
-		Matcher mat = extensionPattern.matcher(id);
-		if (mat.find()) {
-			id = mat.group(1) + "-" + md5 + mat.group(2);
-		} else
-			id += "-" + md5;
-
-		// Check for data already present on the server
-		String dataid = this.DATAID(username, domain, id);
-		List<NameValuePair> formdata = new ArrayList<NameValuePair>();
-		formdata.add(new BasicNameValuePair("data_id", dataid));
-		String datajson = this.get(username, getpage, formdata);
-		if (datajson != null && !datajson.trim().equals("null")) {
-			// Already there
-			return dataid;
-		}
-
-		System.out.println("Not found, upload " + id);
-		// If not present, Create temporary file and upload
-		try {
-			File dir = File.createTempFile("tmp", "");
-			if (!dir.delete() || !dir.mkdirs()) {
-				System.err.println("Could not create temporary directory "
-						+ dir);
-				return null;
-			}
-			File f = new File(dir.getAbsolutePath() + "/" + id);
-			FileUtils.write(f, contents);
-			this.upload(username, uploadpage, "data", f);
-			f.delete();
-
-			List<NameValuePair> data = new ArrayList<NameValuePair>();
-			data.add(new BasicNameValuePair("data_id", dataid));
-			data.add(new BasicNameValuePair("data_type", type));
-			String response = this.post(username, postpage, data);
-			if (response != null && response.equals("OK"))
-				return dataid;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	private List<NameValuePair> getBindings(String json,
-			List<VariableBinding> initbindings, List<NameValuePair> formdata) {
-
-		Map<String, Boolean> isBound = new HashMap<String, Boolean>();
-		for (VariableBinding vbinding : initbindings)
-			isBound.put(vbinding.getVariable(), true);
-
-		if (json == null)
+		// Get first expanded workflow
+		pageid = "users/" + username + "/" + domain + "/plan/getExpansions";
+		String expjson = this.post(username, pageid, formdata);
+		if (expjson == null)
 			return null;
 
 		JsonParser jsonParser = new JsonParser();
-		JsonObject expobj = jsonParser.parse(json).getAsJsonObject();
-
+		JsonObject expobj = jsonParser.parse(expjson).getAsJsonObject();
 		if (!expobj.get("success").getAsBoolean())
 			return null;
 
 		JsonObject dataobj = expobj.get("data").getAsJsonObject();
-		JsonArray bindingsobj = dataobj.get("bindings").getAsJsonArray();
-		if (bindingsobj.size() == 0)
-			return formdata;
 
-		JsonObject bindingobj = bindingsobj.get(0).getAsJsonObject();
-		for (Entry<String, JsonElement> entry : bindingobj.entrySet()) {
-			if (!isBound.containsKey(entry.getKey())) {
-				if (entry.getValue().isJsonArray()) {
-					for (JsonElement bindingEl : entry.getValue()
-							.getAsJsonArray())
-						formdata.add(new BasicNameValuePair(entry.getKey(),
-								this.getJsonBindingValue(bindingEl)));
-				} else {
-					formdata.add(new BasicNameValuePair(entry.getKey(), this
-							.getJsonBindingValue(entry.getValue())));
-				}
-			}
+		JsonArray templatesobj = dataobj.get("templates").getAsJsonArray();
+		if (templatesobj.size() == 0)
+			return null;
+
+		JsonObject templateobj = templatesobj.get(0).getAsJsonObject();
+		JsonObject seedobj = dataobj.get("seed").getAsJsonObject();
+
+		// Run the first Expanded workflow
+		formdata = new ArrayList<NameValuePair>();
+		formdata.add(new BasicNameValuePair("template_id", templateid));
+		formdata.add(new BasicNameValuePair("json", templateobj.get(
+				"template").toString()));
+		formdata.add(new BasicNameValuePair("constraints_json", templateobj
+				.get("constraints").toString()));
+		formdata.add(new BasicNameValuePair("seed_json", seedobj.get(
+				"template").toString()));
+		formdata.add(new BasicNameValuePair("seed_constraints_json",
+				seedobj.get("constraints").toString()));
+
+		pageid = "users/" + username + "/" + domain
+				+ "/executions/runWorkflow";
+		runid = this.post(username, pageid, formdata);
+
+		// Return the run id
+		return runid;
+	} catch (Exception e) {
+		e.printStackTrace();
+	}
+	return null;
+}
+
+public String fetchDataFromWings(String username, String domain,
+		String dataid) {
+	String getpage = "users/" + username + "/" + domain + "/data/fetch";
+
+	// Check for data already present on the server
+	List<NameValuePair> formdata = new ArrayList<NameValuePair>();
+	formdata.add(new BasicNameValuePair("data_id", dataid));
+	return this.get(username, getpage, formdata);
+}
+
+public String addOrUpdateData(String username, String domain, String id,
+		String type, String contents) {
+    type = this.server+type;
+	String getpage = "users/" + username + "/" + domain
+			+ "/data/getDataJSON";
+	String postpage = "users/" + username + "/" + domain
+			+ "/data/addDataForType";
+	String uploadpage = "users/" + username + "/" + domain + "/upload";
+	String locationpage = "users/" + username + "/" + domain + "/data/setDataLocation";
+
+	// Check for data already present on the server
+	String dataid = this.DATAID(username, domain, id);
+	List<NameValuePair> formdata = new ArrayList<NameValuePair>();
+
+	System.out.println("Upload " + id);
+	// If not present, Create temporary file and upload
+	try {
+		File dir = File.createTempFile("tmp", "");
+		if (!dir.delete() || !dir.mkdirs()) {
+			System.err.println("Could not create temporary directory "
+					+ dir);
+			return null;
 		}
-		return formdata;
-	}
+		File f = new File(dir.getAbsolutePath() + "/" + id);
+		FileUtils.write(f, contents);
+		this.upload(username, uploadpage, "data", f);
+		f.delete();
 
-	private String getJsonBindingValue(JsonElement el) {
-		JsonObject obj = el.getAsJsonObject();
-		if (obj.get("type").getAsString().equals("uri"))
-			return obj.get("id").getAsString();
-		else
-			return obj.get("value").getAsString();
-	}
-
-	private List<NameValuePair> createFormData(String username, String domain,
-			String templateid, List<VariableBinding> bindings,
-			Map<String, Variable> inputs) {
 		List<NameValuePair> data = new ArrayList<NameValuePair>();
-		HashMap<String, String> paramDTypes = new HashMap<String, String>();
+		data.add(new BasicNameValuePair("data_id", dataid));
+		data.add(new BasicNameValuePair("data_type", type));
+		System.out.println("data: "+data);
+		String response = post(username, postpage, data);
+		System.out.println("response: " + response);	
+		List<NameValuePair> location = new ArrayList<NameValuePair>();
+		location.add(new BasicNameValuePair("data_id", dataid));
+		location.add(new BasicNameValuePair("location", "/scratch/data/wings/storage/default/users/"+username+"/"+domain+"/data/"+dataid.substring(dataid.indexOf('#')+1)));
+		response = post(username, locationpage, location);
+		System.out.println("responseLocation: " + response);
+	} catch (Exception e) {
+		e.printStackTrace();
+	}
+	return null;
+}
 
-		for (Variable var : inputs.values()) {
-			if (var.isParam())
-				paramDTypes.put(var.getName(), var.getType());
-		}
-		data.add(new BasicNameValuePair("__template_id", templateid));
-		data.add(new BasicNameValuePair("__no_explanation", "true"));
+public String addDataToWings(String username, String domain, String id,
+		String type, String contents) {
 
-		for (VariableBinding vbinding : bindings) {
-			if (paramDTypes.containsKey(vbinding.getVariable())) {
-				data.add(new BasicNameValuePair(vbinding.getVariable(),
-						vbinding.getBinding()));
-			} else {
-				data.add(new BasicNameValuePair(vbinding.getVariable(), DATAID(
-						username, domain, vbinding.getBinding())));
-			}
-		}
-		data.add(new BasicNameValuePair("__paramdtypes", json
-				.toJson(paramDTypes)));
-		return data;
+	String getpage = "users/" + username + "/" + domain
+			+ "/data/getDataJSON";
+	String postpage = "users/" + username + "/" + domain
+			+ "/data/addDataForType";
+	String uploadpage = "users/" + username + "/" + domain + "/upload";
+
+	// Add unique md5 hash to id based on contents
+	String md5 = DigestUtils.md5Hex(contents.getBytes());
+	Pattern extensionPattern = Pattern.compile("^(.*)(\\..+)$");
+	Matcher mat = extensionPattern.matcher(id);
+	if (mat.find()) {
+		id = mat.group(1) + "-" + md5 + mat.group(2);
+	} else
+		id += "-" + md5;
+
+	// Check for data already present on the server
+	String dataid = this.DATAID(username, domain, id);
+	List<NameValuePair> formdata = new ArrayList<NameValuePair>();
+	formdata.add(new BasicNameValuePair("data_id", dataid));
+	String datajson = this.get(username, getpage, formdata);
+	if (datajson != null && !datajson.trim().equals("null")) {
+		// Already there
+		return dataid;
 	}
 
-	private String get(String username, String pageid, List<NameValuePair> data) {
-		String sessionId = this.sessions.get(username);
-		System.out.println("pageid: " + pageid);
-		System.out.println("List<NameValuePair> data: " + data);
-		if (sessionId == null) {
-			sessionId = this.login(username);
-			if (sessionId == null)
-				return null;
-			this.sessions.put(username, sessionId);
-			return this.get(username, pageid, data);
+	System.out.println("Not found, upload " + id);
+	// If not present, Create temporary file and upload
+	try {
+		File dir = File.createTempFile("tmp", "");
+		if (!dir.delete() || !dir.mkdirs()) {
+			System.err.println("Could not create temporary directory "
+					+ dir);
+			return null;
 		}
-		for (int i = 0; i < 3; i++) {
-			CloseableHttpClient client = HttpClientBuilder.create()
-					.setDefaultCookieStore(this.getCookieStore(sessionId))
-					.build();
-			try {
-				String url = this.server + "/" + pageid;
-				if (data != null && data.size() > 0) {
-					url += "?" + URLEncodedUtils.format(data, "UTF-8");
-				}
-				HttpGet securedResource = new HttpGet(url);
-				CloseableHttpResponse httpResponse = client
-						.execute(securedResource);
+		File f = new File(dir.getAbsolutePath() + "/" + id);
+		FileUtils.write(f, contents);
+		this.upload(username, uploadpage, "data", f);
+		f.delete();
 
-				try {
-					HttpEntity responseEntity = httpResponse.getEntity();
-					System.out.println("get/responseEntity" + responseEntity);
-					String strResponse = EntityUtils.toString(responseEntity);
-					EntityUtils.consume(responseEntity);
-					httpResponse.close();
+		List<NameValuePair> data = new ArrayList<NameValuePair>();
+		data.add(new BasicNameValuePair("data_id", dataid));
+		data.add(new BasicNameValuePair("data_type", type));
+		String response = this.post(username, postpage, data);
+		if (response != null && response.equals("OK"))
+			return dataid;
+	} catch (Exception e) {
+		e.printStackTrace();
+	}
+	return null;
+}
 
-					if (strResponse.indexOf("j_security_check") > 0) {
-						sessionId = this.login(username);
-						if (sessionId == null)
-							return null;
-						this.sessions.put(username, sessionId);
-						return this.get(username, pageid, data);
-					}
-					return strResponse;
-				} finally {
-					httpResponse.close();
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					client.close();
-				} catch (IOException e) {
-				}
-			}
-		}
+private List<NameValuePair> getBindings(String json,
+		List<VariableBinding> initbindings, List<NameValuePair> formdata) {
+
+	Map<String, Boolean> isBound = new HashMap<String, Boolean>();
+	for (VariableBinding vbinding : initbindings)
+		isBound.put(vbinding.getVariable(), true);
+
+	if (json == null)
 		return null;
-	}
 
-	private String post(String username, String pageid, List<NameValuePair> data) {
-		String sessionId = this.sessions.get(username);
-		if (sessionId == null) {
-			sessionId = this.login(username);
-			if (sessionId == null)
-				return null;
-			this.sessions.put(username, sessionId);
-			return this.post(username, pageid, data);
+	JsonParser jsonParser = new JsonParser();
+	JsonObject expobj = jsonParser.parse(json.trim()).getAsJsonObject();
+
+	if (!expobj.get("success").getAsBoolean())
+		return null;
+
+	JsonObject dataobj = expobj.get("data").getAsJsonObject();
+	JsonArray bindingsobj = dataobj.get("bindings").getAsJsonArray();
+	if (bindingsobj.size() == 0)
+		return formdata;
+
+	JsonObject bindingobj = bindingsobj.get(0).getAsJsonObject();
+	for (Entry<String, JsonElement> entry : bindingobj.entrySet()) {
+		if (!isBound.containsKey(entry.getKey())) {
+			if (entry.getValue().isJsonArray()) {
+				for (JsonElement bindingEl : entry.getValue()
+						.getAsJsonArray())
+					formdata.add(new BasicNameValuePair(entry.getKey(),
+							this.getJsonBindingValue(bindingEl)));
+			} else {
+				formdata.add(new BasicNameValuePair(entry.getKey(), this
+						.getJsonBindingValue(entry.getValue())));
+			}
 		}
+	}
+	return formdata;
+}
 
+private String getJsonBindingValue(JsonElement el) {
+	JsonObject obj = el.getAsJsonObject();
+	if (obj.get("type").getAsString().equals("uri"))
+		return obj.get("id").getAsString();
+	else
+		return obj.get("value").getAsString();
+}
+
+private List<NameValuePair> createFormData(String username, String domain,
+		String templateid, List<VariableBinding> bindings,
+		Map<String, Variable> inputs) {
+	System.out.println("createFormData: username, domain, templateid, bindings, inputs");
+	System.out.println(username+"\n"+domain+"\n"+templateid+"\n"+bindings+"\n"+inputs);
+	List<NameValuePair> data = new ArrayList<NameValuePair>();
+	HashMap<String, String> paramDTypes = new HashMap<String, String>();
+
+
+	data.add(new BasicNameValuePair("templateId", templateid));
+
+	for (VariableBinding vbinding : bindings) {
+		if (paramDTypes.containsKey(vbinding.getVariable())) {
+			data.add(new BasicNameValuePair(vbinding.getVariable(),
+					vbinding.getBinding()));
+		} else {
+			data.add(new BasicNameValuePair(vbinding.getVariable(), DATAID(
+					username, domain, vbinding.getBinding())));
+		}
+	}
+	data.add(new BasicNameValuePair("__paramdtypes", json
+			.toJson(paramDTypes)));
+	return data;
+}
+
+private String get(String username, String pageid, List<NameValuePair> data) {
+	String sessionId = this.sessions.get(username);
+	System.out.println("pageid: " + pageid);
+	System.out.println("List<NameValuePair> data: " + data);
+	if (sessionId == null) {
+		sessionId = this.login(username);
+		if (sessionId == null)
+			return null;
+		this.sessions.put(username, sessionId);
+		return this.get(username, pageid, data);
+	}
+	for (int i = 0; i < 3; i++) {
 		CloseableHttpClient client = HttpClientBuilder.create()
-				.setDefaultCookieStore(this.getCookieStore(sessionId)).build();
-
+				.setDefaultCookieStore(this.getCookieStore(sessionId))
+				.build();
 		try {
-			HttpPost securedResource = new HttpPost(this.server + "/" + pageid);
-			securedResource.setEntity(new UrlEncodedFormEntity(data));
+			String url = this.server + "/" + pageid;
+			if (data != null && data.size() > 0) {
+				url += "?" + URLEncodedUtils.format(data, "UTF-8");
+			}
+			HttpGet securedResource = new HttpGet(url);
 			CloseableHttpResponse httpResponse = client
 					.execute(securedResource);
+
 			try {
 				HttpEntity responseEntity = httpResponse.getEntity();
+				System.out.println("get/responseEntity" + responseEntity);
 				String strResponse = EntityUtils.toString(responseEntity);
 				EntityUtils.consume(responseEntity);
 				httpResponse.close();
@@ -788,7 +746,7 @@ public class WingsAdapter {
 					if (sessionId == null)
 						return null;
 					this.sessions.put(username, sessionId);
-					return this.post(username, pageid, data);
+					return this.get(username, pageid, data);
 				}
 				return strResponse;
 			} finally {
@@ -802,60 +760,118 @@ public class WingsAdapter {
 			} catch (IOException e) {
 			}
 		}
-		return null;
+	}
+	return null;
+}
+
+private String post(String username, String pageid, List<NameValuePair> data) {
+	String sessionId = this.sessions.get(username);
+	if (sessionId == null) {
+		sessionId = this.login(username);
+		if (sessionId == null)
+			return null;
+		this.sessions.put(username, sessionId);
+		return this.post(username, pageid, data);
 	}
 
-	private String upload(String username, String pageid, String type, File file) {
+	CloseableHttpClient client = HttpClientBuilder.create()
+			.setDefaultCookieStore(this.getCookieStore(sessionId)).build();
 
-		String sessionId = this.sessions.get(username);
-		if (sessionId == null) {
-			sessionId = this.login(username);
-			if (sessionId == null)
-				return null;
-			this.sessions.put(username, sessionId);
-			return this.upload(username, pageid, type, file);
-		}
- 
-		CloseableHttpClient client = HttpClientBuilder.create()
-				.setDefaultCookieStore(this.getCookieStore(sessionId)).build();
+	try {
+		HttpPost securedResource = new HttpPost(this.server + "/" + pageid);
+		securedResource.setEntity(new UrlEncodedFormEntity(data));
+		// securedResource.addHeader("Accept", "application/json");
+		// securedResource.setHeader("Content-type", "application/json");
+		System.out
+		.println(EntityUtils.toString(securedResource.getEntity()));
+		CloseableHttpResponse httpResponse = client
+				.execute(securedResource);
+		// System.out.println("first try: "+EntityUtils.toString(httpResponse.getEntity()));
+		// client = HttpClientBuilder.create()
+		// .setDefaultCookieStore(this.getCookieStore(sessionId)).build();
+		// securedResource = new HttpPost(this.server + "/" + pageid);
+		// httpResponse = client
+		// .execute(securedResource);
 		try {
-			HttpPost post = new HttpPost(this.server + "/" + pageid);
-			System.out.println("pageid: " + pageid);
-			MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-			builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-			builder.addTextBody("name", file.getName());
-			builder.addTextBody("type", type);
-			builder.addBinaryBody("file", file);
-			//
-			HttpEntity entity = builder.build();
-			post.setEntity(entity);
-			System.out.println("post.getEntity: "+EntityUtils.toString(post.getEntity())+"end.getEntity");
-			CloseableHttpResponse response = client.execute(post);
-			try {
-				HttpEntity responseEntity = response.getEntity();
-				String strResponse = EntityUtils.toString(responseEntity);
-				System.out.println("strresponse: "+strResponse);
-				EntityUtils.consume(responseEntity);
+			HttpEntity responseEntity = httpResponse.getEntity();
+			String strResponse = EntityUtils.toString(responseEntity);
+			EntityUtils.consume(responseEntity);
+			httpResponse.close();
 
-				if (strResponse.indexOf("j_security_check") > 0) {
-					sessionId = this.login(username);
-					if (sessionId == null)
-						return null;
-					this.sessions.put(username, sessionId);
-					return this.upload(username, pageid, type, file);
-				}
-				return strResponse;
-			} finally {
-				response.close();
+			if (strResponse.indexOf("j_security_check") > 0) {
+				sessionId = this.login(username);
+				if (sessionId == null)
+					return null;
+				this.sessions.put(username, sessionId);
+				return this.post(username, pageid, data);
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
+			return strResponse;
 		} finally {
-			try {
-				client.close();
-			} catch (IOException e) {
-			}
+			httpResponse.close();
 		}
-		return null;
+	} catch (Exception e) {
+		e.printStackTrace();
+	} finally {
+		try {
+			client.close();
+		} catch (IOException e) {
+		}
 	}
+	return null;
+}
+
+private String upload(String username, String pageid, String type, File file) {
+
+	String sessionId = this.sessions.get(username);
+	if (sessionId == null) {
+		sessionId = this.login(username);
+		if (sessionId == null)
+			return null;
+		this.sessions.put(username, sessionId);
+		return this.upload(username, pageid, type, file);
+	}
+
+	CloseableHttpClient client = HttpClientBuilder.create()
+			.setDefaultCookieStore(this.getCookieStore(sessionId)).build();
+	try {
+		HttpPost post = new HttpPost(this.server + "/" + pageid);
+		System.out.println("pageid: " + pageid);
+		MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+		builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+		builder.addTextBody("name", file.getName());
+		builder.addTextBody("type", type);
+		builder.addBinaryBody("file", file);
+		//
+		HttpEntity entity = builder.build();
+		post.setEntity(entity);
+		System.out.println("post.getEntity: "
+				+ EntityUtils.toString(post.getEntity()) + "end.getEntity");
+		CloseableHttpResponse response = client.execute(post);
+		try {
+			HttpEntity responseEntity = response.getEntity();
+			String strResponse = EntityUtils.toString(responseEntity);
+			System.out.println("strresponse: " + strResponse);
+			EntityUtils.consume(responseEntity);
+
+			if (strResponse.indexOf("j_security_check") > 0) {
+				sessionId = this.login(username);
+				if (sessionId == null)
+					return null;
+				this.sessions.put(username, sessionId);
+				return this.upload(username, pageid, type, file);
+			}
+			return strResponse;
+		} finally {
+			response.close();
+		}
+	} catch (Exception e) {
+		e.printStackTrace();
+	} finally {
+		try {
+			client.close();
+		} catch (IOException e) {
+		}
+	}
+	return null;
+}
 }
