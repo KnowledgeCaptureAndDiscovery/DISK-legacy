@@ -93,6 +93,20 @@ public class DiskResource implements DiskService1 {
       throw new RuntimeException("Exception: " + e.getMessage());
     }
   }
+  
+  @GET
+  @Path("vocabulary/reload")
+  public String APIReloadVocabularies() {
+    try {
+      this.repo.reloadKBCaches();
+      this.repo.initializeKB();
+      return "OK";
+    } catch (Exception e) {
+      // e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+    
     
   /**
    * Hypothesis
@@ -167,7 +181,7 @@ public class DiskResource implements DiskService1 {
       @PathParam("username") String username, 
       @PathParam("domain") String domain, 
       @JsonProperty("assertions") Graph assertions) {
-    this.repo.addAssertion(username, domain, assertions);
+    this.repo.addAssertions(username, domain, assertions);
   }
   
   @GET
@@ -320,6 +334,19 @@ public class DiskResource implements DiskService1 {
       @PathParam("domain") String domain,
       @PathParam("id") String id) {
     // Check execution status
+	  System.out.println(id);
     return WingsAdapter.get().getWorkflowRunStatus(username, domain, id);
+  }  
+  
+  
+  @GET
+  @Path("{username}/{domain}/run/{id}")
+  public String monitorWorkflowAPI(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("id") String id) {
+    // Check execution status
+	  System.out.println(id);
+    return WingsAdapter.get().getWorkflowRunStatus(username, domain, id).toString();
   }  
 }

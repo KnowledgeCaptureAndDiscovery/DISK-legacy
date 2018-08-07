@@ -741,7 +741,7 @@ public class DiskRepository extends KBRepository {
 
 			for (TreeItem item : this.listLOIs(username, domain)) {
 				LineOfInquiry loi = this.getLOI(username, domain, item.getId());
-
+				System.out.println("loi: "+loi);
 				String hypothesisQuery = loi.getHypothesisQuery();
 
 				String dataQuery = loi.getDataQuery();
@@ -754,7 +754,7 @@ public class DiskRepository extends KBRepository {
 
 				String hypSparqlQuery = this.getSparqlQuery(hypothesisQuery,
 						assertions);
-
+				System.out.println(" queryKb.sparqlQuery(hypSparqlQuery)"+ queryKb.sparqlQuery(hypSparqlQuery));
 				for (ArrayList<SparqlQuerySolution> hypothesisSolutions : queryKb
 						.sparqlQuery(hypSparqlQuery)) {
 					Map<String, String> hypVarBindings = new HashMap<String, String>();
@@ -786,7 +786,7 @@ public class DiskRepository extends KBRepository {
 							"hyp:");
 					String dataSparqlQuery = this.getSparqlQuery(
 							boundDataQuery, assertions);
-					System.out.println("	: "+dataSparqlQuery);
+					System.out.println("dataSparqlQuery: "+dataSparqlQuery);
 					TriggeredLOI tloi = null;
 					System.out.println("queryKb.sparqlQuery(dataSparqlQuery): "+queryKb
 							.sparqlQuery(dataSparqlQuery));
@@ -933,6 +933,7 @@ public class DiskRepository extends KBRepository {
 			String[] temp;
 			System.out.println("ToBeQueried: "+ToBeQueried);
 			for (int i = 0; i < ToBeQueried.size(); i++) {
+				System.out.println(ToBeQueried.get(i).substring(ToBeQueried.get(i).indexOf(" ")+1));
 				temp = DataQuery.queryFor(ToBeQueried.get(i).substring(ToBeQueried.get(i).indexOf(" ")+1))[1].split("\n\",\"\n");
 				System.out.println("query: "+Arrays.toString(temp));
 				for(int j = 0; j < temp.length-1; j+=2)
@@ -966,49 +967,60 @@ public class DiskRepository extends KBRepository {
 		String url = this.ASSERTIONSURI(username, domain);
 		return this.getKBGraph(url);
 	}
+	
+	public void addAssertions(String username, String domain, Graph assertions) {
+		List<String> ToBeQueried = getQueriesToBeRun(assertions);
+		this.addQueries(username, domain, ToBeQueried);
+		this.addAssertion(username, domain, assertions);
+	}
 
+	public List<String> getQueriesToBeRun(Graph assertions)
+	{
+		List<Triple> UITriples = assertions.getTriples();
+		HashSet<String> toQuery = new HashSet<String>();
+		String temp;
+		String[] temp2;
+		String file;
+		String query;
+		Triple tri;
+		for (int i = 0; i < UITriples.size(); i++) {
+		//	System.out.println("UITiples.get(i).getSubject(): "+UITriples.get(i).getSubject());
+			//System.out.println("UITiples.get(i).getPredicate(): "+UITriples.get(i).getPredicate());
+			//System.out.println("UITiples.get(i).getObject(): "+UITriples.get(i).getObject());
+			temp = UITriples.get(i).getPredicate(); //check if asking for query
+			if (temp.equals("https://w3id.org/disk/ontology/neuro#hasEnigmaQueryLiteral")) {
+				temp = UITriples.get(i).getSubject().toString(); 
+				file = temp.substring(temp.indexOf("#")+1);
+				temp = UITriples.get(i).getObject().getValue().toString();
+				query = temp
+						.replace("|", "/");
+				System.out.println("query: "+query);
+				// query = DataQuery.toMachineReadableQuery(query);
+				toQuery.add(file+" "+query);
+		//		temp2 = DataQuery.queryFor(temp);
+		//		System.out.println("here we are:" + temp2[1]);
+				// temp2 = temp2[1].split("\",\"");
+				// tri = new Triple();
+				// tri.setSubject(this.ASSERTIONSURI(username,
+				// domain)+"#"+temp2.length);
+				// tri.setPredicate(UITriples.get(i).getPredicate());
+				// tri.setObject(UITriples.get(i).getObject());
+				// UITriples.add(tri);
+
+			}
+		}
+		List<String> ToBeQueried = new ArrayList<String>();
+		for (String strTemp : toQuery)
+			ToBeQueried.add(strTemp);
+		return ToBeQueried;
+	}
 	public void updateAssertions(String username, String domain,
 			Graph assertions) {
 		String url = this.ASSERTIONSURI(username, domain);
 		try {
 			KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
 			kb.delete();
-			List<Triple> UITriples = assertions.getTriples();
-			HashSet<String> toQuery = new HashSet<String>();
-			String temp;
-			String[] temp2;
-			String file;
-			String query;
-			Triple tri;
-			for (int i = 0; i < UITriples.size(); i++) {
-			//	System.out.println("UITiples.get(i).getSubject(): "+UITriples.get(i).getSubject());
-				//System.out.println("UITiples.get(i).getPredicate(): "+UITriples.get(i).getPredicate());
-				//System.out.println("UITiples.get(i).getObject(): "+UITriples.get(i).getObject());
-				temp = UITriples.get(i).getPredicate(); //check if asking for query
-				if (temp.equals("https://w3id.org/disk/ontology/neuro#hasEnigmaQueryLiteral")) {
-					temp = UITriples.get(i).getSubject().toString(); 
-					file = temp.substring(temp.indexOf("#")+1);
-					temp = UITriples.get(i).getObject().getValue().toString();
-					query = temp
-							.replace("|", "/");
-					System.out.println("query: "+query);
-					// query = DataQuery.toMachineReadableQuery(query);
-					toQuery.add(file+" "+query);
-			//		temp2 = DataQuery.queryFor(temp);
-			//		System.out.println("here we are:" + temp2[1]);
-					// temp2 = temp2[1].split("\",\"");
-					// tri = new Triple();
-					// tri.setSubject(this.ASSERTIONSURI(username,
-					// domain)+"#"+temp2.length);
-					// tri.setPredicate(UITriples.get(i).getPredicate());
-					// tri.setObject(UITriples.get(i).getObject());
-					// UITriples.add(tri);
-
-				}
-			}
-			List<String> ToBeQueried = new ArrayList<String>();
-			for (String strTemp : toQuery)
-				ToBeQueried.add(strTemp);
+			List<String> ToBeQueried = getQueriesToBeRun(assertions);
 			this.addQueries(username, domain, ToBeQueried);
 			this.addAssertion(username, domain, assertions);
 			// Re-run hypotheses if needed

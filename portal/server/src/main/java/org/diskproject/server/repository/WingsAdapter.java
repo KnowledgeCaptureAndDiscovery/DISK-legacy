@@ -333,10 +333,11 @@ public class WingsAdapter {
 			formdata.add(new BasicNameValuePair("run_id", execid));
 			String pageid = "users/" + username + "/" + domain
 					+ "/executions/getRunDetails";
-			String runjson = this.get(username, pageid, formdata);
+			String runjson = this.post(username, pageid, formdata);
 			if (runjson == null)
 				return null;
-
+			System.out.println("runjson: "+runjson);
+			System.out.println("getWorkflowRunStatus worked");
 			WorkflowRun wflowstatus = new WorkflowRun();
 			wflowstatus.setId(execid);
 
@@ -345,6 +346,7 @@ public class WingsAdapter {
 			JsonObject expobj = runobj.get("execution").getAsJsonObject();
 			String status = expobj.get("runtimeInfo").getAsJsonObject()
 					.get("status").getAsString();
+			
 			wflowstatus.setStatus(status);
 
 			String link = this.server + "/users/" + username + "/" + domain

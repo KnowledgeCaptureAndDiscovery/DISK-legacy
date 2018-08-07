@@ -16,6 +16,23 @@ public class LineOfInquiry {
     this.workflows = new ArrayList<WorkflowBindings>();
     this.metaWorkflows = new ArrayList<WorkflowBindings>();
   }
+  
+  public LineOfInquiry(String id,
+		  String name, 
+		  String description, 
+		  String hypothesisQuery, 
+		  String dataQuery, 
+		  List<WorkflowBindings> workflows, 
+		  List<WorkflowBindings> metaWorkflows){
+	  this.id = id;
+	  this.name = name;
+	  this.description = description;
+	  this.hypothesisQuery = hypothesisQuery;
+	  this.dataQuery = dataQuery;
+	  this.workflows = workflows;
+	  this.metaWorkflows = metaWorkflows;
+  }
+  
   public String getId() {
     return id;
   }
