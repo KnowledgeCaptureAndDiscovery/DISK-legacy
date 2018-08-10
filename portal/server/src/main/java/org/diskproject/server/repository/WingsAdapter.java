@@ -873,15 +873,25 @@ private String toPlanAcceptableFormat(String username, String domain,
 	output += "{\"templateId\":\"" + wfname + "\",";
 	wfname = wfname.substring(0, wfname.lastIndexOf("#") + 1);
 
-	// Set Parameter Types and Component Bindings
-	output += "\"parameterTypes\": {},\"componentBindings\": {},";
+	// Set Component Bindings
+	output += "\"componentBindings\": {},";
 
+	// Set Parameter Types
+	String paramTypes = "\"parameterTypes\": {";
+	for(String key: ivm.keySet()){
+		if(ivm.get(key).isParam())
+		paramTypes += "\"" + wfname + key + "\":\"" + ivm.get(key).getType()+"\",";
+	}
+	if(ivm.keySet().size()>0)
+		paramTypes = paramTypes.substring(0,paramTypes.length()-1) + "}";
+	output += paramTypes +",";
+	
 	// Set Inputs (Parameters and Data)
 	String paramBindings = "\"parameterBindings\": {";
 	boolean paramAdded = false;
 	String dataBindings = "\"dataBindings\": {";
 	boolean dataAdded = false;
-	String dataID = this.server + "/export/users/" + username + "/" + domain
+	String dataID = server + "/export/users/" + username + "/" + domain
 			+ "/data/library.owl#";
 	for (String key : ivm.keySet()) {
 		Variable v = ivm.get(key);
