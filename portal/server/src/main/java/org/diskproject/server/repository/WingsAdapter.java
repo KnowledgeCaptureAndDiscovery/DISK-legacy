@@ -482,19 +482,16 @@ public class WingsAdapter {
 			List<VariableBinding> vbindings,
 			Map<String, Variable> inputVariables) {
 		try {
-			System.out.println("inputVariables: "+inputVariables);
 			wflowname = WFLOWURI(username,domain,wflowname)+"#" + wflowname;
 			String toPost = toPlanAcceptableFormat(username, domain, wflowname,
 					vbindings, inputVariables);
 			String getData = postWithSpecifiedMediaType(username, "users/"+username+"/"+domain+"/plan/getData",
 					toPost, "application/json", "application/json");
-			System.out.println("getData: " + getData);
 			vbindings = addDataBindings(inputVariables, vbindings, getData, false);
 			toPost = toPlanAcceptableFormat(username, domain, wflowname, vbindings,
 					inputVariables);
 			String getParams = postWithSpecifiedMediaType(username, "users/"+username+"/"+domain+"/plan/getParameters", toPost,
 					"application/json", "application/json");
-			System.out.println("getParams: " + getParams);
 			vbindings = addDataBindings(inputVariables, vbindings, getParams, true);
 			toPost = toPlanAcceptableFormat(username, domain, wflowname, vbindings,
 					inputVariables);
@@ -512,7 +509,6 @@ public class WingsAdapter {
 		System.out.println("toPost :"+toPost);
 		String s = postWithSpecifiedMediaType(username, "users/"+username+"/"+domain+"/plan/getExpansions",
 				toPost, "application/json", "application/json");
-		System.out.println("getExpansions: "+s);
 		JsonParser jsonParser = new JsonParser();
 
 		JsonObject expobj = (JsonObject) jsonParser.parse(s);
@@ -538,9 +534,7 @@ public class WingsAdapter {
 				.get("constraints").toString()));
 		String pageid = "users/" + username + "/" + domain
 				+ "/executions/runWorkflow";
-		System.out.println(formdata);
 		runid = post(username, pageid, formdata);
-		System.out.println(runid);
 		return runid;
 	} catch (Exception e) {
 		e.printStackTrace();
@@ -754,7 +748,6 @@ private String get(String username, String pageid, List<NameValuePair> data) {
 
 			try {
 				HttpEntity responseEntity = httpResponse.getEntity();
-				System.out.println("get/responseEntity" + responseEntity);
 				String strResponse = EntityUtils.toString(responseEntity);
 				EntityUtils.consume(responseEntity);
 				httpResponse.close();
@@ -787,8 +780,14 @@ private List<VariableBinding> addDataBindings(
 		String data, boolean param) {
 
 	JsonParser jsonParser = new JsonParser();
+	try{
 	JsonObject expobj = jsonParser.parse(data.trim()).getAsJsonObject();
-
+	}
+	catch(Exception e){
+		System.out.println("Problem parsing: "+data);
+		return vbl;
+	}
+	JsonObject expobj = jsonParser.parse(data.trim()).getAsJsonObject();
 	if (!expobj.get("success").getAsBoolean())
 		return vbl;
 
@@ -953,8 +952,6 @@ private String postWithSpecifiedMediaType(String username, String pageid, String
 		securedResource.setEntity(new StringEntity(data));
 		securedResource.addHeader("Accept", type);
 		securedResource.addHeader("Content-type", type2);
-		System.out
-				.println(EntityUtils.toString(securedResource.getEntity()));
 		CloseableHttpResponse httpResponse = client
 				.execute(securedResource);
 		try {
@@ -1002,9 +999,7 @@ private String post(String username, String pageid, List<NameValuePair> data) {
 		HttpPost securedResource = new HttpPost(this.server + "/" + pageid);
 		securedResource.setEntity(new UrlEncodedFormEntity(data));
 		// securedResource.addHeader("Accept", "application/json");
-		// securedResource.setHeader("Content-type", "application/json");
-		System.out
-		.println(EntityUtils.toString(securedResource.getEntity()));
+		// securedResource.setHeader("Content-type", "application/json")
 		CloseableHttpResponse httpResponse = client
 				.execute(securedResource);
 		// System.out.println("first try: "+EntityUtils.toString(httpResponse.getEntity()));
