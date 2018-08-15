@@ -5,6 +5,16 @@ public class WorkflowRun {
   String link;
   String status;
 
+  public WorkflowRun(){}
+  
+  public WorkflowRun(String id,
+  String link,
+  String status){
+	  this.id = id;
+	  this.link = link;
+	  this.status = status;
+  }
+  
   public String getId() {
     return id;
   }

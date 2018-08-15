@@ -553,8 +553,9 @@ public String fetchDataFromWings(String username, String domain,
 }
 
 public String addOrUpdateData(String username, String domain, String id,
-		String type, String contents) {
-    type = this.server+type;
+		String type, String contents, boolean addServer) {
+	if(addServer)
+		type = this.server+type;
 	String getpage = "users/" + username + "/" + domain
 			+ "/data/getDataJSON";
 	String postpage = "users/" + username + "/" + domain
@@ -562,12 +563,10 @@ public String addOrUpdateData(String username, String domain, String id,
 	String uploadpage = "users/" + username + "/" + domain + "/upload";
 	String locationpage = "users/" + username + "/" + domain + "/data/setDataLocation";
 
-	// Check for data already present on the server
 	String dataid = this.DATAID(username, domain, id);
 	List<NameValuePair> formdata = new ArrayList<NameValuePair>();
 
 	System.out.println("Upload " + id);
-	// If not present, Create temporary file and upload
 	try {
 		File dir = File.createTempFile("tmp", "");
 		if (!dir.delete() || !dir.mkdirs()) {
@@ -1060,8 +1059,6 @@ private String upload(String username, String pageid, String type, File file) {
 		//
 		HttpEntity entity = builder.build();
 		post.setEntity(entity);
-		System.out.println("post.getEntity: "
-				+ EntityUtils.toString(post.getEntity()) + "end.getEntity");
 		CloseableHttpResponse response = client.execute(post);
 		try {
 			HttpEntity responseEntity = response.getEntity();

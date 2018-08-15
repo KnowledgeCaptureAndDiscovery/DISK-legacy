@@ -91,7 +91,7 @@ public class DataQuery {
 					// Read through query results
 					try {
 						// System.out.println(SingleResult);
-						while ((SingleResult = s.nextLine()) != null) {
+						while (SingleResult != null) {
 							if (SingleResult.indexOf(",") != -1
 									&& SingleResult.indexOf(",") != SingleResult
 											.length() - 1) {
@@ -102,6 +102,7 @@ public class DataQuery {
 								// Open new file in zip and save text into entry
 								str += data + "\n\",\"\n";
 							}
+							SingleResult = s.nextLine();
 						}
 					} catch (Exception e) {
 					}
@@ -120,7 +121,9 @@ public class DataQuery {
 			} catch (Exception e) {
 			}
 			String [] output = new String [2];
+			try{
 			str = str.substring(0, str.length() - 3);
+			}catch(Exception e){}
 			saveQuery = saveQuery.replace("/", "").replace("\\", "")
 					.replace(":", "").replace("*", "").replace("?", "")
 					.replace("\"", "").replace("<", "").replace(">", "")

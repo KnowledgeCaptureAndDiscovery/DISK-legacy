@@ -41,6 +41,7 @@ import org.diskproject.shared.classes.common.TripleUtil;
 import org.diskproject.shared.classes.common.Value;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
+import org.diskproject.shared.classes.loi.MetaWorkflowDetails;
 import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.loi.TriggeredLOI.Status;
@@ -931,46 +932,45 @@ public class DiskRepository extends KBRepository {
 		return null;
 	}
 
-	public void addQueries(String username, String domain,
-			List<String> ToBeQueried) {
-		try {
+//	public void addQueries(String username, String domain,
+//			List<String> ToBeQueried) {
+//		try {
+//
+//			String[] temp;
+//			System.out.println("ToBeQueried: " + ToBeQueried);
+//			for (int i = 0; i < ToBeQueried.size(); i++) {
+//				System.out.println(ToBeQueried.get(i).substring(
+//						ToBeQueried.get(i).indexOf(" ") + 1));
+//				temp = DataQuery.queryFor(ToBeQueried.get(i).substring(
+//						ToBeQueried.get(i).indexOf(" ") + 1))[1]
+//						.split("\n\",\"\n");
+//				System.out.println("query: " + Arrays.toString(temp));
+//				for (int j = 0; j < temp.length - 1; j += 2) {
+//					WingsAdapter.get().addOrUpdateData(
+//							username,
+//							domain,
+//							temp[j].substring(4),
+//							"/export/users/" + username + "/" + domain
+//									+ "/data/ontology.owl#File", temp[j + 1],
+//							true);
+//				}
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
 
-			String[] temp;
-			System.out.println("ToBeQueried: " + ToBeQueried);
-			for (int i = 0; i < ToBeQueried.size(); i++) {
-				System.out.println(ToBeQueried.get(i).substring(
-						ToBeQueried.get(i).indexOf(" ") + 1));
-				temp = DataQuery.queryFor(ToBeQueried.get(i).substring(
-						ToBeQueried.get(i).indexOf(" ") + 1))[1]
-						.split("\n\",\"\n");
-				System.out.println("query: " + Arrays.toString(temp));
-				for (int j = 0; j < temp.length - 1; j += 2) {
-					WingsAdapter.get().addOrUpdateData(
-							username,
-							domain,
-							temp[j].substring(4),
-							"/export/users/" + username + "/" + domain
-									+ "/data/ontology.owl#File", temp[j + 1]);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public String [] addQuery(String username, String domain, String query) {
+	public String[] addQuery(String username, String domain, String query,
+			String type) {
 		try {
 
 			String[] temp = DataQuery.queryFor(query.substring(query
 					.indexOf(" ") + 1))[1].split("\n\",\"\n");
 			System.out.println("query: " + Arrays.toString(temp));
 			for (int j = 0; j < temp.length - 1; j += 2) {
-				WingsAdapter.get().addOrUpdateData(
-						username,
-						domain,
-						temp[j].substring(4),
-						"/export/users/" + username + "/" + domain
-								+ "/data/ontology.owl#File", temp[j + 1]);
+				WingsAdapter.get().addOrUpdateData(username, domain,
+						temp[j].substring(4), type, temp[j + 1], false);
+				System.out.println(type);
 			}
 			return temp;
 		} catch (Exception e) {
@@ -1000,49 +1000,49 @@ public class DiskRepository extends KBRepository {
 	}
 
 	public void addAssertions(String username, String domain, Graph assertions) {
-		List<String> ToBeQueried = getQueriesToBeRun(assertions);
-		this.addQueries(username, domain, ToBeQueried);
+	//	List<String> ToBeQueried = getQueriesToBeRun(assertions);
+	//	this.addQueries(username, domain, ToBeQueried);
 		this.addAssertion(username, domain, assertions);
 	}
 
-	public List<String> getQueriesToBeRun(Graph assertions) {
-		List<Triple> UITriples = assertions.getTriples();
-		HashSet<String> toQuery = new HashSet<String>();
-		String temp;
-		String[] temp2;
-		String file;
-		String query;
-		Triple tri;
-		for (int i = 0; i < UITriples.size(); i++) {
-			// System.out.println("UITiples.get(i).getSubject(): "+UITriples.get(i).getSubject());
-			// System.out.println("UITiples.get(i).getPredicate(): "+UITriples.get(i).getPredicate());
-			// System.out.println("UITiples.get(i).getObject(): "+UITriples.get(i).getObject());
-			temp = UITriples.get(i).getPredicate(); // check if asking for query
-			if (temp.equals("https://w3id.org/disk/ontology/neuro#hasEnigmaQueryLiteral")) {
-				temp = UITriples.get(i).getSubject().toString();
-				file = temp.substring(temp.indexOf("#") + 1);
-				temp = UITriples.get(i).getObject().getValue().toString();
-				query = temp.replace("|", "/");
-				System.out.println("query: " + query);
-				// query = DataQuery.toMachineReadableQuery(query);
-				toQuery.add(file + " " + query);
-				// temp2 = DataQuery.queryFor(temp);
-				// System.out.println("here we are:" + temp2[1]);
-				// temp2 = temp2[1].split("\",\"");
-				// tri = new Triple();
-				// tri.setSubject(this.ASSERTIONSURI(username,
-				// domain)+"#"+temp2.length);
-				// tri.setPredicate(UITriples.get(i).getPredicate());
-				// tri.setObject(UITriples.get(i).getObject());
-				// UITriples.add(tri);
-
-			}
-		}
-		List<String> ToBeQueried = new ArrayList<String>();
-		for (String strTemp : toQuery)
-			ToBeQueried.add(strTemp);
-		return ToBeQueried;
-	}
+//	public List<String> getQueriesToBeRun(Graph assertions) {
+//		List<Triple> UITriples = assertions.getTriples();
+//		HashSet<String> toQuery = new HashSet<String>();
+//		String temp;
+//		String[] temp2;
+//		String file;
+//		String query;
+//		Triple tri;
+//		for (int i = 0; i < UITriples.size(); i++) {
+//			// System.out.println("UITiples.get(i).getSubject(): "+UITriples.get(i).getSubject());
+//			// System.out.println("UITiples.get(i).getPredicate(): "+UITriples.get(i).getPredicate());
+//			// System.out.println("UITiples.get(i).getObject(): "+UITriples.get(i).getObject());
+//			temp = UITriples.get(i).getPredicate(); // check if asking for query
+//			if (temp.equals("https://w3id.org/disk/ontology/neuro#hasEnigmaQueryLiteral")) {
+//				temp = UITriples.get(i).getSubject().toString();
+//				file = temp.substring(temp.indexOf("#") + 1);
+//				temp = UITriples.get(i).getObject().getValue().toString();
+//				query = temp.replace("|", "/");
+//				System.out.println("query: " + query);
+//				// query = DataQuery.toMachineReadableQuery(query);
+//				toQuery.add(file + " " + query);
+//				// temp2 = DataQuery.queryFor(temp);
+//				// System.out.println("here we are:" + temp2[1]);
+//				// temp2 = temp2[1].split("\",\"");
+//				// tri = new Triple();
+//				// tri.setSubject(this.ASSERTIONSURI(username,
+//				// domain)+"#"+temp2.length);
+//				// tri.setPredicate(UITriples.get(i).getPredicate());
+//				// tri.setObject(UITriples.get(i).getObject());
+//				// UITriples.add(tri);
+//
+//			}
+//		}
+//		List<String> ToBeQueried = new ArrayList<String>();
+//		for (String strTemp : toQuery)
+//			ToBeQueried.add(strTemp);
+//		return ToBeQueried;
+//	}
 
 	public void updateAssertions(String username, String domain,
 			Graph assertions) {
@@ -1050,8 +1050,8 @@ public class DiskRepository extends KBRepository {
 		try {
 			KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
 			kb.delete();
-			List<String> ToBeQueried = getQueriesToBeRun(assertions);
-			this.addQueries(username, domain, ToBeQueried);
+		//	List<String> ToBeQueried = getQueriesToBeRun(assertions);
+		//	this.addQueries(username, domain, ToBeQueried);
 			this.addAssertion(username, domain, assertions);
 			// Re-run hypotheses if needed
 			this.requeryHypotheses(username, domain);
@@ -1712,23 +1712,69 @@ public class DiskRepository extends KBRepository {
 							.getBindings();
 					System.out.println("wflowBindings.get(i).getBindings(): "
 							+ wflowBindings.get(i).getBindings());
+					Map<String, Variable> inputs = wings.getWorkflowInputs(
+							username, domain, wflowBindings.get(i)
+									.getWorkflow());
+					System.out.println("inputs to workflows1: " + inputs);
+					String[] files = null;
 					for (VariableBinding var : bindings) {
 						System.out.println("var" + var);
 						System.out.println("varBinding" + var.getBinding());
 						try {
 							String url = ASSERTIONSURI(username, domain);
 							String fullid = url + "#" + var.getBinding();
-							for (KBTriple kbt : equeries) {
-								if (kbt.getSubject().getValueAsString().equals(fullid)) {
-									System.out.println("kbt.getObject().getValueAsString(): "+kbt.getObject().getValueAsString());
-									addQuery(username,domain,kbt.getObject().getValueAsString());
+							if (!inputs.get(var.getVariable()).isParam())
+								for (KBTriple kbt : equeries) {
+									if (kbt.getSubject().getValueAsString()
+											.equals(fullid)) {
+										System.out
+												.println("kbt.getObject().getValueAsString(): "
+														+ kbt.getObject()
+																.getValueAsString());
+										files = addQuery(username, domain,
+												kbt.getObject()
+														.getValueAsString(),
+												inputs.get(var.getVariable())
+														.getType());
+										break;
+									}
 								}
-			
+							if (files != null) {
+								for (int f = 0; f < files.length; f+=2) {
+									List<VariableBinding> newvb = new ArrayList<VariableBinding>();
+									for (VariableBinding newvar : bindings) {
+										if (!newvar.equals(var))
+											newvb.add(new VariableBinding(
+													newvar.getVariable(),
+													newvar.getBinding()));
+										else
+											newvb.add(new VariableBinding(
+													newvar.getVariable(),
+													files[f].substring(4)));
+
+									}
+									WorkflowBindings newwfb = new WorkflowBindings(
+											wflowBindings.get(i).getWorkflow(),
+											wflowBindings.get(i)
+													.getWorkflowLink(),
+											newvb);
+									newwfb.setRun(new WorkflowRun(wflowBindings.get(i).getRun().getId(),
+											wflowBindings.get(i).getRun().getLink(),
+											wflowBindings.get(i).getRun().getStatus()));
+									newwfb.setMeta(new MetaWorkflowDetails(wflowBindings.get(i).getMeta().getHypothesis(),
+											wflowBindings.get(i).getMeta().getRevisedHypothesis()));
+									wflowBindings.add(newwfb);
+								}
+								break;
 							}
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
-
+					}
+					if(files != null){
+						wflowBindings.remove(wflowBindings.get(i));
+						i--;
+						System.out.println(wflowBindings);
 					}
 				}
 				System.out.println("wflowBindings: " + wflowBindings);
