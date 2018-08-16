@@ -1,80 +1,491 @@
 FORMAT: 1A
-HOST: http://polls.apiblueprint.org/
+HOST: http://localhost:8080/disk-server/
 
 # DISK
 
-Polls is a simple API allowing consumers to view polls and vote in them.
+## Automated Discovery of Scientific Knowledge API 
 
-## Questions Collection [/questions]
+## Vocabulary [/vocabulary]
 
-### List All Questions [GET]
+### Get Vocabulary [GET]
 
 + Response 200 (application/json)
 
-        [
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
+### User Vocabulary [GET /vocabulary/{username}/{domain}]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
++ Response 200 (application/json)
+
+### Reload General Vocabulary [GET /vocabulary/reload]
++ Response 200 (application/json)
+
+## Hypotheses [/hypotheses]
+
+### List Hypotheses [GET /{username}/{domain}/hypotheses]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
++ Response 200 (application/json)
+
+### Get Specific Hypothesis [GET /{username}/{domain}/hypotheses/{id}]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
+    + id: `Hypothesis-CYdTjreAYeiM` (string) - Specific Hypothesis Id
++ Response 200 (application/json)
+
+### Query Hypothesis [GET /{username}/{domain}/hypotheses/{id}/query]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
+    + id: `Hypothesis-CYdTjreAYeiM` (string) - Specific Hypothesis Id
++ Response 200 (application/json)
+
+### Add Hypothesis [POST /{username}/{domain}/hypotheses]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
++ Request (application/json)
+
+        {
+            "id": "Hypothesis-CYdTjreAYeiP",
+            "name": "APOE4 associated with Hippocampal Volume",
+            "description": "APOE4 is associated with Hippocampal Volume",
+            "parentId": null,
+            "graph": {
+                "triples": [
                     {
-                        "choice": "Swift",
-                        "votes": 2048
-                    }, {
-                        "choice": "Python",
-                        "votes": 1024
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 512
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 256
+                        "subject": "https://w3id.org/disk/ontology/enigma_hypothesis#APOE4",
+                        "predicate": "http://disk-project.org/ontology/hypothesis#associatedWith",
+                        "object": {
+                            "type": "URI",
+                            "value": "https://w3id.org/disk/ontology/enigma_hypothesis#HippocampalVolume",
+                            "datatype": null
+                        },
+                        "details": null
                     }
                 ]
             }
-        ]
+        }
++ Response 204 (application/json)
 
-### Create a New Question [POST]
-
-You may create your own question using this action. It takes a JSON
-object containing a question and a collection of answers in the
-form of choices.
+### Update Hypothesis [PUT /{username}/{domain}/hypotheses/{id}]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
+    + id: `Hypothesis-CYdTjreAYeiM` (string) - Specific Hypothesis Id
 
 + Request (application/json)
 
         {
-            "question": "Favourite programming language?",
-            "choices": [
-                "Swift",
-                "Python",
-                "Objective-C",
-                "Ruby"
-            ]
-        }
-
-+ Response 201 (application/json)
-
-    + Headers
-
-            Location: /questions/2
-
-    + Body
-
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
+            "id": "Hypothesis-CYdTjreAYeiM",
+            "name": "Gene:APOE4 associated with Brain Characteristic:Hippocampal Volume",
+            "description": "APOE4 is associated with Hippocampal Volume",
+            "parentId": null,
+            "graph": {
+                "triples": [
                     {
-                        "choice": "Swift",
-                        "votes": 0
-                    }, {
-                        "choice": "Python",
-                        "votes": 0
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 0
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 0
+                        "subject": "https://w3id.org/disk/ontology/enigma_hypothesis#APOE4",
+                        "predicate": "http://disk-project.org/ontology/hypothesis#associatedWith",
+                        "object": {
+                            "type": "URI",
+                            "value": "https://w3id.org/disk/ontology/enigma_hypothesis#HippocampalVolume",
+                            "datatype": null
+                        },
+                        "details": null
                     }
                 ]
             }
+        }
+        
++ Response 204 (application/json)
+
+### Delete Hypothesis [DELETE /{username}/{domain}/hypotheses/{id}]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
+    + id: `Hypothesis-CYdTjreAYeiP` (string) - Specific Hypothesis Id
++ Response 200 (application/json)
+
+
+## Assertions [/assertions]
+
+### List Assertions [GET /{username}/{domain}/assertions]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
++ Response 200 (application/json)
+
+### Add Assertions [POST /{username}/{domain}/assertions]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
+    
++ Request (application/json)
+
+        {
+            "triples": [
+                {
+                    "subject": "http://localhost:8080/disk-server/ravali/test/assertions#individual_effects_ENIGMA.xlsx",
+                    "predicate": "https://w3id.org/disk/ontology/enigma_hypothesis#hasEnigmaQueryLiteral",
+                    "object": {
+                        "type": "LITERAL",
+                        "value": "[[Category:Cohort_(E)]]|?HasFileUpload",
+                        "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                    },
+                    "details": null
+                }
+            ]
+        }
+        
++ Response 204 (application/json)
+
+### Update Assertions [PUT /{username}/{domain}/assertions]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
+    
++ Request (application/json)
+
+        {
+            "triples": [
+                {
+                    "subject": "http://localhost:8080/disk-server/ravali/test/assertions#Asi-AltaiUstUlaganLake.Cook.2005.lpd",
+                    "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                    "object": {
+                        "type": "URI",
+                        "value": "https://w3id.org/disk/ontology/enigma_hypothesis#BrainScan",
+                        "datatype": null
+                    },
+                    "details": null
+                },
+                {
+                    "subject": "http://localhost:8080/disk-server/ravali/test/assertions#Asi-AltaiUstUlaganLake.Cook.2005.lpd",
+                    "predicate": "https://w3id.org/disk/ontology/enigma_hypothesis#hasEnigmaQueryLiteral",
+                    "object": {
+                        "type": "LITERAL",
+                        "value": "[[Category:Person_(E)]][[HasEmail_(E)::Rwang3495@gmail.com]]|?HasResearchInterest_(E)",
+                        "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                    },
+                    "details": null
+                },
+                {
+                    "subject": "http://localhost:8080/disk-server/ravali/test/assertions#individual_effects_ENIGMA.xlsx",
+                    "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                    "object": {
+                        "type": "URI",
+                        "value": "https://w3id.org/disk/ontology/enigma_hypothesis#GeneticData",
+                        "datatype": null
+                    },
+                    "details": null
+                },
+                {
+                    "subject": "http://localhost:8080/disk-server/ravali/test/assertions#individual_effects_ENIGMA.xlsx",
+                    "predicate": "https://w3id.org/disk/ontology/enigma_hypothesis#hasEnigmaQueryLiteral",
+                    "object": {
+                        "type": "LITERAL",
+                        "value": "[[Category:Cohort_(E)]]|?HasFileUpload",
+                        "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                    },
+                    "details": null
+                }
+            ]
+        }
+        
++ Response 204 (application/json)
+
+### Delete Assertions [DELETE /{username}/{domain}/assertions]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
+    
++ Request (application/json)
+
+        {
+            "triples": [
+                {
+                    "subject": "http://localhost:8080/disk-server/ravali/test/assertions#individual_effects_ENIGMA.xlsx",
+                    "predicate": "https://w3id.org/disk/ontology/enigma_hypothesis#hasEnigmaQueryLiteral",
+                    "object": {
+                        "type": "LITERAL",
+                        "value": "[[Category:Cohort_(E)]]|?HasFileUpload",
+                        "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                    },
+                    "details": null
+                }
+            ]
+        }
+        
++ Response 204 (application/json)
+
+## Lines of Inquiries [/lois]
+
+### List Lines of Inquiries [GET /{username}/{domain}/lois]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
++ Response 200 (application/json)
+
+### Get Specific Line of Inquiry [GET /{username}/{domain}/lois/{id}]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
+    + id: `LOI-hRQe2Qq811tA` (string) - Specific Line of Inquiry Id
++ Response 200 (application/json)
+
+### Add Line of Inquiry [POST /{username}/{domain}/lois]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
+    
++ Request (application/json)
+
+        {
+            "id": "LOI-hRQe2Qq811tA",
+            "name": "?Gene associated with ?BrainCharacteristic",
+            "description": "Test whether given gene is associated with given brain characteristic",
+            "hypothesisQuery": "?Gene hyp:associatedWith ?BrainCharacteristic\n?Gene a neuro:Gene\n?BrainCharacteristic a neuro:BrainCharacteristic",
+            "dataQuery": "?data1 a neuro:GeneticData\n?data2 a neuro:BrainScan",
+            "workflows": [
+                {
+                    "workflow": "test2",
+                    "workflowLink": "http://www.wings-workflows.org/wings-omics-portal/users/ravali/test/workflows/test2.owl",
+                    "bindings": [
+                        {
+                            "variable": "input",
+                            "binding": "?data1"
+                        },
+                        {
+                            "variable": "input2",
+                            "binding": "?data2"
+                        },
+                        {
+                            "variable": "param",
+                            "binding": "true"
+                        }
+                    ],
+                    "run": {
+                        "id": null,
+                        "link": null,
+                        "status": null
+                    },
+                    "meta": {
+                        "hypothesis": null,
+                        "revisedHypothesis": null
+                    }
+                }
+            ],
+            "metaWorkflows": [
+                {
+                    "workflow": "test",
+                    "workflowLink": "http://www.wings-workflows.org/wings-omics-portal/users/ravali/test/workflows/test.owl",
+                    "bindings": [
+                        {
+                            "variable": "param",
+                            "binding": "test2"
+                        }
+                    ],
+                    "run": {
+                        "id": null,
+                        "link": null,
+                        "status": null
+                    },
+                    "meta": {
+                        "hypothesis": "input",
+                        "revisedHypothesis": "output"
+                    }
+                }
+            ]
+        }
+
++ Response 204 (application/json)
+
+### Update Line of Inquiry [PUT /{username}/{domain}/lois/{id}]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
+    + id: `LOI-hRQe2Qq811tA` (string) - Specific Line of Inquiry Id
+
++ Request (application/json)
+
+        {
+            "id": "LOI-hRQe2Qq811tA",
+            "name": "Gene associated with Brain Characteristic",
+            "description": "Test whether given gene is associated with given brain characteristic",
+            "hypothesisQuery": "?Gene hyp:associatedWith ?BrainCharacteristic\n?Gene a neuro:Gene\n?BrainCharacteristic a neuro:BrainCharacteristic",
+            "dataQuery": "?data1 a neuro:GeneticData\n?data2 a neuro:BrainScan",
+            "workflows": [
+                {
+                    "workflow": "test2",
+                    "workflowLink": "http://www.wings-workflows.org/wings-omics-portal/users/ravali/test/workflows/test2.owl",
+                    "bindings": [
+                        {
+                            "variable": "input",
+                            "binding": "?data1"
+                        },
+                        {
+                            "variable": "input2",
+                            "binding": "?data2"
+                        },
+                        {
+                            "variable": "param",
+                            "binding": "true"
+                        }
+                    ],
+                    "run": {
+                        "id": null,
+                        "link": null,
+                        "status": null
+                    },
+                    "meta": {
+                        "hypothesis": null,
+                        "revisedHypothesis": null
+                    }
+                }
+            ],
+            "metaWorkflows": [
+                {
+                    "workflow": "test",
+                    "workflowLink": "http://www.wings-workflows.org/wings-omics-portal/users/ravali/test/workflows/test.owl",
+                    "bindings": [
+                        {
+                            "variable": "param",
+                            "binding": "test2"
+                        }
+                    ],
+                    "run": {
+                        "id": null,
+                        "link": null,
+                        "status": null
+                    },
+                    "meta": {
+                        "hypothesis": "input",
+                        "revisedHypothesis": "output"
+                    }
+                }
+            ]
+        }
+
++ Response 204 (application/json)
+
+### Delete Line of Inquiry [DELETE /{username}/{domain}/lois/{id}]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
+    + id: `LOI-hRQe2Qq811tA` (string) - Specific Line of Inquiry Id
++ Response 200 (application/json)
+
+## Triggered Lines of Inquiries [/tlois]
+
+### List Triggered Lines of Inquiries [GET /{username}/{domain}/tlois]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
++ Response 200 (application/json)
+
+### Get Specific Triggered Line of Inquiry [GET /{username}/{domain}/tlois/{id}]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
+    + id: `TriggeredLOI-6YBcrWK7eFeu` (string) - Specific Triggered Line of Inquiry Id
++ Response 200 (application/json)
+
+### Add Triggered Line of Inquiry [POST /{username}/{domain}/tlois]
+Receive this information from "Query Hypothesis"
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
+    
++ Request (application/json)
+
+        {
+            "id" : "TriggeredLOI-UwCMbBBVONd0",
+            "name" : "Triggered: ?Gene associated with ?BrainCharacteristic",
+            "description" : "Test whether given gene is associated with given brain characteristic",
+            "status" : null,
+            "loiId" : "LOI-hRQe2Qq811tA",
+            "parentHypothesisId" : "Hypothesis-CYdTjreAYeiM",
+            "resultingHypothesisIds" : [],
+            "workflows" : [ 
+                {
+                    "workflow" : "test2",
+                    "workflowLink" : null,
+                    "bindings" : [ 
+                        {
+                            "variable" : "input",
+                            "binding" : "individual_effects_ENIGMA.xlsx"
+                        }, 
+                        {
+                            "variable" : "input2",
+                            "binding" : "Asi-AltaiUstUlaganLake.Cook.2005.lpd"
+                        }, 
+                        {
+                            "variable" : "param",
+                            "binding" : "true"
+                        } 
+                    ],
+                    "run" : {
+                        "id" : null,
+                        "link" : null,
+                        "status" : null
+                    },
+                    "meta" : {
+                        "hypothesis" : null,
+                        "revisedHypothesis" : null
+                    }
+                } 
+            ],
+            "metaWorkflows" : [ 
+                {
+                    "workflow" : "test",
+                    "workflowLink" : null,
+                    "bindings" : [ 
+                        {
+                            "variable" : "param",
+                            "binding" : "test2"
+                        }
+                    ],
+                    "run" : {
+                        "id" : null,
+                        "link" : null,
+                        "status" : null
+                    },
+                    "meta" : {
+                        "hypothesis" : "input",
+                        "revisedHypothesis" : "output"
+                    }
+                } 
+            ]
+        } 
+
++ Response 200 (application/json)
+
+### Delete Triggered Line of Inquiry [DELETE /{username}/{domain}/tlois/{id}]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
+    + id: `TriggeredLOI-UwCMbBBVONd0` (string) - Specific Line of Inquiry Id
++ Response 200 (application/json)
+
+## Wings Workflows Connection [/workflows]
+
+### List Workflows [GET /{username}/{domain}/workflows]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
++ Response 200 (application/json)
+
+### Get Workflow Variables [GET /{username}/{domain}/workflows/{id}]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
+    + id: `test2` (string) - Specific Wings Workflow Id
++ Response 200 (application/json)
+
+### Monitor Workflow Execution [GET /{username}/{domain}/runs/{id}]
++ Parameters
+    + username: ravali (string) - Wings Username
+    + domain: test (string) - Wings Domain
+    + id: `test2-8c2c785e-6ede-4476-a71c-61d31f72d339` (string) - Specific Workflow Execution Id
++ Response 200 (application/json)
