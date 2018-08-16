@@ -12,7 +12,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 /**
  * 
- * @author Regina Wang
+ * @author reginawang
  * Make sure to change the user, domain, and server Strings to the appropriate ones
  */
 public class exampleUseOfDiskAPI {
