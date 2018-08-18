@@ -35,7 +35,7 @@ public class KBConstants {
   }
 
   public static String NEURONS() {
-    return "https://w3id.org/disk/ontology/neuro#";
+    return "https://w3id.org/disk/ontology/enigma_hypothesis#";
   }
 
   public static String HYPURI() {

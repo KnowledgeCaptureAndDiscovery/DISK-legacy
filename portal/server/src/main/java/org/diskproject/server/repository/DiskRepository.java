@@ -83,7 +83,7 @@ public class DiskRepository extends KBRepository {
 
 	public DiskRepository() {
 		try {
-			TimeUnit.SECONDS.sleep(1);// wait for server.properties file to be
+		//	TimeUnit.SECONDS.sleep(1);// wait for server.properties file to be
 										// written completely
 		} catch (Exception e) {
 		}
@@ -165,8 +165,6 @@ public class DiskRepository extends KBRepository {
 			this.vocabularies.put(KBConstants.OMICSURI(), this
 					.initializeVocabularyFromKB(this.omicsontkb,
 							KBConstants.OMICSNS()));
-			System.out.println(KBConstants.DISKURI());
-			TimeUnit.SECONDS.sleep(3);
 			this.vocabularies.put(
 					KBConstants.DISKURI(),
 					this.initializeVocabularyFromKB(this.ontkb,
@@ -262,19 +260,16 @@ public class DiskRepository extends KBRepository {
 	}
 
 	public Vocabulary initializeVocabularyFromKB(KBAPI kb, String ns) {
-		System.out.println(ns);
 		Vocabulary vocabulary = new Vocabulary(ns);
 		try {
 			this.fetchTypesAndIndividualsFromKB(kb, vocabulary); // Here
 			this.fetchPropertiesFromKB(kb, vocabulary);
-			System.out.println(ns + " worked!");
 			return vocabulary;
 		} catch (Exception e) {
 			e.printStackTrace();
 			vocabulary = new Vocabulary(ns);
 			this.fetchTypesAndIndividualsFromKB(kb, vocabulary); // Here
 			this.fetchPropertiesFromKB(kb, vocabulary);
-			System.out.println(ns + " worked!");
 			return vocabulary;
 		}
 	}
@@ -307,8 +302,6 @@ public class DiskRepository extends KBRepository {
 	private void fetchTypesAndIndividualsFromKB(KBAPI kb, Vocabulary vocabulary) {
 		try {
 			KBObject typeprop = kb.getProperty(KBConstants.RDFNS() + "type");
-			vocabulary.getNamespace();
-			TimeUnit.SECONDS.sleep(1);
 			for (KBTriple t : kb.genericTripleQuery(null, typeprop, null)) {
 				KBObject inst = t.getSubject();
 				KBObject typeobj = t.getObject();
@@ -368,8 +361,6 @@ public class DiskRepository extends KBRepository {
 					}
 				} catch (Exception e) {
 					if (vocabulary.getNamespace().indexOf("neuro") != -1) {
-						System.out.println(t);
-						System.out.println(cls);
 						e.printStackTrace();
 					}
 				}
@@ -677,13 +668,6 @@ public class DiskRepository extends KBRepository {
 	}
 
 	private String getSparqlQuery(String queryPattern, String assertionsUri) {
-		System.out.println("getSparqlQuery: " + "PREFIX bio: <"
-				+ KBConstants.OMICSNS() + ">\n" + "PREFIX neuro: <"
-				+ KBConstants.NEURONS() + ">\n" + "PREFIX hyp: <"
-				+ KBConstants.HYPNS() + ">\n" + "PREFIX xsd: <"
-				+ KBConstants.XSDNS() + ">\n" + "PREFIX user: <"
-				+ assertionsUri + "#>\n\n" + "SELECT *\n" + "WHERE { \n"
-				+ queryPattern + "}\n");
 
 		return "PREFIX bio: <" + KBConstants.OMICSNS() + ">\n"
 				+ "PREFIX neuro: <" + KBConstants.NEURONS() + ">\n"
@@ -743,7 +727,6 @@ public class DiskRepository extends KBRepository {
 
 			for (TreeItem item : this.listLOIs(username, domain)) {
 				LineOfInquiry loi = this.getLOI(username, domain, item.getId());
-				System.out.println("loi: " + loi);
 				String hypothesisQuery = loi.getHypothesisQuery();
 
 				String dataQuery = loi.getDataQuery();
@@ -756,8 +739,6 @@ public class DiskRepository extends KBRepository {
 
 				String hypSparqlQuery = this.getSparqlQuery(hypothesisQuery,
 						assertions);
-				System.out.println(" queryKb.sparqlQuery(hypSparqlQuery)"
-						+ queryKb.sparqlQuery(hypSparqlQuery));
 				for (ArrayList<SparqlQuerySolution> hypothesisSolutions : queryKb
 						.sparqlQuery(hypSparqlQuery)) {
 					Map<String, String> hypVarBindings = new HashMap<String, String>();
@@ -784,15 +765,12 @@ public class DiskRepository extends KBRepository {
 
 					boundDataQuery = hypPattern + boundHypothesisQuery
 							+ boundDataQuery;
-					System.out.println("boundDataQuery: " + boundDataQuery);
 					boundDataQuery = this.filterQueryBindings(boundDataQuery,
 							"hyp:");
 					String dataSparqlQuery = this.getSparqlQuery(
 							boundDataQuery, assertions);
-					System.out.println("dataSparqlQuery: " + dataSparqlQuery);
 					TriggeredLOI tloi = null;
-					System.out.println("queryKb.sparqlQuery(dataSparqlQuery): "
-							+ queryKb.sparqlQuery(dataSparqlQuery));
+
 
 					for (ArrayList<SparqlQuerySolution> dataSolutions : queryKb
 							.sparqlQuery(dataSparqlQuery)) {// kbapijena
@@ -802,7 +780,6 @@ public class DiskRepository extends KBRepository {
 						// - Multiple workflows in the same triggered line of
 						// inquiry ?
 						// - What if workflows take collections as input ?
-						System.out.println("dataSolutions: " + dataSolutions);
 						if (tloi == null) {
 							tloi = new TriggeredLOI(loi, id);
 							tloi.copyWorkflowBindings(loi.getMetaWorkflows(),
@@ -818,9 +795,7 @@ public class DiskRepository extends KBRepository {
 								value = solution.getObject().getName();
 							dataVarBindings.put(solution.getVariable(), value);
 						}
-						System.out
-								.println("dataVarBindings (varaible, value): "
-										+ dataVarBindings);
+
 						for (WorkflowBindings bindings : loi.getWorkflows()) {
 							WorkflowBindings newbindings = new WorkflowBindings();
 							newbindings.setWorkflow(bindings.getWorkflow());
@@ -852,7 +827,6 @@ public class DiskRepository extends KBRepository {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		System.out.println("tlois" + tlois);
 		return tlois;
 	}
 
@@ -932,33 +906,30 @@ public class DiskRepository extends KBRepository {
 		return null;
 	}
 
-//	public void addQueries(String username, String domain,
-//			List<String> ToBeQueried) {
-//		try {
-//
-//			String[] temp;
-//			System.out.println("ToBeQueried: " + ToBeQueried);
-//			for (int i = 0; i < ToBeQueried.size(); i++) {
-//				System.out.println(ToBeQueried.get(i).substring(
-//						ToBeQueried.get(i).indexOf(" ") + 1));
-//				temp = DataQuery.queryFor(ToBeQueried.get(i).substring(
-//						ToBeQueried.get(i).indexOf(" ") + 1))[1]
-//						.split("\n\",\"\n");
-//				System.out.println("query: " + Arrays.toString(temp));
-//				for (int j = 0; j < temp.length - 1; j += 2) {
-//					WingsAdapter.get().addOrUpdateData(
-//							username,
-//							domain,
-//							temp[j].substring(4),
-//							"/export/users/" + username + "/" + domain
-//									+ "/data/ontology.owl#File", temp[j + 1],
-//							true);
-//				}
-//			}
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
+	public void addQueries(String username, String domain,
+			List<String> ToBeQueried) {
+		try {
+
+			String[] temp;
+			for (int i = 0; i < ToBeQueried.size(); i++) {
+
+				temp = DataQuery.queryFor(ToBeQueried.get(i).substring(
+						ToBeQueried.get(i).indexOf(" ") + 1))[1]
+						.split("\n\",\"\n");
+				for (int j = 0; j < temp.length - 1; j += 2) {
+					WingsAdapter.get().addOrUpdateData(
+							username,
+							domain,
+							temp[j].substring(4),
+							"/export/users/" + username + "/" + domain
+									+ "/data/ontology.owl#File", temp[j + 1],
+							true);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	public String[] addQuery(String username, String domain, String query,
 			String type) {
@@ -966,11 +937,9 @@ public class DiskRepository extends KBRepository {
 
 			String[] temp = DataQuery.queryFor(query.substring(query
 					.indexOf(" ") + 1))[1].split("\n\",\"\n");
-			System.out.println("query: " + Arrays.toString(temp));
 			for (int j = 0; j < temp.length - 1; j += 2) {
 				WingsAdapter.get().addOrUpdateData(username, domain,
 						temp[j].substring(4), type, temp[j + 1], false);
-				System.out.println(type);
 			}
 			return temp;
 		} catch (Exception e) {
@@ -1000,49 +969,48 @@ public class DiskRepository extends KBRepository {
 	}
 
 	public void addAssertions(String username, String domain, Graph assertions) {
-	//	List<String> ToBeQueried = getQueriesToBeRun(assertions);
-	//	this.addQueries(username, domain, ToBeQueried);
+		List<String> ToBeQueried = getQueriesToBeRun(assertions);
+		this.addQueries(username, domain, ToBeQueried);
 		this.addAssertion(username, domain, assertions);
 	}
 
-//	public List<String> getQueriesToBeRun(Graph assertions) {
-//		List<Triple> UITriples = assertions.getTriples();
-//		HashSet<String> toQuery = new HashSet<String>();
-//		String temp;
-//		String[] temp2;
-//		String file;
-//		String query;
-//		Triple tri;
-//		for (int i = 0; i < UITriples.size(); i++) {
-//			// System.out.println("UITiples.get(i).getSubject(): "+UITriples.get(i).getSubject());
-//			// System.out.println("UITiples.get(i).getPredicate(): "+UITriples.get(i).getPredicate());
-//			// System.out.println("UITiples.get(i).getObject(): "+UITriples.get(i).getObject());
-//			temp = UITriples.get(i).getPredicate(); // check if asking for query
-//			if (temp.equals("https://w3id.org/disk/ontology/neuro#hasEnigmaQueryLiteral")) {
-//				temp = UITriples.get(i).getSubject().toString();
-//				file = temp.substring(temp.indexOf("#") + 1);
-//				temp = UITriples.get(i).getObject().getValue().toString();
-//				query = temp.replace("|", "/");
-//				System.out.println("query: " + query);
-//				// query = DataQuery.toMachineReadableQuery(query);
-//				toQuery.add(file + " " + query);
-//				// temp2 = DataQuery.queryFor(temp);
-//				// System.out.println("here we are:" + temp2[1]);
-//				// temp2 = temp2[1].split("\",\"");
-//				// tri = new Triple();
-//				// tri.setSubject(this.ASSERTIONSURI(username,
-//				// domain)+"#"+temp2.length);
-//				// tri.setPredicate(UITriples.get(i).getPredicate());
-//				// tri.setObject(UITriples.get(i).getObject());
-//				// UITriples.add(tri);
-//
-//			}
-//		}
-//		List<String> ToBeQueried = new ArrayList<String>();
-//		for (String strTemp : toQuery)
-//			ToBeQueried.add(strTemp);
-//		return ToBeQueried;
-//	}
+	public List<String> getQueriesToBeRun(Graph assertions) {
+		List<Triple> UITriples = assertions.getTriples();
+		HashSet<String> toQuery = new HashSet<String>();
+		String temp;
+		String[] temp2;
+		String file;
+		String query;
+		Triple tri;
+		for (int i = 0; i < UITriples.size(); i++) {
+			// System.out.println("UITiples.get(i).getSubject(): "+UITriples.get(i).getSubject());
+			// System.out.println("UITiples.get(i).getPredicate(): "+UITriples.get(i).getPredicate());
+			// System.out.println("UITiples.get(i).getObject(): "+UITriples.get(i).getObject());
+			temp = UITriples.get(i).getPredicate(); // check if asking for query
+			if (temp.equals(KBConstants.NEURONS()+"hasEnigmaQueryLiteral")) {
+				temp = UITriples.get(i).getSubject().toString();
+				file = temp.substring(temp.indexOf("#") + 1);
+				temp = UITriples.get(i).getObject().getValue().toString();
+				query = temp.replace("|", "/");
+				// query = DataQuery.toMachineReadableQuery(query);
+				toQuery.add(file + " " + query);
+				// temp2 = DataQuery.queryFor(temp);
+				// System.out.println("here we are:" + temp2[1]);
+				// temp2 = temp2[1].split("\",\"");
+				// tri = new Triple();
+				// tri.setSubject(this.ASSERTIONSURI(username,
+				// domain)+"#"+temp2.length);
+				// tri.setPredicate(UITriples.get(i).getPredicate());
+				// tri.setObject(UITriples.get(i).getObject());
+				// UITriples.add(tri);
+
+			}
+		}
+		List<String> ToBeQueried = new ArrayList<String>();
+		for (String strTemp : toQuery)
+			ToBeQueried.add(strTemp);
+		return ToBeQueried;
+	}
 
 	public void updateAssertions(String username, String domain,
 			Graph assertions) {
@@ -1050,8 +1018,8 @@ public class DiskRepository extends KBRepository {
 		try {
 			KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
 			kb.delete();
-		//	List<String> ToBeQueried = getQueriesToBeRun(assertions);
-		//	this.addQueries(username, domain, ToBeQueried);
+			List<String> ToBeQueried = getQueriesToBeRun(assertions);
+			this.addQueries(username, domain, ToBeQueried);
 			this.addAssertion(username, domain, assertions);
 			// Re-run hypotheses if needed
 			this.requeryHypotheses(username, domain);
@@ -1212,7 +1180,6 @@ public class DiskRepository extends KBRepository {
 						cmap.get("VariableBinding"));
 				kb.setPropertyValue(varbindingobj, pmap.get("hasVariable"),
 						kb.getResource(workflowuri + "#" + varid));
-				System.out.println("bindingValue: " + bindingValue);
 				if (bindingValue != null)
 					kb.setPropertyValue(varbindingobj,
 							pmap.get("hasBindingValue"),
@@ -1456,7 +1423,6 @@ public class DiskRepository extends KBRepository {
 					}
 					this.deleteHypothesis(username, domain, hypobj.getName());
 				}
-				System.out.println("kbapi: " + kb);
 				kb.deleteObject(item, true, true);
 				return kb.save() && tloikb.delete();
 			}
@@ -1626,9 +1592,7 @@ public class DiskRepository extends KBRepository {
 			List<Triple> triples = new ArrayList<Triple>();
 			TripleUtil util = new TripleUtil();
 			for (String line : content.split("\\n")) {
-				System.out.println("split by \\n: " + line);
 				String[] parts = line.split("\\s+", 4);
-				System.out.println("split by \\s+: " + Arrays.toString(parts));
 				TripleDetails details = new TripleDetails();
 				details.setConfidenceValue(Double.parseDouble(parts[3]));
 				details.setTriggeredLOI(tloi.getId());
@@ -1701,7 +1665,7 @@ public class DiskRepository extends KBRepository {
 					String url = ASSERTIONSURI(username, domain);
 					KBAPI kb = fac.getKB(url, OntSpec.PLAIN, false);
 					KBObject typeprop = kb
-							.getProperty("https://w3id.org/disk/ontology/neuro#hasEnigmaQueryLiteral");
+							.getProperty(KBConstants.NEURONS()+"hasEnigmaQueryLiteral");
 					equeries = kb.genericTripleQuery(null, typeprop, null);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -1710,16 +1674,12 @@ public class DiskRepository extends KBRepository {
 				for (int i = 0; i < wflowBindings.size(); i++) {
 					List<VariableBinding> bindings = wflowBindings.get(i)
 							.getBindings();
-					System.out.println("wflowBindings.get(i).getBindings(): "
-							+ wflowBindings.get(i).getBindings());
+
 					Map<String, Variable> inputs = wings.getWorkflowInputs(
 							username, domain, wflowBindings.get(i)
 									.getWorkflow());
-					System.out.println("inputs to workflows1: " + inputs);
 					String[] files = null;
 					for (VariableBinding var : bindings) {
-						System.out.println("var" + var);
-						System.out.println("varBinding" + var.getBinding());
 						try {
 							String url = ASSERTIONSURI(username, domain);
 							String fullid = url + "#" + var.getBinding();
@@ -1727,10 +1687,6 @@ public class DiskRepository extends KBRepository {
 								for (KBTriple kbt : equeries) {
 									if (kbt.getSubject().getValueAsString()
 											.equals(fullid)) {
-										System.out
-												.println("kbt.getObject().getValueAsString(): "
-														+ kbt.getObject()
-																.getValueAsString());
 										files = addQuery(username, domain,
 												kbt.getObject()
 														.getValueAsString(),
@@ -1774,16 +1730,13 @@ public class DiskRepository extends KBRepository {
 					if(files != null){
 						wflowBindings.remove(wflowBindings.get(i));
 						i--;
-						System.out.println(wflowBindings);
 					}
 				}
-				System.out.println("wflowBindings: " + wflowBindings);
 				// Start off workflows from tloi
 				for (WorkflowBindings bindings : wflowBindings) {
 					// Get workflow input details
 					Map<String, Variable> inputs = wings.getWorkflowInputs(
 							username, domain, bindings.getWorkflow());
-					System.out.println("inputs to workflows: " + inputs);
 					List<VariableBinding> vbindings = bindings.getBindings();
 					List<VariableBinding> sendbindings = new ArrayList<VariableBinding>(
 							vbindings);
@@ -1837,7 +1790,6 @@ public class DiskRepository extends KBRepository {
 							+ " with:\n" + vbindings);
 					String runid = wings.runWorkflow(username, domain,
 							bindings.getWorkflow(), sendbindings, inputs);
-					System.out.println("which runid: " + runid);
 					if (runid != null)
 						bindings.getRun().setId(runid);// .replaceAll("^.*#",
 														// ""));

@@ -75,12 +75,6 @@ public class WingsAdapter {
 
 	public WingsAdapter() {
 		this.sessions = new HashMap<String, String>();
-		System.out.println("Config.get().getProperties()"
-				+ Config.get().getProperties());
-		System.out
-		.println("Config.get().getProperties().getString(wings.server)"
-				+ Config.get().getProperties()
-				.getString("wings.server"));
 		this.server = Config.get().getProperties().getString("wings.server");
 		this.json = new Gson();
 	}
@@ -250,8 +244,6 @@ public class WingsAdapter {
 	private String login(String username) {
 		String password = Config.get().getProperties()
 				.getString("wings.passwords." + username);
-		System.out.println("Logging in " + username + " with password "
-				+ password);
 
 		CloseableHttpClient client = HttpClients.createDefault();
 		HttpClientContext context = HttpClientContext.create();
@@ -260,8 +252,6 @@ public class WingsAdapter {
 			HttpResponse httpResponse = client
 					.execute(securedResource, context);
 			HttpEntity responseEntity = httpResponse.getEntity();
-			System.out.println("httpResponse.getEntity(); :"
-					+ httpResponse.getEntity());
 			int statusCode = httpResponse.getStatusLine().getStatusCode();
 			EntityUtils.consume(responseEntity);
 			if (statusCode != 200)
@@ -273,7 +263,6 @@ public class WingsAdapter {
 			nameValuePairs.add(new BasicNameValuePair("j_username", username));
 			nameValuePairs.add(new BasicNameValuePair("j_password", password));
 			authpost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-			System.out.println(nameValuePairs);
 			for (int i = 1; i < 4; i++) {
 				try {
 					httpResponse = client.execute(authpost);
@@ -336,8 +325,6 @@ public class WingsAdapter {
 			String runjson = this.post(username, pageid, formdata);
 			if (runjson == null)
 				return null;
-			System.out.println("runjson: "+runjson);
-			System.out.println("getWorkflowRunStatus worked");
 			WorkflowRun wflowstatus = new WorkflowRun();
 			wflowstatus.setId(execid);
 
@@ -403,10 +390,8 @@ public class WingsAdapter {
 				continue;
 			String runid = qb.get("run").getAsJsonObject().get("value")
 					.getAsString();
-			System.out.println("qb: " + qb);
 			String bindstrs = qb.get("bindings").getAsJsonObject().get("value")
 					.getAsString();
-			System.out.println("bindstrs: " + bindstrs);
 			HashMap<String, String> keyvalues = new HashMap<String, String>();
 			for (String bindstr : bindstrs.split("\\|\\|")) {
 				String[] keyval = bindstr.split("=", 2);
@@ -427,17 +412,14 @@ public class WingsAdapter {
 						keyvalues.remove(key);
 					}
 				}
-				System.out.println(keyvalues);
 			boolean match = true;
 			for (VariableBinding vbinding : vbindings) {
 				String value = keyvalues.get(vbinding.getVariable());
-				System.out.println(value+ " "+vbinding.getBinding());
 
 				if (value == null) {
 					match = false;
 					break;
 				}
-				System.out.println(value+ " "+vbinding.getBinding());
 				String[] tempValues = value.split(",");
 				String[] vbindingValues = vbinding.getBinding().split(",");
 				for (int i = 0; i < vbindingValues.length; i++) {
@@ -506,7 +488,6 @@ public class WingsAdapter {
 			System.out.println("Found existing run : " + runid);
 			return runid;
 		}
-		System.out.println("toPost :"+toPost);
 		String s = postWithSpecifiedMediaType(username, "users/"+username+"/"+domain+"/plan/getExpansions",
 				toPost, "application/json", "application/json");
 		JsonParser jsonParser = new JsonParser();
@@ -517,7 +498,6 @@ public class WingsAdapter {
 		JsonArray templatesobj = dataobj.get("templates").getAsJsonArray();
 		if (templatesobj.size() == 0)
 			return null;
-		System.out.println("works");
 		JsonObject templateobj = templatesobj.get(0).getAsJsonObject();
 		JsonObject seedobj = dataobj.get("seed").getAsJsonObject();
 
@@ -582,14 +562,12 @@ public String addOrUpdateData(String username, String domain, String id,
 		List<NameValuePair> data = new ArrayList<NameValuePair>();
 		data.add(new BasicNameValuePair("data_id", dataid));
 		data.add(new BasicNameValuePair("data_type", type));
-		System.out.println("data: "+data);
 		String response = post(username, postpage, data);
-		System.out.println("response: " + response);	
 		List<NameValuePair> location = new ArrayList<NameValuePair>();
 		location.add(new BasicNameValuePair("data_id", dataid));
 		location.add(new BasicNameValuePair("location", "/scratch/data/wings/storage/default/users/"+username+"/"+domain+"/data/"+dataid.substring(dataid.indexOf('#')+1)));
 		response = post(username, locationpage, location);
-		System.out.println("responseLocation: " + response);
+		System.out.println("Upload Location: " + response);
 	} catch (Exception e) {
 		e.printStackTrace();
 	}
@@ -699,8 +677,6 @@ private String getJsonBindingValue(JsonElement el) {
 private List<NameValuePair> createFormData(String username, String domain,
 		String templateid, List<VariableBinding> bindings,
 		Map<String, Variable> inputs) {
-	System.out.println("createFormData: username, domain, templateid, bindings, inputs");
-	System.out.println(username+"\n"+domain+"\n"+templateid+"\n"+bindings+"\n"+inputs);
 	List<NameValuePair> data = new ArrayList<NameValuePair>();
 	HashMap<String, String> paramDTypes = new HashMap<String, String>();
 
@@ -723,8 +699,7 @@ private List<NameValuePair> createFormData(String username, String domain,
 
 private String get(String username, String pageid, List<NameValuePair> data) {
 	String sessionId = this.sessions.get(username);
-	System.out.println("pageid: " + pageid);
-	System.out.println("List<NameValuePair> data: " + data);
+
 	if (sessionId == null) {
 		sessionId = this.login(username);
 		if (sessionId == null)
@@ -792,7 +767,6 @@ private List<VariableBinding> addDataBindings(
 
 	JsonObject dataobj = expobj.get("data").getAsJsonObject();
 	String bindings = dataobj.get("bindings").getAsJsonArray().toString();
-	System.out.println("bindings: " + bindings);
 	if (bindings.length() < 7)
 		return vbl;
 
@@ -801,7 +775,6 @@ private List<VariableBinding> addDataBindings(
 		bindings = bindings.substring(1, bindings.length() - 1)
 				.replace("}]}],[{", "}],").replace("}}],[{", "},")
 				.replace("}},{", "},");
-	System.out.println("bindings: " + bindings);
 	JsonObject bindingobj = jsonParser.parse(bindings.trim())
 			.getAsJsonObject();
 
@@ -839,7 +812,6 @@ private List<VariableBinding> addDataBindings(
 					id = id.substring(id.indexOf("#") + 1, id.length() - 1);
 					vbl.add(new VariableBinding(key, id));
 				}
-				System.out.println("key" + bindingobj.get(key).toString());
 			}
 		} else if (v.isParam() && param) {
 			for (int i = 0; i < vbl.size(); i++) {
@@ -855,11 +827,9 @@ private List<VariableBinding> addDataBindings(
 				value = value.substring(1, value.length() - 1);
 
 				vbl.add(new VariableBinding(key,value));
-				System.out.println("key" + bindingobj.get(key).toString());
 			}
 		}
 	}
-	System.out.println(vbl);
 	return vbl;
 }
 
@@ -929,7 +899,6 @@ private String toPlanAcceptableFormat(String username, String domain,
 
 	output += paramBindings + "}," + dataBindings + "}}";
 
-	System.out.println("here" + output);
 	return output;
 }
 
@@ -1050,7 +1019,6 @@ private String upload(String username, String pageid, String type, File file) {
 			.setDefaultCookieStore(this.getCookieStore(sessionId)).build();
 	try {
 		HttpPost post = new HttpPost(this.server + "/" + pageid);
-		System.out.println("pageid: " + pageid);
 		MultipartEntityBuilder builder = MultipartEntityBuilder.create();
 		builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
 		builder.addTextBody("name", file.getName());
@@ -1063,7 +1031,6 @@ private String upload(String username, String pageid, String type, File file) {
 		try {
 			HttpEntity responseEntity = response.getEntity();
 			String strResponse = EntityUtils.toString(responseEntity);
-			System.out.println("strresponse: " + strResponse);
 			EntityUtils.consume(responseEntity);
 
 			if (strResponse.indexOf("j_security_check") > 0) {
