@@ -1,20 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <web-app>
-
-	<servlet>
-		<servlet-name>JAVA WS</servlet-name>
-		<servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
-		<init-param>
-			<param-name>jersey.config.server.provider.packages</param-name>
-			<param-value>org.diskproject.server</param-value>	
-		</init-param>
-		<load-on-startup>1</load-on-startup>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>JAVA WS</servlet-name>
-		<url-pattern>/API/*</url-pattern>
-	</servlet-mapping>
 	
 	<servlet>
 		<servlet-name>DiskServer</servlet-name>

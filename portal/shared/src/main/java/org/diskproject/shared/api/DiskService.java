@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Path("")
 @Produces("application/json")
 @Consumes("application/json")
-public interface DiskService1 extends DirectRestService {
+public interface DiskService extends DirectRestService {
    /*
    * Vocabulary
    */

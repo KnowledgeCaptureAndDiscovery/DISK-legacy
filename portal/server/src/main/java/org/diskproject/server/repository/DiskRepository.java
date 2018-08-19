@@ -958,6 +958,8 @@ public class DiskRepository extends KBRepository {
 					kb.addTriple(t);
 			}
 			kb.save();
+			// Re-run hypotheses if needed
+			this.requeryHypotheses(username, domain);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -966,12 +968,6 @@ public class DiskRepository extends KBRepository {
 	public Graph listAssertions(String username, String domain) {
 		String url = this.ASSERTIONSURI(username, domain);
 		return this.getKBGraph(url);
-	}
-
-	public void addAssertions(String username, String domain, Graph assertions) {
-		List<String> ToBeQueried = getQueriesToBeRun(assertions);
-		this.addQueries(username, domain, ToBeQueried);
-		this.addAssertion(username, domain, assertions);
 	}
 
 	public List<String> getQueriesToBeRun(Graph assertions) {
@@ -1018,11 +1014,7 @@ public class DiskRepository extends KBRepository {
 		try {
 			KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
 			kb.delete();
-			List<String> ToBeQueried = getQueriesToBeRun(assertions);
-			this.addQueries(username, domain, ToBeQueried);
 			this.addAssertion(username, domain, assertions);
-			// Re-run hypotheses if needed
-			this.requeryHypotheses(username, domain);
 
 		} catch (Exception e) {
 			e.printStackTrace();

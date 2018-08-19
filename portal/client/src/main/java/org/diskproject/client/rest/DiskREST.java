@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.diskproject.client.Config;
 import org.diskproject.client.authentication.AuthenticatedDispatcher;
-import org.diskproject.shared.api.DiskService1;
+import org.diskproject.shared.api.DiskService;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
@@ -25,7 +25,7 @@ import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 
 public class DiskREST {
-  public static DiskService1 diskService;
+  public static DiskService diskService;
 
   static class VocabularyCallbacks {
     List<Callback<Vocabulary, Throwable>> callbacks;
@@ -62,12 +62,12 @@ public class DiskREST {
   
   private static String username, domain;
   
-  public static DiskService1 getDiskService() {
+  public static DiskService getDiskService() {
     if(diskService == null) {
       Defaults.setServiceRoot(Config.getServerURL());
       Defaults.setDateFormat(null);
       Defaults.setDispatcher(new AuthenticatedDispatcher());
-      diskService = GWT.create(DiskService1.class);
+      diskService = GWT.create(DiskService.class);
     }
     return diskService;
   }

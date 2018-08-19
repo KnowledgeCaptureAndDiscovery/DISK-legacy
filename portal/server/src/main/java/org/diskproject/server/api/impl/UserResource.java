@@ -19,7 +19,7 @@ import javax.ws.rs.core.SecurityContext;
 
 import org.diskproject.server.users.User;
 import org.diskproject.server.users.UserDatabase;
-import org.diskproject.shared.api.UserService1;
+import org.diskproject.shared.api.UserService;
 import org.diskproject.shared.classes.users.UserCredentials;
 import org.diskproject.shared.classes.users.UserSession;
 
@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Path("")
 @DeclareRoles({"user", "admin", "importer"})
-public class UserResource implements UserService1 {
+public class UserResource implements UserService {
   @Context
   HttpServletResponse response;
   

@@ -82,7 +82,7 @@ public class Config {
     config.addProperty("storage.db", storageDir + File.separator + "DB");
     config.addProperty("server", server);
     config.addProperty("wings.server", "http://www.wings-workflows.org/wings-omics-portal");
-    config.addProperty("wings.passwords.ravali", "ravali123");
+    config.addProperty("wings.passwords.USERNAME_HERE", "PASSWORD_HERE");
     
 
 

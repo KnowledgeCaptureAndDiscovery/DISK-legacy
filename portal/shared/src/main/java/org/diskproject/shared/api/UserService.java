@@ -18,7 +18,7 @@ import org.fusesource.restygwt.client.DirectRestService;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Path("")
-public interface UserService1 extends DirectRestService {
+public interface UserService extends DirectRestService {
   /**
    * Authentication
    */
