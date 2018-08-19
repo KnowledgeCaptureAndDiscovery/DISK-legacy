@@ -22,15 +22,17 @@ Installation
 3. Start tomcat
 	- $ /path/to/tomcat/bin/startup.sh
 
-4. Open http://[your-server-name]:8080/disk-server/data to check that the local repository server is working fine. It might take a little while to open it for the first time as it downloads vocabularies from the internet.
+4. Open http://[your-server-name]:8080/disk-client/index.html#hypotheses to load the vocabulary. It might take a little while to open it for the first time as it downloads vocabularies from the internet.
 
-5. Check $HOME/.diskworkflows/server.properties file to see that server name is correctly identified
+5. Open http://[your-server-name]:8080/disk-server/vocabulary to check that the local repository server is working fine.
 
-6. Open http://[your-server-name]:8080/disk-client to access the Disk UI that connects with the local repository
+6. Check $HOME/.disk/server.properties file to see that server name is correctly identified and to save a Wings Workflows username and password where indicated.
 
-7. Customize the client by changing /path/to/tomcat/webapps/disk-client/customise/config.js
+7. Open http://[your-server-name]:8080/disk-client/index.html to access the Disk UI that connects with the local repository
 
-8. The default userid is "admin" with password "changeme!". Remember to change it :)
+8. Customize the client by changing /path/to/tomcat/webapps/disk-client/customise/config.js
+
+9. The default userid is "admin" with password "changeme!". Remember to change it :) (This function is not currently available.)
 
 
   
