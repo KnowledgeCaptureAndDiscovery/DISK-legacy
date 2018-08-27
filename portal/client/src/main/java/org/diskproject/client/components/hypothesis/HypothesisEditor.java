@@ -62,7 +62,7 @@ public class HypothesisEditor extends Composite
     this.hypothesis = hypothesis;
     name.setValue(hypothesis.getName());
     description.setValue(hypothesis.getDescription());
-    if(hypothesis.getGraph() != null && loadcount==4)
+    if(hypothesis.getGraph() != null && loadcount==3)
       triples.setValue(hypothesis.getGraph().getTriples());
   }
   
@@ -82,7 +82,7 @@ public class HypothesisEditor extends Composite
       new Callback<String, Throwable>() {
     public void onSuccess(String result) {
       loadcount++;
-      if(hypothesis != null && hypothesis.getGraph() != null && loadcount==4)
+      if(hypothesis != null && hypothesis.getGraph() != null && loadcount==3)
         triples.setValue(hypothesis.getGraph().getTriples());
     }
     public void onFailure(Throwable reason) {}

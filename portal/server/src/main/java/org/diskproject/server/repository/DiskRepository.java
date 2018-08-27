@@ -33,7 +33,6 @@ import java.util.regex.Pattern;
 import java.util.Scanner;
 
 import org.apache.commons.lang.SerializationUtils;
-import org.diskproject.server.util.DataQuery;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
 import org.diskproject.shared.classes.common.Triple;
@@ -63,7 +62,7 @@ import edu.isi.wings.ontapi.OntSpec;
 import edu.isi.wings.ontapi.SparqlQuerySolution;
 
 public class DiskRepository extends KBRepository {
-	static DiskRepository singleton;
+	static DiskRepository singleton = null;
 
 	private static SimpleDateFormat dateformatter = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ssX");
@@ -75,14 +74,8 @@ public class DiskRepository extends KBRepository {
 	Map<String, Vocabulary> vocabularies;
 	ScheduledExecutorService monitor;
 	ExecutorService executor;
-	static GmailService gmail;
 
 	public static DiskRepository get() {
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 		if (singleton == null)
 			singleton = new DiskRepository(); // Here
 		return singleton;
@@ -90,15 +83,10 @@ public class DiskRepository extends KBRepository {
 
 	public DiskRepository() {
 		try {
-			// TimeUnit.SECONDS.sleep(1);// wait for server.properties file to
-			// be
-			// written completely
+		//	TimeUnit.SECONDS.sleep(1);// wait for server.properties file to be
+										// written completely
 		} catch (Exception e) {
 		}
-		
-		if (gmail == null) {
-			gmail = GmailService.get();
-			}
 		setConfiguration(KBConstants.DISKURI(), KBConstants.DISKNS());
 		initializeKB(); // Here
 		monitor = Executors.newScheduledThreadPool(10);
@@ -110,8 +98,6 @@ public class DiskRepository extends KBRepository {
 			monitor.shutdownNow();
 		if (executor != null)
 			executor.shutdownNow();
-		if(gmail != null)
-			gmail.shutdown();
 	}
 
 	public String DOMURI(String username, String domain) {
@@ -133,8 +119,6 @@ public class DiskRepository extends KBRepository {
 	public String TLOIURI(String username, String domain) {
 		return this.DOMURI(username, domain) + "/tlois";
 	}
-	
-	
 
 	/**
 	 * KB Initialization
@@ -787,6 +771,7 @@ public class DiskRepository extends KBRepository {
 							boundDataQuery, assertions);
 					TriggeredLOI tloi = null;
 
+
 					for (ArrayList<SparqlQuerySolution> dataSolutions : queryKb
 							.sparqlQuery(dataSparqlQuery)) {// kbapijena
 															// sparqlquery
@@ -998,7 +983,7 @@ public class DiskRepository extends KBRepository {
 			// System.out.println("UITiples.get(i).getPredicate(): "+UITriples.get(i).getPredicate());
 			// System.out.println("UITiples.get(i).getObject(): "+UITriples.get(i).getObject());
 			temp = UITriples.get(i).getPredicate(); // check if asking for query
-			if (temp.equals(KBConstants.NEURONS() + "hasEnigmaQueryLiteral")) {
+			if (temp.equals(KBConstants.NEURONS()+"hasEnigmaQueryLiteral")) {
 				temp = UITriples.get(i).getSubject().toString();
 				file = temp.substring(temp.indexOf("#") + 1);
 				temp = UITriples.get(i).getObject().getValue().toString();
@@ -1671,8 +1656,8 @@ public class DiskRepository extends KBRepository {
 				try {
 					String url = ASSERTIONSURI(username, domain);
 					KBAPI kb = fac.getKB(url, OntSpec.PLAIN, false);
-					KBObject typeprop = kb.getProperty(KBConstants.NEURONS()
-							+ "hasEnigmaQueryLiteral");
+					KBObject typeprop = kb
+							.getProperty(KBConstants.NEURONS()+"hasEnigmaQueryLiteral");
 					equeries = kb.genericTripleQuery(null, typeprop, null);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -1703,7 +1688,7 @@ public class DiskRepository extends KBRepository {
 									}
 								}
 							if (files != null) {
-								for (int f = 0; f < files.length; f += 2) {
+								for (int f = 0; f < files.length; f+=2) {
 									List<VariableBinding> newvb = new ArrayList<VariableBinding>();
 									for (VariableBinding newvar : bindings) {
 										if (!newvar.equals(var))
@@ -1719,18 +1704,13 @@ public class DiskRepository extends KBRepository {
 									WorkflowBindings newwfb = new WorkflowBindings(
 											wflowBindings.get(i).getWorkflow(),
 											wflowBindings.get(i)
-													.getWorkflowLink(), newvb);
-									newwfb.setRun(new WorkflowRun(wflowBindings
-											.get(i).getRun().getId(),
-											wflowBindings.get(i).getRun()
-													.getLink(), wflowBindings
-													.get(i).getRun()
-													.getStatus()));
-									newwfb.setMeta(new MetaWorkflowDetails(
-											wflowBindings.get(i).getMeta()
-													.getHypothesis(),
-											wflowBindings.get(i).getMeta()
-													.getRevisedHypothesis()));
+													.getWorkflowLink(),
+											newvb);
+									newwfb.setRun(new WorkflowRun(wflowBindings.get(i).getRun().getId(),
+											wflowBindings.get(i).getRun().getLink(),
+											wflowBindings.get(i).getRun().getStatus()));
+									newwfb.setMeta(new MetaWorkflowDetails(wflowBindings.get(i).getMeta().getHypothesis(),
+											wflowBindings.get(i).getMeta().getRevisedHypothesis()));
 									wflowBindings.add(newwfb);
 								}
 								break;
@@ -1739,7 +1719,7 @@ public class DiskRepository extends KBRepository {
 							e.printStackTrace();
 						}
 					}
-					if (files != null) {
+					if(files != null){
 						wflowBindings.remove(wflowBindings.get(i));
 						i--;
 					}

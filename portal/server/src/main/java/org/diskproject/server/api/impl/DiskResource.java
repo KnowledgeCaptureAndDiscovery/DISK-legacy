@@ -1,6 +1,5 @@
 package org.diskproject.server.api.impl;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -31,10 +30,6 @@ import org.diskproject.shared.classes.workflow.Workflow;
 import org.diskproject.shared.classes.workflow.WorkflowRun;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.api.services.gmail.Gmail;
-import com.google.api.services.gmail.model.Message;
-
-
 
 
 @Path("")
