@@ -19,6 +19,7 @@ import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 class DiskServer extends ResourceConfig {
 
   public DiskServer() {
+	  System.out.println("me:"+this.toString());
     register(AcceptHeaderFilter.class);
     register(CORSResponseFilter.class);
     register(RolesAllowedDynamicFeature.class);

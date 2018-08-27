@@ -67,9 +67,9 @@ public class LOIEditor extends Composite
     this.loi = loi;
     name.setValue(loi.getName());
     description.setValue(loi.getDescription());
-    if(loi.getHypothesisQuery() != null && loadcount==6)
+    if(loi.getHypothesisQuery() != null && loadcount==8)
       hypothesisQuery.setValue(loi.getHypothesisQuery());
-    if(loi.getHypothesisQuery() != null && loadcount==6)
+    if(loi.getHypothesisQuery() != null && loadcount==8)
       dataQuery.setValue(loi.getDataQuery());    
     workflowlist.loadBindingsList(loi.getWorkflows());
     metaworkflowlist.loadBindingsList(loi.getMetaWorkflows());  
@@ -97,9 +97,9 @@ public class LOIEditor extends Composite
       new Callback<String, Throwable>() {
     public void onSuccess(String result) {
       loadcount++;
-      if(loi != null && loi.getHypothesisQuery() != null && loadcount==6)
+      if(loi != null && loi.getHypothesisQuery() != null && loadcount==8)
         hypothesisQuery.setValue(loi.getHypothesisQuery());
-      if(loi != null && loi.getDataQuery() != null && loadcount==6)
+      if(loi != null && loi.getDataQuery() != null && loadcount==8)
         dataQuery.setValue(loi.getDataQuery());
     }
     public void onFailure(Throwable reason) {}

@@ -1,4 +1,4 @@
-package org.diskproject.server.repository;
+package org.diskproject.server.util;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Scanner;
