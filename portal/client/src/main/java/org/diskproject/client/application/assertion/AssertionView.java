@@ -122,7 +122,7 @@ public class AssertionView extends ApplicationSubviewImpl implements
 		        loader.setVisible(false);
 		        form.setVisible(true);
 		        graph = result;
-		        if(graph != null && loadcount == 4)
+		        if(graph != null && loadcount == 5)
 		          showAssertions();
 		      }
 		      @Override

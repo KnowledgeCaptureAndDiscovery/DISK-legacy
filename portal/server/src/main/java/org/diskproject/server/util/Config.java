@@ -81,9 +81,12 @@ public class Config {
     config.addProperty("storage.tdb", storageDir + File.separator + "TDB");
     config.addProperty("storage.db", storageDir + File.separator + "DB");
     config.addProperty("server", server);
+    config.addProperty("username", "DEFAULT_USERNAME");
+    config.addProperty("domain", "DEFAULT_DOMAIN");
     config.addProperty("wings.server", "http://www.wings-workflows.org/wings-omics-portal");
     config.addProperty("wings.passwords.USERNAME_HERE", "PASSWORD_HERE");
-    
+    config.addProperty("gmail.username", "USERNAME_HERE");
+    config.addProperty("gmail.password", "PASSWORD_HERE");
 
 
     try {
