@@ -1,6 +1,11 @@
 package org.diskproject.server.repository;
 
+import java.awt.Desktop;
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -8,6 +13,7 @@ import javax.mail.*;
 import javax.mail.internet.*;
 import javax.mail.search.FlagTerm;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
@@ -18,18 +24,34 @@ import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.server.util.Config;
 import org.diskproject.server.util.Mail;
+import org.diskproject.server.util.gmail.OAuth2Authenticator;
 import org.diskproject.shared.classes.util.GUID;
+
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeRequestUrl;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeTokenRequest;
+import com.google.api.client.googleapis.auth.oauth2.GoogleRefreshTokenRequest;
+import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.sun.mail.imap.IMAPSSLStore;
+import com.sun.mail.imap.IMAPStore;
+import com.sun.mail.smtp.SMTPTransport;
+import com.sun.mail.util.BASE64EncoderStream;
 
 public class GmailService {
 
 	private static String USER_NAME;
-	private static String PASSWORD; // GMail password
 	static ScheduledExecutorService monitor;
 	static MailMonitor mailThread;
 	static Set<Mail> emails;
 	static GmailService gmail;
 	static boolean created = false;
-    
+	private static final JsonFactory JSON_FACTORY = JacksonFactory
+			.getDefaultInstance();
+
 	/**
 	 * When using this, https://myaccount.google.com/lesssecureapps?pli=1 set
 	 * Allow less secure apps: ON Otherwise, it will not connect
@@ -38,7 +60,6 @@ public class GmailService {
 	 * -->Forwarding and POP/IMAP-->IMAP Access--> Enable IMAP-->Save Changes
 	 */
 	public static void main(String[] args) {
-		// new GmailService();
 
 	}
 
@@ -46,7 +67,6 @@ public class GmailService {
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		if (!created && gmail == null)
@@ -62,14 +82,74 @@ public class GmailService {
 			monitor.shutdownNow();
 	}
 
+	public void refreshTokens() {
+		try {
+			HttpTransport httpTransport = GoogleNetHttpTransport
+					.newTrustedTransport();
+			GoogleTokenResponse response = new GoogleRefreshTokenRequest(
+					httpTransport, JSON_FACTORY,
+					getProperty("gmail.tokens.refresh"),
+					getProperty("gmail.clientId"),
+					getProperty("gmail.clientSecret")).execute();
+			setProperty("gmail.tokens.access", response.getAccessToken());
+			System.out.println("Access Token updated.");
+		} catch (Exception e) {
+			setProperty("gmail.code", "CODE_HERE");
+			e.printStackTrace();
+		}
+	}
+
+	public void promptCode() {
+		String redirectUrl = "urn:ietf:wg:oauth:2.0:oob";
+		String url = new GoogleAuthorizationCodeRequestUrl(
+				getProperty("gmail.clientId"), redirectUrl,
+				Collections.singleton("https://mail.google.com/"))
+				.setAccessType("offline").build();
+		try {
+			if (Desktop.isDesktopSupported()) {
+				Desktop.getDesktop().browse(new URI(url));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		System.out
+				.println("If a url did not automatically open, please open the following in your browser:\n"
+						+ url);
+		try {
+			String start = getProperty("gmail.code");
+			for (int i = 0; i < 4; i++) {
+				Thread.sleep(20000);
+				if (!getProperty("gmail.code").equals(start))
+					break;
+			}
+			if (getProperty("gmail.code").equals(start)) {
+				promptCode();
+				return;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		GoogleTokenResponse response;
+		try {
+			response = new GoogleAuthorizationCodeTokenRequest(
+					new NetHttpTransport(), new JacksonFactory(),
+					getProperty("gmail.clientId"),
+					getProperty("gmail.clientSecret"),
+					getProperty("gmail.code"), redirectUrl).execute();
+			setProperty("gmail.tokens.refresh", response.getRefreshToken());
+			setProperty("gmail.tokens.access", response.getAccessToken());
+			System.out.println("Tokens added.");
+		} catch (Exception e) {
+		}
+	}
+
 	private GmailService() {
 		USER_NAME = getProperty("gmail.username");
-		PASSWORD = getProperty("gmail.password");
 		created = true;
 		emails = new HashSet<Mail>();
 		monitor = Executors.newScheduledThreadPool(1);
 		mailThread = new MailMonitor();
-
+		OAuth2Authenticator.initialize();
 		monitor.scheduleWithFixedDelay(mailThread, 0, 20, TimeUnit.SECONDS);
 	}
 
@@ -78,6 +158,19 @@ public class GmailService {
 			return "";
 		PropertyListConfiguration props = Config.get().getProperties();
 		return props.getString(property);
+	}
+
+	public void setProperty(String property, String value) {
+		if (Config.get() == null)
+			return;
+		PropertyListConfiguration props = Config.get().getProperties();
+		props.setProperty(property, value);
+		try {
+			props.save(props.getFileName());
+		} catch (ConfigurationException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public void saveMail(Message m, boolean read) throws Exception {
@@ -227,28 +320,31 @@ public class GmailService {
 			throw new Exception();
 	}
 
-	public void fetchMessages(String user, String password, boolean read) {
+	public void fetchMessages(String user, boolean read) {
 		try {
+			OAuth2Authenticator.initialize();
+			Properties props = new Properties();
+			props.put("mail.imaps.sasl.enable", "true");
+			props.put("mail.imaps.sasl.mechanisms", "XOAUTH2");
+			props.put(
+					org.diskproject.server.util.gmail.OAuth2SaslClientFactory.OAUTH_TOKEN_PROP,
+					getProperty("gmail.tokens.access"));
+			Session session = Session.getInstance(props);
+			session.setDebug(false);
 
-			Properties props = System.getProperties();
-			String host = "smtp.gmail.com";
-			props.put("mail.smtp.starttls.required", "false");
+			final URLName unusedUrlName = null;
+			IMAPSSLStore store = new IMAPSSLStore(session, unusedUrlName);
+			final String emptyPassword = "";
 
-			props.put("mail.smtp.starttls.enable", "true");
-			props.put("mail.smtp.host", host);
-			props.put("mail.smtp.user", USER_NAME);
-			props.put("mail.smtp.password", PASSWORD);
-			props.put("mail.smtp.port", "587");
-			props.put("mail.smtp.auth", "true");
-
-			props.put("spring.mail.properties.mail.smtp.starttls.enable",
-					"true");
-			props.put("spring.mail.properties.mail.smtp.starttls.required",
-					"false");
-
-			Session session = Session.getDefaultInstance(props);
-			Store store = session.getStore("imaps");
-			store.connect("imap.googlemail.com", 993, user, password);
+			try {
+				store.connect("imap.gmail.com", 993, USER_NAME, emptyPassword);
+			} catch (AuthenticationFailedException e1) {
+				refreshTokens();
+				store.close();
+				System.out.println("uh");
+				e1.printStackTrace();
+				return;
+			}
 			Folder inbox = store.getFolder("INBOX");
 			inbox.open(Folder.READ_WRITE);
 
@@ -260,16 +356,31 @@ public class GmailService {
 				// Delete messages that are not necessary
 				try {
 					message.setFlag(Flags.Flag.SEEN, true);
-					saveMail(message, read);
+					if (message.getSubject().trim().toLowerCase()
+							.equals("hypothesis submission")) {
+						saveMail(message, read);
+					} else if (message.getSubject().trim().toLowerCase()
+							.equals("help")) {
+						String path = getProperty("help_file");
+						sendEmail("Re: Help", message.getReplyTo(), new String(
+								Files.readAllBytes(Paths.get(path))));
+						Folder other = store.getFolder("Help");
+						Message[] m = { message };
+						inbox.copyMessages(m, other);
+						inbox.setFlags(m, new Flags(Flags.Flag.DELETED), true);
+					} else
+						throw new Exception();
 				} catch (Exception e) {
-					Folder trash = store.getFolder("[Gmail]/Other");
+					Folder other = store.getFolder("Other");
 					Message[] m = { message };
-					inbox.copyMessages(m, trash);
+					inbox.copyMessages(m, other);
+					inbox.setFlags(m, new Flags(Flags.Flag.DELETED), true);
+
 				}
 
 			}
 
-			inbox.close(false);
+			inbox.close(true);
 			store.close();
 			System.out.println("emails: " + emails);
 		} catch (Exception e) {
@@ -326,13 +437,6 @@ public class GmailService {
 		return endResult.trim();
 	}
 
-	private void sendEmail(String subject, Address[] recipients, String body) {
-		String from = USER_NAME;
-		String pass = PASSWORD;
-
-		sendFromGMail(from, pass, recipients, subject, body);
-	}
-
 	private void checkForNewResults() {
 		String username = getProperty("username");
 		String domain = getProperty("domain");
@@ -349,16 +453,19 @@ public class GmailService {
 							.listHypotheses(username, domain);
 					for (TreeItem hypothesis : hypList) {
 						try {
-							Hypothesis hyp = DiskRepository.get().getHypothesis(
-									username, domain, hypothesis.getId());
+							Hypothesis hyp = DiskRepository.get()
+									.getHypothesis(username, domain,
+											hypothesis.getId());
 							if (hyp.getParentId() != null
 									&& hyp.getParentId().equals(
 											mail.getHypothesisId())) {
 								System.out.println(hyp);
 								for (Triple t : hyp.getGraph().getTriples()) {
-									results += "\n" + util.toString(t)
+									results += "\n"
+											+ util.toString(t)
 											+ " with Confidence Value: "
-											+ t.getDetails().getConfidenceValue();
+											+ t.getDetails()
+													.getConfidenceValue();
 								}
 							}
 						} catch (Exception e) {
@@ -367,7 +474,8 @@ public class GmailService {
 					}
 					System.out.println(results);
 					if ((mail.getResults() == null && results.length() > 10)
-							|| (mail.getResults()!= null && !mail.getResults().equals(results))) {
+							|| (mail.getResults() != null && !mail.getResults()
+									.equals(results))) {
 						mail.setResults(results);
 						sendEmail("Re: " + mail.getSubject(),
 								mail.getReplyTo(), header + results);
@@ -379,33 +487,46 @@ public class GmailService {
 		}
 	}
 
-	private void sendFromGMail(String from, String pass, Address[] to,
-			String subject, String body) {
-		Properties props = System.getProperties();
-		String host = "smtp.gmail.com";
-		props.put("mail.smtp.starttls.enable", "true");
-		props.put("mail.smtp.host", host);
-		props.put("mail.smtp.user", from);
-		props.put("mail.smtp.password", pass);
-		props.put("mail.smtp.port", "587");
-		props.put("mail.smtp.auth", "true");
-
-		Session session = Session.getDefaultInstance(props);
-		MimeMessage message = new MimeMessage(session);
-
+	private void sendEmail(String subject, Address[] to, String body) {
 		try {
+			OAuth2Authenticator.initialize();
+			Properties props = new Properties();
+			props.put("mail.smtp.starttls.enable", "true");
+			props.put("mail.smtp.starttls.required", "true");
+			props.put("mail.smtp.sasl.enable", "false");
+			Session session = Session.getInstance(props);
+			session.setDebug(false);
+			String from = USER_NAME;
+
+			final URLName unusedUrlName = null;
+			SMTPTransport transport = new SMTPTransport(session, unusedUrlName);
+			// If the password is non-null, SMTP tries to do AUTH LOGIN.
+			final String emptyPassword = null;
+			transport.connect("smtp.gmail.com", 587, from, emptyPassword);
+			byte[] response = String.format("user=%s\1auth=Bearer %s\1\1",
+					from, getProperty("gmail.tokens.access")).getBytes();
+			response = BASE64EncoderStream.encode(response);
+
+			try {
+				transport.issueCommand("AUTH XOAUTH2 " + new String(response),
+						235);
+			} catch (MessagingException e) {
+				refreshTokens();
+				sendEmail(subject, to, body);
+				transport.close();
+				return;
+			}
+
+			Message message = new MimeMessage(session);
+
 			message.setFrom(new InternetAddress(from));
 
 			message.setSubject(subject);
 			message.setText(body);
-			Transport transport = session.getTransport("smtp");
-			transport.connect(host, from, pass);
 			transport.sendMessage(message, to);
 			transport.close();
-		} catch (AddressException ae) {
-			ae.printStackTrace();
-		} catch (MessagingException me) {
-			me.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -413,10 +534,12 @@ public class GmailService {
 
 		boolean stop;
 		boolean firstLoad;
+		boolean settingCode;
 
 		public MailMonitor() {
 			stop = false;
 			firstLoad = true;
+			settingCode = false;
 		}
 
 		public void run() {
@@ -428,13 +551,20 @@ public class GmailService {
 				} else {
 					if (!this.equals(mailThread))
 						stop();
-					if(!firstLoad){
-					if (emails.size() == 0)
-						fetchMessages(USER_NAME, PASSWORD, true);
-					checkForNewResults();
-					fetchMessages(USER_NAME, PASSWORD, false);
-					}
-					else 
+					if (!firstLoad && !settingCode) {
+						if (getProperty("gmail.code").equals("CODE_HERE")) {
+							settingCode = true;
+							promptCode();
+							settingCode = false;
+						} else {
+							System.out.println(this.toString());
+							if (emails.size() == 0)
+								fetchMessages(USER_NAME, true);
+							checkForNewResults();
+							fetchMessages(USER_NAME, false);
+
+						}
+					} else
 						firstLoad = false;
 				}
 			} catch (IllegalStateException e) {
