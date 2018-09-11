@@ -147,7 +147,7 @@ public class GmailService {
 		USER_NAME = getProperty("gmail.username");
 		created = true;
 		emails = new HashSet<Mail>();
-		monitor = Executors.newScheduledThreadPool(1);
+		monitor = Executors.newScheduledThreadPool(0);
 		mailThread = new MailMonitor();
 		OAuth2Authenticator.initialize();
 		monitor.scheduleWithFixedDelay(mailThread, 0, 20, TimeUnit.SECONDS);
