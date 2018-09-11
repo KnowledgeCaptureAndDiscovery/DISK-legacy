@@ -1,7 +1,13 @@
 package org.diskproject.server.util;
+
 import java.net.URLEncoder;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 import com.gargoylesoftware.htmlunit.TextPage;
 import com.gargoylesoftware.htmlunit.WebClient;
@@ -14,33 +20,97 @@ import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.BrowserVersion.BrowserVersionBuilder;
 
 public class DataQuery {
-	public static String [] queryFor(String args) throws Exception{
-			WebClient webClient = WebClientSetup();
-			return prepareQueryString("",args, webClient);
+	public static String[] queryFor(String args) throws Exception {
+		WebClient webClient = WebClientSetup();
+		return prepareQueryString("", args, webClient);
 
 	}
-    public static void main (String [] args)
-    {
-    	try {
-			//System.out.println(Arrays.toString(queryFor(args[0])));
+
+	public static void main(String[] args) {
+		try {
+			boolean update = wasUpdatedInLastDay("[[Category:Person_(E)]][[HasEmail_(E)::Rwang3495@gmail.com]]|?HasResearchInterest_(E)");
+			System.out.println(update);
+			// System.out
+			// .println(Arrays
+			// .toString(queryFor("[[Category:Person_(E)]][[HasEmail_(E)::Rwang3495@gmail.com]]|?HasResearchInterest_(E)")));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    }
-	public static WebClient WebClientSetup() throws Exception {
-		BrowserVersion browserVersion
-        = new BrowserVersion.BrowserVersionBuilder(BrowserVersion.FIREFOX_52)
-            .setApplicationName("Firefox")
-            .setApplicationVersion("5.0 (Windows NT 10.0; WOW64; rv:39.0) Gecko/20100101 Firefox/39.0")
-            .setUserAgent("Mozilla/5.0 (Windows NT 10.0; WOW64; rv:39.0) Gecko/20100101 Firefox/39.0")
-            .build();	
-	
-		WebClient webClient = new WebClient(browserVersion);
-		// Get the first page
-		HtmlPage page1 = webClient
-				.getPage("http://organicdatacuration.org/enigma_new/index.php?title=Special:UserLogin&wpRemember=1&returnto=Regina+Wang&returntoquery=");
+	}
 
+	public static boolean wasUpdatedInLastDay(String query) {
+		try {
+			String inputQuery = query.substring(0, query.indexOf("]]") + 2)
+					+ "[[Modification date::+]]"
+					+ query.substring(query.indexOf("]]") + 2)
+					+ "|?Modification_date#-F[F_d,_y]";
+			WebClient webClient = WebClientSetup();
+			String saveQuery = inputQuery;
+			// Make query machine readable and initialize variables
+			inputQuery = inputQuery.replace("|", "/");
+			int offset = 0;
+
+			query = toMachineReadableQuery(inputQuery).replace("-2F", "/");
+			String MachineReadableQuery = "http://organicdatacuration.org/enigma_new/index.php/Special:Ask/"
+					+ query
+					+ "/sort=Modification date/order=descending"
+					+ "/offset%3D" + offset + "/limit%3D-2010/format=-20csv";
+			// Open query result reader for datasets first
+			System.out.println(MachineReadableQuery);
+			TextPage page3 = (TextPage) webClient.getPage(MachineReadableQuery);
+			// System.out.println(MachineReadableQuery);
+			// System.out.println(page3.getWebResponse().getContentAsString());
+			Scanner s = new Scanner(page3.getWebResponse().getContentAsString());
+			DateFormat dateFormat = new SimpleDateFormat(
+					"dd MMMM yyyy HH:mm:ss");
+			Calendar c = Calendar.getInstance();
+			c.add(Calendar.DATE, -21);
+			s.useDelimiter(Pattern.compile("(\\n)|,"));
+			Calendar c2;
+			s.nextLine();
+			while (s.hasNextLine()) {
+				s.next();
+				if (s.next() != null) {
+					c2 = Calendar.getInstance();
+					c2.setTime(dateFormat.parse(s.next().replace("\"", "")
+							.replace("\'", "")));
+					if (c.compareTo(c2) <= 0)
+						return true;
+					break;
+				}
+
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return false;
+	}
+
+	public static WebClient WebClientSetup() throws Exception {
+		BrowserVersion browserVersion = new BrowserVersion.BrowserVersionBuilder(
+				BrowserVersion.FIREFOX_52)
+				.setApplicationName("Firefox")
+				.setApplicationVersion(
+						"5.0 (Windows NT 10.0; WOW64; rv:39.0) Gecko/20100101 Firefox/39.0")
+				.setUserAgent(
+						"Mozilla/5.0 (Windows NT 10.0; WOW64; rv:39.0) Gecko/20100101 Firefox/39.0")
+				.build();
+
+		WebClient webClient = new WebClient(browserVersion);
+		HtmlPage page1 = null;
+		// Get the first page
+		for (int i = 0; i < 3; i++)
+			try {
+				page1 = webClient
+						.getPage("http://organicdatacuration.org/enigma_new/index.php?title=Special:UserLogin&wpRemember=1&returnto=Regina+Wang&returntoquery=");
+				break;
+			} catch (Exception e) {
+			}
+		if(page1 == null)
+			page1 = webClient
+			.getPage("http://organicdatacuration.org/enigma_new/index.php?title=Special:UserLogin&wpRemember=1&returnto=Regina+Wang&returntoquery=");
+	
 		// Get the form that we are dealing with and within that form,
 		// find the submit button and the field that we want to change.
 		HtmlForm form = page1.getFormByName("userlogin");
@@ -60,79 +130,79 @@ public class DataQuery {
 		return webClient;
 	}
 
-	public static String [] prepareQueryString(String str, String inputQuery,
-			WebClient webClient) throws Exception{
-			String saveQuery = inputQuery;
-			// Make query machine readable and initialize variables
-			inputQuery = inputQuery.replace("|", "/");
-			int offset = 0;
-			
-			String query = toMachineReadableQuery(inputQuery).replace("-2F",
-					"/");
-			String MachineReadableQuery = "http://organicdatacuration.org/enigma_new/index.php/Special:Ask/"
-					+ query
-					+ "/offset%3D"
-					+ offset
-					+ "/limit%3D-2010/format=-20csv";
-			// Open query result reader for datasets first
-			
-			TextPage page3 =  (TextPage)webClient.getPage(MachineReadableQuery);
-			//System.out.println(MachineReadableQuery);
-			//System.out.println(page3.getWebResponse().getContentAsString());
-			Scanner s = new Scanner(page3.getWebResponse().getContentAsString());
-			s.useDelimiter(",");
+	public static String[] prepareQueryString(String str, String inputQuery,
+			WebClient webClient) throws Exception {
+		String saveQuery = inputQuery;
+		// Make query machine readable and initialize variables
+		inputQuery = inputQuery.replace("|", "/");
+		int offset = 0;
 
-			// Set up reading through pages (first line is irrelevant)
-			// (500 datasets per query max)
-			s.nextLine();
-			String SingleResult;
-			try {
-				while ((SingleResult = s.nextLine()) != null) {
-					// Read through query results
-					try {
-						// System.out.println(SingleResult);
-						while (SingleResult != null) {
-							if (SingleResult.indexOf(",") != -1
-									&& SingleResult.indexOf(",") != SingleResult
-											.length() - 1) {
-								SingleResult = SingleResult
-										.substring(SingleResult.indexOf(",") + 1);
-								String data = pageNameToFileInformation(
-										SingleResult, webClient);
-								// Open new file in zip and save text into entry
-								str += data + "\n\",\"\n";
-							}
-							SingleResult = s.nextLine();
+		String query = toMachineReadableQuery(inputQuery).replace("-2F", "/");
+		String MachineReadableQuery = "http://organicdatacuration.org/enigma_new/index.php/Special:Ask/"
+				+ query
+				+ "/offset%3D"
+				+ offset
+				+ "/limit%3D-2010/format=-20csv";
+		// Open query result reader for datasets first
+
+		TextPage page3 = (TextPage) webClient.getPage(MachineReadableQuery);
+		// System.out.println(MachineReadableQuery);
+		// System.out.println(page3.getWebResponse().getContentAsString());
+		Scanner s = new Scanner(page3.getWebResponse().getContentAsString());
+		s.useDelimiter(",");
+
+		// Set up reading through pages (first line is irrelevant)
+		// (500 datasets per query max)
+		s.nextLine();
+		String SingleResult;
+		try {
+			while ((SingleResult = s.nextLine()) != null) {
+				// Read through query results
+				try {
+					// System.out.println(SingleResult);
+					while (SingleResult != null) {
+						if (SingleResult.indexOf(",") != -1
+								&& SingleResult.indexOf(",") != SingleResult
+										.length() - 1) {
+							SingleResult = SingleResult.substring(SingleResult
+									.indexOf(",") + 1);
+							String data = pageNameToFileInformation(
+									SingleResult, webClient);
+							// Open new file in zip and save text into entry
+							str += data + "\n\",\"\n";
 						}
-					} catch (Exception e) {
+						SingleResult = s.nextLine();
 					}
-					offset += 10;
-					MachineReadableQuery = "http://organicdatacuration.org/enigma_new/index.php/Special:Ask/"
-							+ query
-							+ "/offset%3D"
-							+ offset
-							+ "/limit%3D-2010/format=-20csv";
-					// Get query results for datasets again\
-					//System.out.println(MachineReadableQuery);
-					page3 = (TextPage)webClient.getPage(MachineReadableQuery);
-					s = new Scanner(page3.getWebResponse().getContentAsString());
-					s.nextLine();
+				} catch (Exception e) {
 				}
-			} catch (Exception e) {
+				offset += 10;
+				MachineReadableQuery = "http://organicdatacuration.org/enigma_new/index.php/Special:Ask/"
+						+ query
+						+ "/offset%3D"
+						+ offset
+						+ "/limit%3D-2010/format=-20csv";
+				// Get query results for datasets again\
+				// System.out.println(MachineReadableQuery);
+				page3 = (TextPage) webClient.getPage(MachineReadableQuery);
+				s = new Scanner(page3.getWebResponse().getContentAsString());
+				s.nextLine();
 			}
-			String [] output = new String [2];
-			try{
+		} catch (Exception e) {
+		}
+		String[] output = new String[2];
+		try {
 			str = str.substring(0, str.length() - 3);
-			}catch(Exception e){}
-			saveQuery = saveQuery.replace("/", "").replace("\\", "")
-					.replace(":", "").replace("*", "").replace("?", "")
-					.replace("\"", "").replace("<", "").replace(">", "")
-					.replace("|", "");
-			output[0] = saveQuery;
-			output[1] = str;
-			s.close();
-			return output;
-			// Clean up
+		} catch (Exception e) {
+		}
+		saveQuery = saveQuery.replace("/", "").replace("\\", "")
+				.replace(":", "").replace("*", "").replace("?", "")
+				.replace("\"", "").replace("<", "").replace(">", "")
+				.replace("|", "");
+		output[0] = saveQuery;
+		output[1] = str;
+		s.close();
+		return output;
+		// Clean up
 	}
 
 	/**
@@ -151,8 +221,8 @@ public class DataQuery {
 	}
 
 	public static String pageNameToFileInformation(String SingleResult,
-			WebClient webClient){
-			try{
+			WebClient webClient) {
+		try {
 			// Find dataset link and download file
 			HtmlPage page3 = webClient
 					.getPage("http://organicdatacuration.org/enigma_new/index.php/"
@@ -171,10 +241,11 @@ public class DataQuery {
 			return SingleResult.replace("/", "").replace("\\", "")
 					.replace(":", "").replace("*", "").replace("?", "")
 					.replace("\"", "").replace("<", "").replace(">", "")
-					.replace("|", "")+ "\n\",\"\n" +pageTxt.getWebResponse().getContentAsString();
-			}
-			catch(Exception e)
-			{}
+					.replace("|", "")
+					+ "\n\",\"\n"
+					+ pageTxt.getWebResponse().getContentAsString();
+		} catch (Exception e) {
+		}
 		return "";
 	}
 

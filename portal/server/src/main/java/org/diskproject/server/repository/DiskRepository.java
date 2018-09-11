@@ -33,6 +33,8 @@ import java.util.regex.Pattern;
 import java.util.Scanner;
 
 import org.apache.commons.lang.SerializationUtils;
+import org.diskproject.server.repository.GmailService.MailMonitor;
+import org.diskproject.server.util.Config;
 import org.diskproject.server.util.DataQuery;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
@@ -74,8 +76,10 @@ public class DiskRepository extends KBRepository {
 
 	Map<String, Vocabulary> vocabularies;
 	ScheduledExecutorService monitor;
+	ScheduledExecutorService monitorData;
 	ExecutorService executor;
 	static GmailService gmail;
+	static DataMonitor dataThread;
 
 	public static DiskRepository get() {
 		try {
@@ -89,20 +93,17 @@ public class DiskRepository extends KBRepository {
 	}
 
 	public DiskRepository() {
-		try {
-			// TimeUnit.SECONDS.sleep(1);// wait for server.properties file to
-			// be
-			// written completely
-		} catch (Exception e) {
-		}
-		
 		if (gmail == null) {
 			gmail = GmailService.get();
-			}
+		}
 		setConfiguration(KBConstants.DISKURI(), KBConstants.DISKNS());
 		initializeKB(); // Here
 		monitor = Executors.newScheduledThreadPool(10);
 		executor = Executors.newFixedThreadPool(2);
+		monitorData = Executors.newScheduledThreadPool(1);
+		dataThread = new DataMonitor();
+		monitor.scheduleWithFixedDelay(dataThread, (long) .02, 24,
+				TimeUnit.HOURS);
 	}
 
 	public void shutdownExecutors() {
@@ -110,7 +111,11 @@ public class DiskRepository extends KBRepository {
 			monitor.shutdownNow();
 		if (executor != null)
 			executor.shutdownNow();
-		if(gmail != null)
+		if (dataThread != null)
+			dataThread.stop();
+		if (monitorData != null)
+			monitorData.shutdownNow();
+		if (gmail != null)
 			gmail.shutdown();
 	}
 
@@ -133,8 +138,6 @@ public class DiskRepository extends KBRepository {
 	public String TLOIURI(String username, String domain) {
 		return this.DOMURI(username, domain) + "/tlois";
 	}
-	
-	
 
 	/**
 	 * KB Initialization
@@ -1907,4 +1910,61 @@ public class DiskRepository extends KBRepository {
 		}
 	}
 
+	public class DataMonitor implements Runnable {
+		boolean stop;
+		String defaultUsername;
+		String defaultDomain;
+
+		public DataMonitor() {
+			stop = false;
+		}
+
+		public void run() {F
+				if (!stop){
+					if (stop) {
+						while (!Thread.currentThread().isInterrupted()) {
+							Thread.currentThread().interrupt();
+						}
+					} else if (!this.equals(dataThread)) {
+						if (!stop)
+							stop();
+						return;
+					} else {
+						defaultUsername = Config.get().getProperties()
+								.getString("username");
+						defaultDomain = Config.get().getProperties()
+								.getString("domain");
+						String url = ASSERTIONSURI(defaultUsername,
+								defaultDomain);
+						KBAPI kb = fac.getKB(url, OntSpec.PLAIN, false);
+						KBObject typeprop = kb.getProperty(KBConstants
+								.NEURONS() + "hasEnigmaQueryLiteral");
+						List<KBTriple> equeries = kb.genericTripleQuery(null,
+								typeprop, null);
+						for (KBTriple kbt : equeries)
+							if (DataQuery.wasUpdatedInLastDay(kbt.getObject()
+									.getValueAsString())) {
+								requeryHypotheses(defaultUsername,
+										defaultDomain);
+								System.out.println(this.toString());
+								break;
+							}
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					while (!Thread.interrupted()) {
+						stop = true;
+						Thread.currentThread().interrupt();
+					}
+		}
+
+		public void stop() {
+			stop = true;
+			run();
+			while (!Thread.interrupted()) {
+				System.out.println("Shutting Down");
+				Thread.currentThread().interrupt();
+			}
+		}
+	}
 }

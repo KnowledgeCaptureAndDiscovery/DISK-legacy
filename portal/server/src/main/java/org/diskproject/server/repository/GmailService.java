@@ -549,8 +549,10 @@ public class GmailService {
 						Thread.currentThread().interrupt();
 					}
 				} else {
-					if (!this.equals(mailThread))
+					if (!this.equals(mailThread)){
 						stop();
+						return;
+					}
 					if (!firstLoad && !settingCode) {
 						if (getProperty("gmail.code").equals("CODE_HERE")) {
 							settingCode = true;
@@ -567,7 +569,7 @@ public class GmailService {
 					} else
 						firstLoad = false;
 				}
-			} catch (IllegalStateException e) {
+			} catch (Exception e) {
 				while (!Thread.interrupted()) {
 					stop = true;
 					Thread.currentThread().interrupt();
