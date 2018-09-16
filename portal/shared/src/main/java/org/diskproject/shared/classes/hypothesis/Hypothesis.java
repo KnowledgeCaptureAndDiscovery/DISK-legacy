@@ -9,6 +9,16 @@ public class Hypothesis {
   String parentId;
   Graph graph;
   
+  public Hypothesis (String id, String name, String description, String parentId, Graph graph){
+	  this.id = id;
+	  this.name = name;
+	  this.description = description;
+	  this.parentId = parentId;
+	  this.graph = graph;
+  }
+    
+  public Hypothesis(){}
+  
   public String getId() {
     return id;
   }

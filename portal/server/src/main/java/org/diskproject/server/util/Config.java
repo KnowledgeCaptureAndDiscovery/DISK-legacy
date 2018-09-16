@@ -5,6 +5,7 @@ import java.io.File;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 
 public class Config {
@@ -26,6 +27,11 @@ public class Config {
   }
   
   public PropertyListConfiguration getProperties() {
+      try {
+		props.load();
+	} catch (ConfigurationException e) {
+		e.printStackTrace();
+	}
     return this.props;
   }
   
@@ -57,6 +63,7 @@ public class Config {
     PropertyListConfiguration props = new PropertyListConfiguration();
     try {
         props.load(configFile);
+        props.setFileName(configFile);
     } catch (Exception e) {
         e.printStackTrace();
     }
@@ -81,8 +88,21 @@ public class Config {
     config.addProperty("storage.tdb", storageDir + File.separator + "TDB");
     config.addProperty("storage.db", storageDir + File.separator + "DB");
     config.addProperty("server", server);
+    config.addProperty("username", "DEFAULT_USERNAME");
+    config.addProperty("domain", "DEFAULT_DOMAIN");
+    config.addProperty("wings.server", "http://www.wings-workflows.org/wings-omics-portal");
+    config.addProperty("wings.passwords.USERNAME_HERE", "PASSWORD_HERE");
+    config.addProperty("gmail.username", "USERNAME_HERE");
+    config.addProperty("gmail.code", "CODE_HERE");
+    config.addProperty("gmail.clientId", "CLIENT_ID_HERE");
+    config.addProperty("gmail.clientSecret", "CLIENT_SECRET_HERE");
+    config.addProperty("gmail.tokens.access", "Automatically_Generated");
+    config.addProperty("gmail.tokens.refresh", "Automatically_Generated");
+    config.addProperty("help_file", "FILE_LOCATION");
+
 
     try {
+    	config.setFileName("file://" + configFile);
         config.save("file://" + configFile);
     } catch (Exception e) {
         e.printStackTrace();

@@ -1,5 +1,5 @@
 var CONFIG = {
-	SERVER : "http://localhost:9090/disk-project-server",
+	SERVER : "http://localhost:8080/disk-server",
 	TITLE : "Disk",
 	COLORS : {
 		base : "#5D7BA0", // Background color for Top Banner, and Headers
@@ -11,11 +11,12 @@ var CONFIG = {
 }
 
 CONFIG.WINGS = {
-	userid : "admin",
-	domain : "genomics"
+	userid : "ravali",
+	domain : "test"
 }
 
 CONFIG.HOME = "	<p>\n" + 
 		"		This portal provides access to the DISK Hypothesis reasoner\n" + 
 		"	</p>\n";
+
 

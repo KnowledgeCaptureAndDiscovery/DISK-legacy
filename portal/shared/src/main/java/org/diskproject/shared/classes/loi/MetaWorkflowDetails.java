@@ -4,6 +4,13 @@ public class MetaWorkflowDetails {
   String hypothesis;
   String revisedHypothesis;
 
+  public MetaWorkflowDetails(){}
+  
+  public MetaWorkflowDetails(String hypothesis, String revisedHypothesis){
+	  this.hypothesis = hypothesis;
+	  this.revisedHypothesis = revisedHypothesis;
+  }
+
   public String getHypothesis() {
     return hypothesis;
   }

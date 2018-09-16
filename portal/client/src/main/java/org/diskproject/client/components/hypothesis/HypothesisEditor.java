@@ -62,7 +62,7 @@ public class HypothesisEditor extends Composite
     this.hypothesis = hypothesis;
     name.setValue(hypothesis.getName());
     description.setValue(hypothesis.getDescription());
-    if(hypothesis.getGraph() != null && loadcount==3)
+    if(hypothesis.getGraph() != null && loadcount==4)
       triples.setValue(hypothesis.getGraph().getTriples());
   }
   
@@ -74,6 +74,7 @@ public class HypothesisEditor extends Composite
     loadcount=0;
     triples.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
     triples.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
+    triples.loadVocabulary("neuro", KBConstants.NEUROURI(), vocabLoaded);
     triples.loadUserVocabulary("user", this.userid, this.domain, vocabLoaded);
   }
   
@@ -81,7 +82,7 @@ public class HypothesisEditor extends Composite
       new Callback<String, Throwable>() {
     public void onSuccess(String result) {
       loadcount++;
-      if(hypothesis != null && hypothesis.getGraph() != null && loadcount==3)
+      if(hypothesis != null && hypothesis.getGraph() != null && loadcount==4)
         triples.setValue(hypothesis.getGraph().getTriples());
     }
     public void onFailure(Throwable reason) {}
