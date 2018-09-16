@@ -1,9 +1,10 @@
 package org.diskproject.server.util.gmail;
 
 /* Copyright 2012 Google Inc.
-*
+* 
 * NOTICE:
 * Derived from https://github.com/google/gmail-oauth2-tools/tree/master/java/com/google/code/samples/oauth2
+* because there are no maven dependencies for this
 * and fixed/updated SMTP Connection
 * 
 * Licensed under the Apache License, Version 2.0 (the "License");

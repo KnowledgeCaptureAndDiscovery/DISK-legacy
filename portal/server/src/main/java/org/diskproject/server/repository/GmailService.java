@@ -375,6 +375,7 @@ public class GmailService {
 
 	/**
 	 * TODO: Add querying for vocabulary so client does not have to know namespaces
+	 * TODO: Fix what to do if there is a connection issue. It is causing glitches at the moment.
 	 */
 	public void fetchMessages(String user, boolean read) {
 		try {
@@ -412,12 +413,17 @@ public class GmailService {
 					if (message.getSubject().trim().toLowerCase().equals("hypothesis submission")) {
 						saveMail(message, read);
 					} else if (message.getSubject().trim().toLowerCase().equals("help")) {
+						try {
 						String path = getProperty("help_file");
 						sendEmail("Re: Help", message.getReplyTo(), new String(Files.readAllBytes(Paths.get(path))));
 						Folder other = store.getFolder("Help");
 						Message[] m = { message };
 						inbox.copyMessages(m, other);
 						inbox.setFlags(m, new Flags(Flags.Flag.DELETED), true);
+						}
+						catch(Exception e) {
+							e.printStackTrace();
+						}
 					} else
 						throw new Exception();
 				} catch (Exception e) {
@@ -574,7 +580,7 @@ public class GmailService {
 		boolean settingCode;
 
 		public MailMonitor() {
-			monitor.scheduleWithFixedDelay(this, 5, 5, TimeUnit.SECONDS);
+			monitor.scheduleWithFixedDelay(this, 20, 20, TimeUnit.SECONDS);
 			stop = false;
 			load = 0;
 			settingCode = false;

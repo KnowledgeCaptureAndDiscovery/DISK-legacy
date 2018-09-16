@@ -23,12 +23,11 @@ public class exampleUseOfDiskAPI {
 
 	public static void main(String[] args) {
 
-		vocabularyAPIExamples(); //verified to work
-		hypothesisAPIExamples(); //verified to work
-		assertionsAPIExamples(); //verified to work
-		lineOfInquiryAPIExamples(); //verified to work
-		triggeredLineOfInquiryAPIExmaples();
-		workflowAPIExamples(); //verified to work
+		vocabularyAPIExamples(); 
+		hypothesisAPIExamples(); 
+		assertionsAPIExamples(); 
+		lineOfInquiryAPIExamples(); 
+		workflowAPIExamples(); 
 	}
 
 	public static void vocabularyAPIExamples() {
@@ -106,20 +105,6 @@ public class exampleUseOfDiskAPI {
 		
 		//deletes specified loi
 		delete(user + "/" + domain + "/lois/"+LoiId);
-	}
-	
-	public static void triggeredLineOfInquiryAPIExmaples() {
-		// addTriggeredLOI
-		
-		
-		//listTriggeredLOIs
-		
-		
-		//getTriggeredLOI
-		
-		
-		//deleteTriggeredLOI
-		
 	}
 	
 	public static void workflowAPIExamples() {	

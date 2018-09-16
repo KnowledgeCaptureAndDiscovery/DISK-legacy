@@ -52,7 +52,7 @@ public class DiskResource implements DiskService {
   DiskRepository repo;
   
   public DiskResource() {
-    this.repo = DiskRepository.get(); //Here
+    this.repo = DiskRepository.get(); 
   }
   /*
    * Vocabulary

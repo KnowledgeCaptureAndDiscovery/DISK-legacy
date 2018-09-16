@@ -50,9 +50,9 @@ public class KBRepository {
     this.fac = new OntFactory(OntFactory.JENA, tdbdir);
     try {
       ontkb = fac.getKB(this.onturi, OntSpec.PELLET, false, true);
-      TimeUnit.SECONDS.sleep(2);
+      TimeUnit.SECONDS.sleep(2); 
       // Temporary hacks
-      // this.temporaryHacks();
+      this.temporaryHacks();
       
       pmap = new HashMap<String, KBObject>();
       cmap = new HashMap<String, KBObject>();
