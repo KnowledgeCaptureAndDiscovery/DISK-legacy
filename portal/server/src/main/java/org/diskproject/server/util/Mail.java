@@ -51,6 +51,7 @@ public class Mail {
 	}
 	
 	public void setResults(String results) {
+		System.out.println("Results saved. "+ results);
 		this.results = results;
 	}
 	
@@ -75,8 +76,8 @@ public class Mail {
 	}
 
 	public String toString() {
-		return "Subject: " + getSubject() + "\nReply To: "
-				+ Arrays.toString(getReplyTo()) + "\nBody: "+getContent();
+		return "Subject: " + getSubject() + " From: "
+				+ Arrays.toString(getReplyTo()) + " Body: "+getContent();
 	}
 	
 	public int hashCode(){

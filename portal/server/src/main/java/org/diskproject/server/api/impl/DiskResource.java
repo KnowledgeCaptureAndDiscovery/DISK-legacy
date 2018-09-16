@@ -339,7 +339,6 @@ public class DiskResource implements DiskService {
       @PathParam("domain") String domain,
       @PathParam("id") String id) {
     // Check execution status
-	  System.out.println(id);
     return WingsAdapter.get().getWorkflowRunStatus(username, domain, id);
   }  
    

@@ -27,7 +27,6 @@ public class KBRepository {
     if(Config.get() == null)
       return;
     PropertyListConfiguration props = Config.get().getProperties();
-    System.out.println("props: "+props);
     this.server = props.getString("server");
     tdbdir = props.getString("storage.tdb");
     File tdbdirf = new File(tdbdir);
@@ -58,8 +57,6 @@ public class KBRepository {
       pmap = new HashMap<String, KBObject>();
       cmap = new HashMap<String, KBObject>();
       this.cacheKBTerms(ontkb);
-      System.out.println("pmap: "+pmap);
-      System.out.println("cmap: "+cmap);
     } catch (Exception e) {
       e.printStackTrace();
     }

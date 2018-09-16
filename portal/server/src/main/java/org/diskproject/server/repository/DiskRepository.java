@@ -106,7 +106,6 @@ public class DiskRepository extends KBRepository {
 		monitor = Executors.newScheduledThreadPool(0);
 		executor = Executors.newFixedThreadPool(2);
 		dataThread = new DataMonitor();
-		dataThread.run();
 	}
 
 	public void shutdownExecutors() {
@@ -172,8 +171,6 @@ public class DiskRepository extends KBRepository {
 			this.vocabularies = new HashMap<String, Vocabulary>();
 			this.vocabularies.put(KBConstants.NEUROURI(),
 					this.initializeVocabularyFromKB(this.neuroontkb, KBConstants.NEURONS()));
-			// System.out.println("KBConstants.DISKNS(): "+KBConstants.DISKNS());
-			// System.out.println("ontkb: "+this.ontkb);
 			this.hypontkb = fac.getKB(KBConstants.HYPURI(), OntSpec.PLAIN, false, true);
 			this.vocabularies.put(KBConstants.HYPURI(),
 					this.initializeVocabularyFromKB(this.hypontkb, KBConstants.HYPNS()));
@@ -337,8 +334,6 @@ public class DiskRepository extends KBRepository {
 					vocabulary.addType(type);
 				} catch (Exception e) {
 					// Verified that exception is not abnormal
-					// System.out.println(t);
-					// System.out.println(inst);
 					// e.printStackTrace();
 				}
 			}
@@ -927,29 +922,13 @@ public class DiskRepository extends KBRepository {
 		String query;
 		Triple tri;
 		for (int i = 0; i < UITriples.size(); i++) {
-			// System.out.println("UITiples.get(i).getSubject():
-			// "+UITriples.get(i).getSubject());
-			// System.out.println("UITiples.get(i).getPredicate():
-			// "+UITriples.get(i).getPredicate());
-			// System.out.println("UITiples.get(i).getObject():
-			// "+UITriples.get(i).getObject());
 			temp = UITriples.get(i).getPredicate(); // check if asking for query
 			if (temp.equals(KBConstants.NEURONS() + "hasEnigmaQueryLiteral")) {
 				temp = UITriples.get(i).getSubject().toString();
 				file = temp.substring(temp.indexOf("#") + 1);
 				temp = UITriples.get(i).getObject().getValue().toString();
 				query = temp.replace("|", "/");
-				// query = DataQuery.toMachineReadableQuery(query);
 				toQuery.add(file + " " + query);
-				// temp2 = DataQuery.queryFor(temp);
-				// System.out.println("here we are:" + temp2[1]);
-				// temp2 = temp2[1].split("\",\"");
-				// tri = new Triple();
-				// tri.setSubject(this.ASSERTIONSURI(username,
-				// domain)+"#"+temp2.length);
-				// tri.setPredicate(UITriples.get(i).getPredicate());
-				// tri.setObject(UITriples.get(i).getObject());
-				// UITriples.add(tri);
 
 			}
 		}
@@ -1747,11 +1726,12 @@ public class DiskRepository extends KBRepository {
 
 		public DataMonitor() {
 			stop = false;
-			scheduledFuture = monitor.scheduleWithFixedDelay(this, 5, 24, TimeUnit.SECONDS);
+			scheduledFuture = monitor.scheduleWithFixedDelay(this, 0 , 1, TimeUnit.DAYS);
 		}
 
 		public void run() {
 			try {
+				Thread.sleep(5000);
 				if (stop) {
 					scheduledFuture.cancel(false);
 					while (!Thread.currentThread().isInterrupted()) {
@@ -1770,9 +1750,8 @@ public class DiskRepository extends KBRepository {
 					 List<KBTriple> equeries = kb.genericTripleQuery(null, typeprop, null);
 					 for (KBTriple kbt : equeries)
 					 if (DataQuery.wasUpdatedInLastDay(kbt.getObject().getValueAsString())) {
-					 requeryHypotheses(defaultUsername, defaultDomain);
-					 System.out.println(this.toString());
-					 break;
+						 requeryHypotheses(defaultUsername, defaultDomain);
+						 break;
 					 }
 
 				}

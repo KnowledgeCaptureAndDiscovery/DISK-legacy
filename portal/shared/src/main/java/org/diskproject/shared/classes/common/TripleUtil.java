@@ -35,11 +35,9 @@ public class TripleUtil {
   
   public Triple fromString(String tripleString) {
     String[] tarr = tripleString.split("\\s+", 3);
-	  System.out.println(Arrays.toString(tarr));
     String subject = this.getURIValue(tarr[0]);
     String predicate = this.getURIValue(tarr[1]);
     Value object = this.getObjectValue(tarr[2]);
-	  System.out.println("triple: "+subject+" "+predicate+" "+object);
 
     if(subject != null && predicate != null && object != null) {
       Triple triple = new Triple();
@@ -58,7 +56,6 @@ public class TripleUtil {
     Matcher m1 = uriPattern.matcher(qname);
     if(m1.find())
       return m1.group(1);
-    System.out.println(qname);
     Matcher m2 = qnamePattern.matcher(qname);
     if(m2.find()) {
       if(this.nsmap.containsKey(m2.group(1)))

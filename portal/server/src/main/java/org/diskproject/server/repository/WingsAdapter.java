@@ -547,6 +547,7 @@ public String addOrUpdateData(String username, String domain, String id,
 	List<NameValuePair> formdata = new ArrayList<NameValuePair>();
 
 	System.out.println("Upload " + id);
+	String response = null;
 	try {
 		File dir = File.createTempFile("tmp", "");
 		if (!dir.delete() || !dir.mkdirs()) {
@@ -562,16 +563,20 @@ public String addOrUpdateData(String username, String domain, String id,
 		List<NameValuePair> data = new ArrayList<NameValuePair>();
 		data.add(new BasicNameValuePair("data_id", dataid));
 		data.add(new BasicNameValuePair("data_type", type));
-		String response = post(username, postpage, data);
+		response = post(username, postpage, data);
 		List<NameValuePair> location = new ArrayList<NameValuePair>();
 		location.add(new BasicNameValuePair("data_id", dataid));
 		location.add(new BasicNameValuePair("location", "/scratch/data/wings/storage/default/users/"+username+"/"+domain+"/data/"+dataid.substring(dataid.indexOf('#')+1)));
 		response = post(username, locationpage, location);
-		System.out.println("Upload Location: " + response);
+		if(response.equals("OK"))
+			System.out.println("Upload successful.");
+		else 
+			System.out.println("Upload failed.");
 	} catch (Exception e) {
+		System.out.println("Upload failed.");
 		e.printStackTrace();
 	}
-	return null;
+	return response;
 }
 
 public String addDataToWings(String username, String domain, String id,
@@ -966,16 +971,8 @@ private String post(String username, String pageid, List<NameValuePair> data) {
 	try {
 		HttpPost securedResource = new HttpPost(this.server + "/" + pageid);
 		securedResource.setEntity(new UrlEncodedFormEntity(data));
-		// securedResource.addHeader("Accept", "application/json");
-		// securedResource.setHeader("Content-type", "application/json")
 		CloseableHttpResponse httpResponse = client
 				.execute(securedResource);
-		// System.out.println("first try: "+EntityUtils.toString(httpResponse.getEntity()));
-		// client = HttpClientBuilder.create()
-		// .setDefaultCookieStore(this.getCookieStore(sessionId)).build();
-		// securedResource = new HttpPost(this.server + "/" + pageid);
-		// httpResponse = client
-		// .execute(securedResource);
 		try {
 			HttpEntity responseEntity = httpResponse.getEntity();
 			String strResponse = EntityUtils.toString(responseEntity);
