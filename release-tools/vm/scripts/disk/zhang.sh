@@ -179,9 +179,12 @@ pip install RSeQC
 # R Packages
 # ----------
 
-yum -y install R-devel openssl-devel libcurl-devel
+yum -y install R-devel openssl-devel libcurl-devel libxml2-devel
 
 Rscript - << EOT
+source('http://bioconductor.org/biocLite.R')
+biocLite()
+
 install.packages("codetools", repos='http://cran.us.r-project.org')
 install.packages("devtools", repos='http://cran.us.r-project.org')
 install.packages("curl", repos='http://cran.us.r-project.org')
@@ -190,9 +193,13 @@ install_github("kassambara/easyGgplot2")
 install.packages("ggplot2", repos='http://cran.us.r-project.org')
 install.packages("reshape", repos='http://cran.us.r-project.org')
 install.packages("reshape2", repos='http://cran.us.r-project.org')
-install.packages("dplyr", repos="http://R-Forge.R-project.org")
-install.packages("Vennerable", repos="http://R-Forge.R-project.org")
-install.packages("PerformanceAnalytics", repos="http://R-Forge.R-project.org")
+install.packages("dplyr", repos='http://cran.us.r-project.org')
+
+biocLite("graph")
+biocLite("RBGL")
+install.packages("Vennerable", repos='http://R-Forge.R-project.org')
+
+install.packages("PerformanceAnalytics", repos='http://cran.us.r-project.org')
 install.packages("psych", repos='http://cran.us.r-project.org')
 install.packages("circlize", repos='http://cran.us.r-project.org')
 install.packages("corrplot", repos='http://cran.us.r-project.org')
@@ -200,8 +207,7 @@ install.packages("Hmisc", repos='http://cran.us.r-project.org')
 install.packages("gdata", repos='http://cran.us.r-project.org')
 install.packages("factoextra", dependencies=TRUE, repos='http://cran.rstudio.com/', type='source')
 install.packages("scagnostics", repos='http://cran.us.r-project.org')
-source('http://bioconductor.org/biocLite.R')
-biocLite()
+
 biocLite("customProDB")
 biocLite("Rsubread")
 biocLite("limma")
