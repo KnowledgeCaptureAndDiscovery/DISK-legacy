@@ -19,7 +19,7 @@ resource "aws_instance" "disk-master" {
   instance_type = "${var.aws_instance_type}"
   subnet_id     = "${aws_subnet.disk-vpc-subnet.id}"
   key_name      = "${var.key_name}"
-  user_data     = "EFS_ID='${aws_efs_file_system.disk-efs.id}'"
+  user_data     = "EFS_ID='${var.aws_efs_id}'"
 
   vpc_security_group_ids = [
     "${aws_security_group.disk-master.id}",
@@ -57,7 +57,7 @@ resource "aws_instance" "disk-worker" {
   instance_type = "${var.aws_instance_type}"
   subnet_id     = "${aws_subnet.disk-vpc-subnet.id}"
   key_name      = "${var.key_name}"
-  user_data     = "EFS_ID='${aws_efs_file_system.disk-efs.id}'\nMASTER_IP='${aws_instance.disk-master.private_ip}'"
+  user_data     = "EFS_ID='${var.aws_efs_id}'\nMASTER_IP='${aws_instance.disk-master.private_ip}'"
 
   count = "${var.workers}"
 

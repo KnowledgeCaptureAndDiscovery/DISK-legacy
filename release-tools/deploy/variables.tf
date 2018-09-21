@@ -49,7 +49,7 @@ variable "aws_instance_root_volume_size" {
 }
 
 variable "aws_efs_id" {
-  default = "fs-c676896f"
+  default = "fs-cea49867"
 }
 
 variable "aws_ephemeral_count" {

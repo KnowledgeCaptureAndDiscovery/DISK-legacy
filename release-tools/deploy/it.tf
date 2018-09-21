@@ -47,14 +47,18 @@ resource "aws_default_route_table" "disk-vpc-default-route-table" {
 # Elastic File System
 # -------------------
 
+/*
+ * Disable EFS creation, as we do not want it to be deleted on destroy.
+ *
 resource "aws_efs_file_system" "disk-efs" {
   tags {
     Name = "disk-efs"
   }
 }
+*/
 
 resource "aws_efs_mount_target" "efs-mount-target" {
-  file_system_id = "${aws_efs_file_system.disk-efs.id}"
+  file_system_id = "${var.aws_efs_id}"
   subnet_id      = "${aws_subnet.disk-vpc-subnet.id}"
 
   security_groups = [
