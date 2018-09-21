@@ -886,7 +886,6 @@ public class DiskRepository extends KBRepository {
 					WingsAdapter.get().addOrUpdateData(username, domain, temp[j].substring(4), type, temp[j + 1],
 							false);
 				}
-			System.out.println(Arrays.toString(temp));
 			return temp;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -975,25 +974,19 @@ public class DiskRepository extends KBRepository {
 			}
 		}
 		Collections.sort(bindkeys);
-		System.out.println("tloikeys: " + tloikeys);
 		// Get all Hypotheses
 		for (TreeItem hypitem : this.listHypotheses(username, domain)) {
 			// Run/Query only top-level hypotheses
 			if (hypitem.getParentId() == null) {
 				List<TriggeredLOI> tlois = this.queryHypothesis(username, domain, hypitem.getId());
 				Collections.sort(tlois);
-				System.out.println("thishappend234");
-
 				for (TriggeredLOI tloi : tlois) {
-					System.out.println("thishappend");
 					List<WorkflowBindings> wfbindings = this.addEnimgaFiles(username, domain, tloi, false, false);
 					tloi.setWorkflows(wfbindings);
 					String key = tloi.toString();
 					if (tloikeys.containsKey(key))
 						continue;
-					System.out.println("keyyyyy: " + key);
 					for (String partkey : bindkeys) {
-						System.out.println("partkeyss: " + partkey);
 						if (key.contains(partkey)) {
 							TriggeredLOI curtloi = tloimap.get(partkey);
 							if (curtloi.getLoiId().equals(tloi.getLoiId()))
