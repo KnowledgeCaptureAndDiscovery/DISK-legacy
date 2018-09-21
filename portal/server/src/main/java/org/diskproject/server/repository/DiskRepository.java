@@ -877,13 +877,16 @@ public class DiskRepository extends KBRepository {
 		}
 	}
 
-	public String[] addQuery(String username, String domain, String query, String type) {
+	public String[] addQuery(String username, String domain, String query, String type, boolean upload) {
 		try {
 
 			String[] temp = DataQuery.queryFor(query.substring(query.indexOf(" ") + 1))[1].split("\n\",\"\n");
-			for (int j = 0; j < temp.length - 1; j += 2) {
-				WingsAdapter.get().addOrUpdateData(username, domain, temp[j].substring(4), type, temp[j + 1], false);
-			}
+			if (upload)
+				for (int j = 0; j < temp.length - 1; j += 2) {
+					WingsAdapter.get().addOrUpdateData(username, domain, temp[j].substring(4), type, temp[j + 1],
+							false);
+				}
+			System.out.println(Arrays.toString(temp));
 			return temp;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -972,19 +975,25 @@ public class DiskRepository extends KBRepository {
 			}
 		}
 		Collections.sort(bindkeys);
-
+		System.out.println("tloikeys: " + tloikeys);
 		// Get all Hypotheses
 		for (TreeItem hypitem : this.listHypotheses(username, domain)) {
 			// Run/Query only top-level hypotheses
 			if (hypitem.getParentId() == null) {
 				List<TriggeredLOI> tlois = this.queryHypothesis(username, domain, hypitem.getId());
 				Collections.sort(tlois);
+				System.out.println("thishappend234");
+
 				for (TriggeredLOI tloi : tlois) {
+					System.out.println("thishappend");
+					List<WorkflowBindings> wfbindings = this.addEnimgaFiles(username, domain, tloi, false, false);
+					tloi.setWorkflows(wfbindings);
 					String key = tloi.toString();
 					if (tloikeys.containsKey(key))
 						continue;
-
+					System.out.println("keyyyyy: " + key);
 					for (String partkey : bindkeys) {
+						System.out.println("partkeyss: " + partkey);
 						if (key.contains(partkey)) {
 							TriggeredLOI curtloi = tloimap.get(partkey);
 							if (curtloi.getLoiId().equals(tloi.getLoiId()))
@@ -1466,6 +1475,75 @@ public class DiskRepository extends KBRepository {
 		return null;
 	}
 
+	private List<WorkflowBindings> addEnimgaFiles(String username, String domain, TriggeredLOI tloi, boolean metamode, boolean upload) {
+		WingsAdapter wings = WingsAdapter.get();
+
+		List<WorkflowBindings> wflowBindings = tloi.getWorkflows();
+		if (metamode)
+			wflowBindings = tloi.getMetaWorkflows();
+		// Query for assertions pertaining to hasEnigmaQueryLiteral
+		ArrayList<KBTriple> equeries = new ArrayList<KBTriple>();
+		try {
+			String url = ASSERTIONSURI(username, domain);
+			KBAPI kb = fac.getKB(url, OntSpec.PLAIN, false);
+			KBObject typeprop = kb.getProperty(KBConstants.NEURONS() + "hasEnigmaQueryLiteral");
+			equeries = kb.genericTripleQuery(null, typeprop, null);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		// Iterate through data and add enigma query files if necessary
+		for (int i = 0; i < wflowBindings.size(); i++) {
+			List<VariableBinding> bindings = wflowBindings.get(i).getBindings();
+
+			Map<String, Variable> inputs = wings.getWorkflowInputs(username, domain,
+					wflowBindings.get(i).getWorkflow());
+			String[] files = null;
+			for (VariableBinding var : bindings) {
+				try {
+					String url = ASSERTIONSURI(username, domain);
+					String fullid = url + "#" + var.getBinding();
+					if (!inputs.get(var.getVariable()).isParam())
+						for (KBTriple kbt : equeries) {
+							if (kbt.getSubject().getValueAsString().equals(fullid)) {
+								files = addQuery(username, domain, kbt.getObject().getValueAsString(),
+										inputs.get(var.getVariable()).getType(), upload);
+								break;
+							}
+						}
+					if (files != null) {
+						for (int f = 0; f < files.length; f += 2) {
+							List<VariableBinding> newvb = new ArrayList<VariableBinding>();
+							for (VariableBinding newvar : bindings) {
+								if (!newvar.equals(var))
+									newvb.add(new VariableBinding(newvar.getVariable(), newvar.getBinding()));
+								else
+									newvb.add(new VariableBinding(newvar.getVariable(), files[f].substring(4)));
+
+							}
+							WorkflowBindings newwfb = new WorkflowBindings(wflowBindings.get(i).getWorkflow(),
+									wflowBindings.get(i).getWorkflowLink(), newvb);
+							newwfb.setRun(new WorkflowRun(wflowBindings.get(i).getRun().getId(),
+									wflowBindings.get(i).getRun().getLink(),
+									wflowBindings.get(i).getRun().getStatus()));
+							newwfb.setMeta(new MetaWorkflowDetails(wflowBindings.get(i).getMeta().getHypothesis(),
+									wflowBindings.get(i).getMeta().getRevisedHypothesis()));
+							wflowBindings.add(newwfb);
+						}
+						break;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			if (files != null) {
+				wflowBindings.remove(wflowBindings.get(i));
+				i--;
+			}
+		}
+		return wflowBindings;
+	}
+
 	/*
 	 * private String createDummyHypothesis(String username, String domain,
 	 * WorkflowBindings bindings, TriggeredLOI tloi) { Hypothesis parentHypothesis =
@@ -1509,69 +1587,8 @@ public class DiskRepository extends KBRepository {
 
 				WingsAdapter wings = WingsAdapter.get();
 
-				List<WorkflowBindings> wflowBindings = tloi.getWorkflows();
-				if (this.metamode)
-					wflowBindings = tloi.getMetaWorkflows();
-
-				ArrayList<KBTriple> equeries = new ArrayList<KBTriple>();
-				try {
-					String url = ASSERTIONSURI(username, domain);
-					KBAPI kb = fac.getKB(url, OntSpec.PLAIN, false);
-					KBObject typeprop = kb.getProperty(KBConstants.NEURONS() + "hasEnigmaQueryLiteral");
-					equeries = kb.genericTripleQuery(null, typeprop, null);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-
-				for (int i = 0; i < wflowBindings.size(); i++) {
-					List<VariableBinding> bindings = wflowBindings.get(i).getBindings();
-
-					Map<String, Variable> inputs = wings.getWorkflowInputs(username, domain,
-							wflowBindings.get(i).getWorkflow());
-					String[] files = null;
-					for (VariableBinding var : bindings) {
-						try {
-							String url = ASSERTIONSURI(username, domain);
-							String fullid = url + "#" + var.getBinding();
-							if (!inputs.get(var.getVariable()).isParam())
-								for (KBTriple kbt : equeries) {
-									if (kbt.getSubject().getValueAsString().equals(fullid)) {
-										files = addQuery(username, domain, kbt.getObject().getValueAsString(),
-												inputs.get(var.getVariable()).getType());
-										break;
-									}
-								}
-							if (files != null) {
-								for (int f = 0; f < files.length; f += 2) {
-									List<VariableBinding> newvb = new ArrayList<VariableBinding>();
-									for (VariableBinding newvar : bindings) {
-										if (!newvar.equals(var))
-											newvb.add(new VariableBinding(newvar.getVariable(), newvar.getBinding()));
-										else
-											newvb.add(new VariableBinding(newvar.getVariable(), files[f].substring(4)));
-
-									}
-									WorkflowBindings newwfb = new WorkflowBindings(wflowBindings.get(i).getWorkflow(),
-											wflowBindings.get(i).getWorkflowLink(), newvb);
-									newwfb.setRun(new WorkflowRun(wflowBindings.get(i).getRun().getId(),
-											wflowBindings.get(i).getRun().getLink(),
-											wflowBindings.get(i).getRun().getStatus()));
-									newwfb.setMeta(
-											new MetaWorkflowDetails(wflowBindings.get(i).getMeta().getHypothesis(),
-													wflowBindings.get(i).getMeta().getRevisedHypothesis()));
-									wflowBindings.add(newwfb);
-								}
-								break;
-							}
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-					if (files != null) {
-						wflowBindings.remove(wflowBindings.get(i));
-						i--;
-					}
-				}
+				// Ask to upload and set enigma files
+				List<WorkflowBindings> wflowBindings = addEnimgaFiles(username, domain, tloi, metamode, true);
 				// Start off workflows from tloi
 				for (WorkflowBindings bindings : wflowBindings) {
 					// Get workflow input details
@@ -1726,7 +1743,7 @@ public class DiskRepository extends KBRepository {
 
 		public DataMonitor() {
 			stop = false;
-			scheduledFuture = monitor.scheduleWithFixedDelay(this, 0 , 1, TimeUnit.DAYS);
+			scheduledFuture = monitor.scheduleWithFixedDelay(this, 0, 1, TimeUnit.DAYS);
 		}
 
 		public void run() {
@@ -1741,18 +1758,17 @@ public class DiskRepository extends KBRepository {
 					stop();
 					return;
 				} else {
-					 defaultUsername = Config.get().getProperties().getString("username");
-					 defaultDomain = Config.get().getProperties().getString("domain");
-					 String url = ASSERTIONSURI(defaultUsername, defaultDomain);
-					 KBAPI kb = fac.getKB(url, OntSpec.PLAIN, false);
-					 KBObject typeprop = kb.getProperty(KBConstants.NEURONS() +
-					 "hasEnigmaQueryLiteral");
-					 List<KBTriple> equeries = kb.genericTripleQuery(null, typeprop, null);
-					 for (KBTriple kbt : equeries)
-					 if (DataQuery.wasUpdatedInLastDay(kbt.getObject().getValueAsString())) {
-						 requeryHypotheses(defaultUsername, defaultDomain);
-						 break;
-					 }
+					defaultUsername = Config.get().getProperties().getString("username");
+					defaultDomain = Config.get().getProperties().getString("domain");
+					String url = ASSERTIONSURI(defaultUsername, defaultDomain);
+					KBAPI kb = fac.getKB(url, OntSpec.PLAIN, false);
+					KBObject typeprop = kb.getProperty(KBConstants.NEURONS() + "hasEnigmaQueryLiteral");
+					List<KBTriple> equeries = kb.genericTripleQuery(null, typeprop, null);
+					for (KBTriple kbt : equeries)
+						if (DataQuery.wasUpdatedInLastDay(kbt.getObject().getValueAsString())) {
+							requeryHypotheses(defaultUsername, defaultDomain);
+							break;
+						}
 
 				}
 			} catch (Exception e) {
