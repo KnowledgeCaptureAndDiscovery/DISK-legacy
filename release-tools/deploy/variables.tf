@@ -17,7 +17,7 @@ data "aws_ami" "disk-ami" {
 data "aws_availability_zones" "available" {}
 
 variable "disk_version" {
-  default = "1.6"
+  default = "1.7"
 }
 
 variable "workers" {
@@ -45,7 +45,7 @@ variable "aws_instance_type" {
 }
 
 variable "aws_instance_root_volume_size" {
-  default = "20"
+  default = "30"
 }
 
 variable "aws_efs_id" {
