@@ -4,6 +4,8 @@
 1. [Create AWS Security Credentials](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html)
 1. Configure AWS CLI
 
+Note: Terraform must be installed and run from outside AWS (on your desktop/laptop)
+
 ```bash
 cat >> ~/.aws/config <<EOT
 [profile disk@stanford]
