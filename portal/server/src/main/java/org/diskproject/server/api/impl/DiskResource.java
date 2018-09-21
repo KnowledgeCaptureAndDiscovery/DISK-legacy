@@ -1,5 +1,6 @@
 package org.diskproject.server.api.impl;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,11 @@ import org.diskproject.shared.classes.workflow.Workflow;
 import org.diskproject.shared.classes.workflow.WorkflowRun;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.api.services.gmail.Gmail;
+import com.google.api.services.gmail.model.Message;
+
+
+
 
 @Path("")
 @Produces("application/json")
@@ -46,7 +52,7 @@ public class DiskResource implements DiskService {
   DiskRepository repo;
   
   public DiskResource() {
-    this.repo = DiskRepository.get();
+    this.repo = DiskRepository.get(); 
   }
   /*
    * Vocabulary
@@ -62,7 +68,7 @@ public class DiskResource implements DiskService {
       throw new RuntimeException("Exception: " + e.getMessage());
     }
   }
-  
+
   @GET
   @Path("{username}/{domain}/vocabulary")
   @Override
@@ -92,6 +98,20 @@ public class DiskResource implements DiskService {
       throw new RuntimeException("Exception: " + e.getMessage());
     }
   }
+  
+  @GET
+  @Path("vocabulary/reload")
+  public String APIReloadVocabularies() {
+    try {
+      this.repo.reloadKBCaches();
+      this.repo.initializeKB();
+      return "OK";
+    } catch (Exception e) {
+      // e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+    
     
   /**
    * Hypothesis
@@ -321,4 +341,5 @@ public class DiskResource implements DiskService {
     // Check execution status
     return WingsAdapter.get().getWorkflowRunStatus(username, domain, id);
   }  
+   
 }

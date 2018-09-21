@@ -17,6 +17,14 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
   WorkflowRun run;
   MetaWorkflowDetails meta;
 
+  public WorkflowBindings(String workflow,
+  String workflowLink,
+  List<VariableBinding> bindings) {
+	  this.workflow = workflow;
+	  this.workflowLink = workflowLink;
+	  this.bindings = bindings;
+  }
+  
   public WorkflowBindings() {
     bindings = new ArrayList<VariableBinding>();
     run = new WorkflowRun();

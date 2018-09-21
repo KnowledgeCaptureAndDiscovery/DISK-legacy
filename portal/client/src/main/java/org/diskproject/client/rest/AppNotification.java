@@ -17,6 +17,10 @@ public class AppNotification {
   public static void notifyFailure(String message) {
     showToast(message, 1000, "maroon");
   }
+
+  public static void notifyLoading(String message) {
+    showToast(message, Integer.MAX_VALUE, "tan");
+  }
   
   private static void showToast(final String message, final int delay, final String color) {
     final PaperToastElement toast = ApplicationView.toast;
@@ -42,6 +46,10 @@ public class AppNotification {
         }
       });
     }
+  }
+
+  public static void stopShowing(){
+    ApplicationView.toast.hide();
   }
   
   public static void showLoading() {
