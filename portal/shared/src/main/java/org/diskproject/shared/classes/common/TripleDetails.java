@@ -4,6 +4,14 @@ public class TripleDetails {
   double confidenceValue;
   String triggeredLOI;
   
+  public TripleDetails(double confidenceValue, String triggeredLOI)
+  {
+	  this.confidenceValue = confidenceValue;
+	  this.triggeredLOI = triggeredLOI;
+  }
+  
+  public TripleDetails(){}
+  
   public double getConfidenceValue() {
     return confidenceValue;
   }

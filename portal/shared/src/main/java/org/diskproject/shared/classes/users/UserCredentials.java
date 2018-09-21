@@ -13,6 +13,21 @@ public class UserCredentials {
   
   List<String> roles;
 
+  public UserCredentials(
+  int id,
+  String name,
+  String fullname,
+  String password,
+  String email,
+  String affiliation,  
+  List<String> roles) {
+	  this.id = id;
+	  this.name = name;
+	  this.fullname = fullname;
+	  this.password = password;
+	  this.email = email;
+	  this.affiliation = affiliation;
+  }  
   public UserCredentials() {
     roles = new ArrayList<String>();
   }

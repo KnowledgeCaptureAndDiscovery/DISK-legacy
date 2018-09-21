@@ -17,6 +17,9 @@
 			paper-button.maroon {
 				color: maroon;
 			}
+			paper-button.tan {
+				color: tan;
+			}
 			paper-input.nomargin {
 				margin-top: 0px;
 			}

@@ -6,6 +6,16 @@ public class Triple {
   Value object;
   TripleDetails details;
 
+  public Triple(String subject, String predicate, Value object, TripleDetails details)
+  {
+	  this.subject = subject;
+	  this.predicate = predicate;
+	  this.object = object;
+	  this.details = details;
+  }
+  
+  public Triple(){}
+  
   public String getSubject() {
     return subject;
   }
