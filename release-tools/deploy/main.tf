@@ -49,6 +49,10 @@ resource "aws_instance" "disk-master" {
   tags {
     Name = "disk-${var.disk_version}-master"
   }
+
+  volume_tags {
+    Name = "disk-${var.disk_version}-master"
+  }
 }
 
 # Start DISK Worker
@@ -88,5 +92,9 @@ resource "aws_instance" "disk-worker" {
 
   tags {
     Name = "disk-${var.disk_version}-worker"
+  }
+
+  volume_tags {
+    Name = "disk-${var.disk_version}-worker-${count.index}"
   }
 }
