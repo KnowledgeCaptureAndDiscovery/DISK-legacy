@@ -54,6 +54,10 @@ resource "aws_efs_file_system" "disk-efs" {
   tags {
     Name = "disk-efs"
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 */
 
