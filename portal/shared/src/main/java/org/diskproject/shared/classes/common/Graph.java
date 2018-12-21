@@ -9,6 +9,9 @@ public class Graph {
   public Graph() {
     this.triples = new ArrayList<Triple>();
   }
+  public Graph(List<Triple> triples){
+	  this.triples = triples;
+  }
   
   public List<Triple> getTriples() {
     return triples;

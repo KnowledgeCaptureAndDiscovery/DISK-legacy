@@ -22,11 +22,11 @@ Installation
 3. Start tomcat
 	- $ /path/to/tomcat/bin/startup.sh
 
-4. Open http://[your-server-name]:8080/disk-server/data to check that the local repository server is working fine. It might take a little while to open it for the first time as it downloads vocabularies from the internet.
+4. Open http://[your-server-name]:8080/disk-server/vocabulary to check that the local repository server is working fine. It might take a little while to open it for the first time as it downloads vocabularies from the internet.
 
-5. Check $HOME/.diskworkflows/server.properties file to see that server name is correctly identified
+5. Check $HOME/.disk/server.properties file to see that server name is correctly identified and edit the file as necessary
 
-6. Open http://[your-server-name]:8080/disk-client to access the Disk UI that connects with the local repository
+6. Open http://[your-server-name]:8080/disk-client/index.html to access the Disk UI that connects with the local repository
 
 7. Customize the client by changing /path/to/tomcat/webapps/disk-client/customise/config.js
 
