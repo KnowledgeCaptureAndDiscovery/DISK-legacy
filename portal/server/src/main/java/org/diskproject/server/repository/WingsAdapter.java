@@ -850,14 +850,14 @@ private String toPlanAcceptableFormat(String username, String domain,
 	output += "\"componentBindings\": {},";
 
 	// Set Parameter Types
-	String paramTypes = "\"parameterTypes\": {";
+	String paramTypes = "";
 	for(String key: ivm.keySet()){
 		if(ivm.get(key).isParam())
 		paramTypes += "\"" + wfname + key + "\":\"" + ivm.get(key).getType()+"\",";
 	}
-	if(ivm.keySet().size()>0)
-		paramTypes = paramTypes.substring(0,paramTypes.length()-1) + "}";
-	output += paramTypes +",";
+	if(paramTypes.length() > 0)
+		paramTypes = paramTypes.substring(0,paramTypes.length()-1);
+	output += "\"parameterTypes\": {" + paramTypes +"},";
 	
 	// Set Inputs (Parameters and Data)
 	String paramBindings = "\"parameterBindings\": {";

@@ -741,7 +741,7 @@ public class DiskRepository extends KBRepository {
 						// - What if workflows take collections as input ?
 						if (tloi == null) {
 							tloi = new TriggeredLOI(loi, id);
-							tloi.copyWorkflowBindings(loi.getMetaWorkflows(), tloi.getMetaWorkflows());
+							// tloi.copyWorkflowBindings(loi.getMetaWorkflows(), tloi.getMetaWorkflows());
 						}
 
 						Map<String, String> dataVarBindings = new HashMap<String, String>();
@@ -772,6 +772,29 @@ public class DiskRepository extends KBRepository {
 							}
 							newbindings.setBindings(vbindings);
 							tloi.getWorkflows().add(newbindings);
+						}
+
+						for (WorkflowBindings bindings : loi.getMetaWorkflows()) {
+
+							WorkflowBindings newbindings = new WorkflowBindings();
+							newbindings.setWorkflow(bindings.getWorkflow());
+
+							@SuppressWarnings("unchecked")
+							ArrayList<VariableBinding> vbindings = (ArrayList<VariableBinding>) SerializationUtils
+									.clone((Serializable) bindings.getBindings());
+
+							for (VariableBinding vbinding : vbindings) {
+								String binding = vbinding.getBinding();
+								Matcher mat = varPattern.matcher(binding);
+								if (mat.find() && dataVarBindings.containsKey(mat.group(1))) {
+									binding = mat.replaceAll(dataVarBindings.get(mat.group(1)));
+								}
+								vbinding.setBinding(binding);
+							}
+							newbindings.setMeta(bindings.getMeta());
+							newbindings.setBindings(vbindings);
+							tloi.getMetaWorkflows().add(newbindings);
+
 						}
 					}
 					if (tloi != null)
@@ -1595,6 +1618,7 @@ public class DiskRepository extends KBRepository {
 						// Variable Bindings
 						for (VariableBinding vbinding : vbindings) {
 							String runids = getWorkflowExecutionRunIds(tloi, vbinding.getBinding());
+							if( runids != null && runids.length() > 0 )
 							vbinding.setBinding(runids);
 						}
 						// Upload hypothesis to Wings as a file, and add to

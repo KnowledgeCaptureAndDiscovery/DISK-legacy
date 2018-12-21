@@ -35,9 +35,9 @@ public class WorkflowBindingsEditor extends Composite {
   interface Binder extends UiBinder<Widget, WorkflowBindingsEditor> {};
   private static Binder uiBinder = GWT.create(Binder.class);
  
-  @UiField HTMLPanel varsection, metasection, varbindings;
+  @UiField HTMLPanel varsection, workflowstoberunsection, metasection, varbindings, workflowstoberunbindings;
   @UiField VaadinComboBox workflowmenu, hypothesismenu, revhypothesismenu;
-  @UiField PaperIconButton addbindingbutton;
+  @UiField PaperIconButton addbindingbutton, addworkflowstoberunbutton;
   
   boolean metamode;
   List<String> sourceworkflows;
@@ -85,14 +85,19 @@ public class WorkflowBindingsEditor extends Composite {
   
   private void clearVariableBindingsUI() {
     varbindings.clear();
+    workflowstoberunbindings.clear();
     metasection.setVisible(false);
+    workflowstoberunsection.setVisible(false);
     //this.setMetaSection(null);
     addbindingbutton.setVisible(false);
+    addworkflowstoberunbutton.setVisible(false);
   }
   
   private void setBindingsUI() {
     if(metamode) {
       metasection.setVisible(true);
+      workflowstoberunsection.setVisible(true);
+      addworkflowstoberunbutton.setVisible(true);
       this.setMetaSection(bindings);
     }
     
@@ -100,7 +105,11 @@ public class WorkflowBindingsEditor extends Composite {
       return;
     
     for(VariableBinding vbinding : bindings.getBindings()) {
-      this.addVariableBinding(vbinding.getVariable(), vbinding.getBinding());
+      if( metamode && sourceworkflows.contains(vbinding.getBinding()) ) {
+        this.addVariableBinding(vbinding.getVariable(), vbinding.getBinding(), true);
+        continue;
+      }
+      this.addVariableBinding(vbinding.getVariable(), vbinding.getBinding(), false);
     }
   }
   
@@ -125,7 +134,7 @@ public class WorkflowBindingsEditor extends Composite {
     }
   }
   
-  private void addVariableBinding(String varid, String binding) {
+  private void addVariableBinding(String varid, String binding, boolean previousWorkflowFlag) {
     final HTMLPanel el = new HTMLPanel("");
     el.setStyleName("varbindings-row");
     
@@ -142,7 +151,7 @@ public class WorkflowBindingsEditor extends Composite {
       varmenu.setValue(varid);
     
     PolymerWidget bindwidget = null;
-    if(this.metamode) {
+    if(previousWorkflowFlag) {
       VaadinComboBox bindinput = new VaadinComboBox();
       
       bindinput.setItems(Polymer.asJsArray(sourceworkflows));
@@ -170,7 +179,11 @@ public class WorkflowBindingsEditor extends Composite {
     el.add(varmenu);
     el.add(bindwidget);
     el.add(delbutton);
-    varbindings.add(el);
+
+    if(previousWorkflowFlag)
+      workflowstoberunbindings.add(el);
+    else
+      varbindings.add(el);
     
     delbutton.addClickHandler(new ClickHandler() {
       @Override
@@ -182,7 +195,12 @@ public class WorkflowBindingsEditor extends Composite {
   
   @UiHandler("addbindingbutton")
   void onAddBindingClicked(ClickEvent event) {
-    this.addVariableBinding(null, null);
+    this.addVariableBinding(null, null, false);
+  }
+
+  @UiHandler("addworkflowstoberunbutton")
+  void onAddPrevWorkflowsClicked(ClickEvent event) {
+    this.addVariableBinding(null, null, true);
   }
   
   @UiHandler("workflowmenu")
@@ -207,8 +225,11 @@ public class WorkflowBindingsEditor extends Composite {
         else
           bindings = null;
         addbindingbutton.setVisible(true);
-        if(metamode)
+        if(metamode) {
           metasection.setVisible(true);
+          workflowstoberunsection.setVisible(true);
+          addworkflowstoberunbutton.setVisible(true);
+        }
         variablecache = new HashMap<String, Variable>();
         for(Variable v : result)
           variablecache.put(v.getName(), v);
@@ -237,24 +258,37 @@ public class WorkflowBindingsEditor extends Composite {
       HTMLPanel row = (HTMLPanel) varbindings.getWidget(i);
       VaadinComboBox cb = (VaadinComboBox) row.getWidget(0);
       String varname = cb.getValue();
+      
       VariableBinding vbinding = new VariableBinding();
       vbinding.setVariable(varname);
-      if(this.metamode) {
-        VaadinComboBox vb = (VaadinComboBox) row.getWidget(1);
-        vbinding.setBinding(vb.getValue());
-      }
-      else {
-        PaperInput in = (PaperInput) row.getWidget(1);
-        vbinding.setBinding(in.getValue());
-      }
+      PaperInput in = (PaperInput) row.getWidget(1);
+      vbinding.setBinding(in.getValue());
+
       vbindings.add(vbinding);
     }
+
+    if( metamode ) {
+      for(int i=0; i<workflowstoberunbindings.getWidgetCount(); i++) {
+        HTMLPanel row = (HTMLPanel) workflowstoberunbindings.getWidget(i);
+        VaadinComboBox cb = (VaadinComboBox) row.getWidget(0);
+        String varname = cb.getValue();
+        
+        VariableBinding vbinding = new VariableBinding();
+        vbinding.setVariable(varname);
+        VaadinComboBox vb = (VaadinComboBox) row.getWidget(1);
+        vbinding.setBinding(vb.getValue());
+
+        vbindings.add(vbinding);
+      }
+    }
+
     bindings.setBindings(vbindings);
     
     if(metamode) {
       bindings.getMeta().setHypothesis(hypothesismenu.getValue());
       bindings.getMeta().setRevisedHypothesis(revhypothesismenu.getValue());
     }
+    
     return bindings;
   }  
 }
