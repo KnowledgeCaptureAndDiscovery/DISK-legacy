@@ -1,5 +1,6 @@
 package org.diskproject.shared.classes.common;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -25,6 +26,7 @@ public class TripleUtil {
     nsmap.put("rdfs", KBConstants.RDFSNS());
     nsmap.put("owl", KBConstants.OWLNS());
     nsmap.put("xsd", KBConstants.XSDNS());    
+
   }
   
   public void addNamespacePrefix(String prefix, String ns) {
@@ -36,6 +38,7 @@ public class TripleUtil {
     String subject = this.getURIValue(tarr[0]);
     String predicate = this.getURIValue(tarr[1]);
     Value object = this.getObjectValue(tarr[2]);
+
     if(subject != null && predicate != null && object != null) {
       Triple triple = new Triple();
       triple.setSubject(subject);
@@ -53,7 +56,6 @@ public class TripleUtil {
     Matcher m1 = uriPattern.matcher(qname);
     if(m1.find())
       return m1.group(1);
-    
     Matcher m2 = qnamePattern.matcher(qname);
     if(m2.find()) {
       if(this.nsmap.containsKey(m2.group(1)))
@@ -129,10 +131,12 @@ public class TripleUtil {
   }
   
   public String toString(Triple t) {
+	  
     return this.getQName(t.getSubject())+" "
         + this.getQName(t.getPredicate())+" "
         + this.getObjectString(t.getObject());
   }
+  
   
 }
 

@@ -25,6 +25,26 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   List<WorkflowBindings> workflows;
   List<WorkflowBindings> metaWorkflows;
 
+  public TriggeredLOI(String id,
+  String name,
+  String description,
+  Status status,
+  String loiId,
+  String parentHypothesisId,
+  List<String> resultingHypothesisIds,
+  List<WorkflowBindings> workflows,
+  List<WorkflowBindings> metaWorkflows) {
+	  this.id = id;
+	  this.name = name;
+	  this.description = description;
+	  this.status = status;
+	  this.loiId = loiId;
+	  this.parentHypothesisId = parentHypothesisId;
+	  this.resultingHypothesisIds = resultingHypothesisIds;
+	  this.workflows = workflows;
+	  this.metaWorkflows = metaWorkflows;
+	  }
+  
   public TriggeredLOI() {
     workflows = new ArrayList<WorkflowBindings>();
     metaWorkflows = new ArrayList<WorkflowBindings>();
