@@ -41,7 +41,7 @@ variable "key_name" {
 }
 
 variable "aws_instance_type" {
-  default = "m3.2xlarge"
+  default = "m3.xlarge"
 }
 
 variable "aws_instance_root_volume_size" {
