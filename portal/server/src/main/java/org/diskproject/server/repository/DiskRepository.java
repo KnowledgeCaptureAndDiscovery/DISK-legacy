@@ -146,6 +146,7 @@ public class DiskRepository extends KBRepository {
 	 */
 
 	public void reloadKBCaches() {
+	  this.start_write();
 		if (this.ontkb != null)
 			this.ontkb.delete();
 		if (this.hypontkb != null)
@@ -154,6 +155,7 @@ public class DiskRepository extends KBRepository {
 			this.omicsontkb.delete();
 		if (this.neuroontkb != null)
 			this.neuroontkb.delete();
+		this.end();
 
 		this.initializeKB();
 	}
