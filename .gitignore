@@ -6,6 +6,9 @@
 .idea
 *.iml
 .venv
+.project
+.classpath
+.settings
 build
 dist
 tmp
