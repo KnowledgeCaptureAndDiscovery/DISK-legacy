@@ -62,6 +62,16 @@ public class DiskREST {
   
   private static String username, domain;
   
+
+  private static String stackTraceToString(Throwable e) {
+      StringBuilder sb = new StringBuilder();
+      for (StackTraceElement element : e.getStackTrace()) {
+          sb.append(element.toString());
+          sb.append("\n");
+      }
+      return sb.toString();
+  }
+
   public static DiskService getDiskService() {
     if(diskService == null) {
       Defaults.setServiceRoot(Config.getServerURL());
@@ -70,6 +80,27 @@ public class DiskREST {
       diskService = GWT.create(DiskService.class);
     }
     return diskService;
+  }
+  
+  public static void getServerConfig(
+    final Callback<Map<String, String>, Throwable> callback) {      
+      if(Config.serverConfig != null) {
+        callback.onSuccess(Config.serverConfig);
+      }
+      else {
+        REST.withCallback(new MethodCallback<Map<String, String>>() {
+          @Override
+          public void onSuccess(Method method, Map<String, String> config) {
+            Config.serverConfig = config;
+            callback.onSuccess(config);
+          }
+          @Override
+          public void onFailure(Method method, Throwable exception) {
+            AppNotification.notifyFailure("Could not load user vocabulary");
+            callback.onFailure(exception);
+          }
+        }).call(getDiskService()).getConfig();
+      }
   }
 
   public static void setUsername(String username) {
@@ -407,7 +438,6 @@ public class DiskREST {
       final Callback<List<Workflow>, Throwable> callback) {
     if(workflows.size() > 0)
       callback.onSuccess(workflows);
-    
     REST.withCallback(new MethodCallback<List<Workflow>>() {
       @Override
       public void onSuccess(Method method, List<Workflow> response) {
@@ -420,6 +450,7 @@ public class DiskREST {
       }
       @Override
       public void onFailure(Method method, Throwable exception) {
+        GWT.log(stackTraceToString(exception));
         callback.onFailure(exception);
       }      
     }).call(getDiskService()).listWorkflows(username, domain);

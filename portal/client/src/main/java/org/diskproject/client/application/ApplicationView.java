@@ -42,12 +42,6 @@ public class ApplicationView extends ViewImpl implements
   
   @UiField SimplePanel sidebar;
   @UiField SimplePanel toolbar;
-  
-  @UiField Anchor loginanchor, logoutanchor, registeranchor;
-  
-  @UiField PaperDialog loginwindow;
-  @UiField PaperInput username;
-  @UiField PaperInput password;
 
   @Inject
   public ApplicationView(Binder binder) {
@@ -62,16 +56,6 @@ public class ApplicationView extends ViewImpl implements
       super.setInSlot(slot, content);
   }
   
-  @UiHandler("loginwindow")
-  void onShowWindow(IronOverlayOpenedEvent event) {
-    username.setFocused(true);
-  }
-  
-  @UiHandler("loginbutton")
-  public void onLogin(ClickEvent event) {
-    submitLoginForm();
-    event.stopPropagation();
-  }
   
   /*@UiHandler({"username", "password"})
   void onSoftwareEnter(KeyPressEvent event) {
@@ -79,46 +63,6 @@ public class ApplicationView extends ViewImpl implements
       submitLoginForm();
     }
   }*/
-  
-  @UiHandler("logoutanchor")
-  public void onLogout(ClickEvent event) {
-    UserREST.logout(new Callback<Void, Throwable>() {
-      @Override
-      public void onFailure(Throwable reason) {
-        AppNotification.notifyFailure(reason.getMessage());
-      }
-      @Override
-      public void onSuccess(Void session) {
-        toggleLoginLogoutButtons();
-      }
-    });
-  }
-  
-  @UiHandler("loginanchor")
-  public void onLoginClick(ClickEvent event) {
-    loginwindow.open();
-  }
-  
-  private void submitLoginForm() {
-    if(!username.getInvalid() && !password.getInvalid()) {
-      UserCredentials credentials = new UserCredentials();
-      credentials.setName(username.getValue());
-      credentials.setPassword(password.getValue());
-      UserREST.login(credentials, new Callback<UserSession, Throwable>() {
-        @Override
-        public void onFailure(Throwable reason) {
-          AppNotification.notifyFailure(reason.getMessage());
-        }
-        @Override
-        public void onSuccess(UserSession session) {
-          toggleLoginLogoutButtons();
-          username.setValue(null);
-          password.setValue(null);
-          loginwindow.close();
-        }
-      });
-    }
-  }
 
   public void initializeParameters(String userid, String domain, 
       String[] params, boolean edit, 
@@ -132,7 +76,6 @@ public class ApplicationView extends ViewImpl implements
       SimplePanel sidebar, SimplePanel toolbar) {
     toolbar.clear();
     toolbar.add(new HTML("<h3>DISK Home</h3>"));
-    toggleLoginLogoutButtons();
      
     Polymer.ready(drawer, new Function<Object, Object>() {
       @Override
@@ -186,19 +129,5 @@ public class ApplicationView extends ViewImpl implements
     assertionsMenu.addClassName(cls);
   }
   
-  private void toggleLoginLogoutButtons() {
-    UserSession session = SessionStorage.getSession();
-    if(session == null) {
-      loginanchor.setVisible(true);
-      registeranchor.setHTML("<div>Register</div>");
-      logoutanchor.setVisible(false);
-    }
-    else {
-      loginanchor.setVisible(false);
-      registeranchor.setHTML("<div>Change user details</div>");
-      logoutanchor.setVisible(true);
-      logoutanchor.setHTML("<div>Logout " + session.getUsername() + "</div>");
-    }
-  }
 
 }

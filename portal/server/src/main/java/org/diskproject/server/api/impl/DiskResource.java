@@ -1,6 +1,6 @@
 package org.diskproject.server.api.impl;
 
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +17,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 
+import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.diskproject.server.repository.DiskRepository;
 import org.diskproject.server.repository.WingsAdapter;
 import org.diskproject.shared.api.DiskService;
@@ -31,10 +32,6 @@ import org.diskproject.shared.classes.workflow.Workflow;
 import org.diskproject.shared.classes.workflow.WorkflowRun;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.api.services.gmail.Gmail;
-import com.google.api.services.gmail.model.Message;
-
-
 
 
 @Path("")
@@ -54,6 +51,26 @@ public class DiskResource implements DiskService {
   public DiskResource() {
     this.repo = DiskRepository.get(); 
   }
+  
+  @GET
+  @Path("server/config")
+  @Override
+  public Map<String, String> getConfig() {
+    try {
+      PropertyListConfiguration config = this.repo.getConfig();
+      Map<String, String> vals = new HashMap<String, String>();
+      vals.put("data-store", config.getProperty("data-store").toString());
+      vals.put("username", config.getProperty("username").toString());
+      vals.put("domain", config.getProperty("domain").toString());
+      vals.put("wings.server", config.getProperty("wings.server").toString());
+      return vals;
+    } catch (Exception e) {
+      // e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+
+  
   /*
    * Vocabulary
    */

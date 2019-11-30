@@ -10,11 +10,6 @@ var CONFIG = {
 	}
 }
 
-CONFIG.WINGS = {
-	userid : "admin",
-	domain : "test"
-}
-
 CONFIG.HOME = "	<p>\n" + 
 		"		This portal provides access to the DISK Hypothesis reasoner\n" + 
 		"	</p>\n";

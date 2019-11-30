@@ -90,6 +90,7 @@ public class Config {
     config.addProperty("server", server);
     config.addProperty("username", "DEFAULT_USERNAME");
     config.addProperty("domain", "DEFAULT_DOMAIN");
+    config.addProperty("data-store", "DEFAULT_WIKI_ENDPOINT");
     config.addProperty("wings.server", "http://www.wings-workflows.org/wings-omics-portal");
     config.addProperty("wings.passwords.USERNAME_HERE", "PASSWORD_HERE");
     config.addProperty("gmail.username", "USERNAME_HERE");
@@ -99,7 +100,6 @@ public class Config {
     config.addProperty("gmail.tokens.access", "Automatically_Generated");
     config.addProperty("gmail.tokens.refresh", "Automatically_Generated");
     config.addProperty("help_file", "FILE_LOCATION");
-
 
     try {
     	config.setFileName("file://" + configFile);

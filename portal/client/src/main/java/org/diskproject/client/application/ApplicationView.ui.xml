@@ -348,15 +348,6 @@
 						<g:SimplePanel ui:field="sidebar" />
 					</div>
 					<br />
-					<g:Anchor ui:field="loginanchor">
-						<div>Login</div>
-					</g:Anchor>
-					<g:Anchor ui:field="registeranchor" href="#users">
-						<div>Register</div>
-					</g:Anchor>
-					<g:Anchor ui:field="logoutanchor">
-						<div>Logout</div>
-					</g:Anchor>
 					
 				</nav>		
 			</paper-header-panel>
@@ -371,17 +362,5 @@
 		</paper-drawer-panel>
 
 		<paper-toast ui:field="toast" />
-		
-		<p:PaperDialog modal="true" ui:field="loginwindow" entryAnimation="scale-up-animation" >
-			<p:PaperInput label="Username" required="true"
-				autoValidate="true" ui:field="username" />
-			<p:PaperInput styleName="nomargin" label="Password" required="true"
-				autoValidate="true" ui:field="password" type="password" />
-
-			<div class="buttons">
-				<p:PaperButton styleName="maroon" attributes="dialog-dismiss">Cancel</p:PaperButton>
-				<p:PaperButton styleName="green" ui:field="loginbutton">Login</p:PaperButton>
-			</div>
-		</p:PaperDialog>
 	</g:HTMLPanel>
 </ui:UiBinder>

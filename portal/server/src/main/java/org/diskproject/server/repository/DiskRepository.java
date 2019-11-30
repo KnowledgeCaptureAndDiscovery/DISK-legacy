@@ -33,6 +33,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.Scanner;
 
+import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.apache.commons.lang.SerializationUtils;
 import org.diskproject.server.repository.GmailService.MailMonitor;
 import org.diskproject.server.util.Config;
@@ -243,6 +244,10 @@ public class DiskRepository extends KBRepository {
 		}
 	}
 
+	public PropertyListConfiguration getConfig() {
+	  return Config.get().getProperties();
+	}
+	
 	/**
 	 * Vocabulary Initialization
 	 */

@@ -29,6 +29,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Produces("application/json")
 @Consumes("application/json")
 public interface DiskService extends DirectRestService {
+  @GET
+  @Path("server/config")
+  public Map<String, String> getConfig();
+  
    /*
    * Vocabulary
    */
@@ -207,5 +211,6 @@ public interface DiskService extends DirectRestService {
   public WorkflowRun monitorWorkflow(
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
-      @PathParam("id") String id);  
+      @PathParam("id") String id);
+
 }
