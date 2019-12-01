@@ -3,7 +3,6 @@ package org.diskproject.server.repository;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,7 +21,6 @@ import org.apache.http.client.CookieStore;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -33,10 +31,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.diskproject.server.util.Config;
 import org.diskproject.shared.classes.util.KBConstants;
@@ -63,9 +58,11 @@ public class WingsAdapter {
 
 	private Gson json;
 	private String server;
-	private Map<String, String> sessions;
-	private String wflowns = "http://www.wings-workflows.org/ontology/workflow.owl#";
-	private String execns = "http://www.wings-workflows.org/ontology/execution.owl#";
+	private CookieStore cookieStore;
+	
+	public String wflowns = "http://www.wings-workflows.org/ontology/workflow.owl#";
+	public String execns = "http://www.wings-workflows.org/ontology/execution.owl#";
+	public String datans = "http://www.wings-workflows.org/ontology/data.owl#";
 
 	public static WingsAdapter get() {
 		if (singleton == null)
@@ -74,8 +71,8 @@ public class WingsAdapter {
 	}
 
 	public WingsAdapter() {
-		this.sessions = new HashMap<String, String>();
 		this.server = Config.get().getProperties().getString("wings.server");
+		this.cookieStore = new BasicCookieStore();
 		this.json = new Gson();
 	}
 
@@ -241,76 +238,51 @@ public class WingsAdapter {
 		return inputs;
 	}
 
-	private String login(String username) {
+	private boolean login(String username) {
 		String password = Config.get().getProperties()
 				.getString("wings.passwords." + username);
 
-		CloseableHttpClient client = HttpClients.createDefault();
+		CloseableHttpClient client = HttpClientBuilder.create()
+        .setDefaultCookieStore(this.cookieStore).build();
 		HttpClientContext context = HttpClientContext.create();
 		try {
-			HttpHead securedResource = new HttpHead(this.server + "/sparql");
+		  // Get a default domains page
+			HttpGet securedResource = new HttpGet(this.server + "/users/" + username + "/domains");
 			HttpResponse httpResponse = client
 					.execute(securedResource, context);
 			HttpEntity responseEntity = httpResponse.getEntity();
-			int statusCode = httpResponse.getStatusLine().getStatusCode();
-			EntityUtils.consume(responseEntity);
-			if (statusCode != 200)
-				return null;
+			String strResponse = EntityUtils.toString(responseEntity);
+			// If it doesn't ask for a username/password form, then we are already logged in
+			if(!strResponse.contains("j_security_check")) {
+			  return true;
+			}
 
-			// Login
+			// Login with the username/password
 			HttpPost authpost = new HttpPost(this.server + "/j_security_check");
 			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
 			nameValuePairs.add(new BasicNameValuePair("j_username", username));
 			nameValuePairs.add(new BasicNameValuePair("j_password", password));
 			authpost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-			for (int i = 1; i < 4; i++) {
-				try {
-					httpResponse = client.execute(authpost);
-					responseEntity = httpResponse.getEntity();
-					break;
-				} catch (Exception e) {
-					System.out.println("Tried " + i + " times");
-					e.printStackTrace();
-				}
+			try {
+				httpResponse = client.execute(authpost);
+				responseEntity = httpResponse.getEntity();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
 			}
-			statusCode = httpResponse.getStatusLine().getStatusCode();
-			EntityUtils.consume(responseEntity);
-			if (statusCode != 302)
-				return null;
-
 			httpResponse = client.execute(securedResource);
 			responseEntity = httpResponse.getEntity();
 			EntityUtils.consume(responseEntity);
-			statusCode = httpResponse.getStatusLine().getStatusCode();
-			if (statusCode != 200)
-				return null;
 
-			String sessionId = null;
+			// Check for Session ID to make sure we've logged in
 			for (Cookie cookie : context.getCookieStore().getCookies()) {
 				if (cookie.getName().equalsIgnoreCase("JSESSIONID"))
-					sessionId = cookie.getValue();
+					return true;
 			}
-			System.out.println("Got session id: " + sessionId);
-			return sessionId;
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		return null;
-	}
-
-	private CookieStore getCookieStore(String sessionId) {
-		CookieStore cookieStore = new BasicCookieStore();
-		BasicClientCookie cookie = new BasicClientCookie("JSESSIONID",
-				sessionId);
-		try {
-			URL url = new URL(this.server);
-			cookie.setDomain(url.getHost());
-			cookie.setPath(url.getPath());
-			cookieStore.addCookie(cookie);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return cookieStore;
+		return false;
 	}
 
 	public WorkflowRun getWorkflowRunStatus(String username, String domain,
@@ -633,6 +605,15 @@ public String addDataToWings(String username, String domain, String id,
 	return null;
 }
 
+public String addRemoteDataToWings(String username, String domain, String url) {
+  String type = this.server + "/export/users/" + username + "/" + domain + "/data/ontology.owl#File";
+  String opurl = "users/" + username + "/" + domain + "/data/addRemoteDataForType";
+  List<NameValuePair> keyvalues = new ArrayList<NameValuePair>();
+  keyvalues.add(new BasicNameValuePair("data_url", url));
+  keyvalues.add(new BasicNameValuePair("data_type", type));
+  return this.post(username, opurl, keyvalues);
+}
+
 private List<NameValuePair> getBindings(String json,
 		List<VariableBinding> initbindings, List<NameValuePair> formdata) {
 
@@ -703,52 +684,32 @@ private List<NameValuePair> createFormData(String username, String domain,
 }
 
 private String get(String username, String pageid, List<NameValuePair> data) {
-	String sessionId = this.sessions.get(username);
+	this.login(username);
+	CloseableHttpClient client = HttpClientBuilder.create().setDefaultCookieStore(this.cookieStore).build();
+	try {
+		String url = this.server + "/" + pageid;
+		if (data != null && data.size() > 0) {
+			url += "?" + URLEncodedUtils.format(data, "UTF-8");
+		}
+		HttpGet securedResource = new HttpGet(url);
+		CloseableHttpResponse httpResponse = client
+				.execute(securedResource);
 
-	if (sessionId == null) {
-		sessionId = this.login(username);
-		if (sessionId == null)
-			return null;
-		this.sessions.put(username, sessionId);
-		return this.get(username, pageid, data);
-	}
-	for (int i = 0; i < 3; i++) {
-		CloseableHttpClient client = HttpClientBuilder.create()
-				.setDefaultCookieStore(this.getCookieStore(sessionId))
-				.build();
 		try {
-			String url = this.server + "/" + pageid;
-			if (data != null && data.size() > 0) {
-				url += "?" + URLEncodedUtils.format(data, "UTF-8");
-			}
-			HttpGet securedResource = new HttpGet(url);
-			CloseableHttpResponse httpResponse = client
-					.execute(securedResource);
-
-			try {
-				HttpEntity responseEntity = httpResponse.getEntity();
-				String strResponse = EntityUtils.toString(responseEntity);
-				EntityUtils.consume(responseEntity);
-				httpResponse.close();
-
-				if (strResponse.indexOf("j_security_check") > 0) {
-					sessionId = this.login(username);
-					if (sessionId == null)
-						return null;
-					this.sessions.put(username, sessionId);
-					return this.get(username, pageid, data);
-				}
-				return strResponse;
-			} finally {
-				httpResponse.close();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
+			HttpEntity responseEntity = httpResponse.getEntity();
+			String strResponse = EntityUtils.toString(responseEntity);
+			EntityUtils.consume(responseEntity);
+			httpResponse.close();
+			return strResponse;
 		} finally {
-			try {
-				client.close();
-			} catch (IOException e) {
-			}
+			httpResponse.close();
+		}
+	} catch (Exception e) {
+		e.printStackTrace();
+	} finally {
+		try {
+			client.close();
+		} catch (IOException e) {
 		}
 	}
 	return null;
@@ -909,17 +870,8 @@ private String toPlanAcceptableFormat(String username, String domain,
 
 private String postWithSpecifiedMediaType(String username, String pageid, String data,
 		String type, String type2) {
-	String sessionId = this.sessions.get(username);
-	if (sessionId == null) {
-		sessionId = this.login(username);
-		if (sessionId == null)
-			return null;
-		this.sessions.put(username, sessionId);
-		return postWithSpecifiedMediaType(username, pageid, data, type, type2);
-	}
-
 	CloseableHttpClient client = HttpClientBuilder.create()
-			.setDefaultCookieStore(this.getCookieStore(sessionId)).build();
+      .setDefaultCookieStore(this.cookieStore).build();
 	try {
 		HttpPost securedResource = new HttpPost(server + "/" + pageid);
 		securedResource.setEntity(new StringEntity(data));
@@ -932,14 +884,6 @@ private String postWithSpecifiedMediaType(String username, String pageid, String
 		String strResponse = EntityUtils.toString(responseEntity);
 		EntityUtils.consume(responseEntity);
 		httpResponse.close();
-
-		if (strResponse.indexOf("j_security_check") > 0) {
-			sessionId = this.login(username);
-			if (sessionId == null)
-				return null;
-			this.sessions.put(username, sessionId);
-			return postWithSpecifiedMediaType(username, pageid, data, type, type2);
-		}
 		return strResponse;
 	} finally {
 		httpResponse.close();
@@ -956,17 +900,9 @@ return null;
 }
 
 private String post(String username, String pageid, List<NameValuePair> data) {
-	String sessionId = this.sessions.get(username);
-	if (sessionId == null) {
-		sessionId = this.login(username);
-		if (sessionId == null)
-			return null;
-		this.sessions.put(username, sessionId);
-		return this.post(username, pageid, data);
-	}
-
+  this.login(username);
 	CloseableHttpClient client = HttpClientBuilder.create()
-			.setDefaultCookieStore(this.getCookieStore(sessionId)).build();
+      .setDefaultCookieStore(this.cookieStore).build();
 
 	try {
 		HttpPost securedResource = new HttpPost(this.server + "/" + pageid);
@@ -977,15 +913,6 @@ private String post(String username, String pageid, List<NameValuePair> data) {
 			HttpEntity responseEntity = httpResponse.getEntity();
 			String strResponse = EntityUtils.toString(responseEntity);
 			EntityUtils.consume(responseEntity);
-			httpResponse.close();
-
-			if (strResponse.indexOf("j_security_check") > 0) {
-				sessionId = this.login(username);
-				if (sessionId == null)
-					return null;
-				this.sessions.put(username, sessionId);
-				return this.post(username, pageid, data);
-			}
 			return strResponse;
 		} finally {
 			httpResponse.close();
@@ -1002,18 +929,10 @@ private String post(String username, String pageid, List<NameValuePair> data) {
 }
 
 private String upload(String username, String pageid, String type, File file) {
-
-	String sessionId = this.sessions.get(username);
-	if (sessionId == null) {
-		sessionId = this.login(username);
-		if (sessionId == null)
-			return null;
-		this.sessions.put(username, sessionId);
-		return this.upload(username, pageid, type, file);
-	}
-
+  this.login(username);
+  
 	CloseableHttpClient client = HttpClientBuilder.create()
-			.setDefaultCookieStore(this.getCookieStore(sessionId)).build();
+      .setDefaultCookieStore(this.cookieStore).build();
 	try {
 		HttpPost post = new HttpPost(this.server + "/" + pageid);
 		MultipartEntityBuilder builder = MultipartEntityBuilder.create();
@@ -1029,14 +948,6 @@ private String upload(String username, String pageid, String type, File file) {
 			HttpEntity responseEntity = response.getEntity();
 			String strResponse = EntityUtils.toString(responseEntity);
 			EntityUtils.consume(responseEntity);
-
-			if (strResponse.indexOf("j_security_check") > 0) {
-				sessionId = this.login(username);
-				if (sessionId == null)
-					return null;
-				this.sessions.put(username, sessionId);
-				return this.upload(username, pageid, type, file);
-			}
 			return strResponse;
 		} finally {
 			response.close();

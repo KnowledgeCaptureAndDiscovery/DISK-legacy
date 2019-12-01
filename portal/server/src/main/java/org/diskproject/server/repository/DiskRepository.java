@@ -787,7 +787,9 @@ public class DiskRepository extends KBRepository {
 					TriggeredLOI tloi = null;
 
 					ArrayList<ArrayList<SparqlQuerySolution>> allDataSolutions = null;
-					if(Config.get().getProperties().containsKey("data-store")) {
+					boolean wikiStore = Config.get().getProperties().containsKey("data-store");
+					
+					if(wikiStore) {
 					  String externalStore = Config.get().getProperties().getString("data-store");
 					  allDataSolutions = queryKb.sparqlQueryRemote(dataSparqlQuery, externalStore);
 					}
@@ -811,10 +813,11 @@ public class DiskRepository extends KBRepository {
 						Map<String, String> dataVarBindings = new HashMap<String, String>();
 						for (SparqlQuerySolution solution : dataSolutions) {
 							String value;
-							if (solution.getObject().isLiteral())
+							if (solution.getObject().isLiteral()) {
 								value = solution.getObject().getValueAsString();
+							}
 							else
-								value = solution.getObject().getName();
+								value = wikiStore ? solution.getObject().getID() : solution.getObject().getName();
 							dataVarBindings.put(solution.getVariable(), value);
 						}
 
@@ -830,7 +833,11 @@ public class DiskRepository extends KBRepository {
 								String binding = vbinding.getBinding();
 								Matcher mat = varPattern.matcher(binding);
 								if (mat.find() && dataVarBindings.containsKey(mat.group(1))) {
-									binding = mat.replaceAll(dataVarBindings.get(mat.group(1)));
+                  // Register dataset with Wings
+                  String dsurl = dataVarBindings.get(mat.group(1));
+                  String dsname = dsurl.replaceAll("^.*\\/", "");
+                  WingsAdapter.get().addRemoteDataToWings(username, domain, dsurl);
+									binding = mat.replaceAll(dsname);
 								}
 								vbinding.setBinding(binding);
 							}
@@ -1792,7 +1799,7 @@ public class DiskRepository extends KBRepository {
 
 				// Start monitoring
 				TLOIMonitoringThread monitorThread = new TLOIMonitoringThread(username, domain, tloi, metamode);
-				monitor.schedule(monitorThread, 2, TimeUnit.SECONDS);
+				monitor.schedule(monitorThread, 2, TimeUnit.MINUTES);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -1872,7 +1879,7 @@ public class DiskRepository extends KBRepository {
 						executor.execute(wflowThread);
 					}
 				} else if (numFinished < wflowBindings.size()) {
-					monitor.schedule(this, 2, TimeUnit.SECONDS);
+					monitor.schedule(this, 2, TimeUnit.MINUTES);
 				}
 				tloi.setStatus(overallStatus);
 				updateTriggeredLOI(username, domain, tloi.getId(), tloi);
