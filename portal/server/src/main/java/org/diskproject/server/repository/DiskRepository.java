@@ -171,22 +171,22 @@ public class DiskRepository extends KBRepository {
 			// downloadOntology(KBConstants.NEUROURI(), DownloadPath);
 			// InputStream is = new FileInputStream(new File(DownloadPath));
 			this.neuroontkb = fac.getKB(KBConstants.NEUROURI(), OntSpec.PLAIN, false, true);
+			this.hypontkb = fac.getKB(KBConstants.HYPURI(), OntSpec.PLAIN, false, true);
+			this.omicsontkb = fac.getKB(KBConstants.OMICSURI(), OntSpec.PLAIN, false, true);
+			
 			this.vocabularies = new HashMap<String, Vocabulary>();
 			
-			this.start_read();
-			
+			this.start_read();			
 			this.vocabularies.put(KBConstants.NEUROURI(),
 					this.initializeVocabularyFromKB(this.neuroontkb, KBConstants.NEURONS()));
-			this.hypontkb = fac.getKB(KBConstants.HYPURI(), OntSpec.PLAIN, false, true);
 			this.vocabularies.put(KBConstants.HYPURI(),
 					this.initializeVocabularyFromKB(this.hypontkb, KBConstants.HYPNS()));
-			this.omicsontkb = fac.getKB(KBConstants.OMICSURI(), OntSpec.PLAIN, false, true);
 			this.vocabularies.put(KBConstants.OMICSURI(),
 					this.initializeVocabularyFromKB(this.omicsontkb, KBConstants.OMICSNS()));
 			this.vocabularies.put(KBConstants.DISKURI(),
 					this.initializeVocabularyFromKB(this.ontkb, KBConstants.DISKNS()));
-			
 			this.end();
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

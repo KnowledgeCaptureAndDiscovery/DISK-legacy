@@ -107,7 +107,7 @@ public class DiskResource implements DiskService {
   public String reloadVocabularies() {
     try {
       this.repo.reloadKBCaches();
-      this.repo.initializeKB();
+      //this.repo.initializeKB();
       response.sendRedirect("");
       return "";
     } catch (Exception e) {
@@ -121,7 +121,7 @@ public class DiskResource implements DiskService {
   public String APIReloadVocabularies() {
     try {
       this.repo.reloadKBCaches();
-      this.repo.initializeKB();
+      //this.repo.initializeKB();
       return "OK";
     } catch (Exception e) {
       // e.printStackTrace();
