@@ -1,0 +1,12 @@
+language: java
+script:
+- mvn package
+deploy:
+  provider: releases
+  api_key:
+    secure: I0008SoUgaHQVp6gs18l7ECbR5ANmSbfYDocT3y+PLku7gw2Pdj6/LGXZoWii/tLu+P9RLrOAciKYgCmWDlzNqY5e6lknY50N/B3wrfDXue5jn9Gb2JZiWHgzHqbdTVe79D/ZmtsFa6fcWEwY1SX2rpKMnRbOj7EGsD5EezHRa2cEmDwR1abNs7T9lT1NNtp0D4GT0y3vjUmHRTUexvqP17WuN715aFHxff89JesmOdHh/k98k4p1IRL/wKdHHKP/7Elt3cskUW3X31NHxONCn8o19SdapffWZLVkM9GkkPpy+n2ZI+Pl5TVTho6AUp3KHazDL/BsSIr4YWzHKjFCNe2sbHMpjgDyylExV5PshsBFtpIwwOn/FBTyBguTeMk75JwexmAWfHDBC2JO69Jc4waOnjbST8w4DR6HedRqWYfhvRO8rv14gJpC8OgbNYbCXaTkL77+ww58v5Wr42NRJ6TbDhA+k3UQHZSCANH+gle3ky+W6/T2JHOQuohVLoCfcob03XYwZ5WdELu3sP8647UWz0mtels1X4KKk5JOI5OoI7jXuf473p0OZMJ27qpBfH/Vt7Ww0kSyQMhwy1Q0tAXp5V4/PSWPPjLQXklOdZj88x5Xkc8sLa1zHCnCCX++dlOu9xK4PVuPzzO+lK8GHMjfDnLzqfL2iVQJxH68Xc=
+  file_glob: true
+  file: portal/**/target/*.war
+  on:
+    repo: KnowledgeCaptureAndDiscovery/DISK
+    branch: disk-enigma
