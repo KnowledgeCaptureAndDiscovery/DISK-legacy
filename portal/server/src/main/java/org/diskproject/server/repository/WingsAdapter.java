@@ -58,6 +58,7 @@ public class WingsAdapter {
 
 	private Gson json;
 	private String server;
+	private String internal_server;
 	private CookieStore cookieStore;
 	
 	public String wflowns = "http://www.wings-workflows.org/ontology/workflow.owl#";
@@ -72,6 +73,7 @@ public class WingsAdapter {
 
 	public WingsAdapter() {
 		this.server = Config.get().getProperties().getString("wings.server");
+		this.internal_server = Config.get().getProperties().getString("wings.internal_server");
 		this.cookieStore = new BasicCookieStore();
 		this.json = new Gson();
 	}
@@ -89,7 +91,8 @@ public class WingsAdapter {
 	}
 
 	public String WFLOWID(String username, String domain, String id) {
-		return this.WFLOWURI(username, domain, id) + "#" + id;
+		return this.internal_server + "/export/users/" + username + "/" + domain + 
+		    "/workflows/" + id + "#" + id;
 	}
 
 	public String DATAID(String username, String domain, String id) {
@@ -436,7 +439,7 @@ public class WingsAdapter {
 			List<VariableBinding> vbindings,
 			Map<String, Variable> inputVariables) {
 		try {
-			wflowname = WFLOWURI(username,domain,wflowname)+"#" + wflowname;
+			wflowname = WFLOWID(username,domain,wflowname);
 			String toPost = toPlanAcceptableFormat(username, domain, wflowname,
 					vbindings, inputVariables);
 			String getData = postWithSpecifiedMediaType(username, "users/"+username+"/"+domain+"/plan/getData",
