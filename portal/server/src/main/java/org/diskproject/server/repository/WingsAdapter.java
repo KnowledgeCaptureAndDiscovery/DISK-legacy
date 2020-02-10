@@ -6,6 +6,7 @@ import java.lang.reflect.Type;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -79,7 +80,7 @@ public class WingsAdapter {
 	}
 
 	public String DOMURI(String username, String domain) {
-		return this.server + "/export/users/" + username + "/" + domain;
+		return this.internal_server + "/export/users/" + username + "/" + domain;
 	}
 
 	public String WFLOWURI(String username, String domain) {
@@ -92,7 +93,7 @@ public class WingsAdapter {
 
 	public String WFLOWID(String username, String domain, String id) {
 		return this.internal_server + "/export/users/" + username + "/" + domain + 
-		    "/workflows/" + id + "#" + id;
+		    "/workflows/" + id + ".owl#" + id;
 	}
 
 	public String DATAID(String username, String domain, String id) {
@@ -723,29 +724,33 @@ private List<VariableBinding> addDataBindings(
 		String data, boolean param) {
 
 	JsonParser jsonParser = new JsonParser();
-	try{
-	JsonObject expobj = jsonParser.parse(data.trim()).getAsJsonObject();
-	}
-	catch(Exception e){
-		System.out.println("Problem parsing: "+data);
-		return vbl;
-	}
 	JsonObject expobj = jsonParser.parse(data.trim()).getAsJsonObject();
 	if (!expobj.get("success").getAsBoolean())
 		return vbl;
 
 	JsonObject dataobj = expobj.get("data").getAsJsonObject();
-	String bindings = dataobj.get("bindings").getAsJsonArray().toString();
-	if (bindings.length() < 7)
+	JsonArray datalist = dataobj.get("bindings").getAsJsonArray();
+	if (datalist.size() == 0)
 		return vbl;
 
-	bindings = bindings.substring(1, bindings.length() - 1);
-	if (!param)
-		bindings = bindings.substring(1, bindings.length() - 1)
-				.replace("}]}],[{", "}],").replace("}}],[{", "},")
-				.replace("}},{", "},");
-	JsonObject bindingobj = jsonParser.parse(bindings.trim())
-			.getAsJsonObject();
+	JsonObject bindingobj = new JsonObject();
+	for(Iterator<JsonElement> it = datalist.iterator(); it.hasNext(); ) {
+	  JsonElement el = it.next();
+	  JsonObject obj = null;
+	  if(param) {
+	    // If Parameter, the entries aren't arrays
+	    obj = el.getAsJsonObject();
+	  }
+	  else {
+	    JsonArray ellist = el.getAsJsonArray();
+	    if(ellist.size() > 0) {
+	      obj = ellist.get(0).getAsJsonObject();
+	    }
+	  }
+    for(Entry<String, JsonElement> entry : obj.entrySet()) {
+      bindingobj.add(entry.getKey(), entry.getValue());
+    }
+	}
 
 	for (String key : inputVariables.keySet()) {
 		Variable v = inputVariables.get(key);
@@ -758,25 +763,19 @@ private List<VariableBinding> addDataBindings(
 				}
 			}
 			if (!existing) {
-				if (bindingobj.get(key).toString().charAt(0) == '[') {// is
-																		// a
-																		// collection
-					JsonArray wingsData = bindingobj.get(key)
-							.getAsJsonArray();
+				if (bindingobj.get(key).isJsonArray()) {// is a collection
+					JsonArray wingsData = bindingobj.get(key).getAsJsonArray();
 					String id = "";
 					String temp;
 					for (int i = 0; i < wingsData.size(); i++) {
-						temp = wingsData.get(i).getAsJsonObject().get("id")
-								.toString();
-						temp = temp.substring(temp.indexOf("#") + 1,
-								temp.length() - 1);
+						temp = wingsData.get(i).getAsJsonObject().get("id").toString();
+						temp = temp.substring(temp.indexOf("#") + 1, temp.length() - 1);
 						id += temp + ",";
 					}
 					id = id.substring(0, id.length() - 1);
 					vbl.add(new VariableBinding(key, id));
 				} else {
-					JsonObject wingsData = bindingobj.get(key)
-							.getAsJsonObject();
+					JsonObject wingsData = bindingobj.get(key).getAsJsonObject();
 					String id = wingsData.get("id").toString();
 					id = id.substring(id.indexOf("#") + 1, id.length() - 1);
 					vbl.add(new VariableBinding(key, id));
@@ -790,11 +789,9 @@ private List<VariableBinding> addDataBindings(
 				}
 			}
 			if (!existing) {
-				JsonObject wingsParam = bindingobj.get(key)
-						.getAsJsonObject();
+				JsonObject wingsParam = bindingobj.get(key).getAsJsonObject();
 				String value = wingsParam.get("value").toString();
 				value = value.substring(1, value.length() - 1);
-
 				vbl.add(new VariableBinding(key,value));
 			}
 		}
@@ -828,7 +825,7 @@ private String toPlanAcceptableFormat(String username, String domain,
 	boolean paramAdded = false;
 	String dataBindings = "\"dataBindings\": {";
 	boolean dataAdded = false;
-	String dataID = server + "/export/users/" + username + "/" + domain
+	String dataID = this.internal_server + "/export/users/" + username + "/" + domain
 			+ "/data/library.owl#";
 	for (String key : ivm.keySet()) {
 		Variable v = ivm.get(key);
@@ -873,6 +870,7 @@ private String toPlanAcceptableFormat(String username, String domain,
 
 private String postWithSpecifiedMediaType(String username, String pageid, String data,
 		String type, String type2) {
+  this.login(username);
 	CloseableHttpClient client = HttpClientBuilder.create()
       .setDefaultCookieStore(this.cookieStore).build();
 	try {
