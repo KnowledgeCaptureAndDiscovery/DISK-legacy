@@ -1385,7 +1385,6 @@ public class DiskRepository extends KBRepository {
 			KBObject cls = this.cmap.get("TriggeredLineOfInquiry");
 			KBObject typeprop = kb.getProperty(KBConstants.RDFNS() + "type");
 
-			this.start_read();
 			for (KBTriple t : kb.genericTripleQuery(null, typeprop, cls)) {
 				KBObject obj = t.getSubject();
 
@@ -1799,7 +1798,7 @@ public class DiskRepository extends KBRepository {
 
 				// Start monitoring
 				TLOIMonitoringThread monitorThread = new TLOIMonitoringThread(username, domain, tloi, metamode);
-				monitor.schedule(monitorThread, 2, TimeUnit.MINUTES);
+				monitor.schedule(monitorThread, 5, TimeUnit.SECONDS);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
