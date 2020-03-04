@@ -19,7 +19,7 @@
     "release": true
   },
   "hooks": {
-    "after:bump": "mvn --settings pom.xml org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion=${version} 1>/dev/null 2>/dev/null"
+    "after:bump": "cd portal; mvn --settings pom.xml org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion=${version} 1>/dev/null 2>/dev/null"
   }
 }
 
