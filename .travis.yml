@@ -10,7 +10,7 @@ deploy:
   api_key:
     secure: IQKbJ8Es8VDj6qD+MFqBN6DuPjTa+V5e5wNYx9bLvpcm/6+c8FzXPtfRjHAL+My58gnveDMYVPRXHqosodfnez11ncOG43+JEF+VIY8+co7hNWAi3OcKpJAmaO7sZeBlfk4YPy7BGp2+Yd0CJGTbydNkb1zVho0bjuzzkX0XnxnoPj50A1XxPeI0qKCzsN/iAM6XR5yYiNIR4jmcIgK7tQctTfjl58iG6aes4UMuLNUr2XAN99Zk8eYDcBOJtuihz03gywbDiyzWiIIOIHAT1i0KXsH9t5nBcQ4hQPvu/Fk3ENp0Y8ib1I6CplH96+a/f40OXSWelDYvpNKasG99f6bwxTHXVA2lk7LmZLv+wfap2IKZlhtTWXXRvfvNPZ3oSGJvHarcA64PPEY6CIkPLPMwor6+gn2Z5krl/JVncmA6OCrVTRVhWNFBwWX4HdTVci4zBh0HD2P2g8ReZJcuo06zGlM6G9hGwnZe6svjDk2/AvYp8VJFm/bTNK/H5+AeOFsHH+I4k720ySDjupJtxpIfWHMHdFyFHc39PnBfmzMRd1yGE3qR4RWjeIj9BktFCQI5ZpnbDN0aYN5jXdzEjLqCOiRqgjmj3qXsKiYJvdAVh2pUmugKLmc7XqJlkJJEtZYeOXvlCjRGDxLY9SFWp2nTaGnuuJiZ0Scnijv2J9A=
   file_glob: true
-  file: portal/**/target/*.war
+  file: DISK/portal/**/target/*.war
   skip_cleanup: true
   on:
     tags: true
