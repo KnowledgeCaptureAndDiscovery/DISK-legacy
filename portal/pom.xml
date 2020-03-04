@@ -5,11 +5,10 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.disk-project</groupId>
-	<artifactId>disk-project</artifactId>
-	<version>1.0-SNAPSHOT</version>
+    <artifactId>disk-project</artifactId>
+    <version>1.1.1</version>
 	<name>Disk</name>
 	<packaging>pom</packaging>
-
 	<modules>
 		<module>shared</module>
 		<module>server</module>
