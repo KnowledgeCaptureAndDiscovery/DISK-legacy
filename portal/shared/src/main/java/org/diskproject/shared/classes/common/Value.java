@@ -22,6 +22,12 @@ public class Value {
     this.type = Type.LITERAL;
   }
   
+  public Value(Type type, Object value, String datatype) {
+	    this.value = value;
+	    this.datatype = datatype;
+	    this.type = type;
+	  }
+  
   public Type getType() {
     return type;
   }

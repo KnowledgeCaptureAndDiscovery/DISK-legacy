@@ -366,5 +366,9 @@ public class TripleInput extends GWTCodeMirror {
     Property subcProp = new Property();
     subcProp.setId(KBConstants.RDFSNS() + "subClassOf");
     allprops.put("rdfs:subClassOf", subcProp);
+    
+    Property labelProp = new Property();
+    subcProp.setId(KBConstants.RDFSNS() + "label");
+    allprops.put("rdfs:label", labelProp);
   }
 }

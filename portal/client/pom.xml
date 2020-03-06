@@ -29,7 +29,7 @@
 		<gwt.codemirror.version>2.0.1</gwt.codemirror.version>		
 		<vaadin-polymer.version>1.2.3.0</vaadin-polymer.version>
 				
-		<java.version>1.7</java.version>
+		<java.version>1.8</java.version>
 		<webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -156,7 +156,6 @@
 			<version>${restygwt.version}</version>
 			<scope>provided</scope>
 		</dependency>
-
 	</dependencies>
 
 	<build>

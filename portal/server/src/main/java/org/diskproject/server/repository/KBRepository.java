@@ -1,27 +1,33 @@
 package org.diskproject.server.repository;
 
 import java.io.File;
+import java.util.concurrent.TimeUnit;
 import java.util.HashMap;
 
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.diskproject.server.util.Config;
 import org.diskproject.shared.classes.util.KBConstants;
 
-import edu.isi.wings.ontapi.KBAPI;
-import edu.isi.wings.ontapi.KBObject;
-import edu.isi.wings.ontapi.OntFactory;
-import edu.isi.wings.ontapi.OntSpec;
+import edu.isi.kcap.ontapi.KBAPI;
+import edu.isi.kcap.ontapi.KBObject;
+import edu.isi.kcap.ontapi.OntFactory;
+import edu.isi.kcap.ontapi.OntSpec;
+import edu.isi.kcap.ontapi.jena.transactions.TransactionsJena;
+import edu.isi.kcap.ontapi.transactions.TransactionsAPI;
 
-public class KBRepository {
+public class KBRepository implements TransactionsAPI {
   protected String server;
   protected String tdbdir;
   protected String onturi;
+  protected String ontns;
   protected OntFactory fac;
+  protected transient TransactionsAPI transaction;
+  
   protected String owlns, rdfns, rdfsns;
   protected KBAPI ontkb;
   protected HashMap<String, KBObject> pmap, cmap;
   
-  protected void setConfiguration(String onturi) {
+  protected void setConfiguration(String onturi, String ontns) {
     if(Config.get() == null)
       return;
     PropertyListConfiguration props = Config.get().getProperties();
@@ -38,6 +44,7 @@ public class KBRepository {
     rdfsns = KBConstants.RDFSNS();
     
     this.onturi = onturi;
+    this.ontns = ontns;
   }
   
   protected void initializeKB() {
@@ -46,14 +53,18 @@ public class KBRepository {
     
     this.fac = new OntFactory(OntFactory.JENA, tdbdir);
     try {
-      ontkb = fac.getKB(this.onturi, OntSpec.PELLET, false, true);
+      this.transaction = new TransactionsJena(this.fac);
       
+      ontkb = fac.getKB(this.onturi, OntSpec.PELLET, false, true);
+      TimeUnit.SECONDS.sleep(2); 
       // Temporary hacks
+      this.start_write();
       this.temporaryHacks();
       
       pmap = new HashMap<String, KBObject>();
       cmap = new HashMap<String, KBObject>();
       this.cacheKBTerms(ontkb);
+      this.end();
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -65,7 +76,7 @@ public class KBRepository {
   }
   
   private void hackInDataProperty(String prop, String domain, String range) {
-    String ns = onturi + "#";
+    String ns = ontns;
     if(!this.ontkb.containsResource(ns+prop)) {
       this.ontkb.createDatatypeProperty(ns+prop);
       this.ontkb.setPropertyDomain(ns+prop, ns+domain);
@@ -88,4 +99,46 @@ public class KBRepository {
         pmap.put(obj.getName(), obj);
     }
   }
+
+//TransactionsAPI functions
+ @Override
+ public boolean start_read() {
+   if(transaction != null)
+     return transaction.start_read();
+   return true;
+ }
+
+ @Override
+ public boolean start_write() {
+   if(transaction != null)
+     return transaction.start_write();
+   return true;
+ }
+ 
+ @Override
+ public boolean save(KBAPI kb) {
+   return transaction.save(kb);
+ }
+ 
+ @Override
+ public boolean saveAll() {
+   return transaction.saveAll();
+ }
+
+ @Override
+ public boolean end() {
+   if(transaction != null)
+     return transaction.end();
+   return true;
+ }
+
+ @Override
+ public boolean start_batch_operation() {
+   return transaction.start_batch_operation();
+ }
+
+ @Override
+ public void stop_batch_operation() {
+   transaction.stop_batch_operation();
+ }
 }

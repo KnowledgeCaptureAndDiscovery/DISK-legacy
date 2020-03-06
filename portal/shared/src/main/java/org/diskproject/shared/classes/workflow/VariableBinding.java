@@ -1,5 +1,6 @@
 package org.diskproject.shared.classes.workflow;
 
+
 import java.io.Serializable;
 
 public class VariableBinding implements Serializable, Comparable<VariableBinding> {
@@ -7,7 +8,15 @@ public class VariableBinding implements Serializable, Comparable<VariableBinding
   
   String variable;
   String binding;
-
+   
+  public VariableBinding(String v, String b)
+  {
+	  variable = v;
+	  binding = b;
+  }
+  
+  public VariableBinding(){}
+  
   public String getVariable() {
     return variable;
   }
@@ -31,5 +40,4 @@ public class VariableBinding implements Serializable, Comparable<VariableBinding
   public int compareTo(VariableBinding o) {
     return this.toString().compareTo(o.toString());
   }
-
 }

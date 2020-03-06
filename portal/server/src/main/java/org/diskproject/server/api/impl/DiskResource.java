@@ -1,5 +1,6 @@
 package org.diskproject.server.api.impl;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +17,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 
+import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.diskproject.server.repository.DiskRepository;
 import org.diskproject.server.repository.WingsAdapter;
 import org.diskproject.shared.api.DiskService;
@@ -30,6 +32,7 @@ import org.diskproject.shared.classes.workflow.Workflow;
 import org.diskproject.shared.classes.workflow.WorkflowRun;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 
 @Path("")
 @Produces("application/json")
@@ -46,8 +49,28 @@ public class DiskResource implements DiskService {
   DiskRepository repo;
   
   public DiskResource() {
-    this.repo = DiskRepository.get();
+    this.repo = DiskRepository.get(); 
   }
+  
+  @GET
+  @Path("server/config")
+  @Override
+  public Map<String, String> getConfig() {
+    try {
+      PropertyListConfiguration config = this.repo.getConfig();
+      Map<String, String> vals = new HashMap<String, String>();
+      vals.put("data-store", config.getProperty("data-store").toString());
+      vals.put("username", config.getProperty("username").toString());
+      vals.put("domain", config.getProperty("domain").toString());
+      vals.put("wings.server", config.getProperty("wings.server").toString());
+      return vals;
+    } catch (Exception e) {
+      // e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+
+  
   /*
    * Vocabulary
    */
@@ -62,7 +85,7 @@ public class DiskResource implements DiskService {
       throw new RuntimeException("Exception: " + e.getMessage());
     }
   }
-  
+
   @GET
   @Path("{username}/{domain}/vocabulary")
   @Override
@@ -84,7 +107,7 @@ public class DiskResource implements DiskService {
   public String reloadVocabularies() {
     try {
       this.repo.reloadKBCaches();
-      this.repo.initializeKB();
+      //this.repo.initializeKB();
       response.sendRedirect("");
       return "";
     } catch (Exception e) {
@@ -92,6 +115,20 @@ public class DiskResource implements DiskService {
       throw new RuntimeException("Exception: " + e.getMessage());
     }
   }
+  
+  @GET
+  @Path("vocabulary/reload")
+  public String APIReloadVocabularies() {
+    try {
+      this.repo.reloadKBCaches();
+      //this.repo.initializeKB();
+      return "OK";
+    } catch (Exception e) {
+      // e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+    
     
   /**
    * Hypothesis
@@ -321,4 +358,5 @@ public class DiskResource implements DiskService {
     // Check execution status
     return WingsAdapter.get().getWorkflowRunStatus(username, domain, id);
   }  
+   
 }

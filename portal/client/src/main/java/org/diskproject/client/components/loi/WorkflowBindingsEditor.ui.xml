@@ -80,6 +80,17 @@
 				</div>
 				<g:HTMLPanel addStyleNames="varbindings" ui:field="varbindings" />
 			</g:HTMLPanel>
+
+			<g:HTMLPanel ui:field="workflowstoberunsection" addStyleNames="section">
+				<div class="heading">
+				<div class="horizontal layout">
+					Workflows to be run
+					<p:PaperIconButton ui:field="addworkflowstoberunbutton"
+						addStyleNames="smallicon green-button" icon="add-circle" />
+				</div>
+				</div>
+				<g:HTMLPanel addStyleNames="varbindings" ui:field="workflowstoberunbindings" />
+			</g:HTMLPanel>
 		
 			<g:HTMLPanel ui:field="metasection"  addStyleNames="section">
 				<div class="heading">Hypotheses</div>

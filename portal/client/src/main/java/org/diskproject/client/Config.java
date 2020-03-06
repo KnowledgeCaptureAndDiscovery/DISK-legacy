@@ -1,6 +1,9 @@
 package org.diskproject.client;
 
+import java.util.Map;
+
 public class Config {
+  public static Map<String, String> serverConfig = null;
 
   public native static String getServerURL() /*-{
     return $wnd.CONFIG.SERVER;
@@ -22,12 +25,16 @@ public class Config {
     return $wnd.CONFIG.HOME;
   }-*/;
   
-  public native static String getWingsUserid() /*-{
-    return $wnd.CONFIG.WINGS.userid;
-  }-*/;
+  public static String getWingsUserid() {
+    if(serverConfig != null) 
+      return serverConfig.get("username");
+    return null;
+  };
   
-  public native static String getWingsDomain() /*-{
-    return $wnd.CONFIG.WINGS.domain;
-  }-*/;
+  public static String getWingsDomain() {
+    if(serverConfig != null) 
+      return serverConfig.get("domain");
+    return null;
+  }
 
 }
