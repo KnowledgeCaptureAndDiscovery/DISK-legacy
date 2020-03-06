@@ -1,10 +1,12 @@
 language: java
 dist: trusty
 jdk:
-  - openjdk7
+  - openjdk8
+before_script:
+- export MAVEN_OPTS='-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn'
 script:
 - cd portal
-- mvn package
+- mvn -B package
 deploy:
   provider: releases
   api_key:
