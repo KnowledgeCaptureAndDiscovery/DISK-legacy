@@ -170,7 +170,7 @@
 						</goals>
 					</execution>
 				</executions>
-				<inherited>true</inherited>
+				<!--inherited>true</inherited>
 				<configuration>
                     <runTarget>index.html</runTarget>
                     <draftCompile>false</draftCompile>
@@ -178,9 +178,9 @@
                     <disableCastChecking>true</disableCastChecking>
                     <disableClassMetadata>true</disableClassMetadata>
                     <enableAssertions>false</enableAssertions>
-                    <closureCompiler>false</closureCompiler>
+                    <closureCompiler>true</closureCompiler>
                     <bindAddress>0.0.0.0</bindAddress>				
-				</configuration>
+				</configuration-->
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

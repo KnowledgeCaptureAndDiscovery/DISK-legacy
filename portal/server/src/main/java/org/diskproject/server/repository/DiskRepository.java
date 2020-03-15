@@ -780,10 +780,10 @@ public class DiskRepository extends KBRepository {
 						hypVarBindings.put(solution.getVariable(), value);
 					}
 
-					String boundHypothesisQuery = this.getQueryBindings(hypothesisQuery, varPattern, hypVarBindings);
+					//String boundHypothesisQuery = this.getQueryBindings(hypothesisQuery, varPattern, hypVarBindings);
 					String boundDataQuery = this.getQueryBindings(dataQuery, varPattern, hypVarBindings);
 
-					boundDataQuery = hypPattern + boundHypothesisQuery + boundDataQuery;
+					//boundDataQuery = hypPattern + boundHypothesisQuery + boundDataQuery;
 					boundDataQuery = this.filterQueryBindings(boundDataQuery, "hyp:");
 					String dataSparqlQuery = this.getSparqlQuery(boundDataQuery, assertions);
 					TriggeredLOI tloi = null;
