@@ -23,7 +23,7 @@
 		<gwtp.version>1.6</gwtp.version>
 		<gin.version>2.1.2</gin.version>
 		<gwt.d3.version>1.2.0</gwt.d3.version>
-		<restygwt.version>2.2.0</restygwt.version>		
+		<restygwt.version>2.1.1</restygwt.version>		
 		<validation.version>1.0.0.GA</validation.version>
 		<gwt.codemirror.version>2.0.1</gwt.codemirror.version>		
 		<vaadin-polymer.version>1.9.3.1</vaadin-polymer.version>
@@ -178,7 +178,7 @@
                     <disableCastChecking>true</disableCastChecking>
                     <disableClassMetadata>true</disableClassMetadata>
                     <enableAssertions>false</enableAssertions>
-                    <closureCompiler>true</closureCompiler>
+                    <closureCompiler>false</closureCompiler>
                     <bindAddress>0.0.0.0</bindAddress>				
 				</configuration>
 			</plugin>
