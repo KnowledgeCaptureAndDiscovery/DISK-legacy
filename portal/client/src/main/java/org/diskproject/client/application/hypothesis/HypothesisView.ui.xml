@@ -21,20 +21,30 @@
                 background-color: #eee;
                 border: 1px solid #ddd;
             }
-            .tree iron-collapse.pad {
+            .tree iron-flex-layout {
+            	@apply(--layout-horizontal);
+           	}
+           	.tree iron-flex-layout.pad .item {
+           		width: calc(100% - 20px);
+           	}
+            .tree iron-flex-layout.pad {
                 margin-left: 20px;
             }
             @media(max-width: 640px) {
-                .tree iron-collapse.pad {
+                .tree iron-flex-layout.pad {
                     margin-left: 10px;
                 }
-            }            
+            }
+            .tree iron-flex-layout.hidden {
+                display: none;
+            }
             .tree paper-item {
                 border-top: 1px dotted #e5e5e5;
                 padding: 2px;
                 font-size: 13px;
                 min-height: 32px;
                 cursor: pointer;
+                width: 100%;
             }
             .tree paper-item.both-borders {
                 border-bottom: 1px dotted #e5e5e5;
@@ -42,7 +52,7 @@
             .tree paper-item.no-borders {
                 border-top: 0px;
             }
-            iron-collapse {
+            .tree iron-flex-layout.pad {
                 border-left: 1px dotted #e5e5e5;
             }
             .tree paper-item iron-icon {

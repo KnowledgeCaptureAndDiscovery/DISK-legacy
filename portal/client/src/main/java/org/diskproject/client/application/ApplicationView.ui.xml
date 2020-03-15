@@ -299,6 +299,12 @@
                 color: #999;
                 /*font-style: italic;*/
             }
+            .horizontal.layout {
+            	display: flex;
+            }            
+            .layout.center {
+            	align-items: center;
+            }
 		</style>
 		
 		<paper-drawer-panel class="flex" ui:field="drawer">

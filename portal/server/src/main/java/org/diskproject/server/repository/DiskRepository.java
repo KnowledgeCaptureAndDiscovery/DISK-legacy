@@ -713,7 +713,8 @@ public class DiskRepository extends KBRepository {
 		}
 	}
 
-	public List<TriggeredLOI> queryHypothesis(String username, String domain, String id) {
+	@SuppressWarnings("unchecked")
+  public List<TriggeredLOI> queryHypothesis(String username, String domain, String id) {
 		String hypuri = this.HYPURI(username, domain) + "/" + id;
 		String assertions = this.ASSERTIONSURI(username, domain);
 
@@ -738,6 +739,7 @@ public class DiskRepository extends KBRepository {
 			queryKb.importFrom(this.fac.getKB(assertions, OntSpec.PLAIN));
 
 			Pattern varPattern = Pattern.compile("\\?(.+?)\\b");
+			Pattern varCollPattern = Pattern.compile("\\[\\s*\\?(.+?)\\s*\\]");
 			// get according loi
 			String hypPattern = "";
 			
@@ -797,8 +799,106 @@ public class DiskRepository extends KBRepository {
 					  allDataSolutions = queryKb.sparqlQuery(dataSparqlQuery);
 					}
 					
-					HashMap<String, Boolean> duplicateBindingsCheck = new HashMap<String, Boolean>();
+          // Store solutions in dataVarBindings
+          Map<String, List<String>> dataVarBindings = new HashMap<String, List<String>>();
+          for (ArrayList<SparqlQuerySolution> dataSolutions : allDataSolutions) {
+            for (SparqlQuerySolution solution : dataSolutions) {
+              String var = solution.getVariable();
+              List<String> curValues = dataVarBindings.containsKey(var) ? dataVarBindings.get(var) 
+                  : new ArrayList<String>();
+
+              if (solution.getObject().isLiteral()) {
+                curValues.add(solution.getObject().getValueAsString());
+              }
+              else
+                curValues.add(wikiStore ? solution.getObject().getID() : solution.getObject().getName());
+              dataVarBindings.put(var, curValues);
+            }
+          }
 					
+					if(tloi == null)
+					  tloi = new TriggeredLOI(loi, id);
+					
+          List<WorkflowBindings> tloiBindings = new ArrayList<WorkflowBindings>();
+          
+					for (WorkflowBindings bindings : loi.getWorkflows()) {
+					  // For each loi Workflow binding, create an empty tloi Binding
+					  tloiBindings.add(new WorkflowBindings(
+					      bindings.getWorkflow(), 
+					      bindings.getWorkflowLink(), 
+					      new ArrayList<VariableBinding>()));
+					  
+            for (VariableBinding vbinding : bindings.getBindings()) {
+              // For each Variable binding, check :
+              // - If this variable expects a collection or single values
+              // - Check the binding values from the data store
+              String binding = vbinding.getBinding();
+              
+              Matcher collmat = varCollPattern.matcher(binding);
+              Matcher mat = varPattern.matcher(binding);
+              
+              // Check if this binding is meant for a collection
+              // Also get the sparql variable
+              boolean isCollection = false;
+              String sparqlvar = null;
+              if(collmat.find() && dataVarBindings.containsKey(collmat.group(1))) {
+                sparqlvar = collmat.group(1);
+                isCollection = true;
+              }
+              else if(mat.find() && dataVarBindings.containsKey(mat.group(1))) {
+                sparqlvar = mat.group(1);
+              }
+              
+              if(sparqlvar != null) {
+                // Get the data bindings for the sparql variable
+                List<String> dsurls = dataVarBindings.get(sparqlvar);
+                
+                // Register all datasets with Wings & get dataset names
+                List<String> dsnames = new ArrayList<String>();
+                for(String dsurl : dsurls) {
+                  String dsname = dsurl.replaceAll("^.*\\/", "");
+                  WingsAdapter.get().addRemoteDataToWings(username, domain, dsurl);
+                  dsnames.add(dsname);
+                }
+                
+                // If Collection, all datasets go to same workflow
+                if(isCollection) {
+                  // This variable expects a collection. Modify the existing tloiBinding values
+                  for(WorkflowBindings tloiBinding : tloiBindings) {
+                    tloiBinding.addBinding(new VariableBinding(
+                        vbinding.getVariable(),
+                        dsnames.toString()
+                    ));
+                  }
+                }
+                else {
+                  // This variable expects a single file. Add new tloi bindings for each dataset
+                  List<WorkflowBindings> newTloiBindings = new ArrayList<WorkflowBindings>();
+                  for(WorkflowBindings tloiBinding : tloiBindings) {
+                    for(String dsname: dsnames) {
+                      ArrayList<VariableBinding> newBindings = (ArrayList<VariableBinding>) SerializationUtils
+                          .clone((Serializable) tloiBinding.getBindings());
+                      WorkflowBindings newWorkflowBindings = new WorkflowBindings(
+                          bindings.getWorkflow(), 
+                          bindings.getWorkflowLink(), 
+                          newBindings);
+                      newWorkflowBindings.addBinding(new VariableBinding(
+                          vbinding.getVariable(),
+                          dsname
+                      ));
+                      newTloiBindings.add(newWorkflowBindings);
+                    }
+                  }
+                  tloiBindings = newTloiBindings;
+                }
+              }
+            }
+					}
+          tloi.setWorkflows(tloiBindings);
+					
+					/*
+          HashMap<String, Boolean> duplicateBindingsCheck = new HashMap<String, Boolean>();
+          
 					for (ArrayList<SparqlQuerySolution> dataSolutions : allDataSolutions) {
 						// TODO: What to do with multiple data solutions ?
 						// - Separate triggered line of inquiries for each one ?
@@ -825,20 +925,42 @@ public class DiskRepository extends KBRepository {
 							WorkflowBindings newbindings = new WorkflowBindings();
 							newbindings.setWorkflow(bindings.getWorkflow());
 
-							@SuppressWarnings("unchecked")
 							ArrayList<VariableBinding> vbindings = (ArrayList<VariableBinding>) SerializationUtils
 									.clone((Serializable) bindings.getBindings());
 
-							for (VariableBinding vbinding : vbindings) {
+							for (VariableBinding vbinding : vbindings) {	  
 								String binding = vbinding.getBinding();
-								Matcher mat = varPattern.matcher(binding);
-								if (mat.find() && dataVarBindings.containsKey(mat.group(1))) {
-                  // Register dataset with Wings
-                  String dsurl = dataVarBindings.get(mat.group(1));
-                  String dsname = dsurl.replaceAll("^.*\\/", "");
-                  WingsAdapter.get().addRemoteDataToWings(username, domain, dsurl);
-									binding = mat.replaceAll(dsname);
-								}
+								
+								Matcher collmat = varCollPattern.matcher(binding);
+	              Matcher mat = varPattern.matcher(binding);
+	              
+	              // Check if this binding is meant for a collection
+	              // Also get the sparql variable
+	              boolean isCollection = false;
+	              String sparqlvar = null;
+	              if(collmat.find() && dataVarBindings.containsKey(collmat.group(1))) {
+	                sparqlvar = collmat.group(1);
+	                isCollection = true;
+	              }
+	              else if(mat.find() && dataVarBindings.containsKey(mat.group(1))) {
+	                sparqlvar = mat.group(1);
+	              }
+	              
+	              if(sparqlvar != null) {
+	                // Get the data bindings for the sparql variable
+	                String dsurl = dataVarBindings.get(sparqlvar);
+	                // Register dataset with Wings
+	                String dsname = dsurl.replaceAll("^.*\\/", "");
+                  //FIXME: WingsAdapter.get().addRemoteDataToWings(username, domain, dsurl);
+	                
+	                // If Collection, all datasets go to same workflow
+	                if(isCollection) {
+	                  binding = vbinding.getBinding() + "," + mat.replaceAll(dsname);
+	                }
+	                else {
+	                  binding = mat.replaceAll(dsname);
+	                }
+	              }
 								vbinding.setBinding(binding);
 							}
 							newbindings.setBindings(vbindings);
@@ -871,7 +993,7 @@ public class DiskRepository extends KBRepository {
 							tloi.getMetaWorkflows().add(newbindings);
 
 						}
-					}
+					}*/
 					if (tloi != null)
 						tlois.add(tloi);
 				}

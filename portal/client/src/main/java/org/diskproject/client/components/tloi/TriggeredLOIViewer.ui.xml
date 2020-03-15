@@ -63,6 +63,9 @@
 			.no-run-link .run-link {
 				display: none;
 			}
+			iron-flex-layout.list {
+				display: block;
+			}
 		</style>
 		<div class="vertical layout section">
 			<div ui:field="header" />
