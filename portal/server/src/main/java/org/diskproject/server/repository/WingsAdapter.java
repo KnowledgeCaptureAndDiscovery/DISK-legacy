@@ -843,7 +843,9 @@ private String toPlanAcceptableFormat(String username, String domain,
 				VariableBinding vb = vbl.get(i);
 				if (vb.getVariable().equals(v.getName())) {
 					dataBindings += "\"" + wfname + v.getName() + "\":[";
-					String[] dBs = vb.getBinding().split(",");
+					String[] dBs = vb.getBinding()
+					    .replaceFirst("^\\[",  "")
+					    .replaceFirst("\\]$", "").split("\\s*,\\s*");
 					for (int j = 0; j < dBs.length; j++) {
 						if (dBs[j].length() > 0)
 							dataBindings += "\"" + dataID + dBs[j] + "\",";

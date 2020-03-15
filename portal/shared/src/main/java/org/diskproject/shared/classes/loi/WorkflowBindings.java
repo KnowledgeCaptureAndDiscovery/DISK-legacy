@@ -23,6 +23,8 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
 	  this.workflow = workflow;
 	  this.workflowLink = workflowLink;
 	  this.bindings = bindings;
+    run = new WorkflowRun();
+    meta = new MetaWorkflowDetails();
   }
   
   public WorkflowBindings() {
@@ -61,6 +63,10 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
 
   public void setBindings(List<VariableBinding> bindings) {
     this.bindings = bindings;
+  }
+  
+  public void addBinding(VariableBinding binding) {
+    this.bindings.add(binding);
   }
   
   @JsonIgnore

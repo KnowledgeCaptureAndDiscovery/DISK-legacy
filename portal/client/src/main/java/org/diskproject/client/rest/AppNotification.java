@@ -25,7 +25,7 @@ public class AppNotification {
   private static void showToast(final String message, final int delay, final String color) {
     final PaperToastElement toast = ApplicationView.toast;
     final int _delay = delay > 0 ? delay : new Double(toast.getDuration()).intValue();
-    if(toast.getVisible()) {
+    if(toast.getOpened()) {
       Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
         @Override
         public boolean execute() {
@@ -41,7 +41,7 @@ public class AppNotification {
           toast.setText(message);
           toast.setDuration(delay);
           toast.getStyle().setProperty("background-color", color);
-          toast.show();
+          toast.open();
           return null;
         }
       });

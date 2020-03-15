@@ -8,7 +8,7 @@ import java.util.Map;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.HTML;
-import com.vaadin.polymer.iron.widget.IronCollapse;
+import com.vaadin.polymer.iron.widget.IronFlexLayout;
 import com.vaadin.polymer.iron.widget.IronIcon;
 import com.vaadin.polymer.paper.widget.PaperItem;
 
@@ -21,7 +21,7 @@ public class TreeNode implements Comparable<TreeNode> {
   HTML content;
   
   PaperItem item;
-  IronCollapse childrenSection;
+  IronFlexLayout childrenSection;
   
   IronIcon icon, collapser;
   String iconName, expandedIconName;
@@ -60,7 +60,7 @@ public class TreeNode implements Comparable<TreeNode> {
     this.children = new ArrayList<TreeNode>();
     this.nodemap = new HashMap<String, TreeNode>();
     
-    this.childrenSection = new IronCollapse();
+    this.childrenSection = new IronFlexLayout();
     this.childrenSection.addStyleName("pad");
     
     this.collapser = new IronIcon();
@@ -70,7 +70,10 @@ public class TreeNode implements Comparable<TreeNode> {
       public void onClick(ClickEvent event) {
         event.stopPropagation();
         expanded = !expanded;
-        childrenSection.toggle();
+        if(expanded)
+          childrenSection.removeStyleName("hidden");
+        else
+          childrenSection.addStyleName("hidden");
         setIcons();
       }
     });
@@ -161,10 +164,12 @@ public class TreeNode implements Comparable<TreeNode> {
     return this.item;
   }
   
-  public IronCollapse updateChildrenSection() {
+  public IronFlexLayout updateChildrenSection() {
     childrenSection.clear();
-    if(this.expanded)
-      childrenSection.setOpened(true);
+    if(expanded)
+      childrenSection.removeStyleName("hidden");
+    else
+      childrenSection.addStyleName("hidden");
     for(TreeNode childnode : this.getChildren()) {
       childnode.updateChildrenSection();
       childrenSection.add(childnode.getItem());
@@ -174,7 +179,7 @@ public class TreeNode implements Comparable<TreeNode> {
     return childrenSection;
   }
   
-  public IronCollapse getChildrenSection() {
+  public IronFlexLayout getChildrenSection() {
     return this.childrenSection;
   }
   

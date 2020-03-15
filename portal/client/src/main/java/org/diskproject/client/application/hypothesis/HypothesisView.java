@@ -115,7 +115,8 @@ public class HypothesisView extends ApplicationSubviewImpl
       @Override
       public void onSuccess(List<TreeItem> result) {
         treelist = result;
-        loadHypothesisTLOITree();
+        if(tloilist != null)
+          loadHypothesisTLOITree();
       }
       @Override
       public void onFailure(Throwable reason) {
@@ -128,7 +129,8 @@ public class HypothesisView extends ApplicationSubviewImpl
       @Override
       public void onSuccess(List<TriggeredLOI> result) {
         tloilist = result;
-        loadHypothesisTLOITree();
+        if(treelist != null)
+          loadHypothesisTLOITree();
       }
       @Override
       public void onFailure(Throwable reason) {
@@ -185,7 +187,7 @@ public class HypothesisView extends ApplicationSubviewImpl
           tree.addNode(node, child);
         }
       }
-    }    
+    }
     for(TreeItem item : this.treelist) {
       TreeNode node = map.get(item.getId());
       if(node.getParent() == null)      

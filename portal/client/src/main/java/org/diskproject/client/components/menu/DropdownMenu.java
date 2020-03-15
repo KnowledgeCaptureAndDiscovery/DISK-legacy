@@ -63,7 +63,7 @@ public class DropdownMenu extends PaperDropdownMenu
   
   @Override
   public String getValue() {
-    String index = listbox.getSelected();
+    String index = (String) listbox.getSelected();
     if(index == null)
       return null;
     

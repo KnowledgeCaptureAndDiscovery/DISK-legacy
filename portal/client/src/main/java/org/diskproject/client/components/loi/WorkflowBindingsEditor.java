@@ -44,9 +44,9 @@ public class WorkflowBindingsEditor extends Composite {
   
   Map<String, Workflow> workflowcache;
   Map<String, Variable> variablecache;
+  Map<String, List<Variable>> workflowVariablesCache = new HashMap<String, List<Variable>>();
   
   WorkflowBindings bindings;
-  boolean initloaded;
   
   public WorkflowBindingsEditor() {
     initWidget(uiBinder.createAndBindUi(this));  
@@ -75,11 +75,11 @@ public class WorkflowBindingsEditor extends Composite {
   }
 
   public void loadWorkflowBindings(WorkflowBindings bindings) {
-    initloaded = false;
     this.bindings = bindings;
     workflowmenu.setValue(null);  
-    if(bindings != null)
-      workflowmenu.setValue(bindings.getWorkflow());        
+    if(bindings != null) {
+      workflowmenu.setValue(bindings.getWorkflow());
+    }
   }
   
   
@@ -203,39 +203,47 @@ public class WorkflowBindingsEditor extends Composite {
     this.addVariableBinding(null, null, true);
   }
   
+  void showWorkflowVariablesMenu(String workflowid) {
+    List<Variable> variables = workflowVariablesCache.get(workflowid);
+    clearVariableBindingsUI();
+    addbindingbutton.setVisible(true);
+    if(metamode) {
+      metasection.setVisible(true);
+      workflowstoberunsection.setVisible(true);
+      addworkflowstoberunbutton.setVisible(true);
+    }
+    variablecache = new HashMap<String, Variable>();
+    for(Variable v : variables)
+      variablecache.put(v.getName(), v);
+    setBindingsUI();
+  }
+  
   @UiHandler("workflowmenu")
   void onWorkflowMenuSelected(ValueChangedEvent event) {
     String workflowid = workflowmenu.getValue();
+    clearVariableBindingsUI();
     if(workflowid == null) {
-      this.clearVariableBindingsUI();
       return;
     }
     
-    DiskREST.getWorkflowVariables(workflowid, 
-        new Callback<List<Variable>, Throwable>() {
-      @Override
-      public void onFailure(Throwable reason) {
-        AppNotification.notifyFailure(reason.getMessage());
-      }
-      @Override
-      public void onSuccess(List<Variable> result) {
-        clearVariableBindingsUI();
-        if(!initloaded) 
-          initloaded = true;
-        else
-          bindings = null;
-        addbindingbutton.setVisible(true);
-        if(metamode) {
-          metasection.setVisible(true);
-          workflowstoberunsection.setVisible(true);
-          addworkflowstoberunbutton.setVisible(true);
+    // Use Cache here to fetch workflow variables only once
+    if(workflowVariablesCache.containsKey(workflowid)) {
+      this.showWorkflowVariablesMenu(workflowid);
+    }
+    else {
+      DiskREST.getWorkflowVariables(workflowid, 
+          new Callback<List<Variable>, Throwable>() {
+        @Override
+        public void onFailure(Throwable reason) {
+          AppNotification.notifyFailure(reason.getMessage());
         }
-        variablecache = new HashMap<String, Variable>();
-        for(Variable v : result)
-          variablecache.put(v.getName(), v);
-        setBindingsUI();
-      }
-    });
+        @Override
+        public void onSuccess(List<Variable> result) {
+          workflowVariablesCache.put(workflowid, result);
+          showWorkflowVariablesMenu(workflowid);
+        }
+      });
+    }
   }
   
   @UiHandler("workflowlink")
