@@ -222,7 +222,7 @@ public class WorkflowBindingsEditor extends Composite {
   void onWorkflowMenuSelected(ValueChangedEvent event) {
     String workflowid = workflowmenu.getValue();
     clearVariableBindingsUI();
-    if(workflowid == null) {
+    if(workflowid == null || workflowid.equals("")) {
       return;
     }
     
