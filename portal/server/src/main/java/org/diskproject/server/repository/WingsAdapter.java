@@ -610,7 +610,7 @@ public String addDataToWings(String username, String domain, String id,
 }
 
 public String addRemoteDataToWings(String username, String domain, String url) {
-  String type = this.server + "/export/users/" + username + "/" + domain + "/data/ontology.owl#File";
+  String type = this.internal_server + "/export/users/" + username + "/" + domain + "/data/ontology.owl#File";
   String opurl = "users/" + username + "/" + domain + "/data/addRemoteDataForType";
   List<NameValuePair> keyvalues = new ArrayList<NameValuePair>();
   keyvalues.add(new BasicNameValuePair("data_url", url));

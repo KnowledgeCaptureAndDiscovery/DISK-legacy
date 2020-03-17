@@ -22,7 +22,8 @@
                 border: 1px solid #ddd;
             }
             .tree iron-flex-layout {
-            	@apply(--layout-horizontal);
+            	display: block;
+            	/*@apply(--layout-horizontal);*/
            	}
            	.tree iron-flex-layout.pad .item {
            		width: calc(100% - 20px);
