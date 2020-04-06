@@ -93,6 +93,10 @@
 		</style>
 		<p:PaperFab ui:field="addicon" icon="add" mini="true" 
 			addStyleNames="addloiicon" title="Add Line of Inquiry" tabindex="0" />
+		<div style="padding: 4px 10px; font-size: 14px;">
+			A list of all the available Lines of Inquiry in the system is displayed bellow.
+			To add a new Line of Inquery click on the top-right button.
+		</div>
 		<l:Loader ui:field="loader" />
 		<lw:ListWidget ui:field="loilist" styleName="list" />
 		<loi:LOIEditor ui:field="form" styleName="padded" />

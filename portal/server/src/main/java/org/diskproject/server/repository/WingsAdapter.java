@@ -301,6 +301,7 @@ public class WingsAdapter {
 			String runjson = this.post(username, pageid, formdata);
 			if (runjson == null)
 				return null;
+			
 			WorkflowRun wflowstatus = new WorkflowRun();
 			wflowstatus.setId(execid);
 
@@ -309,6 +310,22 @@ public class WingsAdapter {
 			JsonObject expobj = runobj.get("execution").getAsJsonObject();
 			String status = expobj.get("runtimeInfo").getAsJsonObject()
 					.get("status").getAsString();
+			
+			
+			List<String> outputs = new ArrayList();
+			try {
+				JsonObject vars = runobj.get("variables").getAsJsonObject();
+				JsonArray outs = vars.get("output").getAsJsonArray();
+				for (JsonElement resp: outs) {
+					JsonObject binding = resp.getAsJsonObject().get("binding").getAsJsonObject();
+					outputs.add(binding.get("id").toString().replaceAll("\"", ""));
+				}
+	
+				wflowstatus.setOutput(outputs);
+			} catch (Exception e) {
+				System.out.println("ERROR: no outputs files");
+			}
+			wflowstatus.setOutput(outputs);
 			
 			wflowstatus.setStatus(status);
 

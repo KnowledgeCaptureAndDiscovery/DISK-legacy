@@ -313,7 +313,7 @@
 					<g:Anchor href="#{nameTokens.getHome}">
 						<div class="horizontal layout center app-logo">
 							<img src="customise/Logo.png" class="app-logo" />
-							<h1 class="app-logo">DISK</h1>
+							<h1 class="app-logo">Neuro DISK</h1>
 						</div>
 					</g:Anchor>
 				</paper-toolbar>

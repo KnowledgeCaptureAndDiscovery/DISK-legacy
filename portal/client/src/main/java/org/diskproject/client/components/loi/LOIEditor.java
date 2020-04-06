@@ -1,5 +1,6 @@
 package org.diskproject.client.components.loi;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -7,13 +8,18 @@ import java.util.List;
 import org.diskproject.client.components.loi.events.HasLOIHandlers;
 import org.diskproject.client.components.loi.events.LOISaveEvent;
 import org.diskproject.client.components.loi.events.LOISaveHandler;
+import org.diskproject.client.components.loi.events.LOITestEvent;
+import org.diskproject.client.components.loi.events.LOITestHandler;
 import org.diskproject.client.components.triples.SparqlInput;
 import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
+import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.util.KBConstants;
+import org.diskproject.shared.classes.workflow.VariableBinding;
 import org.diskproject.shared.classes.workflow.Workflow;
 
+import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -45,6 +51,7 @@ public class LOIEditor extends Composite
   @UiField SparqlInput hypothesisQuery;
   @UiField SparqlInput dataQuery;
   @UiField LOIWorkflowList workflowlist, metaworkflowlist;
+  @UiField DivElement querytext;
   
   LineOfInquiry loi;
   
@@ -145,6 +152,78 @@ public class LOIEditor extends Composite
     loi.setMetaWorkflows(metaworkflowlist.getBindingsList());
     
     fireEvent(new LOISaveEvent(loi));
+  }
+  
+  @UiHandler("querybutton")
+  void onQueryButtonClicked(ClickEvent event) {   
+    boolean ok = this.dataQuery.validate();
+    if(!ok) {
+      AppNotification.notifyFailure("Please add a query data.");
+      return;
+    }
+    
+    loi.setHypothesisQuery(hypothesisQuery.getValue());
+    loi.setDataQuery(dataQuery.getValue());
+    
+    querytext.setInnerHTML("Loading...");
+    GWT.log("Hyp: " + hypothesisQuery.getValue());
+    GWT.log("WF:" + workflowlist.getBindingsList());
+    
+    List<String> variables = new ArrayList<String>();
+   
+    for (WorkflowBindings wf:  workflowlist.getBindingsList()) {
+    	for (VariableBinding binding: wf.getBindings()) {
+    		variables.add(binding.getBinding().replace("[?", "").replace("]", ""));
+    	}
+    }
+    
+    for (String variable: variables) {
+    	GWT.log("> " + variable);
+    }
+    
+    GWT.log("Doing query");
+    DiskREST.testLOI(dataQuery.getValue(), new Callback<List<List<List<String>>>, Throwable>() {
+        @Override
+        public void onSuccess(List<List<List<String>>> result) {
+          GWT.log("Success");
+          String innerHTML = ""; 
+          boolean writeTitle = true;
+          int i = 1;
+          for (List<List<String>> rows: result) {
+        	  if (writeTitle) {
+        		  innerHTML += "<tr>";
+        		  innerHTML += "<th>#</th>";
+        	      for (List<String> row: rows) {
+        	    	  if (variables.size() == 0 || variables.contains(row.get(0))) {
+        	    		  innerHTML += "<th>" + row.get(0) + "</th>";
+        	    	  }
+        	      }
+        	      innerHTML += "</tr>";
+        	      writeTitle = false;
+        	  }
+        	  innerHTML += "<tr>";
+        	  innerHTML += "<td>" + String.valueOf(i) + "</td>";
+    	      for (List<String> row: rows) {
+    	    	  if (variables.size() == 0 || variables.contains(row.get(0))) {
+	    	    	  String uri = row.get(1).replace("http://localhost:8080/enigma_new/index.php/", "");
+	    	    	  if (uri.contains("http")) {
+	    	    		  String tmp = "<a target=\"_blank\" href=\"" + uri + "\">" + uri + "</a>";
+	    	    		  uri = tmp;
+	    	    	  }
+	    	    	  innerHTML += "<td>" + uri + "</td>";
+    	    	  }
+    	      }
+    	      innerHTML += "</tr>";
+        	  i++;
+          }
+          querytext.setInnerHTML("<table style=\"width:100%\">" + innerHTML + "</table>");
+        }
+        @Override
+        public void onFailure(Throwable reason) {
+          GWT.log("onFailure");
+          querytext.setInnerHTML("An error occurred while executing the query. Please try again.");
+        }
+      });
   }
   
   @Override

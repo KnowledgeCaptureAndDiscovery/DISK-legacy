@@ -1,5 +1,7 @@
 package org.diskproject.client.components.tloi;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.diskproject.client.Config;
@@ -12,11 +14,13 @@ import org.diskproject.client.rest.DiskREST;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.loi.WorkflowBindings;
+import org.diskproject.shared.classes.workflow.WorkflowRun;
 
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.AnchorElement;
 import com.google.gwt.dom.client.DivElement;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
@@ -38,6 +42,7 @@ public class TriggeredLOIViewer extends Composite {
   @UiField TripleViewer hypothesis;
   @UiField ListWidget workflowlist, metaworkflowlist;
   @UiField AnchorElement hypothesisLink, loiLink;
+  @UiField DivElement output;
   
   String username, domain;
   TriggeredLOI tloi;
@@ -168,8 +173,67 @@ public class TriggeredLOIViewer extends Composite {
     if(event.getAction().getId().equals("runlink")) {
       ListNode node = event.getItem();
       WorkflowBindings bindings = (WorkflowBindings) node.getData();
+      
+      /*String[] lid = bindings.getRun().getId().split("#|/");
+      String id = lid[lid.length - 1];
+      GWT.log("WF Status: " + bindings.getRun().getStatus() + ", id: " + id);
+      //WingsAdapter.get().getWorkflowRunStatus(this.username, this.domain, rname);
+      DiskREST.monitorWorkflow(id, new Callback<WorkflowRun, Throwable>() {
+          @Override
+          public void onSuccess(WorkflowRun result) {
+        	  GWT.log("1");
+        	  writeOutputs(result.getOutput());
+          }
+          @Override
+          public void onFailure(Throwable reason) {
+            GWT.log("onFailure");
+          }
+      });*/
+      
       Window.open(bindings.getRun().getLink(), "_blank", "");
     }
+  }
+  
+  private void writeOutputs (List<String> outputs) {
+	  String innerHTML = "<ol>";
+	  String prefix = "https://enigma-disk.wings.isi.edu/wings-portal/users/admin/test/data/fetch?data_id=";
+	  for (String out: outputs) {
+		  String dl = prefix + out.replace(":", "%3A").replace("#", "%23"); 
+		  innerHTML += "<li><a target=\"_blank\" href=\"" + dl + "\">" + out.replaceAll(".*?#", "") + "</a></li>";
+	  }
+	  innerHTML += "</ol>";
+	  output.setInnerHTML(innerHTML);
+	  GWT.log("html: " + innerHTML);
+  }
+  
+  @UiHandler("outputbutton")
+  void onOutputButtonClicked(ClickEvent event) { 
+	  GWT.log("clicked");
+	  output.setInnerHTML("Loading...");
+	  
+	  try {
+      ListNode node = workflowlist.getNodes().get(0);
+      WorkflowBindings bindings = (WorkflowBindings) node.getData();
+      
+      String[] lid = bindings.getRun().getId().split("#|/");
+      String id = lid[lid.length - 1];
+      GWT.log("WF Status: " + bindings.getRun().getStatus() + ", id: " + id);
+      //WingsAdapter.get().getWorkflowRunStatus(this.username, this.domain, rname);
+      DiskREST.monitorWorkflow(id, new Callback<WorkflowRun, Throwable>() {
+          @Override
+          public void onSuccess(WorkflowRun result) {
+        	  GWT.log("1");
+        	  writeOutputs(result.getOutput());
+          }
+          @Override
+          public void onFailure(Throwable reason) {
+            GWT.log("onFailure");
+          }
+      });
+	  } catch (Exception e) {
+		  output.setInnerHTML("An error has occurred while loading output files.");
+	  }
+
   }
 
 }

@@ -20,6 +20,14 @@
 			{
 				display: none;
 			}
+			.querytest {
+				text-align: right;
+			}
+			.queryresult {
+			    text-align: left;
+    			padding: 2px 10px;
+    			overflow-x: scroll;
+		}
 		</style>
 		<div class="vertical center-justified layout">
 			<paper-input label="Short Description" required="true" 
@@ -38,9 +46,20 @@
 
 			<loi:LOIWorkflowList ui:field="metaworkflowlist" 
 				metamode="true" label="Meta-Workflows to Run" />
+				
+			<label class="small-grey" style="margin-top:4px;">Data query results</label>
+			<div class="querytest bordered-list">
+				<div class="queryresult" ui:field="querytext">
+					Click on "Test data query" to see the available results.
+				</div>
+			</div>
 
 		</div>
 		<div class="horizontal end-justified layout">
+			<p:PaperButton ui:field="querybutton">
+				<iron-icon icon="send" />
+				Test data query
+			</p:PaperButton>
 			<p:PaperButton ui:field="savebutton">
 				<iron-icon icon="save" />
 				Save

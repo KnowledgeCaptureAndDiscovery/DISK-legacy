@@ -71,8 +71,97 @@
                 border-radius: 8px;
                 border: 1px solid #e5e5e5;
                 margin: 10px;
-			}            
+			}
+            paper-fab.addicon {
+            	position: fixed;
+            	right: 10px;
+            	top: 10px;
+            }
+            .ontolist {
+                padding: 5px 20px;
+                font: 12px Monaco, Consolas, "Andale Mono", "DejaVu Sans Mono", monospace;
+            }
+            .ontoentry {
+            	display: flex;
+            	justify-content: space-between;
+            	border: 1px solid darkgray;
+    			border-radius: 4px;
+    			padding: 1px 10px;
+    			line-height: 24px;
+    			margin-bottom: 4px;
+    		}
 		</style>
+		<p:PaperFab ui:field="addicon" icon="add" mini="true" style="--paper-fab-background: var(--paper-blue-200);"
+			addStyleNames="addicon" title="Add Data" tabindex="0" disabled="true"/>
+		<div style="padding: 4px 10px; font-size: 14px;">
+			A list of all the ontologies currently loaded in the system is displayed bellow.
+			To add a new Ontologies click on the top-right button.
+		</div>
+		<div class="ontolist">
+			<div class="ontoentry">
+				<span>https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/disk/1.1.0/ontology.ttl</span>
+				<a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/disk/1.1.0/ontology.ttl">
+				    <p:PaperIconButton addStyleNames="linkicon smallicon" style="padding: 0px; height: 20px; width: 20px;" icon="link" />
+				</a>
+			</div>
+			<div class="ontoentry">
+				<span>https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/enigma_hypothesis/release/2.0.0/ontology.ttl</span>
+				<a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/enigma_hypothesis/release/2.0.0/ontology.ttl">
+				    <p:PaperIconButton addStyleNames="linkicon smallicon" style="padding: 0px; height: 20px; width: 20px;" icon="link" />
+				</a>
+			</div>
+			<div class="ontoentry">
+				<span>https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/omics_hypothesis/release/0.0.1/ontology.ttl</span>
+				<a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/omics_hypothesis/release/0.0.1/ontology.ttl">
+				    <p:PaperIconButton addStyleNames="linkicon smallicon" style="padding: 0px; height: 20px; width: 20px;" icon="link" />
+				</a>	
+			</div>
+			<div class="ontoentry">
+				<span>https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/hypothesis/0.0.1/ontology.owl</span>
+				<a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/hypothesis/0.0.1/ontology.owl">
+				    <p:PaperIconButton addStyleNames="linkicon smallicon" style="padding: 0px; height: 20px; width: 20px;" icon="link" />
+				</a>
+			</div>
+			<div class="ontoentry">
+				<span>http://www.w3.org/2002/07/owl#</span>
+				<a target="_blank" href="http://www.w3.org/2002/07/owl#">
+				    <p:PaperIconButton addStyleNames="linkicon smallicon" style="padding: 0px; height: 20px; width: 20px;" icon="link" />
+				</a>
+			</div>
+			<div class="ontoentry">
+				<span>http://www.w3.org/1999/02/22-rdf-syntax-ns#</span>
+				<a target="_blank" href="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+				    <p:PaperIconButton addStyleNames="linkicon smallicon" style="padding: 0px; height: 20px; width: 20px;" icon="link" />
+				</a>
+			</div>
+			<div class="ontoentry">
+				<span>http://www.w3.org/2000/01/rdf-schema#</span>
+				<a target="_blank" href="http://www.w3.org/2000/01/rdf-schema#">
+				    <p:PaperIconButton addStyleNames="linkicon smallicon" style="padding: 0px; height: 20px; width: 20px;" icon="link" />
+				</a>
+			</div>
+			<div class="ontoentry">
+				<span>http://www.w3.org/2001/XMLSchema#</span>
+				<a target="_blank" href="http://www.w3.org/2001/XMLSchema#">
+				    <p:PaperIconButton addStyleNames="linkicon smallicon" style="padding: 0px; height: 20px; width: 20px;" icon="link" />
+				</a>
+			</div>
+			<div class="ontoentry">
+				<span>http://purl.org/dc/terms/</span>
+				<a target="_blank" href="http://purl.org/dc/terms/">
+				    <p:PaperIconButton addStyleNames="linkicon smallicon" style="padding: 0px; height: 20px; width: 20px;" icon="link" />
+				</a>
+			</div>
+			<div class="ontoentry">
+				<span>http://purl.org/dc/elements/1.1/</span>
+				<a target="_blank" href="http://purl.org/dc/elements/1.1/">
+				    <p:PaperIconButton addStyleNames="linkicon smallicon" style="padding: 0px; height: 20px; width: 20px;" icon="link" />
+				</a>
+			</div>
+		</div>
+		<div style="padding: 4px 10px; font-size: 14px;">
+			You can also add data directly below:
+		</div>
 		<l:Loader ui:field="loader" />
 		<div class="outlined">
 			<lw:ListWidget ui:field="datalist" styleName="list" />

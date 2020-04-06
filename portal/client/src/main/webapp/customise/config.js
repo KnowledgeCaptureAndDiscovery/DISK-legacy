@@ -1,6 +1,6 @@
 var CONFIG = {
 	SERVER : "http://localhost:9090/disk-project-server",
-	TITLE : "Disk-Enigma",
+	TITLE : "Neuro DISK",
 	COLORS : {
 		base : "#5D7BA0", // Background color for Top Banner, and Headers
 		link : "#5D7BA0", // Text color for Links
