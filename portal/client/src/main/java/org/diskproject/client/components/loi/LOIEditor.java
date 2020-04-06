@@ -8,8 +8,6 @@ import java.util.List;
 import org.diskproject.client.components.loi.events.HasLOIHandlers;
 import org.diskproject.client.components.loi.events.LOISaveEvent;
 import org.diskproject.client.components.loi.events.LOISaveHandler;
-import org.diskproject.client.components.loi.events.LOITestEvent;
-import org.diskproject.client.components.loi.events.LOITestHandler;
 import org.diskproject.client.components.triples.SparqlInput;
 import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
