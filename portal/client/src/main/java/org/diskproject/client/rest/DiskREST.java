@@ -16,6 +16,7 @@ import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.vocabulary.Vocabulary;
 import org.diskproject.shared.classes.workflow.Variable;
 import org.diskproject.shared.classes.workflow.Workflow;
+import org.diskproject.shared.classes.workflow.WorkflowRun;
 import org.fusesource.restygwt.client.Defaults;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
@@ -297,6 +298,22 @@ public class DiskREST {
     }).call(getDiskService()).getLOI(username, domain, id);
   }
   
+  public static void testLOI(String query,
+      final Callback<List<List<List<String>>>, Throwable> callback) {
+    REST.withCallback(new MethodCallback<List<List<List<String>>>>() {
+      @Override
+      public void onSuccess(Method method, List<List<List<String>>> response) {
+    	GWT.log("-> 1");
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+    	GWT.log("-> 2");
+        callback.onFailure(exception);
+      }      
+    }).call(getDiskService()).testLOI(username, domain, query);
+  }
+  
   public static void addLOI(LineOfInquiry loi,
       final Callback<Void, Throwable> callback) {
     REST.withCallback(new MethodCallback<Void>() {
@@ -458,6 +475,7 @@ public class DiskREST {
   
   public static void getWorkflowVariables(final String id, 
       final Callback<List<Variable>, Throwable> callback) {
+	GWT.log("getWorkflowVariables id:" + id);
     if(workflow_variables.containsKey(id)) {
       callback.onSuccess(workflow_variables.get(id));
       return;
@@ -479,5 +497,22 @@ public class DiskREST {
         callback.onFailure(exception);
       }      
     }).call(getDiskService()).getWorkflowVariables(username, domain, id);
-  }  
+  }
+  
+  public static void monitorWorkflow(final String id,
+	      final Callback<WorkflowRun, Throwable> callback) {
+	    REST.withCallback(new MethodCallback<WorkflowRun>() {
+	      @Override
+	      public void onSuccess(Method method, WorkflowRun response) {
+	    	  GWT.log("Success: " + response.toString());
+	    	  callback.onSuccess(response);
+	      }
+	      @Override
+	      public void onFailure(Method method, Throwable exception) {
+	    	GWT.log("ERROR");
+	        GWT.log(stackTraceToString(exception));
+	        callback.onFailure(exception);
+	      }      
+	    }).call(getDiskService()).monitorWorkflow(username, domain, id);
+	  }
 }

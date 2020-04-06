@@ -91,6 +91,19 @@
 				<lw:ListWidget ui:field="metaworkflowlist" styleName="list" />
 			</div>
 			
+			<label class="small-grey" style="margin-top:4px;">Output files</label>
+			<div class="bordered-list">
+				<div class="output-files" ui:field="output">
+					Output files will be displayed here.
+				</div>
+			</div>
+			<div class="horizontal end-justified layout">
+			<p:PaperButton ui:field="outputbutton">
+				<iron-icon icon="send" />
+				Get output files
+			</p:PaperButton>
+		</div>
+			
 			<g:HTMLPanel ui:field="revHypothesisSection" />
 		</div>
 	</g:HTMLPanel>

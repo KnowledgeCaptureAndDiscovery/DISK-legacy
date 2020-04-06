@@ -10,6 +10,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.Produces;
 
 import org.diskproject.shared.classes.common.Graph;
@@ -129,6 +130,13 @@ public interface DiskService extends DirectRestService {
   /*
    * Lines of Inquiry
    */
+  @GET
+  @Path("{username}/{domain}/test")  
+  public List<List<List<String>>> testLOI(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @QueryParam("query") String query);
+  
   @POST
   @Path("{username}/{domain}/lois")  
   public void addLOI(

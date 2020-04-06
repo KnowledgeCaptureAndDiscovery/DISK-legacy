@@ -1,5 +1,6 @@
 package org.diskproject.server.api.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
@@ -238,6 +240,16 @@ public class DiskResource implements DiskService {
   /**
    * Lines of Inquiry
    */
+  @GET
+  @Path("{username}/{domain}/test")
+  @Override
+  public List<List<List<String>>> testLOI(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain, 
+      @QueryParam("query") String query) {
+	return repo.testDataQuery(username, domain, query);
+  }
+  
   @POST
   @Path("{username}/{domain}/lois")
   @Override

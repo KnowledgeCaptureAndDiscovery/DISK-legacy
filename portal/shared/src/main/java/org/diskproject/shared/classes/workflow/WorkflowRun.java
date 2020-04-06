@@ -1,9 +1,12 @@
 package org.diskproject.shared.classes.workflow;
 
+import java.util.List;
+
 public class WorkflowRun {
   String id;
   String link;
   String status;
+  List<String> outputs;
 
   public WorkflowRun(){}
   
@@ -37,5 +40,13 @@ public class WorkflowRun {
 
   public void setStatus(String status) {
     this.status = status;
+  }
+  
+  public void setOutput(List<String> outputs) {
+	  this.outputs = outputs;
+  }
+  
+  public List<String> getOutput () {
+	  return outputs;
   }
 }

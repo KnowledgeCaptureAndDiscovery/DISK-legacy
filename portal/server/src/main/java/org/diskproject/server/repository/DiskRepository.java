@@ -713,6 +713,52 @@ public class DiskRepository extends KBRepository {
 		}
 	}
 
+	public List<List<List<String>>> testDataQuery(String username, String domain, String dataQuery) {
+		String assertions = this.ASSERTIONSURI(username, domain);
+		String dataSparqlQuery = this.getSparqlQuery(dataQuery, assertions);
+		List<List<List<String>>> result = new ArrayList<List<List<String>>>();
+		
+		System.out.println(dataSparqlQuery);
+		
+		try {
+			this.start_read();
+			KBAPI queryKb = this.fac.getKB(OntSpec.PLAIN);
+			queryKb.importFrom(this.omicsontkb);
+			queryKb.importFrom(this.neuroontkb);
+			queryKb.importFrom(this.hypontkb);
+			queryKb.importFrom(this.fac.getKB(assertions, OntSpec.PLAIN));
+			this.end();
+			
+			ArrayList<ArrayList<SparqlQuerySolution>> allDataSolutions = null;
+			boolean wikiStore = Config.get().getProperties().containsKey("data-store");
+			if(wikiStore) {
+			  String externalStore = Config.get().getProperties().getString("data-store");
+			  allDataSolutions = queryKb.sparqlQueryRemote(dataSparqlQuery, externalStore);
+			} else {
+			  allDataSolutions = queryKb.sparqlQuery(dataSparqlQuery);
+			}
+			
+			System.out.println("---");
+			for (ArrayList<SparqlQuerySolution> list : allDataSolutions) {
+				ArrayList<List<String>> row = new ArrayList<List<String>>();
+				for (SparqlQuerySolution solution : list) {
+					List<String> val = new ArrayList<String>();
+					val.add(solution.getVariable());
+					val.add(solution.getObject().getValueAsString());
+					row.add(val);
+				}
+				result.add(row);
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+		  this.end();
+		}
+		
+		return result;
+	}
+
 	@SuppressWarnings("unchecked")
   public List<TriggeredLOI> queryHypothesis(String username, String domain, String id) {
 		String hypuri = this.HYPURI(username, domain) + "/" + id;
