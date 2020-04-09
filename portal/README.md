@@ -35,7 +35,7 @@ Installation
 
 ## Change the version
 
-```
+```bash
 version="1.1.1"
-mvn --settings pom.xml org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion=${version} 1>/dev/null 2>/dev/null
+mvn --settings pom.xml org.codehaus.mojo:versions-maven-plugin:2.1:set -DnewVersion=${version}
 ```
