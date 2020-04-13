@@ -1,7 +1,5 @@
 package org.diskproject.client.components.tloi;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.diskproject.client.Config;
