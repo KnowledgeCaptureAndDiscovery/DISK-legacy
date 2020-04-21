@@ -221,7 +221,7 @@ public class TriggeredLOIViewer extends Composite {
           @Override
           public void onSuccess(WorkflowRun result) {
         	  GWT.log("1");
-        	  writeOutputs(result.getOutput());
+        	  writeOutputs(result.getOutputs());
           }
           @Override
           public void onFailure(Throwable reason) {

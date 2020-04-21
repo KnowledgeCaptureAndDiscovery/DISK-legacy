@@ -321,11 +321,11 @@ public class WingsAdapter {
 					outputs.add(binding.get("id").toString().replaceAll("\"", ""));
 				}
 	
-				wflowstatus.setOutput(outputs);
+				wflowstatus.setOutputs(outputs);
 			} catch (Exception e) {
 				System.out.println("ERROR: no outputs files");
 			}
-			wflowstatus.setOutput(outputs);
+			wflowstatus.setOutputs(outputs);
 			
 			wflowstatus.setStatus(status);
 

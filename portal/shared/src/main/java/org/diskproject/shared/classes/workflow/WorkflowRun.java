@@ -42,11 +42,11 @@ public class WorkflowRun {
     this.status = status;
   }
   
-  public void setOutput(List<String> outputs) {
+  public void setOutputs(List<String> outputs) {
 	  this.outputs = outputs;
   }
   
-  public List<String> getOutput () {
+  public List<String> getOutputs () {
 	  return outputs;
   }
 }

@@ -815,7 +815,7 @@ public class DiskRepository extends KBRepository {
 					for (SparqlQuerySolution solution : hypothesisSolutions) {
 						String value;
 						if (solution.getObject().isLiteral())
-							value = solution.getObject().getValueAsString();
+							value = '"' + solution.getObject().getValueAsString() + '"';
 						else {
 							String valns = solution.getObject().getNamespace();
 							if (nsmap.containsKey(valns))
