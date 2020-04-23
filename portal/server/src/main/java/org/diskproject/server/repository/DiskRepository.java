@@ -35,7 +35,7 @@ import java.util.Scanner;
 
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.apache.commons.lang.SerializationUtils;
-import org.diskproject.server.repository.GmailService.MailMonitor;
+//import org.diskproject.server.repository.GmailService.MailMonitor;
 import org.diskproject.server.util.Config;
 import org.diskproject.server.util.DataQuery;
 import org.diskproject.shared.classes.common.Graph;
@@ -79,7 +79,7 @@ public class DiskRepository extends KBRepository {
 	ScheduledExecutorService monitor;
 	ScheduledExecutorService monitorData;
 	ExecutorService executor;
-	static GmailService gmail;
+	//static GmailService gmail;
 	static DataMonitor dataThread;
 
 	public static void main(String[] args) {
@@ -99,9 +99,9 @@ public class DiskRepository extends KBRepository {
 	}
 
 	public DiskRepository() {
-		if (gmail == null) {
+		/*if (gmail == null) {
 			gmail = GmailService.get();
-		}
+		}*/
 		setConfiguration(KBConstants.DISKURI(), KBConstants.DISKNS());
 		initializeKB(); // Here
 		monitor = Executors.newScheduledThreadPool(0);
@@ -118,8 +118,8 @@ public class DiskRepository extends KBRepository {
 			dataThread.stop();
 		if (monitorData != null)
 			monitorData.shutdownNow();
-		if (gmail != null)
-			gmail.shutdown();
+		/*if (gmail != null)
+			gmail.shutdown();*/
 	}
 
 	public String DOMURI(String username, String domain) {
