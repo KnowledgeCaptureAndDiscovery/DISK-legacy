@@ -40,7 +40,6 @@ public class TriggeredLOIViewer extends Composite {
   @UiField TripleViewer hypothesis;
   @UiField ListWidget workflowlist, metaworkflowlist;
   @UiField AnchorElement hypothesisLink, loiLink;
-  @UiField DivElement output;
   
   String username, domain;
   TriggeredLOI tloi;
@@ -165,73 +164,53 @@ public class TriggeredLOIViewer extends Composite {
       list.addNode(tnode);
     }
   }
-  
+
   @UiHandler({"workflowlist", "metaworkflowlist"})
   void onWorkflowListAction(ListItemActionEvent event) {
-    if(event.getAction().getId().equals("runlink")) {
-      ListNode node = event.getItem();
-      WorkflowBindings bindings = (WorkflowBindings) node.getData();
-      
-      /*String[] lid = bindings.getRun().getId().split("#|/");
-      String id = lid[lid.length - 1];
-      GWT.log("WF Status: " + bindings.getRun().getStatus() + ", id: " + id);
-      //WingsAdapter.get().getWorkflowRunStatus(this.username, this.domain, rname);
-      DiskREST.monitorWorkflow(id, new Callback<WorkflowRun, Throwable>() {
-          @Override
-          public void onSuccess(WorkflowRun result) {
-        	  GWT.log("1");
-        	  writeOutputs(result.getOutput());
-          }
-          @Override
-          public void onFailure(Throwable reason) {
-            GWT.log("onFailure");
-          }
-      });*/
-      
-      Window.open(bindings.getRun().getLink(), "_blank", "");
-    }
-  }
-  
-  private void writeOutputs (List<String> outputs) {
-	  String innerHTML = "<ol>";
-	  String prefix = "https://enigma-disk.wings.isi.edu/wings-portal/users/admin/test/data/fetch?data_id=";
-	  for (String out: outputs) {
-		  String dl = prefix + out.replace(":", "%3A").replace("#", "%23"); 
-		  innerHTML += "<li><a target=\"_blank\" href=\"" + dl + "\">" + out.replaceAll(".*?#", "") + "</a></li>";
-	  }
-	  innerHTML += "</ol>";
-	  output.setInnerHTML(innerHTML);
-	  GWT.log("html: " + innerHTML);
-  }
-  
-  @UiHandler("outputbutton")
-  void onOutputButtonClicked(ClickEvent event) { 
-	  GWT.log("clicked");
-	  output.setInnerHTML("Loading...");
-	  
-	  try {
-      ListNode node = workflowlist.getNodes().get(0);
-      WorkflowBindings bindings = (WorkflowBindings) node.getData();
-      
-      String[] lid = bindings.getRun().getId().split("#|/");
-      String id = lid[lid.length - 1];
-      GWT.log("WF Status: " + bindings.getRun().getStatus() + ", id: " + id);
-      //WingsAdapter.get().getWorkflowRunStatus(this.username, this.domain, rname);
-      DiskREST.monitorWorkflow(id, new Callback<WorkflowRun, Throwable>() {
-          @Override
-          public void onSuccess(WorkflowRun result) {
-        	  GWT.log("1");
-        	  writeOutputs(result.getOutputs());
-          }
-          @Override
-          public void onFailure(Throwable reason) {
-            GWT.log("onFailure");
-          }
-      });
-	  } catch (Exception e) {
-		  output.setInnerHTML("An error has occurred while loading output files.");
-	  }
+	  if(event.getAction().getId().equals("runlink")) {
+		  // Get node and set loading text
+		  ListNode node = event.getItem();
+		  WorkflowBindings bindings = (WorkflowBindings) node.getData();
+		  String base = bindings.getHTML();
+		  String html = base + "<div>Loading...</div>";
+		  node.setFullContent(html);     
 
-  }
+		  //Request data from wings
+		  WorkflowRun run = bindings.getRun();
+		  String id = run.getId();
+		  if (id != null) {
+			  String[] lid = id.split("#|/");
+			  id = lid[lid.length - 1];
+		  }
 
+		  GWT.log("Current Run:\n  ID: " + run.getId());
+		  DiskREST.monitorWorkflow(id, new Callback<WorkflowRun, Throwable>() {
+			  @Override
+			  public void onSuccess(WorkflowRun result) {
+				  //Save data
+				  String sdate = result.getStartDate();
+				  String edate = result.getEndDate();
+				  List<String> outputs = result.getOutputs();
+				  
+				  if (sdate != null) run.setStartDate(sdate);
+				  if (edate != null) run.setEndDate(edate);
+				  if (outputs != null && outputs.size() > 0) run.setOutputs(outputs);
+				  
+				  /*String html = base
+						  	  + "<b>Start date:</b> " + result.getStartDate()
+						  	  + "<b>End date:</b>" + result.getEndDate();*/
+				  node.setFullContent(bindings.getHTML());
+			  }
+			  @Override
+			  public void onFailure(Throwable reason) {
+				  String html = base 
+						  	  + "<div>An error has occurred retrieving this data from the Wings server."
+						  	  + "Please try again. </div>";
+				  node.setFullContent(html);
+			  }
+		  });
+
+		  //Window.open(bindings.getRun().getLink(), "_blank", "");
+	  }
+  }
 }

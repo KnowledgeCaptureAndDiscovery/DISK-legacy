@@ -2,6 +2,7 @@ package org.diskproject.shared.classes.loi;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import org.diskproject.shared.classes.workflow.VariableBinding;
@@ -150,10 +151,42 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
     }
     
     String html = "<div class='name" + extracls+ "'>"+ id + extra +"</div>";
-    html += "<div class='description'>";
+    html += "<div class='description workflow-description'>";
     String description = this.getBindingsDescription();
     if(!description.equals(""))
-      html += "<b>Variable Bindings:</b> "+description + "<br />";
+      html += "<span><b>Variable Bindings:</b></span> <span>" + description + "</span>";
+    
+    /*Format formatter = new SimpleDateFormat("HH:mm:ss yyyy-MM-dd");
+    DateTimeFormat dateTimeFormat = DateTimeFormat.getFormat("YYYY/MM/DD") 
+    		 Date date = dateTimeFormat.parse(str);*/
+    
+    String startts = this.getRun().getStartDate();
+    if (startts != null) {
+    	//Date sdate = new Date( Long.parseLong(startts) );
+    	html += "<span><b>Start date:</b></span> <span>" + startts + "</span>";
+    }
+    
+    String endts = this.getRun().getEndDate();
+    if (endts != null) {
+    	//Date edate = new Date ( Long.parseLong(endts) );
+    	html += "<span><b>End date:</b></span> <span>" + endts + "</span>";
+    }
+    
+    List<String> outputs = this.getRun().getOutputs();
+
+    if (outputs != null) {
+    	int osize = outputs.size();
+    	String prefix = "https://enigma-disk.wings.isi.edu/wings-portal/users/admin/test/data/fetch?data_id=";
+    	html += "<span style='grid-column: 1 / 3'><b>Output files (" + Integer.toString(osize) + "):</b></span>";
+    	int i = 1;
+    	for (String link: this.getRun().getOutputs()) {
+    		String dl = prefix + link.replace(":", "%3A").replace("#", "%23");
+    		html += "<span style='text-align: right;'>"+ Integer.toString(i) +"</span>" 
+    			 +  "<a target=\"_blank\" href=\"" + dl + "\">" + link.replaceAll(".*?#", "") + "</a>";
+    		i += 1;
+    	}
+    }
+    
     html += "</div>";
     return html;
   }

@@ -1,5 +1,6 @@
 package org.diskproject.client.components.list;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.HTML;
 import com.vaadin.polymer.iron.widget.IronIcon;
 import com.vaadin.polymer.paper.widget.PaperItem;
@@ -39,6 +40,13 @@ public class ListNode implements Comparable<ListNode> {
       this.content = new HTML(html);
   }
 
+  public void setFullContent(String html) {
+    if(this.content != null)
+      this.content.setHTML(html);
+    else
+      this.content = new HTML(html);
+  }
+  
   public IronIcon getIcon() {
     return icon;
   }

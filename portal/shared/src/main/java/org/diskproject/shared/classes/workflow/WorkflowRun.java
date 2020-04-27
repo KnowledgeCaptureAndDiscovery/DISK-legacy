@@ -7,6 +7,8 @@ public class WorkflowRun {
   String link;
   String status;
   List<String> outputs;
+  String startDate;
+  String endDate;
 
   public WorkflowRun(){}
   
@@ -40,6 +42,22 @@ public class WorkflowRun {
 
   public void setStatus(String status) {
     this.status = status;
+  }
+  
+  public void setStartDate (String date) {
+	  this.startDate = date;
+  }
+  
+  public String getStartDate () {
+	  return this.startDate;
+  }
+  
+  public void setEndDate (String date) {
+	  this.endDate = date;
+  }
+  
+  public String getEndDate () {
+	  return this.endDate;
   }
   
   public void setOutputs(List<String> outputs) {

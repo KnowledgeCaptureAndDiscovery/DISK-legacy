@@ -27,7 +27,11 @@
 			    text-align: left;
     			padding: 2px 10px;
     			overflow-x: scroll;
-		}
+		  }
+		  
+		  
+
+
 		</style>
 		<div class="vertical center-justified layout">
 			<paper-input label="Short Description" required="true" 
@@ -37,6 +41,10 @@
 
 			<label class="small-grey">Hypothesis Pattern (Ctrl-Space for suggestions)</label>
 			<tr:SparqlInput ui:field="hypothesisQuery" />
+			<p:PaperButton ui:field="testbutton" style="float:right">
+				<iron-icon icon="send" />
+				Test
+			</p:PaperButton>
 
 			<label class="small-grey">Data Query Pattern (Ctrl-Space for suggestions)</label>
 			<tr:SparqlInput ui:field="dataQuery" />
@@ -47,24 +55,58 @@
 			<loi:LOIWorkflowList ui:field="metaworkflowlist" 
 				metamode="true" label="Meta-Workflows to Run" />
 				
-			<label class="small-grey" style="margin-top:4px;">Data query results</label>
+			<!-- label class="small-grey" style="margin-top:4px;">Data query results</label>
 			<div class="querytest bordered-list">
 				<div class="queryresult" ui:field="querytext">
 					Click on "Test data query" to see the available results.
 				</div>
-			</div>
+			</div-->
 
 		</div>
 		<div class="horizontal end-justified layout">
-			<p:PaperButton ui:field="querybutton">
+			<!--  p:PaperButton ui:field="querybutton">
 				<iron-icon icon="send" />
 				Test data query
-			</p:PaperButton>
+			</p:PaperButton-->
 			<p:PaperButton ui:field="savebutton">
 				<iron-icon icon="save" />
 				Save
 			</p:PaperButton>
 		</div>
+		
+		<div style="visibility: hidden">
+      <g:DialogBox autoHide="true" modal="true" ui:field='testDialog'>
+        <g:caption><b>Test data query</b></g:caption>
+        <g:HTMLPanel>
+          <div>
+            <div>
+              <g:CheckBox ui:field='addHyp'>Add Hypothesis Pattern</g:CheckBox>
+            </div>
+
+            <g:HTMLPanel ui:field='hypContainer'>
+							<label class="small-grey">Hypothesis Pattern (Ctrl-Space for suggestions)</label>
+							<tr:SparqlInput ui:field="hypothesisQuery2" />
+            </g:HTMLPanel>
+
+			      <label class="small-grey">Data Query Pattern (Ctrl-Space for suggestions)</label>
+			      <tr:SparqlInput ui:field="dataQuery2" />
+          </div>
+
+					<label class="small-grey" style="margin-top:4px;">Data query results</label>
+					<div class="querytest bordered-list">
+						<div class="queryresult" ui:field="resultContainer">
+							Click on "Test query" to see the available results.
+						</div>
+					</div>
+
+          <g:Button ui:field='cancelButton'>Cancel</g:Button>
+          <g:Button ui:field='okButton'>Save query</g:Button>
+          <span style="float:right">
+            <g:Button ui:field='sendTest'>Test query</g:Button>
+          </span>
+       </g:HTMLPanel>
+      </g:DialogBox>
+    </div>
 
 	</g:HTMLPanel>
 

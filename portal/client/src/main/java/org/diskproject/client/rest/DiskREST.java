@@ -501,6 +501,7 @@ public class DiskREST {
   
   public static void monitorWorkflow(final String id,
 	      final Callback<WorkflowRun, Throwable> callback) {
+	  	/**/GWT.log("> monitorWorkflow");
 	    REST.withCallback(new MethodCallback<WorkflowRun>() {
 	      @Override
 	      public void onSuccess(Method method, WorkflowRun response) {
