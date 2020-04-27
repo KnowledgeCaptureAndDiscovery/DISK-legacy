@@ -27,7 +27,10 @@ import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.polymer.paper.PaperInputElement;
 import com.vaadin.polymer.paper.PaperTextareaElement;
@@ -49,7 +52,15 @@ public class LOIEditor extends Composite
   @UiField SparqlInput hypothesisQuery;
   @UiField SparqlInput dataQuery;
   @UiField LOIWorkflowList workflowlist, metaworkflowlist;
-  @UiField DivElement querytext;
+
+  @UiField SparqlInput hypothesisQuery2, dataQuery2;
+
+  //@UiField DivElement querytext;
+  @UiField DivElement resultContainer;
+  @UiField HTMLPanel hypContainer;
+
+  @UiField DialogBox testDialog; 
+  @UiField CheckBox addHyp;
   
   LineOfInquiry loi;
   
@@ -72,17 +83,23 @@ public class LOIEditor extends Composite
     this.loi = loi;
     name.setValue(loi.getName());
     description.setValue(loi.getDescription());
-    if(loi.getHypothesisQuery() != null && loadcount==8)
+    if(loi.getHypothesisQuery() != null && loadcount==16) {
       hypothesisQuery.setValue(loi.getHypothesisQuery());
-    if(loi.getHypothesisQuery() != null && loadcount==8)
+      hypothesisQuery2.setValue(loi.getHypothesisQuery());
+    }
+    if(loi.getDataQuery() != null && loadcount==16) {
       dataQuery.setValue(loi.getDataQuery());    
+      dataQuery2.setValue(loi.getDataQuery());    
+    }
     workflowlist.loadBindingsList(loi.getWorkflows());
     metaworkflowlist.loadBindingsList(loi.getMetaWorkflows());  
   }
   
   public void setNamespace(String ns) {
     hypothesisQuery.setDefaultNamespace(ns);
+    hypothesisQuery2.setDefaultNamespace(ns);
     dataQuery.setDefaultNamespace(ns);
+    dataQuery2.setDefaultNamespace(ns);
   }
   
   private void loadVocabularies() {
@@ -96,16 +113,30 @@ public class LOIEditor extends Composite
     dataQuery.loadVocabulary("neuro", KBConstants.NEUROURI(), vocabLoaded);
     dataQuery.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
     dataQuery.loadUserVocabulary("user", userid, domain, vocabLoaded);
+
+    hypothesisQuery2.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
+    hypothesisQuery2.loadVocabulary("neuro", KBConstants.NEUROURI(), vocabLoaded);
+    hypothesisQuery2.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
+    hypothesisQuery2.loadUserVocabulary("user", userid, domain, vocabLoaded);
+    
+    dataQuery2.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
+    dataQuery2.loadVocabulary("neuro", KBConstants.NEUROURI(), vocabLoaded);
+    dataQuery2.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
+    dataQuery2.loadUserVocabulary("user", userid, domain, vocabLoaded);
   }
   
   private Callback<String, Throwable> vocabLoaded = 
       new Callback<String, Throwable>() {
     public void onSuccess(String result) {
       loadcount++;
-      if(loi != null && loi.getHypothesisQuery() != null && loadcount==8)
+      if (loi != null && loi.getHypothesisQuery() != null && loadcount==16) {
         hypothesisQuery.setValue(loi.getHypothesisQuery());
-      if(loi != null && loi.getDataQuery() != null && loadcount==8)
+        hypothesisQuery2.setValue(loi.getHypothesisQuery());
+      }
+      if (loi != null && loi.getDataQuery() != null && loadcount==16) {
         dataQuery.setValue(loi.getDataQuery());
+        dataQuery2.setValue(loi.getDataQuery());
+      }
     }
     public void onFailure(Throwable reason) {}
   };
@@ -152,7 +183,7 @@ public class LOIEditor extends Composite
     fireEvent(new LOISaveEvent(loi));
   }
   
-  @UiHandler("querybutton")
+  /*@UiHandler("querybutton")
   void onQueryButtonClicked(ClickEvent event) {   
     boolean ok = this.dataQuery.validate();
     if(!ok) {
@@ -214,6 +245,10 @@ public class LOIEditor extends Composite
     	      innerHTML += "</tr>";
         	  i++;
           }
+          GWT.log("R: " + Integer.toString(result.size()) );
+          if (result.size() == 1) {
+        	  GWT.log("result size: " + result.get(1) );
+          }
           querytext.setInnerHTML("<table style=\"width:100%\">" + innerHTML + "</table>");
         }
         @Override
@@ -222,13 +257,124 @@ public class LOIEditor extends Composite
           querytext.setInnerHTML("An error occurred while executing the query. Please try again.");
         }
       });
+  }*/
+  
+  @UiHandler("okButton")
+  void onOkButtonClicked(ClickEvent event) {
+	  GWT.log("checkb" + addHyp.getValue().toString());
+	  dataQuery.setValue(dataQuery2.getValue());
+	  if (addHyp.getValue())
+		  hypothesisQuery.setValue(hypothesisQuery2.getValue());
+	  testDialog.hide();
+  }
+
+  @UiHandler("cancelButton")
+  void onCancelButtonClicked(ClickEvent event) {
+	  testDialog.hide();
+  }
+
+  @UiHandler("addHyp")
+  void onCheckboxClicked(ClickEvent event) {
+	  if (addHyp.getValue()) {
+		  hypContainer.setVisible(true);
+	  } else {
+		  hypContainer.setVisible(false);
+	  }
   }
   
+  @UiHandler("sendTest")
+  void onSendClicked(ClickEvent event) {
+	boolean both = addHyp.getValue();
+    boolean ok = this.dataQuery2.validate() && (!both || this.hypothesisQuery2.validate());
+    if(!ok) {
+      AppNotification.notifyFailure("Please fix errors before sending the query");
+      return;
+    }
+    
+    String query = dataQuery2.getValue();
+    if (both) {
+    	query += hypothesisQuery2.getValue();
+    }
+    
+    resultContainer.setInnerHTML("Loading...");
+    GWT.log("Hyp: " + hypothesisQuery.getValue());
+    GWT.log("WF:" + workflowlist.getBindingsList());
+    
+    List<String> variables = new ArrayList<String>();
+   
+    for (WorkflowBindings wf:  workflowlist.getBindingsList()) {
+    	for (VariableBinding binding: wf.getBindings()) {
+    		variables.add(binding.getBinding().replace("[?", "").replace("]", ""));
+    	}
+    }
+    
+    for (String variable: variables) {
+    	GWT.log("> " + variable);
+    }
+    
+    GWT.log("Doing query");
+    DiskREST.testLOI(query, new Callback<List<List<List<String>>>, Throwable>() {
+        @Override
+        public void onSuccess(List<List<List<String>>> result) {
+          GWT.log("Success");
+          String innerHTML = ""; 
+          boolean writeTitle = true;
+          int i = 1;
+          for (List<List<String>> rows: result) {
+        	  if (writeTitle) {
+        		  innerHTML += "<tr>";
+        		  innerHTML += "<th>#</th>";
+        	      for (List<String> row: rows) {
+        	    	  if (variables.size() == 0 || variables.contains(row.get(0))) {
+        	    		  innerHTML += "<th>" + row.get(0) + "</th>";
+        	    	  }
+        	      }
+        	      innerHTML += "</tr>";
+        	      writeTitle = false;
+        	  }
+        	  innerHTML += "<tr>";
+        	  innerHTML += "<td>" + String.valueOf(i) + "</td>";
+    	      for (List<String> row: rows) {
+    	    	  if (variables.size() == 0 || variables.contains(row.get(0))) {
+	    	    	  String uri = row.get(1).replace("http://localhost:8080/enigma_new/index.php/", "");
+	    	    	  if (uri.contains("http")) {
+	    	    		  String tmp = "<a target=\"_blank\" href=\"" + uri + "\">" + uri + "</a>";
+	    	    		  uri = tmp;
+	    	    	  }
+	    	    	  innerHTML += "<td>" + uri + "</td>";
+    	    	  }
+    	      }
+    	      innerHTML += "</tr>";
+        	  i++;
+          }
+          GWT.log( Integer.toString(result.size()) );
+          if (result.size() == 0) {
+        	  innerHTML = "<td colspan=\"2\">No results found</td>";
+          }
+          resultContainer.setInnerHTML("<table style=\"width:100%\">" + innerHTML + "</table>");
+        }
+        @Override
+        public void onFailure(Throwable reason) {
+          GWT.log("onFailure");
+          resultContainer.setInnerHTML("An error occurred while executing the query. Please try again.");
+        }
+      });
+  }
+
+  @UiHandler("testbutton")
+  void onTestButtonClicked(ClickEvent event) {   
+	  hypothesisQuery2.setValue(hypothesisQuery.getValue());
+	  dataQuery2.setValue(dataQuery.getValue());
+	  onCheckboxClicked(event);
+
+	  testDialog.center();
+  }  
+
   @Override
   public void fireEvent(GwtEvent<?> event) {
     handlerManager.fireEvent(event);
   }
-  
+
   @Override
   public HandlerRegistration addLOISaveHandler(
       LOISaveHandler handler) {

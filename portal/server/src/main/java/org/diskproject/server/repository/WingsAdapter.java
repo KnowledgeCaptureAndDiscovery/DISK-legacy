@@ -4,7 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URLEncoder;
+import java.sql.Timestamp;
+import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -289,8 +293,8 @@ public class WingsAdapter {
 		return false;
 	}
 
-	public WorkflowRun getWorkflowRunStatus(String username, String domain,
-			String runid) {
+	public WorkflowRun getWorkflowRunStatus(String username, String domain, String runid) {
+		System.out.println("getWorkflowRunStatus " + runid);
 		try {
 			// Get data
 			String execid = RUNID(username, domain, runid);
@@ -307,12 +311,24 @@ public class WingsAdapter {
 
 			JsonParser jsonParser = new JsonParser();
 			JsonObject runobj = jsonParser.parse(runjson).getAsJsonObject();
-			JsonObject expobj = runobj.get("execution").getAsJsonObject();
-			String status = expobj.get("runtimeInfo").getAsJsonObject()
-					.get("status").getAsString();
 			
+			// Try to get the execution information
+			String status = null,
+				   tsStart = null,
+				   tsEnd = null;
 			
-			List<String> outputs = new ArrayList();
+			try {
+				JsonObject expobj = runobj.get("execution").getAsJsonObject();
+				JsonObject runInfo = expobj.get("runtimeInfo").getAsJsonObject();
+				status = runInfo.get("status").getAsString();
+				tsStart = runInfo.get("startTime").getAsString();
+				tsEnd = runInfo.get("endTime").getAsString();
+			} catch (Exception e) {
+				System.out.println("Run ID " + runid + ": No execution information");
+			}
+
+			// Try to get output files
+			List<String> outputs = new ArrayList<String>();
 			try {
 				JsonObject vars = runobj.get("variables").getAsJsonObject();
 				JsonArray outs = vars.get("output").getAsJsonArray();
@@ -320,19 +336,48 @@ public class WingsAdapter {
 					JsonObject binding = resp.getAsJsonObject().get("binding").getAsJsonObject();
 					outputs.add(binding.get("id").toString().replaceAll("\"", ""));
 				}
-	
-				wflowstatus.setOutputs(outputs);
 			} catch (Exception e) {
-				System.out.println("ERROR: no outputs files");
+				System.out.println("Run ID " + runid + ": No output file");
 			}
+
+			// Creating link
+			String link = this.server + "/users/" + username + "/" + domain + "/executions";
+			link += "?run_id=" + URLEncoder.encode(execid, "UTF-8");
+
+			wflowstatus.setStatus(status);
+			wflowstatus.setLink(link);
 			wflowstatus.setOutputs(outputs);
 			
-			wflowstatus.setStatus(status);
+			Format formatter = new SimpleDateFormat("HH:mm:ss yyyy-MM-dd");
+			
+			if (tsStart != null) {
+				Date dateStart = new Date( Long.parseLong(tsStart) );
+				wflowstatus.setStartDate( formatter.format(dateStart));
+				System.out.println(" Start: " + dateStart.toString());
+			}
 
-			String link = this.server + "/users/" + username + "/" + domain
-					+ "/executions";
-			link += "?run_id=" + URLEncoder.encode(execid, "UTF-8");
-			wflowstatus.setLink(link);
+			if (tsEnd != null) {
+				Date dateEnd = new Date( Long.parseLong(tsEnd) );
+				wflowstatus.setEndDate(formatter.format(dateEnd));
+				System.out.println(" End: " + dateEnd.toString());
+			}
+			
+			if (status != null) {
+				System.out.println(" Status: " + status);
+			}
+			
+			if (link != null) {
+				System.out.println(" Link: " + link);
+			}
+
+			if (outputs.size() > 0) {
+				System.out.println(" Outputs:");
+				for (String id: outputs) {
+					System.out.println(" - " + id);
+				}
+			}
+			System.out.println("------------------------------");
+
 			return wflowstatus;
 		} catch (Exception e) {
 			e.printStackTrace();
