@@ -56,6 +56,7 @@ public class HypothesisView extends ApplicationSubviewImpl
   @UiField HypothesisEditor form;
   @UiField PaperFab addicon;
   @UiField HTMLPanel matchlist;
+  @UiField HTMLPanel description;
   
   List<TreeItem> treelist;
   List<TriggeredLOI> tloilist; 
@@ -104,6 +105,7 @@ public class HypothesisView extends ApplicationSubviewImpl
     loader.setVisible(false);
     form.setVisible(false);
     tree.setVisible(false);
+    description.setVisible(false);
     addicon.setVisible(false);
     matchlist.setVisible(false);
     addmode = false;
@@ -148,6 +150,7 @@ public class HypothesisView extends ApplicationSubviewImpl
     loader.setVisible(false);  
     addicon.setVisible(true);
     tree.setVisible(true);
+    description.setVisible(true);
     
     TreeNode root = new TreeNode("Hypotheses", "Hypotheses", 
         "A List of Hypotheses");
@@ -289,6 +292,7 @@ public class HypothesisView extends ApplicationSubviewImpl
   @UiHandler("addicon")
   void onAddIconClicked(ClickEvent event) {
     tree.setVisible(false);
+    description.setVisible(false);
     addicon.setVisible(false);
     form.setVisible(true);        
     addmode = true;

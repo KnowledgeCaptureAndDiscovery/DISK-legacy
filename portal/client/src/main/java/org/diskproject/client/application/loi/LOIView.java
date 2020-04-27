@@ -27,6 +27,7 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
@@ -45,6 +46,7 @@ public class LOIView extends ApplicationSubviewImpl
   @UiField PaperFab addicon;
   @UiField ListWidget loilist; 
   @UiField LOIEditor form;
+  @UiField HTMLPanel description;
   
   interface Binder extends UiBinder<Widget, LOIView> {
   }
@@ -85,6 +87,7 @@ public class LOIView extends ApplicationSubviewImpl
     loader.setVisible(false);
     form.setVisible(false);
     loilist.setVisible(false);
+    description.setVisible(false);
     addicon.setVisible(false);
     addmode = false;
   }
@@ -107,6 +110,7 @@ public class LOIView extends ApplicationSubviewImpl
         loader.setVisible(false);  
         addicon.setVisible(true);
         loilist.setVisible(true);
+        description.setVisible(true);
       }
       @Override
       public void onFailure(Throwable reason) {
@@ -119,6 +123,7 @@ public class LOIView extends ApplicationSubviewImpl
   
   private void showLOI(final String loiId) {
     loilist.setVisible(false);
+    description.setVisible(false);
     addicon.setVisible(false);
     loader.setVisible(true);
     Polymer.ready(form.getElement(), new Function<Object, Object>() {
@@ -146,6 +151,7 @@ public class LOIView extends ApplicationSubviewImpl
   @UiHandler("addicon")
   void onAddIconClicked(ClickEvent event) {
     loilist.setVisible(false);
+    description.setVisible(false);
     addicon.setVisible(false);
     form.setVisible(true);    
     addmode = true;

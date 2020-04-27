@@ -130,10 +130,12 @@
 		</style>
 		<p:PaperFab ui:field="addicon" icon="add" mini="true" 
 			addStyleNames="addicon" title="Add Hypothesis" tabindex="0" />
-		<div style="padding: 4px 10px; font-size: 14px;">
-			A list of all the available Hypotheses in the system is displayed bellow.
-			To add a new hypothesis click on the top-right button.
-		</div>
+		<g:HTMLPanel ui:field="description">
+			<div style="padding: 4px 10px; font-size: 14px;">
+				A list of all the available Hypotheses in the system is displayed bellow.
+				To add a new hypothesis click on the top-right button.
+			</div>
+		</g:HTMLPanel>
 		<l:Loader ui:field="loader" />
 		<t:TreeWidget ui:field="tree" styleName="tree" />
 		<h:HypothesisEditor ui:field="form" styleName="padded" />
