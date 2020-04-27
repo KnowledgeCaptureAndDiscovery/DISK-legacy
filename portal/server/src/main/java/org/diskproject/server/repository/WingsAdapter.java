@@ -351,15 +351,15 @@ public class WingsAdapter {
 			Format formatter = new SimpleDateFormat("HH:mm:ss yyyy-MM-dd");
 			
 			if (tsStart != null) {
-				Date dateStart = new Date( Long.parseLong(tsStart) );
+				Date dateStart = new Date( Long.parseLong(tsStart) * 1000);
 				wflowstatus.setStartDate( formatter.format(dateStart));
-				System.out.println(" Start: " + dateStart.toString());
+				System.out.println(" Start: " + tsStart + " " + dateStart.toString());
 			}
 
 			if (tsEnd != null) {
-				Date dateEnd = new Date( Long.parseLong(tsEnd) );
+				Date dateEnd = new Date( Long.parseLong(tsEnd) * 1000);
 				wflowstatus.setEndDate(formatter.format(dateEnd));
-				System.out.println(" End: " + dateEnd.toString());
+				System.out.println(" End: " + tsEnd + " " + dateEnd.toString());
 			}
 			
 			if (status != null) {
