@@ -1,12 +1,6 @@
 package org.diskproject.server.repository;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.net.HttpURLConnection;
@@ -14,10 +8,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -31,7 +22,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.Scanner;
 
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.apache.commons.lang.SerializationUtils;
@@ -46,7 +36,6 @@ import org.diskproject.shared.classes.common.TripleUtil;
 import org.diskproject.shared.classes.common.Value;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
-import org.diskproject.shared.classes.loi.MetaWorkflowDetails;
 import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.loi.TriggeredLOI.Status;
@@ -81,6 +70,9 @@ public class DiskRepository extends KBRepository {
 	ExecutorService executor;
 	//static GmailService gmail;
 	static DataMonitor dataThread;
+	
+  Pattern varPattern = Pattern.compile("\\?(.+?)\\b");
+  Pattern varCollPattern = Pattern.compile("\\[\\s*\\?(.+?)\\s*\\]");
 
 	public static void main(String[] args) {
 		get();
@@ -699,6 +691,7 @@ public class DiskRepository extends KBRepository {
 				+ "PREFIX user: <" + assertionsUri + "#>\n\n" + "SELECT *\n" + "WHERE { \n" + queryPattern + "}\n";
 	}
 
+	/*
 	private String getPrefixedItem(KBObject item, Map<String, String> nsmap) {
 		if (item.isLiteral())
 			return item.getValueAsString();
@@ -712,6 +705,7 @@ public class DiskRepository extends KBRepository {
 				return "<" + item.getID() + ">";
 		}
 	}
+	*/
 
 	public List<List<List<String>>> testDataQuery(String username, String domain, String dataQuery) {
 		String assertions = this.ASSERTIONSURI(username, domain);
@@ -759,7 +753,6 @@ public class DiskRepository extends KBRepository {
 		return result;
 	}
 
-	@SuppressWarnings("unchecked")
   public List<TriggeredLOI> queryHypothesis(String username, String domain, String id) {
 		String hypuri = this.HYPURI(username, domain) + "/" + id;
 		String assertions = this.ASSERTIONSURI(username, domain);
@@ -784,17 +777,16 @@ public class DiskRepository extends KBRepository {
 			queryKb.importFrom(hypkb);
 			queryKb.importFrom(this.fac.getKB(assertions, OntSpec.PLAIN));
 
-			Pattern varPattern = Pattern.compile("\\?(.+?)\\b");
-			Pattern varCollPattern = Pattern.compile("\\[\\s*\\?(.+?)\\s*\\]");
 			// get according loi
+			/*
 			String hypPattern = "";
-			
 			for (KBTriple t : hypkb.getAllTriples()) {
 				String subject = this.getPrefixedItem(t.getSubject(), nsmap);
 				String predicate = this.getPrefixedItem(t.getPredicate(), nsmap);
 				String object = this.getPrefixedItem(t.getObject(), nsmap);
 				hypPattern += subject + " " + predicate + " " + object + " .\n";
 			}
+			*/
 			this.end();
 
 			for (TreeItem item : this.listLOIs(username, domain)) {
@@ -865,84 +857,13 @@ public class DiskRepository extends KBRepository {
 					if(tloi == null)
 					  tloi = new TriggeredLOI(loi, id);
 					
-          List<WorkflowBindings> tloiBindings = new ArrayList<WorkflowBindings>();
-          
-					for (WorkflowBindings bindings : loi.getWorkflows()) {
-					  // For each loi Workflow binding, create an empty tloi Binding
-					  tloiBindings.add(new WorkflowBindings(
-					      bindings.getWorkflow(), 
-					      bindings.getWorkflowLink(), 
-					      new ArrayList<VariableBinding>()));
-					  
-            for (VariableBinding vbinding : bindings.getBindings()) {
-              // For each Variable binding, check :
-              // - If this variable expects a collection or single values
-              // - Check the binding values from the data store
-              String binding = vbinding.getBinding();
-              
-              Matcher collmat = varCollPattern.matcher(binding);
-              Matcher mat = varPattern.matcher(binding);
-              
-              // Check if this binding is meant for a collection
-              // Also get the sparql variable
-              boolean isCollection = false;
-              String sparqlvar = null;
-              if(collmat.find() && dataVarBindings.containsKey(collmat.group(1))) {
-                sparqlvar = collmat.group(1);
-                isCollection = true;
-              }
-              else if(mat.find() && dataVarBindings.containsKey(mat.group(1))) {
-                sparqlvar = mat.group(1);
-              }
-              
-              if(sparqlvar != null) {
-                // Get the data bindings for the sparql variable
-                List<String> dsurls = dataVarBindings.get(sparqlvar);
-                
-                // Register all datasets with Wings & get dataset names
-                List<String> dsnames = new ArrayList<String>();
-                for(String dsurl : dsurls) {
-                  String dsname = dsurl.replaceAll("^.*\\/", "");
-                  WingsAdapter.get().addRemoteDataToWings(username, domain, dsurl);
-                  dsnames.add(dsname);
-                }
-                
-                // If Collection, all datasets go to same workflow
-                if(isCollection) {
-                  // This variable expects a collection. Modify the existing tloiBinding values
-                  for(WorkflowBindings tloiBinding : tloiBindings) {
-                    tloiBinding.addBinding(new VariableBinding(
-                        vbinding.getVariable(),
-                        dsnames.toString()
-                    ));
-                  }
-                }
-                else {
-                  // This variable expects a single file. Add new tloi bindings for each dataset
-                  List<WorkflowBindings> newTloiBindings = new ArrayList<WorkflowBindings>();
-                  for(WorkflowBindings tloiBinding : tloiBindings) {
-                    for(String dsname: dsnames) {
-                      ArrayList<VariableBinding> newBindings = (ArrayList<VariableBinding>) SerializationUtils
-                          .clone((Serializable) tloiBinding.getBindings());
-                      WorkflowBindings newWorkflowBindings = new WorkflowBindings(
-                          bindings.getWorkflow(), 
-                          bindings.getWorkflowLink(), 
-                          newBindings);
-                      newWorkflowBindings.addBinding(new VariableBinding(
-                          vbinding.getVariable(),
-                          dsname
-                      ));
-                      newTloiBindings.add(newWorkflowBindings);
-                    }
-                  }
-                  tloiBindings = newTloiBindings;
-                }
-              }
-            }
+					if(tloi != null) {
+            tloi.setWorkflows(
+                this.getTLOIBindings(username, domain, loi.getWorkflows(), dataVarBindings));
+            tloi.setMetaWorkflows(
+                this.getTLOIBindings(username, domain, loi.getMetaWorkflows(), dataVarBindings));
+  					tlois.add(tloi);
 					}
-          tloi.setWorkflows(tloiBindings);
-					if (tloi != null)
-						tlois.add(tloi);
 				}
 			}
 		} catch (Exception e) {
@@ -951,6 +872,90 @@ public class DiskRepository extends KBRepository {
 		  this.end();
 		}
 		return tlois;
+	}
+	
+	
+	@SuppressWarnings("unchecked")
+  private List<WorkflowBindings> getTLOIBindings(
+	    String username, String domain,
+	    List<WorkflowBindings> wflowBindings, Map<String, List<String>> dataVarBindings) {
+	  
+	  List<WorkflowBindings> tloiBindings = new ArrayList<WorkflowBindings>();
+	  
+    for (WorkflowBindings bindings : wflowBindings) {
+      // For each loi Workflow binding, create an empty tloi Binding
+      WorkflowBindings tloiBinding = 
+          new WorkflowBindings(bindings.getWorkflow(), bindings.getWorkflowLink(), new ArrayList<VariableBinding>());
+      tloiBinding.setMeta(bindings.getMeta());
+      tloiBindings.add(tloiBinding);
+      
+      for (VariableBinding vbinding : bindings.getBindings()) {
+        // For each Variable binding, check :
+        // - If this variable expects a collection or single values
+        // - Check the binding values from the data store
+        String binding = vbinding.getBinding();
+        
+        Matcher collmat = varCollPattern.matcher(binding);
+        Matcher mat = varPattern.matcher(binding);
+        
+        // Check if this binding is meant for a collection
+        // Also get the sparql variable
+        boolean isCollection = false;
+        String sparqlvar = null;
+        if(collmat.find() && dataVarBindings.containsKey(collmat.group(1))) {
+          sparqlvar = collmat.group(1);
+          isCollection = true;
+        }
+        else if(mat.find() && dataVarBindings.containsKey(mat.group(1))) {
+          sparqlvar = mat.group(1);
+        }
+        
+        if(sparqlvar != null) {
+          // Get the data bindings for the sparql variable
+          List<String> dsurls = dataVarBindings.get(sparqlvar);
+          
+          // Register all datasets with Wings & get dataset names
+          List<String> dsnames = new ArrayList<String>();
+          for(String dsurl : dsurls) {
+            String dsname = dsurl.replaceAll("^.*\\/", "");
+            WingsAdapter.get().addRemoteDataToWings(username, domain, dsurl);
+            dsnames.add(dsname);
+          }
+          
+          // If Collection, all datasets go to same workflow
+          if(isCollection) {
+            // This variable expects a collection. Modify the existing tloiBinding values
+            for(WorkflowBindings tmpBinding : tloiBindings) {
+              tmpBinding.addBinding(new VariableBinding(
+                  vbinding.getVariable(),
+                  dsnames.toString()
+              ));
+            }
+          }
+          else {
+            // This variable expects a single file. Add new tloi bindings for each dataset
+            List<WorkflowBindings> newTloiBindings = new ArrayList<WorkflowBindings>();
+            for(WorkflowBindings tmpBinding : tloiBindings) {
+              for(String dsname: dsnames) {
+                ArrayList<VariableBinding> newBindings = (ArrayList<VariableBinding>) SerializationUtils
+                    .clone((Serializable) tmpBinding.getBindings());
+                WorkflowBindings newWorkflowBindings = new WorkflowBindings(
+                    bindings.getWorkflow(), 
+                    bindings.getWorkflowLink(), 
+                    newBindings);
+                newWorkflowBindings.addBinding(new VariableBinding(
+                    vbinding.getVariable(),
+                    dsname
+                ));
+                newTloiBindings.add(newWorkflowBindings);
+              }
+            }
+            tloiBindings = newTloiBindings;
+          }
+        }
+      }
+    }
+    return tloiBindings;
 	}
 
 	/**
@@ -1097,10 +1102,10 @@ public class DiskRepository extends KBRepository {
 		List<Triple> UITriples = assertions.getTriples();
 		HashSet<String> toQuery = new HashSet<String>();
 		String temp;
-		String[] temp2;
+		//String[] temp2;
 		String file;
 		String query;
-		Triple tri;
+		//Triple tri;
 		for (int i = 0; i < UITriples.size(); i++) {
 			temp = UITriples.get(i).getPredicate(); // check if asking for query
 			if (temp.equals(KBConstants.NEURONS() + "hasEnigmaQueryLiteral")) {
@@ -1678,7 +1683,8 @@ public class DiskRepository extends KBRepository {
 			for (String line : content.split("\\n")) {
 				String[] parts = line.split("\\s+", 4);
 				TripleDetails details = new TripleDetails();
-				details.setConfidenceValue(Double.parseDouble(parts[3]));
+				if(parts.length > 3)
+				  details.setConfidenceValue(Double.parseDouble(parts[3]));
 				details.setTriggeredLOI(tloi.getId());
 				Triple t = util.fromString(parts[0] + " " + parts[1] + " " + parts[2]);
 				t.setDetails(details);
@@ -1694,6 +1700,7 @@ public class DiskRepository extends KBRepository {
 		return null;
 	}
 
+	/*
 	private List<WorkflowBindings> addEnimgaFiles(String username, String domain, TriggeredLOI tloi, boolean metamode, boolean upload) {
 		WingsAdapter wings = WingsAdapter.get();
 
@@ -1764,6 +1771,7 @@ public class DiskRepository extends KBRepository {
 		}
 		return wflowBindings;
 	}
+	*/
 
 	/*
 	 * private String createDummyHypothesis(String username, String domain,
@@ -1808,8 +1816,10 @@ public class DiskRepository extends KBRepository {
 
 				WingsAdapter wings = WingsAdapter.get();
 
-				// Ask to upload and set enigma files
-				List<WorkflowBindings> wflowBindings = tloi.getWorkflows(); //addEnimgaFiles(username, domain, tloi, metamode, true);
+				List<WorkflowBindings> wflowBindings = tloi.getWorkflows();
+        if (this.metamode)
+          wflowBindings = tloi.getMetaWorkflows();
+        
 				// Start off workflows from tloi
 				for (WorkflowBindings bindings : wflowBindings) {
 					// Get workflow input details
