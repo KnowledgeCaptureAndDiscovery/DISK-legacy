@@ -17,7 +17,6 @@ import org.diskproject.shared.classes.loi.TriggeredLOI.Status;
 
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
-import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;

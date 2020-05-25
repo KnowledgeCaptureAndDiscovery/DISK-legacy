@@ -18,11 +18,9 @@ import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.AnchorElement;
 import com.google.gwt.dom.client.DivElement;
-import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTML;
@@ -108,8 +106,10 @@ public class TriggeredLOIViewer extends Composite {
         public void onSuccess(Hypothesis result) {
           anchor.setHref(getHypothesisLink(id));
           anchor.setText(result.getName());
-          if(result.getGraph() != null)
+          if(result.getGraph() != null) {
+            tv.setDefaultNamespace(getNamespace(result.getId()));
             tv.load(result.getGraph().getTriples());
+          }
         }
         public void onFailure(Throwable reason) {}
       });

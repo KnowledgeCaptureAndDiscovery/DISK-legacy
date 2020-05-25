@@ -1,20 +1,10 @@
 package org.diskproject.client.application;
 
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.uibinder.client.UiHandler;
-
-import org.diskproject.client.authentication.SessionStorage;
 import org.diskproject.client.place.NameTokens;
-import org.diskproject.client.rest.AppNotification;
-import org.diskproject.client.rest.UserREST;
-import org.diskproject.shared.classes.users.UserCredentials;
-import org.diskproject.shared.classes.users.UserSession;
 
-import com.google.gwt.core.client.Callback;
 import com.google.gwt.dom.client.DivElement;
-import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
-import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -23,11 +13,8 @@ import com.google.inject.Inject;
 import com.gwtplatform.mvp.client.ViewImpl;
 import com.vaadin.polymer.Polymer;
 import com.vaadin.polymer.elemental.Function;
-import com.vaadin.polymer.iron.widget.event.IronOverlayOpenedEvent;
 import com.vaadin.polymer.paper.PaperDrawerPanelElement;
 import com.vaadin.polymer.paper.PaperToastElement;
-import com.vaadin.polymer.paper.widget.PaperDialog;
-import com.vaadin.polymer.paper.widget.PaperInput;
 
 public class ApplicationView extends ViewImpl implements
     ApplicationPresenter.MyView {

@@ -127,6 +127,13 @@
 			paper-item.tlois .action-buttons .query-action {
 				display:none;
 			}
+			.block {
+			  display: block;
+			}
+			.new-binding {
+			  margin-left: 20px;
+        width: calc(100% - 55px);
+			}
 		</style>
 		<p:PaperFab ui:field="addicon" icon="add" mini="true" 
 			addStyleNames="addicon" title="Add Hypothesis" tabindex="0" />
@@ -140,5 +147,20 @@
 		<t:TreeWidget ui:field="tree" styleName="tree" />
 		<h:HypothesisEditor ui:field="form" styleName="padded" />
 		<g:HTMLPanel ui:field="matchlist" styleName="tree list matchlist" />
+		
+		<div style="visibility: hidden">
+      <g:DialogBox autoHide="true" modal="true" ui:field='dialog'>
+        <g:caption><b>Edit variable bindings</b></g:caption>
+        <g:VerticalPanel>
+					<g:HTMLPanel ui:field='dialogContent'>
+					</g:HTMLPanel>
+					<g:HTMLPanel>
+						<g:Button ui:field='dialogCancelButton'>Cancel</g:Button>
+						<g:Button ui:field='dialogOkButton'>Save</g:Button>
+					</g:HTMLPanel>
+        </g:VerticalPanel>
+      </g:DialogBox>
+    </div>
+		
 	</g:HTMLPanel>
 </ui:UiBinder>

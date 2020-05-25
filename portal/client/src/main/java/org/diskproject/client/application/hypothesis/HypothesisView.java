@@ -1,7 +1,9 @@
 package org.diskproject.client.application.hypothesis;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.diskproject.client.Config;
 import org.diskproject.client.application.ApplicationSubviewImpl;
@@ -20,7 +22,9 @@ import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
+import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.util.GUID;
+import org.diskproject.shared.classes.workflow.VariableBinding;
 
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
@@ -31,9 +35,12 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.ui.CheckBox;
+import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.InlineHTML;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
@@ -57,10 +64,18 @@ public class HypothesisView extends ApplicationSubviewImpl
   @UiField PaperFab addicon;
   @UiField HTMLPanel matchlist;
   @UiField HTMLPanel description;
+
+  @UiField DialogBox dialog;
+  @UiField HTMLPanel dialogContent;
+  
+  ListBox varList;
+  Map<String, List<CheckBox>> checkMap;
+  WorkflowBindings selectedWorkflow;
   
   List<TreeItem> treelist;
   List<TriggeredLOI> tloilist; 
-  
+  List<TriggeredLOI> matches; 
+
   interface Binder extends UiBinder<Widget, HypothesisView> {
   }
 
@@ -231,6 +246,7 @@ public class HypothesisView extends ApplicationSubviewImpl
       public void onSuccess(List<TriggeredLOI> result) {
         loader.setVisible(false);
         matchlist.setVisible(true);
+        matches = result;
         showTriggeredLOIOptions(result);
       }
       @Override
@@ -268,9 +284,50 @@ public class HypothesisView extends ApplicationSubviewImpl
         }
       });
       buttonPanel.add(button);
+      /* Edit bindings button. Move me to the workflow. */
+      PaperButton button2 = new PaperButton();
+      button2.add(new InlineHTML("Edit bindings"));
+      button2.addClickHandler(new ClickHandler() {
+        @Override
+        public void onClick(ClickEvent event) {
+        	updateDialogContent(tloi.getWorkflows());
+        	dialog.center();
+        }
+      });
+      buttonPanel.add(button2);
+
       panel.add(buttonPanel);            
       matchlist.add(panel);
     }
+  }
+
+  void updateDialogContent (List<WorkflowBindings> workflows) {
+	  dialogContent.clear();
+	  varList = null;
+	  checkMap = null;
+	  if (workflows.size() == 0) return;
+
+	  varList = new ListBox();
+	  checkMap = new HashMap<>();
+	  WorkflowBindings wf = workflows.get(0); //FIXME
+	  selectedWorkflow = wf;
+	  for (VariableBinding b: wf.getBindings()) {
+		  varList.addItem(b.getVariable());
+		  dialogContent.add(varList);
+		  //GWT.log(">" + b.getVariable());
+		  //GWT.log("<" + b.getBinding());
+		  String binds = b.getBinding().replace("]", "").replace("[", "");
+		  List<CheckBox> cblist = new ArrayList<CheckBox>();
+		  checkMap.put(b.getVariable(), cblist);
+		  for (String bind: binds.split(",")) {
+			  GWT.log(">>" + bind);
+			  CheckBox cb = new CheckBox(bind);
+			  cb.setValue(true);
+			  cb.setStyleName("block");
+			  dialogContent.add(cb); //FIXME
+			  cblist.add(cb);
+		  }
+	  }
   }
   
   void triggerMatchedLOI(final TriggeredLOI tloi) {
@@ -381,6 +438,33 @@ public class HypothesisView extends ApplicationSubviewImpl
           this.getHistoryToken(NameTokens.hypotheses, node.getId()) + "/query";
       History.newItem(token);
     }
+  }
+  
+  @UiHandler("dialogOkButton")
+  void onOkButtonClicked(ClickEvent event) {
+	  String var = varList.getSelectedValue();
+	  List<String> bindings = new ArrayList<String>();
+	  
+	  for (CheckBox cb: checkMap.get(var)) {
+		  if (cb.getValue()) {
+			  bindings.add(cb.getText());
+		  }
+	  }
+	  String strb = "[" + String.join(",", bindings) + "]";
+	  strb = strb.replace(" ", "").replace(",", ", ");
+	  for (VariableBinding b: selectedWorkflow.getBindings()) {
+		  //GWT.log('<' + b.getBinding());
+		  b.setBinding(strb);
+		  //GWT.log('>' + b.getBinding());
+	  }
+	  
+	  showTriggeredLOIOptions(matches);
+	  dialog.hide();
+  }
+
+  @UiHandler("dialogCancelButton")
+  void onCancelButtonClicked(ClickEvent event) {
+	  dialog.hide();
   }
   
   private void setHeader(SimplePanel toolbar) {
