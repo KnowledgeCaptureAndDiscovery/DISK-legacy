@@ -99,8 +99,8 @@
 		</div>
 		<div class="ontolist">
 			<div class="ontoentry">
-				<span>https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/disk/1.1.0/ontology.ttl</span>
-				<a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/disk/1.1.0/ontology.ttl">
+				<span>https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/disk/release/1.1.0/ontology.ttl</span>
+				<a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/disk/release/1.1.0/ontology.ttl">
 				    <p:PaperIconButton addStyleNames="linkicon smallicon" style="padding: 0px; height: 20px; width: 20px;" icon="link" />
 				</a>
 			</div>
@@ -117,8 +117,8 @@
 				</a>	
 			</div>
 			<div class="ontoentry">
-				<span>https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/hypothesis/0.0.1/ontology.owl</span>
-				<a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/hypothesis/0.0.1/ontology.owl">
+				<span>https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/hypothesis/release/0.0.1/ontology.owl</span>
+				<a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/hypothesis/release/0.0.1/ontology.owl">
 				    <p:PaperIconButton addStyleNames="linkicon smallicon" style="padding: 0px; height: 20px; width: 20px;" icon="link" />
 				</a>
 			</div>
