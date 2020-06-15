@@ -2,7 +2,6 @@ package org.diskproject.shared.classes.loi;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import org.diskproject.shared.classes.workflow.VariableBinding;

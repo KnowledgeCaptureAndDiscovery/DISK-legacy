@@ -1,7 +1,6 @@
 package org.diskproject.server.repository;
 
 import java.awt.Desktop;
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -18,7 +17,6 @@ import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
 import org.diskproject.shared.classes.common.Triple;
-import org.diskproject.shared.classes.common.TripleDetails;
 import org.diskproject.shared.classes.common.TripleUtil;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
@@ -37,7 +35,6 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.sun.mail.imap.IMAPSSLStore;
-import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.smtp.SMTPTransport;
 import com.sun.mail.util.BASE64EncoderStream;
 
