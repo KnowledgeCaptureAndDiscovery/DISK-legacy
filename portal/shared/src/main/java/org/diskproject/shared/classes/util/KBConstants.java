@@ -1,10 +1,10 @@
 package org.diskproject.shared.classes.util;
 
 public class KBConstants {
-  private static String diskuri = "https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/disk/1.1.0/ontology.ttl";
+  private static String diskuri = "https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/disk/release/1.1.0/ontology.ttl";
   private static String neurouri = "https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/enigma_hypothesis/release/2.0.0/ontology.ttl";
   private static String omicsuri = "https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/omics_hypothesis/release/0.0.1/ontology.ttl";
-  private static String hypuri = "https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/hypothesis/0.0.1/ontology.owl";
+  private static String hypuri = "https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/hypothesis/release/0.0.1/ontology.owl";
 
   private static String owlns = "http://www.w3.org/2002/07/owl#";
   private static String rdfns = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
