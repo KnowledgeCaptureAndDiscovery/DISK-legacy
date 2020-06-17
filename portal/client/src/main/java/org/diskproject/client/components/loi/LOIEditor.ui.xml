@@ -22,32 +22,41 @@
 			}
 			.querytest {
 				text-align: right;
+				margin-bottom: 4px;
+				max-width: 800px;
+        max-height: 400px;
 			}
 			.queryresult {
-			    text-align: left;
-    			padding: 2px 10px;
-    			overflow-x: scroll;
+				text-align: left;
+				padding: 2px 10px;
+				overflow-x: scroll;
+				max-width: 790px;
+        max-height: 390px;
 		  }
-		  
-		  
-
-
 		</style>
+
 		<div class="vertical center-justified layout">
-			<paper-input label="Short Description" required="true" 
-				autoValidate="true" ui:field="name" />
-			<paper-textarea label="Long Description" required="true"
-				autoValidate="true" ui:field="description" />
+		  <div name="description">
+				<paper-input label="Short Description" required="true" 
+					autoValidate="true" ui:field="name" />
+				<paper-textarea label="Long Description" required="true"
+					autoValidate="true" ui:field="description" />
+			</div>
+			
+			<div name="hypothesis">
+				<label class="small-grey">Hypothesis Pattern (Ctrl-Space for suggestions)</label>
+				<tr:SparqlInput ui:field="hypothesisQuery" />
+			</div>
+			
+			<div name="data">
+				<p:PaperButton ui:field="testbutton" style="float:right">
+					<iron-icon icon="send" />
+					Test
+				</p:PaperButton>
+				<label class="small-grey">Data Query Pattern (Ctrl-Space for suggestions)</label>
+				<tr:SparqlInput ui:field="dataQuery" />
+			</div>
 
-			<label class="small-grey">Hypothesis Pattern (Ctrl-Space for suggestions)</label>
-			<tr:SparqlInput ui:field="hypothesisQuery" />
-			<p:PaperButton ui:field="testbutton" style="float:right">
-				<iron-icon icon="send" />
-				Test
-			</p:PaperButton>
-
-			<label class="small-grey">Data Query Pattern (Ctrl-Space for suggestions)</label>
-			<tr:SparqlInput ui:field="dataQuery" />
 			
 			<loi:LOIWorkflowList ui:field="workflowlist" 
 				metamode="false" label="Workflows to Run"/>
@@ -55,19 +64,8 @@
 			<loi:LOIWorkflowList ui:field="metaworkflowlist" 
 				metamode="true" label="Meta-Workflows to Run" />
 				
-			<!-- label class="small-grey" style="margin-top:4px;">Data query results</label>
-			<div class="querytest bordered-list">
-				<div class="queryresult" ui:field="querytext">
-					Click on "Test data query" to see the available results.
-				</div>
-			</div-->
-
 		</div>
 		<div class="horizontal end-justified layout">
-			<!--  p:PaperButton ui:field="querybutton">
-				<iron-icon icon="send" />
-				Test data query
-			</p:PaperButton-->
 			<p:PaperButton ui:field="savebutton">
 				<iron-icon icon="save" />
 				Save
@@ -79,20 +77,22 @@
         <g:caption><b>Test data query</b></g:caption>
         <g:HTMLPanel>
           <div>
-            <div>
-              <g:CheckBox ui:field='addHyp'>Add Hypothesis Pattern</g:CheckBox>
-            </div>
-
-            <g:HTMLPanel ui:field='hypContainer'>
-							<label class="small-grey">Hypothesis Pattern (Ctrl-Space for suggestions)</label>
-							<tr:SparqlInput ui:field="hypothesisQuery2" />
-            </g:HTMLPanel>
-
 			      <label class="small-grey">Data Query Pattern (Ctrl-Space for suggestions)</label>
-			      <tr:SparqlInput ui:field="dataQuery2" />
+			      <tr:SparqlInput ui:field="testQuery" />
           </div>
 
-					<label class="small-grey" style="margin-top:4px;">Data query results</label>
+					<label class="small-grey" style="margin-top:4px;">
+					 Data query results for
+					  <g:ListBox ui:field='displayVariables'>
+							<g:item value='wf'>
+							   Workflow variables
+							</g:item>
+							<g:item value='all'>
+								All variables
+							</g:item>
+						 </g:ListBox>
+					</label>
+
 					<div class="querytest bordered-list">
 						<div class="queryresult" ui:field="resultContainer">
 							Click on "Test query" to see the available results.
