@@ -46,7 +46,11 @@
 				autoValidate="true" ui:field="description" />
 
 			<label class="small-grey" title="Represents the type of hypotheses that can be explored with this line of inquiry.">
-			  Hypothesis Pattern (Prefixes: <span class="code">bio:</span>, <span class="code">hyp:</span> and <span class="code">neuro:</span>, write any and Ctrl-Space for suggestions)
+			  Hypothesis Pattern (Prefixes: 
+			   <a class="code" target="_blank" href="http://disk-project.org/ontology/omics#">bio:</a>,
+			   <a class="code" target="_blank" href="http://disk-project.org/ontology/hypothesis#">hyp:</a> and 
+			   <a class="code" target="_blank" href="https://w3id.org/disk/ontology/enigma_hypothesis#">neuro:</a>,
+			    write any and Ctrl-Space for suggestions)
 				<!--  iron-icon icon="help"/-->
 			</label>
 			<tr:SparqlInput ui:field="hypothesisQuery" />
@@ -58,7 +62,11 @@
 				autoValidate="true" ui:field="hyDesc" /-->
 
 			<label class="small-grey">
-			  Data Query Pattern (Prefixes: <span class="code">bio:</span>, <span class="code">hyp:</span> and <span class="code">neuro:</span>, write any and Ctrl-Space for suggestions)
+			  Data Query Pattern (Prefixes: 
+			   <a class="code" target="_blank" href="http://disk-project.org/ontology/omics#">bio:</a>,
+			   <a class="code" target="_blank" href="http://disk-project.org/ontology/hypothesis#">hyp:</a> and 
+			   <a class="code" target="_blank" href="https://w3id.org/disk/ontology/enigma_hypothesis#">neuro:</a>,
+			   write any and Ctrl-Space for suggestions)
 				<!-- iron-icon icon="help"/-->
 			</label>
 			<tr:SparqlInput ui:field="dataQuery" />

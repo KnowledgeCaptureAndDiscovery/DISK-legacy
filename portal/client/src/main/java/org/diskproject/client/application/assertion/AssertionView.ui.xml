@@ -85,17 +85,21 @@
             	display: flex;
             	justify-content: space-between;
             	border: 1px solid darkgray;
-    			border-radius: 4px;
-    			padding: 1px 10px;
-    			line-height: 24px;
-    			margin-bottom: 4px;
-    		}
+							border-radius: 4px;
+							padding: 1px 10px;
+							line-height: 24px;
+							margin-bottom: 4px;
+						}
+						.code {
+							font:12px Monaco,Consolas,"Andale  Mono","DejaVu Sans Mono",monospace;
+							font-weight: bold;
+						}
 		</style>
 		<p:PaperFab ui:field="addicon" icon="add" mini="true" style="--paper-fab-background: var(--paper-blue-200);"
 			addStyleNames="addicon" title="Add Data" tabindex="0" disabled="true"/>
 		<div style="padding: 4px 10px; font-size: 14px;">
 			A list of all the ontologies currently loaded in the system is displayed below.
-			To add a new Ontologies click on the top-right button.
+		  <!--  To add a new Ontologies click on the top-right button.-->
 		</div>
 		<div class="ontolist">
 			<div class="ontoentry">
@@ -122,7 +126,7 @@
 				    <p:PaperIconButton addStyleNames="linkicon smallicon" style="padding: 0px; height: 20px; width: 20px;" icon="link" />
 				</a>
 			</div>
-			<div class="ontoentry">
+			<!-- div class="ontoentry">
 				<span>http://www.w3.org/2002/07/owl#</span>
 				<a target="_blank" href="http://www.w3.org/2002/07/owl#">
 				    <p:PaperIconButton addStyleNames="linkicon smallicon" style="padding: 0px; height: 20px; width: 20px;" icon="link" />
@@ -157,11 +161,9 @@
 				<a target="_blank" href="http://purl.org/dc/elements/1.1/">
 				    <p:PaperIconButton addStyleNames="linkicon smallicon" style="padding: 0px; height: 20px; width: 20px;" icon="link" />
 				</a>
-			</div>
+			</div-->
 		</div>
-		<div style="padding: 4px 10px; font-size: 14px;">
-			You can also add data directly below:
-		</div>
+
 		<l:Loader ui:field="loader" />
 		<div class="outlined">
 			<lw:ListWidget ui:field="datalist" styleName="list" />
@@ -169,6 +171,18 @@
 		<g:HTMLPanel ui:field="form" styleName="padded">
 			<div class="vertical center-justified layout">
 				<div class="vertical-section">
+				<div style="padding: 4px 10px; font-size: 14px;">
+				  <p>
+					You can also add data directly bellow.
+          Each line represents one triple <span class="code">subject predicate object</span>.<br/>
+          To define a new resource use as prefix <span class="code">:</span> in the textbox below, 
+          all resources defined here can be used with the prefix <span class="code">user:</span>.
+          </p><p>
+          For example, we can define a named resource in one line with
+          <span class="code">:example rdfs:label "Example_name"^^xsd:string</span>.<br/>
+          To reference this resource in a hypothesis we can use <span class="code">user:example</span>.
+          </p>
+				</div>
 					<label class="small-grey">Metadata (Ctrl-Space for suggestions)</label>
 					<tr:TripleInput ui:field="triples" />
 				</div>
