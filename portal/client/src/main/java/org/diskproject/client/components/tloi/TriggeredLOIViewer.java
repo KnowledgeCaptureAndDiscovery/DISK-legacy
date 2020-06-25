@@ -195,10 +195,8 @@ public class TriggeredLOIViewer extends Composite {
 				  if (sdate != null) run.setStartDate(sdate);
 				  if (edate != null) run.setEndDate(edate);
 				  if (outputs != null && outputs.size() > 0) run.setOutputs(outputs);
+				  run.setFiles(result.getFiles());
 				  
-				  /*String html = base
-						  	  + "<b>Start date:</b> " + result.getStartDate()
-						  	  + "<b>End date:</b>" + result.getEndDate();*/
 				  node.setFullContent(bindings.getHTML());
 			  }
 			  @Override

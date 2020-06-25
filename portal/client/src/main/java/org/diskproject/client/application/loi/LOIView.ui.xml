@@ -90,13 +90,49 @@
                 background-color: transparent;
                 border: 0px;
             }
+            summary::-webkit-details-marker {
+                display: none
+            }
 		</style>
 		<p:PaperFab ui:field="addicon" icon="add" mini="true" 
 			addStyleNames="addloiicon" title="Add Line of Inquiry" tabindex="0" />
 		<g:HTMLPanel ui:field="description">
-		  <div style="padding: 4px 10px; font-size: 14px;">
-			A list of all the available Lines of Inquiry in the system is displayed bellow.
-			To add a new Line of Inquery click on the top-right button.
+		  <div style="padding: 4px 10px; font-size: 14px; color: #666">
+		    <details>
+		      <summary style="font-weight: bold; font-size: 1.1em;">
+				    A line of inquiry represents potential analyses that can be pursued to test a type of hypothesis (more).
+		      </summary>
+		      A line of inquiry consists of:
+		      <ol>
+		        <li>
+		          A hypothesis pattern, which represents the type of hypotheses that can be explored with this line of inquiry.
+		          This hypothesis pattern must be expressed in the same language as hypothesis statements, so that they can be matched against a user’s hypothesis.
+		        </li>
+		        <li>
+              A set of query patterns, representing the kinds of data relevant to testing the hypothesis pattern as a set of templates of queries to a data repository.
+              Several kinds of data may be relevant, so there may be several query patterns.
+		        </li>
+		        <li>
+              A set of workflows, which capture data analysis methods that can be applied to the data retrieved by the query patterns in order to test the hypothesis pattern.
+		        </li>
+		        <li>
+              A set of workflow mappings, indicating how the query patterns and the datasets retrieved should be used to instantiate the workflows above to create execution-ready workflows.  
+		        </li>
+		        <li>
+              A set of meta-workflows, which describe how to aggregate the results of the workflow executions done to analyze the data.
+            </li>
+		        <li>
+              A set of meta-workflow mappings, which describe how the results of the workflow executions are to be used to generate bindings for the inputs of the meta-workflows.
+		        </li>
+		        <li>
+              A set of priorities, which describe the relative importance of running different execution-ready workflows given the hypothesis at hand.
+		        </li>
+		      </ol>
+		    </details>
+				<div style="margin-top: 5px;">
+					A list of all the available Lines of Inquiry in the system is displayed below.
+					To add a <b>new Line of Inquery</b> click on the top-right button.
+			</div>
 		  </div>
 		</g:HTMLPanel>
 		<l:Loader ui:field="loader" />

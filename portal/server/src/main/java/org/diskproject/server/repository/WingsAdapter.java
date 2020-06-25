@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URLEncoder;
-import java.sql.Timestamp;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -331,13 +330,31 @@ public class WingsAdapter {
 			List<String> outputs = new ArrayList<String>();
 			try {
 				JsonObject vars = runobj.get("variables").getAsJsonObject();
-				JsonArray outs = vars.get("output").getAsJsonArray();
-				for (JsonElement resp: outs) {
-					JsonObject binding = resp.getAsJsonObject().get("binding").getAsJsonObject();
-					outputs.add(binding.get("id").toString().replaceAll("\"", ""));
+				try {
+					JsonArray outs = vars.get("output").getAsJsonArray();
+					for (JsonElement resp: outs) {
+						JsonObject binding = resp.getAsJsonObject().get("binding").getAsJsonObject();
+						outputs.add(binding.get("id").toString().replaceAll("\"", ""));
+					}
+				} catch (Exception e) {
+					System.out.println("Run ID " + runid + ": No output files");
+				}
+				try {
+					JsonArray inputs = vars.get("input").getAsJsonArray();
+					for (JsonElement input: inputs) {
+						JsonObject binding = input.getAsJsonObject().get("binding").getAsJsonObject();
+						String id = binding.get("id").toString().replaceAll("\"", "");
+						String[] sp = id.split("#");
+						if (sp.length > 0) {
+							String name = sp[sp.length-1];
+							wflowstatus.addFile(name, id);
+						}
+					}
+				} catch (Exception e) {
+					System.out.println("Run ID " + runid + ": No input files");
 				}
 			} catch (Exception e) {
-				System.out.println("Run ID " + runid + ": No output file");
+				System.out.println("Run ID " + runid + ": No variables attribute");
 			}
 
 			// Creating link

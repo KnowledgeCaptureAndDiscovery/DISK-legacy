@@ -7,13 +7,28 @@
 	xmlns:p='urn:import:com.vaadin.polymer.paper.widget'>
 
 	<g:HTMLPanel>
+    <style>
+      .code {
+        font:12px Monaco,Consolas,"Andale  Mono","DejaVu Sans Mono",monospace;
+        font-weight: bold;
+      }
+    </style>
+	
 		<div class="vertical center-justified layout">
 			<div class="vertical-section">
 				<paper-input label="Short Description" required="true" 
 					autoValidate="true" ui:field="name" />
 				<paper-textarea label="Long Description" required="true"
 					autoValidate="true" ui:field="description" />
-				<label class="small-grey">Formal Description (Ctrl-Space for suggestions)</label>
+				<label class="small-grey">Formal Description</label>
+				<div>
+				  Resources defined on <b>Data</b> must use <span class="code">user:</span> as prefix.
+				  You can also use 
+			   <a class="code" target="_blank" href="http://disk-project.org/ontology/omics#">bio:</a>,
+			   <a class="code" target="_blank" href="http://disk-project.org/ontology/hypothesis#">hyp:</a> and 
+			   <a class="code" target="_blank" href="https://w3id.org/disk/ontology/enigma_hypothesis#">neuro:</a>
+				  prefixes (Ctrl-Space for suggestions).
+				</div>
 				<tr:HypothesisTripleInput ui:field="triples" />
 			</div>
 		</div>

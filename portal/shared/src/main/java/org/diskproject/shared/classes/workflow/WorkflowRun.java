@@ -1,12 +1,16 @@
 package org.diskproject.shared.classes.workflow;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class WorkflowRun {
   String id;
   String link;
   String status;
+
   List<String> outputs;
+  Map<String, String> files;
   String startDate;
   String endDate;
 
@@ -66,5 +70,18 @@ public class WorkflowRun {
   
   public List<String> getOutputs () {
 	  return outputs;
+  }
+  
+  public void addFile (String name, String link) {
+	  if (files == null) files = new HashMap<String, String>();
+	  files.put(name, link);
+  }
+  
+  public Map<String, String> getFiles () {
+	  return files;
+  }
+  
+  public void setFiles (Map<String, String> files) {
+	  if (files != null) this.files = files;
   }
 }
