@@ -146,10 +146,38 @@
 		<p:PaperFab ui:field="addicon" icon="add" mini="true" 
 			addStyleNames="addicon" title="Add Hypothesis" tabindex="0" />
 		<g:HTMLPanel ui:field="description">
-			<div style="padding: 4px 10px; font-size: 14px;">
-				A list of all the available Hypotheses in the system is displayed bellow.
-				To add a new hypothesis click on the top-right button.
-			</div>
+		  <div style="padding: 4px 10px; font-size: 14px; color: #666">
+		    <details>
+		      <summary style="font-weight: bold; font-size: 1.1em;">
+				    A hypothesis is a set of assertions about entities in the problem domain. 
+		      </summary>
+		      A hypothesis h consists of: 
+		      <ol>
+		        <li>
+              A hypothesis statement, which is a set of assertions about entities in the domain.
+              For example, they express assertions such as “The mutant form of Protein ABCD is associated with colon cancer.”
+		        </li>
+		        <li>
+              A hypothesis qualification (confidence report), which qualifies the veracity of the hypothesis based on the data and the analyses done so far.
+              A typical qualification is a numeric confidence value.
+              For example, for the hypothesis statement above we could have a confidence value of 0.7.
+              Each of the statements of a hypothesis may have a different confidence value.
+		        </li>
+		        <li>
+              A hypothesis provenance, which is a record of the analyses that were carried out in support of the hypothesis statement.
+              For example the provenance may include an analysis of mass spectrometry data for 25 patients with colon cancer and 25 healthy controls followed by clustering, cluster metrics and binary hypothesis testing.
+		        </li>
+		        <li>
+              A hypothesis history, which points to a prior hypothesis h’ that was revised to generate h.
+              In our example, a prior hypothesis could be “Protein ABCD is associated with cancer.
+		        </li>
+		      </ol>
+		    </details>
+		    <div style="margin-top: 5px;">
+		      A list of all the available Hypotheses in the system is displayed below.
+		      To add a <b>new hypothesis</b> click on the top-right button.
+		    </div>
+		  </div>
 		</g:HTMLPanel>
 		<l:Loader ui:field="loader" />
 		<div ui:field="notloi" class="aux">No Line of Inquiry matches your hypothesis.</div>

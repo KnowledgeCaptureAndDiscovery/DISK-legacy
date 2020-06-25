@@ -34,4 +34,12 @@ public class Graph {
     return striples;
   }
   
+  public String toString() {
+	  String g = "";
+	  for (Triple triple: this.triples) {
+		  g += triple.toString() + "\n";
+	  }
+	  return g;
+  }
+  
 }

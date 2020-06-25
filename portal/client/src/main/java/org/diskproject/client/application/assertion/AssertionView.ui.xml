@@ -94,7 +94,7 @@
 		<p:PaperFab ui:field="addicon" icon="add" mini="true" style="--paper-fab-background: var(--paper-blue-200);"
 			addStyleNames="addicon" title="Add Data" tabindex="0" disabled="true"/>
 		<div style="padding: 4px 10px; font-size: 14px;">
-			A list of all the ontologies currently loaded in the system is displayed bellow.
+			A list of all the ontologies currently loaded in the system is displayed below.
 			To add a new Ontologies click on the top-right button.
 		</div>
 		<div class="ontolist">

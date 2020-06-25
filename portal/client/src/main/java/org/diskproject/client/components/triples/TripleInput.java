@@ -355,6 +355,7 @@ public class TripleInput extends GWTCodeMirror {
     }, userid, domain, reload);
   }
   
+  //TODO: Can read prefixes here.
   void loadTerms(String prefix, Vocabulary vocab) {
     for(Type type : vocab.getTypes().values())
       alltypes.put(prefix+":"+type.getName(), type);

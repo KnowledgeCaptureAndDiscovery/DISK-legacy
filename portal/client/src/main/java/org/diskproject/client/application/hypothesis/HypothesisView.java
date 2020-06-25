@@ -484,6 +484,7 @@ public class HypothesisView extends ApplicationSubviewImpl
     HTML div = new HTML("<nav><div class='layout horizontal center'>"
         + "<iron-icon class='orange' icon='" + icon + "'/></div></nav>");
     div.getElement().getChild(0).getChild(0).appendChild(new HTML(title).getElement());
+    
     toolbar.add(div);    
   }
 
@@ -497,5 +498,6 @@ public class HypothesisView extends ApplicationSubviewImpl
 
   private String getNamespace(String id) {
     return Config.getServerURL() + "/"+userid+"/"+domain + "/hypotheses/" + id + "#";
+    
   }
 }

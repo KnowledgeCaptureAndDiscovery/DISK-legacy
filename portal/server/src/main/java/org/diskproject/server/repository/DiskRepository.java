@@ -239,7 +239,7 @@ public class DiskRepository extends KBRepository {
 	public PropertyListConfiguration getConfig() {
 	  return Config.get().getProperties();
 	}
-	
+
 	/**
 	 * Vocabulary Initialization
 	 */
@@ -590,6 +590,18 @@ public class DiskRepository extends KBRepository {
 				String fullparentid = url + "/" + hypothesis.getParentId();
 				kb.setPropertyValue(hypitem, pmap.get("hasParentHypothesis"), kb.getResource(fullparentid));
 			}
+			/* TODO: ADD DATE
+			 try {
+			 
+				Format formatter = new SimpleDateFormat("HH:mm:ss yyyy-MM-dd");
+				String date = formatter.format(new Date());
+				System.out.println("DATE: " + date);
+				//kb.addPropertyValue(hypitem, pmap.get("hasCreationDate"), date);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			*/
+
 			this.save(kb);
 			this.end();
 
