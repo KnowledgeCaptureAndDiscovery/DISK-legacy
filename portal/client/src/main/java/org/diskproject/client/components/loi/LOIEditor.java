@@ -3,6 +3,7 @@ package org.diskproject.client.components.loi;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 import org.diskproject.client.components.loi.events.HasLOIHandlers;
@@ -46,13 +47,13 @@ public class LOIEditor extends Composite
   boolean editmode;
   boolean metamode;
   int loadcount=0;
-  
+
   @UiField PaperInputElement name;
   @UiField PaperTextareaElement description;
   @UiField SparqlInput hypothesisQuery;
   @UiField SparqlInput dataQuery;
   @UiField LOIWorkflowList workflowlist, metaworkflowlist;
-
+  
   @UiField SparqlInput testQuery;
   @UiField DivElement resultContainer;
   @UiField DialogBox testDialog; 
@@ -60,7 +61,7 @@ public class LOIEditor extends Composite
   
   LineOfInquiry loi;
   List<List<List<String>>> testResults = null;
-  
+
   private static Binder uiBinder =
       GWT.create(Binder.class);
 
@@ -68,14 +69,14 @@ public class LOIEditor extends Composite
     initWidget(uiBinder.createAndBindUi(this));
     handlerManager = new HandlerManager(this);    
   }
-  
+
   public void initialize(String userid, String domain) {
     this.userid = userid;
     this.domain = domain;
     this.loadVocabularies();
     this.loadWorkflows();
   }
-  
+
   public void load(LineOfInquiry loi) {
     this.loi = loi;
     name.setValue(loi.getName());
@@ -90,13 +91,13 @@ public class LOIEditor extends Composite
     workflowlist.loadBindingsList(loi.getWorkflows());
     metaworkflowlist.loadBindingsList(loi.getMetaWorkflows());  
   }
-  
+
   public void setNamespace(String ns) {
     hypothesisQuery.setDefaultNamespace(ns);
     dataQuery.setDefaultNamespace(ns);
     testQuery.setDefaultNamespace(ns);
   }
-  
+
   private void loadVocabularies() {
     loadcount=0;
     hypothesisQuery.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
@@ -108,28 +109,28 @@ public class LOIEditor extends Composite
     dataQuery.loadVocabulary("neuro", KBConstants.NEUROURI(), vocabLoaded);
     dataQuery.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
     dataQuery.loadUserVocabulary("user", userid, domain, vocabLoaded);
-
+    
     testQuery.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
     testQuery.loadVocabulary("neuro", KBConstants.NEUROURI(), vocabLoaded);
     testQuery.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
     testQuery.loadUserVocabulary("user", userid, domain, vocabLoaded);
   }
-  
+
   private Callback<String, Throwable> vocabLoaded = 
       new Callback<String, Throwable>() {
     public void onSuccess(String result) {
       loadcount++;
-      if (loi != null && loi.getHypothesisQuery() != null && loadcount==16) {
+      if (loi != null && loi.getHypothesisQuery() != null && loadcount==12) {
         hypothesisQuery.setValue(loi.getHypothesisQuery());
       }
-      if (loi != null && loi.getDataQuery() != null && loadcount==16) {
+      if (loi != null && loi.getDataQuery() != null && loadcount==12) {
         dataQuery.setValue(loi.getDataQuery());
         testQuery.setValue(loi.getDataQuery());
       }
     }
     public void onFailure(Throwable reason) {}
   };
-  
+
   private void loadWorkflows() {
     DiskREST.listWorkflows(new Callback<List<Workflow>, Throwable>() {
       @Override
@@ -150,7 +151,7 @@ public class LOIEditor extends Composite
       }
     });
   }
-  
+
   @UiHandler("savebutton")
   void onSaveButtonClicked(ClickEvent event) {   
     boolean ok1 = this.name.validate();
@@ -193,20 +194,15 @@ public class LOIEditor extends Composite
     String query = testQuery.getValue();
     
     resultContainer.setInnerHTML("Loading...");
-    GWT.log("Hyp: " + hypothesisQuery.getValue());
-    GWT.log("WF:" + workflowlist.getBindingsList());
-    GWT.log("Doing query...");
 
     DiskREST.testLOI(query, new Callback<List<List<List<String>>>, Throwable>() {
         @Override
         public void onSuccess(List<List<List<String>>> result) {
-          GWT.log("Success");
           testResults = result;
           renderTestResults();
         }
         @Override
         public void onFailure(Throwable reason) {
-          GWT.log("onFailure");
           resultContainer.setInnerHTML("An error occurred while executing the query. Please try again.");
         }
       });
@@ -225,10 +221,10 @@ public class LOIEditor extends Composite
 
 		for (WorkflowBindings wf:  workflowlist.getBindingsList()) {
 			for (VariableBinding binding: wf.getBindings()) {
-				wfVariables.add(binding.getBinding().replace("[?", "").replace("]", ""));
+				wfVariables.add(binding.getBinding().replace("[", "").replace("]", "").replace("?", ""));
 			}
 		}
-
+		
 		if (testResults.size() > 0) {
 		  for (List<String> row: testResults.get(0)) {
 			 resVariables.add(row.get(0));
@@ -241,6 +237,30 @@ public class LOIEditor extends Composite
 		} else {
 			variables = resVariables;
 		}
+		
+		HashMap<String, List<String>> values = new HashMap<String, List<String>>();
+
+		for (String var: variables) {
+			for (List<List<String>> rows: testResults) {
+				for (List<String> row: rows) {
+					if (row.get(0).equals(var)) {
+						String uri = row.get(1).replace("http://localhost:8080/enigma_new/index.php/", "");
+						if (uri.contains("http")) {
+							String link = "<a target=\"_blank\" href=\"" + uri + "\">" + uri + "</a>";
+							uri = link;
+						}
+						if (!values.containsKey(var)) {
+							values.put(var, new ArrayList<String>());
+						}
+						values.get(var).add(uri);
+					}
+				}
+			}
+		}
+		int nRows = 0;
+		if (variables.size()>0 && values.get(variables.get(0)) != null)
+			nRows = values.get(variables.get(0)).size();
+
 		String innerHTML = "<tr><th>#</th>"; 
 		
 		for (String v: variables) {
@@ -248,20 +268,11 @@ public class LOIEditor extends Composite
 		}
 		innerHTML += "</tr>";
 
-		int i = 1;
-		for (List<List<String>> rows: testResults) {
-			innerHTML += "<tr><td>" + String.valueOf(i++) + "</td>";
-			for (List<String> row: rows) {
-				if (variables.contains(row.get(0))) {
-					String uri = row.get(1).replace("http://localhost:8080/enigma_new/index.php/", "");
-					if (uri.contains("http")) {
-						String link = "<a target=\"_blank\" href=\"" + uri + "\">" + uri + "</a>";
-						uri = link;
-					}
-					innerHTML += "<td>" + uri + "</td>";
-				}
+		for (int i = 0; i < nRows; i++) {
+			innerHTML += "<tr><td>" + String.valueOf(i+1) + "</td>";
+			for (String var: variables) {
+				innerHTML += "<td>" + values.get(var).get(i) + "</td>";
 			}
-			innerHTML += "</tr>";
 		}
 		resultContainer.setInnerHTML("<table style=\"width:100%\">" + innerHTML + "</table>");
 	} else {
@@ -271,9 +282,10 @@ public class LOIEditor extends Composite
 
   @UiHandler("testbutton")
   void onTestButtonClicked(ClickEvent event) {   
-	  testQuery.setValue(dataQuery.getValue());
+	testQuery.setValue(dataQuery.getValue());
+	resultContainer.setInnerHTML("Click on \"Test query\" to see the available results.");
 
-	  testDialog.center();
+	testDialog.center();
   }  
 
   @Override

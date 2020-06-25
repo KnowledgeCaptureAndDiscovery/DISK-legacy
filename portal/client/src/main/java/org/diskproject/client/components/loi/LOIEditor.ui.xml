@@ -72,7 +72,7 @@
 			</p:PaperButton>
 		</div>
 		
-		<div style="visibility: hidden">
+		<div style="visibility: collapse">
       <g:DialogBox autoHide="true" modal="true" ui:field='testDialog'>
         <g:caption><b>Test data query</b></g:caption>
         <g:HTMLPanel>
@@ -94,9 +94,7 @@
 					</label>
 
 					<div class="querytest bordered-list">
-						<div class="queryresult" ui:field="resultContainer">
-							Click on "Test query" to see the available results.
-						</div>
+						<div class="queryresult" ui:field="resultContainer"></div>
 					</div>
 
           <g:Button ui:field='cancelButton'>Cancel</g:Button>
