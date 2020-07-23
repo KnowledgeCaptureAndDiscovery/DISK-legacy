@@ -95,7 +95,6 @@
 							font-weight: bold;
 						}
 		</style>
-
 		<div style="padding: 4px 10px; font-size: 14px;">
 			All data is stored and can be modify on the <a target="_blank" href="http://organicdatapublishing.org/enigma_new/index.php/Main_Page">Enigma Wiki</a>.
 		  <!--  To add a new Ontologies click on the top-right button.-->
