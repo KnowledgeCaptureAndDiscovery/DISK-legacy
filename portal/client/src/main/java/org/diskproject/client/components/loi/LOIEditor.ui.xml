@@ -37,6 +37,17 @@
 		    font:12px Monaco,Consolas,"Andale  Mono","DejaVu Sans Mono",monospace;
 		    font-weight: bold;
 		  }
+		  .hyp-pattern {
+        border: 1px solid #aaa;
+        padding: 8px;
+        width: fit-content;
+        border-radius: 5px;
+      }
+      .paper-button-0 {
+        padding: 0;
+        min-width: 24px;
+        display: inline-block;
+      }
 		</style>
 
 		<div class="vertical center-justified layout">
@@ -46,7 +57,48 @@
 				autoValidate="true" ui:field="description" />
 
 			<label class="small-grey" title="Represents the type of hypotheses that can be explored with this line of inquiry.">
-			  Hypothesis Pattern (Prefixes: 
+			  Hypothesis question:
+			</label>
+			<br/>
+			<g:ListBox ui:field='hypQuestion'>
+				<g:item value='h1'>Is the effect size of genotype in brain trait associated with attribute</g:item>
+				<g:item value='h2'>Is brain characteristic associated with neurological disorder</g:item>
+			</g:ListBox>
+
+			<div class="hyp-pattern">
+					<span ui:field="h1Section">
+						<span> Is the <span class="code">EffectSize</span> of</span>
+						<g:ListBox ui:field="h1r1">
+							<g:item value='Genotype'>Genotype</g:item>
+						</g:ListBox>
+						<span> on </span>
+						<g:ListBox ui:field="h1r2">
+							<g:item value="BrainImagingDerivedTrait">Brain Imaging Derived Trait</g:item>
+						</g:ListBox>
+						<span> associated with </span>
+						<g:ListBox ui:field="h1r3">
+							<g:item value="DemographicAttribute">Demographic Attribute</g:item>
+						</g:ListBox>
+				  </span>
+					<span style="display:none" ui:field="h2Section">
+						<span> Is </span>
+						<g:ListBox ui:field="h2r1">
+							<g:item value="BrainCharacteristic">Brain Characteristic</g:item>
+						</g:ListBox>
+						<span class="code">associated with</span>
+						<g:ListBox ui:field="h2r2">
+							<g:item value="NeurologicalDisorder">Neurological Disorder</g:item>
+						</g:ListBox>
+				  </span>
+				<p:PaperButton ui:field="addPattern"> <iron-icon icon="add"/> </p:PaperButton>
+				<p:PaperButton ui:field="helpPattern1"> <iron-icon icon="help-outline"/> </p:PaperButton>
+				<div style="display:none" ui:field="example1">
+					<hr/>
+				</div>
+			</div>
+
+			<label class="small-grey" title="Represents the type of hypotheses that can be explored with this line of inquiry.">
+			  Hypothesis question template pattern (Prefixes: 
 			   <a class="code" target="_blank" href="http://disk-project.org/ontology/omics#">bio:</a>,
 			   <a class="code" target="_blank" href="http://disk-project.org/ontology/hypothesis#">hyp:</a> and 
 			   <a class="code" target="_blank" href="https://w3id.org/disk/ontology/enigma_hypothesis#">neuro:</a>,

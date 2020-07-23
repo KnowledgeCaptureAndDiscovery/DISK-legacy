@@ -285,10 +285,10 @@ public class TripleInput extends GWTCodeMirror {
   }
   
 //  @Override
-//  public void setValue(String value) {
-//    super.setValue(value);
-//    this.validate();
-//  }
+  public void setStringValue(String value) {
+    super.setValue(value);
+    this.validate();
+  }
   
   public void setValue(List<Triple> triples) {
     this.triples = triples;

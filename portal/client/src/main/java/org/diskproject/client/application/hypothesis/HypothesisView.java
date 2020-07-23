@@ -69,6 +69,8 @@ public class HypothesisView extends ApplicationSubviewImpl
   
   @UiField DialogBox dialog;
   @UiField HTMLPanel dialogContent;
+
+  @UiField DialogBox helpDialog;
   
   ListBox varList;
   Map<String, List<CheckBox>> checkMap;
@@ -115,6 +117,9 @@ public class HypothesisView extends ApplicationSubviewImpl
     }
     else if(params.length == 2 && params[1].equals("query")) {
       this.showHypothesisMatches(params[0]);
+    }
+    else if(params.length == 2 && params[1].equals("data")) {
+      this.showHypothesisData(params[0]);
     }
   }
 
@@ -227,8 +232,9 @@ public class HypothesisView extends ApplicationSubviewImpl
           public void onSuccess(Hypothesis result) {
             loader.setVisible(false);
             form.setVisible(true);
+            					GWT.log(result.getName());
             form.setNamespace(getNamespace(result.getId()));
-            form.load(result);            
+            form.load(result);
           }
           @Override
           public void onFailure(Throwable reason) {
@@ -260,6 +266,20 @@ public class HypothesisView extends ApplicationSubviewImpl
     });
   }
 
+  private void showHypothesisData(final String id) {
+    DiskREST.queryHypothesisData(id,
+        new Callback<Map<String, List<String>>, Throwable>() {
+      @Override
+      public void onSuccess(Map<String, List<String>> result) {
+    	  GWT.log(result.keySet().toString());
+      }
+      @Override
+      public void onFailure(Throwable reason) {
+        AppNotification.notifyFailure(reason.getMessage());
+      }
+    });
+  }
+
   private void showTriggeredLOIOptions(List<TriggeredLOI> tlois) {
     matchlist.clear();
     
@@ -283,7 +303,7 @@ public class HypothesisView extends ApplicationSubviewImpl
       IronIcon icon = new IronIcon();
       icon.setIcon("build");
       button.add(icon);
-      button.add(new InlineHTML("Trigger"));
+      button.add(new InlineHTML("Run line of inquiry"));
       button.addClickHandler(new ClickHandler() {
         @Override
         public void onClick(ClickEvent event) {
@@ -302,7 +322,7 @@ public class HypothesisView extends ApplicationSubviewImpl
         	dialog.center();
         }
       });
-      buttonPanel.add(button2);
+      //buttonPanel.add(button2);
 
       panel.add(buttonPanel);            
       matchlist.add(panel);
@@ -499,5 +519,17 @@ public class HypothesisView extends ApplicationSubviewImpl
   private String getNamespace(String id) {
     return Config.getServerURL() + "/"+userid+"/"+domain + "/hypotheses/" + id + "#";
     
+  }
+
+  @UiHandler("helpicon")
+  void onHelpIconClicked(ClickEvent event) {
+	  helpDialog.center();
+	  helpDialog.setWidth("800px");
+	  helpDialog.center();
+  }
+
+  @UiHandler("closeDialog")
+  void onCloseButtonClicked(ClickEvent event) {
+	  helpDialog.hide();
   }
 }
