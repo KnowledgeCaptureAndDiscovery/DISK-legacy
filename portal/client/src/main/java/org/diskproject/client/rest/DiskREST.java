@@ -224,7 +224,7 @@ public class DiskREST {
       }      
     }).call(getDiskService()).addHypothesis(username, domain, hypothesis);
   }
-  
+
   public static void updateHypothesis(Hypothesis hypothesis,
       final Callback<Void, Throwable> callback) {
     REST.withCallback(new MethodCallback<Void>() {
@@ -239,7 +239,7 @@ public class DiskREST {
     }).call(getDiskService()).updateHypothesis(username, domain, 
         hypothesis.getId(), hypothesis);
   }
-  
+
   public static void deleteHypothesis(String id,
       final Callback<Void, Throwable> callback) {
     REST.withCallback(new MethodCallback<Void>() {
@@ -253,7 +253,7 @@ public class DiskREST {
       }      
     }).call(getDiskService()).deleteHypothesis(username, domain, id);
   }  
-  
+
   public static void queryHypothesis(String id,
       final Callback<List<TriggeredLOI>, Throwable> callback) {
     REST.withCallback(new MethodCallback<List<TriggeredLOI>>() {
@@ -267,7 +267,21 @@ public class DiskREST {
       }
     }).call(getDiskService()).queryHypothesis(username, domain, id);
   }
-  
+
+  public static void queryHypothesisData(String id,
+      final Callback<Map<String, List<String>>, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Map<String, List<String>>>() {
+      @Override
+      public void onSuccess(Method method, Map<String, List<String>> response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(getDiskService()).queryHypothesisData(username, domain, id);
+  }
+
   /*
    * Lines of Inquiry
    */
@@ -283,7 +297,7 @@ public class DiskREST {
       }
     }).call(getDiskService()).listLOIs(username, domain);
   }
-  
+
   public static void getLOI(String id, 
       final Callback<LineOfInquiry, Throwable> callback) {
     REST.withCallback(new MethodCallback<LineOfInquiry>() {
@@ -297,7 +311,7 @@ public class DiskREST {
       }
     }).call(getDiskService()).getLOI(username, domain, id);
   }
-  
+
   public static void testLOI(String query,
       final Callback<List<List<List<String>>>, Throwable> callback) {
     REST.withCallback(new MethodCallback<List<List<List<String>>>>() {
@@ -313,7 +327,7 @@ public class DiskREST {
       }      
     }).call(getDiskService()).testLOI(username, domain, query);
   }
-  
+
   public static void addLOI(LineOfInquiry loi,
       final Callback<Void, Throwable> callback) {
     REST.withCallback(new MethodCallback<Void>() {
@@ -327,7 +341,7 @@ public class DiskREST {
       }      
     }).call(getDiskService()).addLOI(username, domain, loi);
   }
-  
+
   public static void deleteLOI(String id,
       final Callback<Void, Throwable> callback) {
     REST.withCallback(new MethodCallback<Void>() {

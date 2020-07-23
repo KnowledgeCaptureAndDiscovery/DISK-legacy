@@ -2,6 +2,8 @@ package org.diskproject.client.application;
 
 import org.diskproject.client.application.assertion.AssertionPresenter;
 import org.diskproject.client.application.assertion.AssertionView;
+import org.diskproject.client.application.terminology.TerminologyPresenter;
+import org.diskproject.client.application.terminology.TerminologyView;
 import org.diskproject.client.application.home.HomePresenter;
 import org.diskproject.client.application.home.HomeView;
 import org.diskproject.client.application.hypothesis.HypothesisPresenter;
@@ -40,9 +42,11 @@ public class ApplicationModule extends AbstractPresenterModule {
     bindPresenter(LOIPresenter.class, LOIPresenter.MyView.class,
         LOIView.class, LOIPresenter.MyProxy.class);
     bindPresenter(TriggeredLOIPresenter.class, TriggeredLOIPresenter.MyView.class,
-        TriggeredLOIView.class, TriggeredLOIPresenter.MyProxy.class);    
+        TriggeredLOIView.class, TriggeredLOIPresenter.MyProxy.class);
     bindPresenter(AssertionPresenter.class, AssertionPresenter.MyView.class,
-        AssertionView.class, AssertionPresenter.MyProxy.class);    
+        AssertionView.class, AssertionPresenter.MyProxy.class);
+    bindPresenter(TerminologyPresenter.class, TerminologyPresenter.MyView.class,
+        TerminologyView.class, TerminologyPresenter.MyProxy.class);
   }
 
 }

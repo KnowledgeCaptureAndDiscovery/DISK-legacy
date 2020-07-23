@@ -97,6 +97,14 @@ public interface DiskService extends DirectRestService {
       @PathParam("domain") String domain,
       @PathParam("id") String id);
   
+  @GET
+  @Produces("application/json")
+  @Path("{username}/{domain}/hypotheses/{id}/data")
+  public Map<String, List<String>> queryHypothesisData(
+	  @PathParam("username") String username, 
+	  @PathParam("domain") String domain,
+	  @PathParam("id") String id);
+
   /*
    * Assertions
    */

@@ -7,27 +7,89 @@
 	xmlns:p='urn:import:com.vaadin.polymer.paper.widget'>
 
 	<g:HTMLPanel>
+    <style>
+      .code {
+        font:12px Monaco,Consolas,"Andale  Mono","DejaVu Sans Mono",monospace;
+        font-weight: bold;
+      }
+			.hyp-pattern {
+			  border: 1px solid #aaa;
+				padding: 8px;
+				width: fit-content;
+				border-radius: 5px;
+			}
+			.paper-button-0 {
+				padding: 0;
+				min-width: 24px;
+				display: inline-block;
+			}
+    </style>
+
 		<div class="vertical center-justified layout">
 			<div class="vertical-section">
 				<paper-input label="Short Description" required="true" 
 					autoValidate="true" ui:field="name" />
 				<paper-textarea label="Long Description" required="true"
 					autoValidate="true" ui:field="description" />
-				<label class="small-grey">Formal Description (Ctrl-Space for suggestions)</label>
+
+				<label class="small-grey">Select a <b>hypothesis question</b></label>
+				<br/>
+				<g:ListBox ui:field='hypQuestion'>
+					<g:item value='h1'>Is the effect size of genotype in brain trait associated with attribute</g:item>
+					<g:item value='h2'>Is brain characteristic associated with neurological disorder</g:item>
+				</g:ListBox>
+				<p></p>
+
+				<div class="hyp-pattern">
+					<span ui:field="h1Section">
+						<span> Is the <span class="code">EffectSize</span> of</span>
+						<g:ListBox ui:field='h1r1'>
+							<g:item value=''>loading...</g:item>
+						</g:ListBox>
+						<span> on </span>
+						<g:ListBox ui:field='h1r2'>
+							<g:item value=''>loading...</g:item>
+						</g:ListBox>
+						<span> associated with </span>
+						<g:ListBox ui:field='h1r3'>
+							<g:item value=''>loading...</g:item>
+						</g:ListBox>
+				  </span>
+					<span style="display:none" ui:field="h2Section">
+						<span> Is </span>
+						<g:ListBox ui:field='h2r1'>
+							<g:item value=''>loading...</g:item>
+						</g:ListBox>
+						<span class="code">associated with</span>
+						<g:ListBox ui:field='h2r2'>
+							<g:item value=''>loading...</g:item>
+						</g:ListBox>
+				  </span>
+
+					<!--p:PaperButton ui:field="helpPattern"> <iron-icon icon="help-outline"/> </p:PaperButton-->
+					<p:PaperButton ui:field="addPattern"> <iron-icon icon="arrow-forward"/> </p:PaperButton>
+					<div style="display:none" ui:field="exampleh1">
+						<hr/>
+					</div>
+					<div style="display:none" ui:field="exampleh2">
+						<hr/>
+					</div>
+				</div>
+
+				<label class="small-grey">Corresponding hypothesis</label>
 				<tr:HypothesisTripleInput ui:field="triples" />
 			</div>
 		</div>
-		<div class="horizontal end-justified layout">
+		<div class="horizontal end-justified layout" style="padding: 10px 0px;">
 			<p:PaperButton ui:field="savebutton">
 				<iron-icon icon="save" />
 				Save
 			</p:PaperButton>
 			<p:PaperButton ui:field="runbutton">
 				<iron-icon icon="done" />
-				Query
+				Submit hypothesis
 			</p:PaperButton>
 		</div>
-		
 		<p:PaperDialog ui:field="triggerdialog">
 			<p:PaperDialogScrollable ui:field="dialogcontent">
 			</p:PaperDialogScrollable>

@@ -1,6 +1,5 @@
 package org.diskproject.server.api.impl;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -193,6 +192,17 @@ public class DiskResource implements DiskService {
       @PathParam("domain") String domain,
       @PathParam("id") String id) {
     return this.repo.queryHypothesis(username, domain, id);
+  }
+
+  @GET
+  @Path("{username}/{domain}/hypotheses/{id}/data")
+  @Produces("application/json")
+  @Override
+  public Map<String, List<String>> queryHypothesisData(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("id") String id) {
+    return this.repo.queryHypothesisData(username, domain, id);
   }
 
   /**

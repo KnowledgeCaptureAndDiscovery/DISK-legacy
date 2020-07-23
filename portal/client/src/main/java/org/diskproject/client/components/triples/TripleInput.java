@@ -285,10 +285,10 @@ public class TripleInput extends GWTCodeMirror {
   }
   
 //  @Override
-//  public void setValue(String value) {
-//    super.setValue(value);
-//    this.validate();
-//  }
+  public void setStringValue(String value) {
+    super.setValue(value);
+    this.validate();
+  }
   
   public void setValue(List<Triple> triples) {
     this.triples = triples;
@@ -355,6 +355,7 @@ public class TripleInput extends GWTCodeMirror {
     }, userid, domain, reload);
   }
   
+  //TODO: Can read prefixes here.
   void loadTerms(String prefix, Vocabulary vocab) {
     for(Type type : vocab.getTypes().values())
       alltypes.put(prefix+":"+type.getName(), type);

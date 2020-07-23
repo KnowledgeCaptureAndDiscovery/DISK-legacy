@@ -239,7 +239,7 @@ public class DiskRepository extends KBRepository {
 	public PropertyListConfiguration getConfig() {
 	  return Config.get().getProperties();
 	}
-	
+
 	/**
 	 * Vocabulary Initialization
 	 */
@@ -590,6 +590,18 @@ public class DiskRepository extends KBRepository {
 				String fullparentid = url + "/" + hypothesis.getParentId();
 				kb.setPropertyValue(hypitem, pmap.get("hasParentHypothesis"), kb.getResource(fullparentid));
 			}
+			/* TODO: ADD DATE
+			 try {
+			 
+				Format formatter = new SimpleDateFormat("HH:mm:ss yyyy-MM-dd");
+				String date = formatter.format(new Date());
+				System.out.println("DATE: " + date);
+				//kb.addPropertyValue(hypitem, pmap.get("hasCreationDate"), date);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			*/
+
 			this.save(kb);
 			this.end();
 
@@ -853,6 +865,7 @@ public class DiskRepository extends KBRepository {
               dataVarBindings.put(var, curValues);
             }
           }
+          
 					
 					if(tloi == null)
 					  tloi = new TriggeredLOI(loi, id);
@@ -873,8 +886,123 @@ public class DiskRepository extends KBRepository {
 		}
 		return tlois;
 	}
-	
-	
+
+  public Map<String, List<String>> queryHypothesisData(String username, String domain, String id) {
+		String hypuri = this.HYPURI(username, domain) + "/" + id;
+		String assertions = this.ASSERTIONSURI(username, domain);
+
+		Map<String, String> nsmap = new HashMap<String, String>();
+		nsmap.put(KBConstants.OMICSNS(), "bio:");
+		nsmap.put(KBConstants.NEURONS(), "neuro:");
+		nsmap.put(KBConstants.HYPNS(), "hyp:");
+		nsmap.put(KBConstants.XSDNS(), "xsd:");
+		nsmap.put(assertions + "#", "user:");
+		nsmap.put(hypuri + "#", "?");
+
+		//System.out.println("-- queryHypothesisData --");
+		
+        Map<String, List<String>> data = new HashMap<String, List<String>>();
+
+		try {
+			this.start_read();
+			KBAPI queryKb = this.fac.getKB(OntSpec.PLAIN);
+			KBAPI hypkb = this.fac.getKB(hypuri, OntSpec.PLAIN);
+			queryKb.importFrom(this.omicsontkb);
+			queryKb.importFrom(this.neuroontkb);
+			queryKb.importFrom(this.hypontkb);
+			queryKb.importFrom(hypkb);
+			queryKb.importFrom(this.fac.getKB(assertions, OntSpec.PLAIN));
+			this.end();
+
+			for (TreeItem item : this.listLOIs(username, domain)) {
+				LineOfInquiry loi = this.getLOI(username, domain, item.getId());
+				String hypothesisQuery = loi.getHypothesisQuery();
+				//System.out.println("Check LOI id=" + loi.getId());
+
+				String dataQuery = loi.getDataQuery();
+				if (hypothesisQuery == null || hypothesisQuery.equals("") || dataQuery == null || dataQuery.equals(""))
+					continue;
+
+				hypothesisQuery = this.getQueryBindings(hypothesisQuery, null, null);
+
+				String hypSparqlQuery = this.getSparqlQuery(hypothesisQuery, assertions);
+				
+				//System.out.println("Hypothesis Query\n" + hypSparqlQuery);
+				
+				this.start_read();
+				for (ArrayList<SparqlQuerySolution> hypothesisSolutions : queryKb.sparqlQuery(hypSparqlQuery)) {
+					Map<String, String> hypVarBindings = new HashMap<String, String>();
+					for (SparqlQuerySolution solution : hypothesisSolutions) {
+						String value;
+						if (solution.getObject().isLiteral())
+							value = '"' + solution.getObject().getValueAsString() + '"';
+						else {
+							String valns = solution.getObject().getNamespace();
+							if (nsmap.containsKey(valns))
+								value = nsmap.get(valns) + solution.getObject().getName();
+							else
+								value = "<" + solution.getObject().getID() + ">";
+						}
+						hypVarBindings.put(solution.getVariable(), value);
+						//System.out.println("Solution: " + solution.getVariable() + " - " + value);
+					}
+
+					//String boundHypothesisQuery = this.getQueryBindings(hypothesisQuery, varPattern, hypVarBindings);
+					String boundDataQuery = this.getQueryBindings(dataQuery, varPattern, hypVarBindings);
+
+					//boundDataQuery = hypPattern + boundHypothesisQuery + boundDataQuery;
+					boundDataQuery = this.filterQueryBindings(boundDataQuery, "hyp:");
+					String dataSparqlQuery = this.getSparqlQuery(boundDataQuery, assertions);
+					//System.out.println("Data SPARQL Query:\n" + dataSparqlQuery);
+
+					ArrayList<ArrayList<SparqlQuerySolution>> allDataSolutions = null;
+					boolean wikiStore = Config.get().getProperties().containsKey("data-store");
+					
+					if(wikiStore) {
+					  //System.out.println("Using wikistore");
+					  String externalStore = Config.get().getProperties().getString("data-store");
+					  allDataSolutions = queryKb.sparqlQueryRemote(dataSparqlQuery, externalStore);
+					} else {
+					  //System.out.println("Using local kb");
+					  allDataSolutions = queryKb.sparqlQuery(dataSparqlQuery);
+					}
+
+					// Store solutions in dataVarBindings
+					Map<String, List<String>> dataVarBindings = new HashMap<String, List<String>>();
+					for (ArrayList<SparqlQuerySolution> dataSolutions : allDataSolutions) {
+						for (SparqlQuerySolution solution : dataSolutions) {
+						  String var = solution.getVariable();
+						  List<String> curValues = dataVarBindings.containsKey(var) ? dataVarBindings.get(var) 
+							  : new ArrayList<String>();
+						  if (solution.getObject().isLiteral()) {
+							curValues.add(solution.getObject().getValueAsString());
+						  }
+						  else
+							curValues.add(wikiStore ? solution.getObject().getID() : solution.getObject().getName());
+						  dataVarBindings.put(var, curValues);
+						}
+					}
+
+					// To save all the data retrieved for the query.
+					for (String var: dataVarBindings.keySet()) {
+						  //System.out.println("-" + var);
+						  List<String> tmp = new ArrayList<String>();
+						  for (String bind: dataVarBindings.get(var)) {
+							  //System.out.println("  +" + bind);
+							  tmp.add(bind);
+						  }
+						  data.put(var, tmp);
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+		  this.end();
+		}
+		return data;
+	}
+
 	@SuppressWarnings("unchecked")
   private List<WorkflowBindings> getTLOIBindings(
 	    String username, String domain,
@@ -1817,8 +1945,8 @@ public class DiskRepository extends KBRepository {
 				WingsAdapter wings = WingsAdapter.get();
 
 				List<WorkflowBindings> wflowBindings = tloi.getWorkflows();
-        if (this.metamode)
-          wflowBindings = tloi.getMetaWorkflows();
+				if (this.metamode)
+					wflowBindings = tloi.getMetaWorkflows();
         
 				// Start off workflows from tloi
 				for (WorkflowBindings bindings : wflowBindings) {

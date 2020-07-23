@@ -1,10 +1,15 @@
 package org.diskproject.client.application;
 
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.uibinder.client.UiHandler;
+
 import org.diskproject.client.place.NameTokens;
 
 import com.google.gwt.dom.client.DivElement;
+import com.google.gwt.dom.client.Style.Visibility;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
+import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -24,11 +29,15 @@ public class ApplicationView extends ViewImpl implements
   @UiField public static SimplePanel contentContainer;
   @UiField public static PaperToastElement toast;
   
+  @UiField DialogBox loginDialog;
+  private boolean shouldLogin = false;
+  
   @UiField public static DivElement 
-    hypothesesMenu, loisMenu, assertionsMenu;
+    hypothesesMenu, loisMenu, assertionsMenu, terminologyMenu;
   
   @UiField SimplePanel sidebar;
   @UiField SimplePanel toolbar;
+  @UiField DivElement fog;
 
   @Inject
   public ApplicationView(Binder binder) {
@@ -43,7 +52,6 @@ public class ApplicationView extends ViewImpl implements
       super.setInSlot(slot, content);
   }
   
-  
   /*@UiHandler({"username", "password"})
   void onSoftwareEnter(KeyPressEvent event) {
     if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER) {
@@ -57,7 +65,7 @@ public class ApplicationView extends ViewImpl implements
     this.initializeParameters(userid, domain, null, params, 
         edit, sidebar, toolbar);
   }
-  
+
   public void initializeParameters(String userid, String domain, 
       final String nametoken, final String[] params, boolean edit, 
       SimplePanel sidebar, SimplePanel toolbar) {
@@ -72,6 +80,7 @@ public class ApplicationView extends ViewImpl implements
         loisMenu.removeClassName("activeMenu");
         //tloisMenu.removeClassName("activeMenu");
         assertionsMenu.removeClassName("activeMenu");
+        terminologyMenu.removeClassName("activeMenu");
         
         DivElement menu = null;
         if(nametoken.equals(NameTokens.hypotheses))
@@ -83,11 +92,14 @@ public class ApplicationView extends ViewImpl implements
           menu = hypothesesMenu;
         else if(nametoken.equals(NameTokens.assertions))
           menu = assertionsMenu;
+        else if(nametoken.equals(NameTokens.terminology))
+          menu = terminologyMenu;
         
         clearMenuClasses(hypothesesMenu);
         clearMenuClasses(loisMenu);
         //clearMenuClasses(tloisMenu);
         clearMenuClasses(assertionsMenu);
+        clearMenuClasses(terminologyMenu);
         
         if(menu != null) {
           menu.addClassName("activeMenu");
@@ -98,23 +110,36 @@ public class ApplicationView extends ViewImpl implements
           }
         }
         
+        /* LOGIN STUFF */
+        if (shouldLogin) {
+        	fog.getStyle().setVisibility(Visibility.VISIBLE);
+        	loginDialog.center();
+        	shouldLogin = false;
+        }
+        
         return null;
       }
     });
   }
-  
+
+  @UiHandler("cancelButton")
+  void onCanelButtonClicked(ClickEvent event) {   
+	loginDialog.hide();
+	fog.getStyle().setVisibility(Visibility.HIDDEN);
+  } 
+
   private void clearMenuClasses(DivElement menu) {
     menu.removeClassName("activeMenu");
     menu.removeClassName("hiddenMenu");
     menu.removeClassName("activeItemMenu");    
   }
-  
+
   private void addClassToMenus(String cls) {
     hypothesesMenu.addClassName(cls);
     loisMenu.addClassName(cls);
     //tloisMenu.addClassName(cls);
     assertionsMenu.addClassName(cls);
+    terminologyMenu.addClassName(cls);
   }
-  
 
 }

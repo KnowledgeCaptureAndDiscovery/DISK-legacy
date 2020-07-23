@@ -1,10 +1,6 @@
 package org.diskproject.server;
 
 import javax.annotation.PreDestroy;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.Path;
-import javax.ws.rs.GET;
 
 import org.diskproject.server.api.impl.DiskResource;
 import org.diskproject.server.api.impl.UserResource;

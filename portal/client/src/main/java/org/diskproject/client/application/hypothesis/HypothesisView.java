@@ -28,6 +28,7 @@ import org.diskproject.shared.classes.workflow.VariableBinding;
 
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -64,9 +65,12 @@ public class HypothesisView extends ApplicationSubviewImpl
   @UiField PaperFab addicon;
   @UiField HTMLPanel matchlist;
   @UiField HTMLPanel description;
-
+  @UiField DivElement notloi;
+  
   @UiField DialogBox dialog;
   @UiField HTMLPanel dialogContent;
+
+  @UiField DialogBox helpDialog;
   
   ListBox varList;
   Map<String, List<CheckBox>> checkMap;
@@ -86,7 +90,7 @@ public class HypothesisView extends ApplicationSubviewImpl
         "green-button query-action");
     tree.addDeleteAction();
   }
-  
+
   @Override
   public void initializeParameters(String userid, String domain, 
       String[] params, boolean edit, 
@@ -114,9 +118,13 @@ public class HypothesisView extends ApplicationSubviewImpl
     else if(params.length == 2 && params[1].equals("query")) {
       this.showHypothesisMatches(params[0]);
     }
+    else if(params.length == 2 && params[1].equals("data")) {
+      this.showHypothesisData(params[0]);
+    }
   }
-  
+
   private void clear() {
+	notloi.removeAttribute("visible");
     loader.setVisible(false);
     form.setVisible(false);
     tree.setVisible(false);
@@ -125,7 +133,7 @@ public class HypothesisView extends ApplicationSubviewImpl
     matchlist.setVisible(false);
     addmode = false;
   }
-  
+
   private void showHypothesisList() {
     loader.setVisible(true);
     DiskREST.listHypotheses(new Callback<List<TreeItem>, Throwable>() {
@@ -157,12 +165,12 @@ public class HypothesisView extends ApplicationSubviewImpl
       }
     });
   }
-  
+
   private void loadHypothesisTLOITree() {
     if(treelist == null || tloilist == null)
       return;
     
-    loader.setVisible(false);  
+    clear();
     addicon.setVisible(true);
     tree.setVisible(true);
     description.setVisible(true);
@@ -213,7 +221,7 @@ public class HypothesisView extends ApplicationSubviewImpl
     }
     tree.setRoot(root);
   }
-  
+
   private void showHypothesis(final String id) {
     loader.setVisible(true);
     Polymer.ready(form.getElement(), new Function<Object, Object>() {
@@ -224,8 +232,9 @@ public class HypothesisView extends ApplicationSubviewImpl
           public void onSuccess(Hypothesis result) {
             loader.setVisible(false);
             form.setVisible(true);
+            					GWT.log(result.getName());
             form.setNamespace(getNamespace(result.getId()));
-            form.load(result);            
+            form.load(result);
           }
           @Override
           public void onFailure(Throwable reason) {
@@ -237,7 +246,7 @@ public class HypothesisView extends ApplicationSubviewImpl
       }
     });
   }
-  
+
  private void showHypothesisMatches(final String id) {
    loader.setVisible(true);   
     DiskREST.queryHypothesis(id, 
@@ -257,8 +266,27 @@ public class HypothesisView extends ApplicationSubviewImpl
     });
   }
 
+  private void showHypothesisData(final String id) {
+    DiskREST.queryHypothesisData(id,
+        new Callback<Map<String, List<String>>, Throwable>() {
+      @Override
+      public void onSuccess(Map<String, List<String>> result) {
+    	  GWT.log(result.keySet().toString());
+      }
+      @Override
+      public void onFailure(Throwable reason) {
+        AppNotification.notifyFailure(reason.getMessage());
+      }
+    });
+  }
+
   private void showTriggeredLOIOptions(List<TriggeredLOI> tlois) {
     matchlist.clear();
+    
+    if (tlois.size() == 0) {
+    	notloi.setAttribute("visible", "");
+    	return;
+    }
     
     for(final TriggeredLOI tloi : tlois) {
       final TriggeredLOIViewer tviewer = new TriggeredLOIViewer();
@@ -275,7 +303,7 @@ public class HypothesisView extends ApplicationSubviewImpl
       IronIcon icon = new IronIcon();
       icon.setIcon("build");
       button.add(icon);
-      button.add(new InlineHTML("Trigger"));
+      button.add(new InlineHTML("Run line of inquiry"));
       button.addClickHandler(new ClickHandler() {
         @Override
         public void onClick(ClickEvent event) {
@@ -294,7 +322,7 @@ public class HypothesisView extends ApplicationSubviewImpl
         	dialog.center();
         }
       });
-      buttonPanel.add(button2);
+      //buttonPanel.add(button2);
 
       panel.add(buttonPanel);            
       matchlist.add(panel);
@@ -329,7 +357,7 @@ public class HypothesisView extends ApplicationSubviewImpl
 		  }
 	  }
   }
-  
+
   void triggerMatchedLOI(final TriggeredLOI tloi) {
     DiskREST.addTriggeredLOI(tloi, new Callback<Void, Throwable>() {
       @Override
@@ -345,7 +373,7 @@ public class HypothesisView extends ApplicationSubviewImpl
       }
     });
   }
-  
+
   @UiHandler("addicon")
   void onAddIconClicked(ClickEvent event) {
     tree.setVisible(false);
@@ -364,7 +392,7 @@ public class HypothesisView extends ApplicationSubviewImpl
     
     History.newItem(this.getHistoryToken(NameTokens.hypotheses, id), false);
   }
-  
+
   @UiHandler("form")
   void onHypothesisFormSave(HypothesisSaveEvent event) {
     Hypothesis hypothesis = event.getHypothesis();
@@ -392,14 +420,14 @@ public class HypothesisView extends ApplicationSubviewImpl
       });      
     }
   }
-  
+
   @UiHandler("tree")
   void onTreeItemSelected(TreeItemSelectionEvent event) {
     TreeNode node = event.getItem();
     String token = this.getHistoryToken(node.getType(), node.getId());
     History.newItem(token); 
   }
-  
+
   @UiHandler("tree")
   void onTreeItemAction(TreeItemActionEvent event) {
     final TreeNode node = event.getItem();
@@ -439,7 +467,7 @@ public class HypothesisView extends ApplicationSubviewImpl
       History.newItem(token);
     }
   }
-  
+
   @UiHandler("dialogOkButton")
   void onOkButtonClicked(ClickEvent event) {
 	  String var = varList.getSelectedValue();
@@ -466,7 +494,7 @@ public class HypothesisView extends ApplicationSubviewImpl
   void onCancelButtonClicked(ClickEvent event) {
 	  dialog.hide();
   }
-  
+
   private void setHeader(SimplePanel toolbar) {
     // Set Toolbar header
     toolbar.clear();
@@ -476,18 +504,32 @@ public class HypothesisView extends ApplicationSubviewImpl
     HTML div = new HTML("<nav><div class='layout horizontal center'>"
         + "<iron-icon class='orange' icon='" + icon + "'/></div></nav>");
     div.getElement().getChild(0).getChild(0).appendChild(new HTML(title).getElement());
+    
     toolbar.add(div);    
   }
-  
+
   private void setSidebar(SimplePanel sidebar) {
     // TODO: Modify sidebar
   }
-  
+
   private String getHistoryToken(String type, String id) {    
     return type+"/" + this.userid+"/"+this.domain + "/" + id;    
   }
-  
+
   private String getNamespace(String id) {
     return Config.getServerURL() + "/"+userid+"/"+domain + "/hypotheses/" + id + "#";
+    
+  }
+
+  @UiHandler("helpicon")
+  void onHelpIconClicked(ClickEvent event) {
+	  helpDialog.center();
+	  helpDialog.setWidth("800px");
+	  helpDialog.center();
+  }
+
+  @UiHandler("closeDialog")
+  void onCloseButtonClicked(ClickEvent event) {
+	  helpDialog.hide();
   }
 }

@@ -8,6 +8,7 @@ public class NameTokens {
   public static final String lois = "lois";
   public static final String tlois = "tlois";
   public static final String assertions = "assertions";
+  public static final String terminology = "terminology";
 
   public static String getHome() {
     return home;
@@ -35,5 +36,9 @@ public class NameTokens {
   
   public static String getAssertions() {
     return assertions;
+  }
+  
+  public static String getTerminology() {
+	return terminology;
   }
 }
