@@ -155,7 +155,7 @@ public class TriggeredLOIViewer extends Composite {
     	for (String v: vars) {
     		String url = dataRetrieved.get(v).get(i).replace(
     				"http://localhost:8080/enigma_new/index.php/Special:URIResolver/",
-    				"http://organicdataRetrievedpublishing.org/enigma_new/index.php/");
+    				"http://organicdatapublishing.org/enigma_new/index.php/");
     		if (url.contains("http")) {
     			String parts[] = url.split("/");
     			String name = (parts.length>3) ?
