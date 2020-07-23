@@ -99,7 +99,7 @@
 				<div class="bordered-list padded">
 				  <div ui:field="data" style="white-space: nowrap; overflow: scroll;"/>
 				  <br/>
-				  <p:PaperButton ui:field="downloadbutton"><iron-icon icon="save" />Download as CSV</p:PaperButton>
+				  <p:PaperButton ui:field="downloadbutton"><iron-icon icon="save" />Download metadata as CSV</p:PaperButton>
 			  </div>
 			</div>
 			
