@@ -26,6 +26,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -47,6 +48,8 @@ public class LOIView extends ApplicationSubviewImpl
   @UiField ListWidget loilist; 
   @UiField LOIEditor form;
   @UiField HTMLPanel description;
+  
+  @UiField DialogBox helpDialog;
   
   interface Binder extends UiBinder<Widget, LOIView> {
   }
@@ -245,5 +248,17 @@ public class LOIView extends ApplicationSubviewImpl
   
   private String getNamespace(String id) {
     return Config.getServerURL() + "/"+userid+"/"+domain + "/loi/" + id + "#";
+  }
+
+  @UiHandler("helpicon")
+  void onHelpIconClicked(ClickEvent event) {
+	  helpDialog.center();
+	  helpDialog.setWidth("800px");
+	  helpDialog.center();
+  }
+
+  @UiHandler("closeDialog")
+  void onCloseButtonClicked(ClickEvent event) {
+	  helpDialog.hide();
   }
 }

@@ -89,19 +89,19 @@ public class KBRepository implements TransactionsAPI {
     for (KBObject obj : kb.getAllClasses()) {
       if(obj != null) {
         cmap.put(obj.getName(), obj);
-        System.out.println("cmap: " + obj.getName());
+        //System.out.println("cmap: " + obj.getName());
       }
     }
     for (KBObject obj : kb.getAllObjectProperties()) {
       if(obj != null) {
         pmap.put(obj.getName(), obj);
-        System.out.println("pmap: " + obj.getName());
+        //System.out.println("pmap: " + obj.getName());
       }
     }
     for (KBObject obj : kb.getAllDatatypeProperties()) {
       if(obj != null) {
         pmap.put(obj.getName(), obj);
-        System.out.println("dt pmap: " + obj.getName());
+        //System.out.println("dt pmap: " + obj.getName());
       }
     }
   }

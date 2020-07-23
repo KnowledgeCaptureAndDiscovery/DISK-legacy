@@ -3,7 +3,7 @@
 	xmlns:g="urn:import:com.google.gwt.user.client.ui" 
 	xmlns:lw='urn:import:org.diskproject.client.components.list'
 	xmlns:tr='urn:import:org.diskproject.client.components.triples'	
-	xmlns:p='urn:import:com.vaadin.polymer.paper.widget'>
+	xmlns:p='urn:import:com.vaadin.polymer.paper.widget' xmlns:G="urn:import:com.google.gwt.thirdparty.common.css.compiler.gssfunctions.GssFunctions">
 
 	<g:HTMLPanel>
 		<style is="custom-style">
@@ -78,17 +78,43 @@
 				</div>
 			</div>
 			
-			<label class="small-grey">Triggered Line of Inquiry</label>
-			<div><a ui:field="loiLink" /></div>
-			
-			<label class="small-grey">Triggered Workflows</label>
-			<div class="bordered-list">
-				<lw:ListWidget ui:field="workflowlist" styleName="list" />
+			<div ui:field="LOISection">
+				<label class="small-grey">Triggered Line of Inquiry</label>
+				<div class="bordered-list padded">
+				  <div><a ui:field="loiLink"/></div>
+				  <div>Data query to execute</div>
+				  <label class="small-grey"></label>
+				  <div style="pointer-events: none;">
+				    <tr:SparqlInput ui:field="loi"/>
+				  </div>
+				</div>
+			</div>
+
+			<div ui:field="DataSection">
+				<label class="small-grey">Data Retrieved</label>
+				<span style="float:right; display:none;">
+			    <p:PaperButton ui:field="dataRelevant">Relevant data</p:PaperButton>
+			    <p:PaperButton ui:field="dataAll">All data</p:PaperButton>
+				</span>
+				<div class="bordered-list padded">
+				  <div ui:field="data" style="white-space: nowrap; overflow: scroll;"/>
+				  <br/>
+				  <p:PaperButton ui:field="downloadbutton"><iron-icon icon="save" />Download as CSV</p:PaperButton>
+			  </div>
 			</div>
 			
-			<label class="small-grey">Triggered Meta-Workflows</label>
-			<div class="bordered-list">
-				<lw:ListWidget ui:field="metaworkflowlist" styleName="list" />
+			<div ui:field="WFSection">
+				<label ui:field="WFLabel" class="small-grey">Triggered Workflows</label>
+				<div class="bordered-list">
+					<lw:ListWidget ui:field="workflowlist" styleName="list" />
+				</div>
+			</div>
+			
+			<div ui:field="MetaWFSection">
+				<label class="small-grey">Triggered Meta-Workflows</label>
+				<div class="bordered-list">
+					<lw:ListWidget ui:field="metaworkflowlist" styleName="list" />
+				</div>
 			</div>
 			
 			<g:HTMLPanel ui:field="revHypothesisSection" />

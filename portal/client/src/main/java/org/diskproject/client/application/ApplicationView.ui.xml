@@ -314,7 +314,7 @@
 			}
 			
 			.gwt-DialogBox {
-				z-index: 999;
+				z-index: 1001;
 			}
 
 			.gwt-PopupPanelGlass {
@@ -402,8 +402,37 @@
 				height: 12px;
 				overflow: hidden;
 			}
-
+			.textfield {
+			 width: 200px;
+			}
+			.fog {
+				width: 100%;
+				height: 100vh;
+				background: rgba(255,255,255,0.9);
+				position: absolute;
+				z-index: 1000;
+				visibility: hidden;
+			}
 		</style>
+
+		<div style="visibility: collapse;">
+      <g:DialogBox modal="true" ui:field='loginDialog'>
+        <g:caption><b>Login</b></g:caption>
+        <g:HTMLPanel>
+         <div style="padding: 0 15px;">
+			     <paper-input label="Username" required="true" autoValidate="true" ui:field="username" class="textfield"/>
+			     <paper-input label="Password" required="true" autoValidate="false" type="password" ui:field="password" class="textfield"/>
+			     
+						<g:Button ui:field='cancelButton'>Cancel</g:Button>
+						<span style="float:right">
+							<g:Button ui:field='submitButton'>Submit</g:Button>
+						</span>
+         </div>
+       </g:HTMLPanel>
+      </g:DialogBox>
+		</div>
+
+		<div class="fog" ui:field="fog"></div>
 		
 		<paper-drawer-panel class="flex" ui:field="drawer">
 			<paper-header-panel drawer="" mode="seamed">
@@ -439,7 +468,15 @@
 							<iron-icon class="orange" icon="icons:explore" />
 							 Triggered LOIs
 						</div>
-					</g:Anchor-->					
+					</g:Anchor-->
+					<g:Anchor 
+					href="#{nameTokens.getTerminology}/{config.getWingsUserid}/{config.getWingsDomain}">
+						<div class="layout horizontal center" ui:field="terminologyMenu">
+							<iron-icon class="backbutton grey" icon="icons:chevron-left" />						
+							<iron-icon class="blue" icon="icons:chrome-reader-mode" />
+							 Terminology
+						</div>
+					</g:Anchor>
 					<g:Anchor 
 					href="#{nameTokens.getAssertions}/{config.getWingsUserid}/{config.getWingsDomain}">
 						<div class="layout horizontal center" ui:field="assertionsMenu">
@@ -452,7 +489,7 @@
 						<g:SimplePanel ui:field="sidebar" />
 					</div>
 					<br />
-					
+
 				</nav>		
 			</paper-header-panel>
 			<paper-header-panel main="" mode="scroll" class="container">

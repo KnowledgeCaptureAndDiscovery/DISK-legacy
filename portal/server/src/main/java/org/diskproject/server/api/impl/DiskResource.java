@@ -194,6 +194,17 @@ public class DiskResource implements DiskService {
     return this.repo.queryHypothesis(username, domain, id);
   }
 
+  @GET
+  @Path("{username}/{domain}/hypotheses/{id}/data")
+  @Produces("application/json")
+  @Override
+  public Map<String, List<String>> queryHypothesisData(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("id") String id) {
+    return this.repo.queryHypothesisData(username, domain, id);
+  }
+
   /**
    * Assertions
    */

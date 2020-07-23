@@ -19,6 +19,8 @@ import org.diskproject.shared.classes.workflow.VariableBinding;
 import org.diskproject.shared.classes.workflow.Workflow;
 
 import com.google.gwt.dom.client.DivElement;
+import com.google.gwt.dom.client.SpanElement;
+import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -58,6 +60,8 @@ public class LOIEditor extends Composite
   @UiField DivElement resultContainer;
   @UiField DialogBox testDialog; 
   @UiField ListBox displayVariables; 
+  @UiField ListBox hypQuestion, h1r1, h1r2, h1r3, h2r1, h2r2;
+  @UiField SpanElement h1Section, h2Section;
   
   LineOfInquiry loi;
   List<List<List<String>>> testResults = null;
@@ -244,7 +248,7 @@ public class LOIEditor extends Composite
 			for (List<List<String>> rows: testResults) {
 				for (List<String> row: rows) {
 					if (row.get(0).equals(var)) {
-						String uri = row.get(1).replace("http://localhost:8080/enigma_new/index.php/", "");
+						String uri = row.get(1).replace("http://localhost:8080/enigma_new/index.php/Special:URIResolver/", "http://organicdatapublishing.org/enigma_new/index.php/");
 						if (uri.contains("http")) {
 							String link = "<a target=\"_blank\" href=\"" + uri + "\">" + uri + "</a>";
 							uri = link;
@@ -298,5 +302,72 @@ public class LOIEditor extends Composite
       LOISaveHandler handler) {
     return handlerManager.addHandler(LOISaveEvent.TYPE, handler);
   }
+  
+  static String toVarName (String stdname) {
+	  String[] parts = stdname.split(" ");
+	  String endString = "";
+	  Boolean first = true;
+	  for (String p: parts) {
+		  if (first) {
+			  endString += p;
+			  first = false;
+		  } else {
+			  endString += p.substring(0, 1).toUpperCase() + p.substring(1).toLowerCase();
+		  }
+	  }
+	  return endString;
+  }
+
+	@UiHandler("addPattern")
+	void onAddTermButtonClicked(ClickEvent event) {
+		String selectedHyp = hypQuestion.getSelectedValue();
+		if (selectedHyp.equals("h1")) {
+			setH1();
+		} else if (selectedHyp.equals("h2")) {
+			setH2();
+		}
+	}
+
+	@UiHandler("hypQuestion")
+	void onHypChange(ChangeEvent event) {
+		String h = hypQuestion.getSelectedValue();
+		if (h.equals("h1")) {
+			h1Section.getStyle().setDisplay(Display.INITIAL);
+			h2Section.getStyle().setDisplay(Display.NONE);
+		} else if (h.equals("h2")) {
+			h2Section.getStyle().setDisplay(Display.INITIAL);
+			h1Section.getStyle().setDisplay(Display.NONE);
+		}
+	}
+
+	void setH1 () {
+		String p1v = h1r1.getSelectedValue();
+		String p2v = h1r2.getSelectedValue();
+		String p3v = h1r3.getSelectedValue();
+		if (p1v == "" || p2v == "" || p3v == "") {
+		    AppNotification.notifyFailure("Must select all requested properties.");
+			return;
+		}
+		
+		String t1 =  ":EffectSize neuro:sourceGene ?" + p1v;
+		String t2 =  ":EffectSize neuro:targetCharacteristic ?" + p2v;
+		String t3 =  ":EffectSize hyp:associatedWith ?" + p3v;
+		
+		String merged =  t1 + '\n' + t2 + '\n' + t3;
+		hypothesisQuery.setStringValue(merged);
+		
+	}
+
+	void setH2 () {
+		String p1v = h2r1.getSelectedValue();
+		String p2v = h2r2.getSelectedValue();
+		if (p1v == "" || p2v == "") {
+		    AppNotification.notifyFailure("Must select all requested properties.");
+			return;
+		}
+		
+		String t = "?" + p1v + " hyp:associatedWith ?" + p2v;
+		hypothesisQuery.setStringValue(t);
+	}
 
 }
