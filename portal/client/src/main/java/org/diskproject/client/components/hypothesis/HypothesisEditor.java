@@ -103,7 +103,7 @@ public class HypothesisEditor extends Composite
         	l.clear();
         }
 
-		String[] prefixes = {"bio", "neuro", "hyp", "disk", "user"};
+		String[] prefixes = {"neuro", "hyp", "user"};
 		Map<String, Map<String, Individual>> individuals = new HashMap<String, Map<String,Individual>>();
 		Map<String, Map<String, Type>> types = new HashMap<String, Map<String,Type>>();
 		for (String prefix: prefixes) {
