@@ -1,5 +1,8 @@
 package org.diskproject.client.application.loi;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 import org.diskproject.client.Config;
@@ -20,7 +23,9 @@ import org.diskproject.shared.classes.util.GUID;
 
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
@@ -29,6 +34,7 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
@@ -42,12 +48,14 @@ public class LOIView extends ApplicationSubviewImpl
   String userid;
   String domain;
   boolean addmode;
+  List<TreeItem> LOIList;
 
   @UiField Loader loader;
   @UiField PaperFab addicon;
   @UiField ListWidget loilist; 
   @UiField LOIEditor form;
   @UiField HTMLPanel description;
+  @UiField ListBox order;
   
   @UiField DialogBox helpDialog;
   
@@ -59,7 +67,7 @@ public class LOIView extends ApplicationSubviewImpl
     initWidget(binder.createAndBindUi(this));
     loilist.addDeleteAction();
   }
-  
+
   @Override
   public void initializeParameters(String userid, String domain, 
       String[] params, boolean edit, 
@@ -79,13 +87,17 @@ public class LOIView extends ApplicationSubviewImpl
     this.setSidebar(sidebar);
     
     if(params.length == 0) {
-      this.showLOIList();
+    	if (LOIList == null) {
+    		this.loadLOIList();
+    	} else {
+    		this.showLOIList();
+    	}
     }
     else {
       this.showLOI(params[0]);
     }
   }
-  
+
   private void clear() {
     loader.setVisible(false);
     form.setVisible(false);
@@ -94,36 +106,92 @@ public class LOIView extends ApplicationSubviewImpl
     addicon.setVisible(false);
     addmode = false;
   }
-  
-  private void showLOIList() {
+
+  private void loadLOIList () {
     loader.setVisible(true);
     DiskREST.listLOI(new Callback<List<TreeItem>, Throwable>() {
       @Override
       public void onSuccess(List<TreeItem> result) {
-        loilist.clear();
-        for(TreeItem item : result) {
-          ListNode node = new ListNode(
-              item.getId(),
-              item.getName(), 
-              item.getDescription());
-          node.setIcon("icons:explore");
-          node.setIconStyle("green");
-          loilist.addNode(node);
-        }
-        loader.setVisible(false);  
-        addicon.setVisible(true);
-        loilist.setVisible(true);
-        description.setVisible(true);
+    	  LOIList = result;
+    	  showLOIList();
       }
       @Override
       public void onFailure(Throwable reason) {
         loader.setVisible(false);   
         AppNotification.notifyFailure(reason.getMessage());
-        GWT.log("Failed", reason);
       }
     });    
   }
-  
+
+	@UiHandler("order")
+	void onChange(ChangeEvent event) {
+    	showLOIList();
+	}
+
+  private void applyOrder () {
+    String orderType = order.getSelectedValue();
+    GWT.log(">> " + orderType);
+    if (orderType != null) {
+    	if (orderType.compareTo("date") == 0) {
+			Collections.sort(LOIList, new Comparator<TreeItem>(){
+				@Override
+				public int compare (TreeItem l, TreeItem r) {
+					String lc = l.getCreationDate();
+					String lr = r.getCreationDate();
+					if (lc != null && lr != null) {
+						DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
+						Date dl = fm.parse(lc);
+						Date dr = fm.parse(lr);
+						if (dl.after(dr)) return -1;
+						else return 1;
+					} else if (lc != null) {
+						return -1;
+					} else if (lr != null) {
+						return 1;
+					}
+					return 0;
+				}
+			});
+    	} else if (orderType.compareTo("author") == 0) {
+			Collections.sort(LOIList, new Comparator<TreeItem>(){
+				@Override
+				public int compare (TreeItem l, TreeItem r) {
+					String la = l.getAuthor();
+					String ra = r.getAuthor();
+					if (la != null && ra != null) {
+						return la.compareTo(ra);
+					} else if (la != null) {
+						return -1;
+					} else if (ra != null) {
+						return 1;
+					}
+					return 0;
+				}
+			});
+    	}
+    }
+  }
+
+  private void showLOIList() {
+	loilist.clear();
+	applyOrder();
+	for(TreeItem item : LOIList) {
+	  ListNode node = new ListNode(
+		  item.getId(),
+		  item.getName(), 
+		  item.getDescription(),
+		  item.getCreationDate(),
+		  item.getAuthor());
+	  node.setIcon("icons:explore");
+	  node.setIconStyle("green");
+	  loilist.addNode(node);
+	}
+	loader.setVisible(false);  
+	addicon.setVisible(true);
+	loilist.setVisible(true);
+	description.setVisible(true);
+  }
+
   private void showLOI(final String loiId) {
     loilist.setVisible(false);
     description.setVisible(false);
@@ -150,7 +218,7 @@ public class LOIView extends ApplicationSubviewImpl
       }
     });
   }
-  
+
   @UiHandler("addicon")
   void onAddIconClicked(ClickEvent event) {
     loilist.setVisible(false);
@@ -169,7 +237,7 @@ public class LOIView extends ApplicationSubviewImpl
     
     History.newItem(this.getHistoryToken(id), false);
   }
-  
+
   @UiHandler("form")
   void onLOIFormSave(LOISaveEvent event) {
     LineOfInquiry loi = event.getLOI();
@@ -178,6 +246,7 @@ public class LOIView extends ApplicationSubviewImpl
       DiskREST.addLOI(loi, new Callback<Void, Throwable>() {
         @Override
         public void onSuccess(Void result) {
+          LOIList = null;
           AppNotification.notifySuccess("Saved", 500);
         }        
         @Override
@@ -189,6 +258,7 @@ public class LOIView extends ApplicationSubviewImpl
       DiskREST.updateLOI(loi, new Callback<Void, Throwable>() {
         @Override
         public void onSuccess(Void result) {
+          LOIList = null;
           AppNotification.notifySuccess("Updated", 500);
         }        
         @Override

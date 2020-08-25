@@ -8,6 +8,8 @@ public class Hypothesis {
   String description;
   String parentId;
   Graph graph;
+  String creationDate;
+  String author;
   
   public Hypothesis (String id, String name, String description, String parentId, Graph graph){
 	  this.id = id;
@@ -57,5 +59,21 @@ public class Hypothesis {
 
   public void setGraph(Graph graph) {
     this.graph = graph;
+  }
+
+  public void setCreationDate(String date) {
+	  this.creationDate = date;
+  }
+
+  public void setAuthor (String author) {
+	  this.author = author;
+  }
+
+  public String getCreationDate () {
+	  return this.creationDate;
+  }
+
+  public String getAuthor () {
+	  return this.author;
   }
 }

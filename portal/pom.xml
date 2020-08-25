@@ -6,7 +6,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.disk-project</groupId>
     <artifactId>disk-project</artifactId>
-    <version>2.3.6</version>
+    <version>2.3.7</version>
 	<name>Disk</name>
 	<packaging>pom</packaging>
 	<modules>
@@ -27,5 +27,4 @@
 			<url>http://www.wings-workflows.org/archiva/repository/snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
-
 </project>

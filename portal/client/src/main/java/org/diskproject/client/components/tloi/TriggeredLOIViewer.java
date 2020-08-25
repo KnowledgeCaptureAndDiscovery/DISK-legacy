@@ -14,6 +14,7 @@ import org.diskproject.client.components.triples.TripleViewer;
 import org.diskproject.client.place.NameTokens;
 import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
+import org.diskproject.shared.classes.common.Triple;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
@@ -234,10 +235,12 @@ public class TriggeredLOIViewer extends Composite {
           new Callback<Hypothesis, Throwable>() {
         public void onSuccess(Hypothesis result) {
           anchor.setHref(getHypothesisLink(id));
-          anchor.setText(result.getName());
-          if(result.getGraph() != null) {
-            tv.setDefaultNamespace(getNamespace(result.getId()));
-            tv.load(result.getGraph().getTriples());
+          if (result != null) {
+			  anchor.setText(result.getName());
+			  if(result.getGraph() != null) {
+				tv.setDefaultNamespace(getNamespace(result.getId()));
+				tv.load(result.getGraph().getTriples());
+			  }
           }
         }
         public void onFailure(Throwable reason) {}
@@ -341,23 +344,22 @@ public class TriggeredLOIViewer extends Composite {
 	  }
   }
 
-  	public static native void downloadCSV(String raw) /*-{
-  		var blob = new Blob([raw], {type: 'text/csv;encoding:utf-8'});
+  	public static native void download(String name, String raw, String enc) /*-{
+  		var blob = new Blob([raw], {type: enc});
         var a = document.createElement("a");
         a.style = "display: none";
         document.body.appendChild(a);
         var url = $wnd.window.URL.createObjectURL(blob);
         a.href = url;
-        a.download = 'data.csv';
+        a.download = name;
         a.click();
         window.URL.revokeObjectURL(url);
 	}-*/;
 
 	@UiHandler("downloadbutton")
 	void onSaveButtonClicked(ClickEvent event) {
-		GWT.log("download csv!");
-		GWT.log(rawcsv);
-		downloadCSV(rawcsv);
+		String name = (this.tloi != null) ? this.tloi.getId() + "_metadata.csv" : "metadata.csv";
+		download(name, rawcsv, "text/csv;encoding:utf-8");
 	}
 
 	@UiHandler("dataRelevant")
@@ -385,5 +387,27 @@ public class TriggeredLOIViewer extends Composite {
     	}
     	return r;
     }
-  
+
+	@UiHandler("triplesbutton")
+	void onDlTriplesButtonClicked(ClickEvent event) {
+		GWT.log("Downloading triples...");
+		TriggeredLOI t = tloi;
+		DiskREST.getTriggeredLOITriples(t.getId(),
+			new Callback<List<Triple>, Throwable>() {
+		  @Override
+		  public void onSuccess(List<Triple> result) {
+			  String name = (t != null) ? t.getId() + "_triples.nt" : "triples.nt";
+			  String cont = "";
+			  for (Triple t: result) {
+				  cont += t.toString() + " .\n";
+			  }
+			  GWT.log(cont);
+			  download(name, cont, "application/n-triples");
+		  }
+		  @Override
+		  public void onFailure(Throwable reason) {
+			AppNotification.notifyFailure(reason.getMessage());
+		  }
+		});
+	}
 }
