@@ -11,16 +11,19 @@ public class ListNode implements Comparable<ListNode> {
   Object data;
   String type;
   HTML content;
+  String creationDate, author;
   
   PaperItem item;
   IronIcon icon;
   String iconName;
   
-  public ListNode(String id, String name, String description) {
+  public ListNode(String id, String name, String description, String date, String author) {
     this.id = id;
     this.name = name;
     this.description = description;
     this.icon = new IronIcon();
+    this.creationDate = date;
+    this.author = author;
     this.setContent(name,  description);
   }
   
@@ -30,13 +33,21 @@ public class ListNode implements Comparable<ListNode> {
     this.icon = new IronIcon();
   }
   
-  private void setContent(String name, String description) {
+  public void setContent(String name, String description) {
     String html = "<div class='name'>" + this.name + "</div>";
     html += "<div class='description'>"+this.description+"</div>";
+    html += "<div class='footer' style='display: flex;justify-content: space-between;'>";
+    html += "<span><b>Creation date:</b> ";
+    html += (this.creationDate != null) ? this.creationDate : "Not defined";
+    html += "</span><span><b>Author:</b> ";
+    html += (this.author != null) ? this.author : "Not defined";
+    html += "</span></div>";
+    
     if(this.content != null)
       this.content.setHTML(html);
     else
       this.content = new HTML(html);
+    this.content.addStyleName("listnode");
   }
 
   public void setFullContent(String html) {

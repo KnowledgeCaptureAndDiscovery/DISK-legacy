@@ -24,6 +24,7 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   List<String> resultingHypothesisIds;
   List<WorkflowBindings> workflows;
   List<WorkflowBindings> metaWorkflows;
+  String creationDate, author;
 
   public TriggeredLOI(String id,
   String name,
@@ -184,6 +185,22 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
 
   public int compareTo(TriggeredLOI o) {
     return this.toString().compareTo(o.toString());
+  }
+  
+  public void setCreationDate(String date) {
+	  this.creationDate = date;
+  }
+  
+  public void setAuthor (String author) {
+	  this.author = author;
+  }
+  
+  public String getCreationDate () {
+	  return this.creationDate;
+  }
+  
+  public String getAuthor () {
+	  return this.author;
   }
 
 }

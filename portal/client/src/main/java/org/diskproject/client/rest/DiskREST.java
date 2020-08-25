@@ -1,6 +1,7 @@
 package org.diskproject.client.rest;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,8 @@ import org.diskproject.client.authentication.AuthenticatedDispatcher;
 import org.diskproject.shared.api.DiskService;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
+import org.diskproject.shared.classes.common.Triple;
+import org.diskproject.shared.classes.firebase.User;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
@@ -24,10 +27,12 @@ import org.fusesource.restygwt.client.REST;
 
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.i18n.shared.DateTimeFormat;
+import com.google.gwt.user.client.Cookies;
 
 public class DiskREST {
   public static DiskService diskService;
-
+  
   static class VocabularyCallbacks {
     List<Callback<Vocabulary, Throwable>> callbacks;
     public VocabularyCallbacks() {
@@ -82,7 +87,7 @@ public class DiskREST {
     }
     return diskService;
   }
-  
+
   public static void getServerConfig(
     final Callback<Map<String, String>, Throwable> callback) {      
       if(Config.serverConfig != null) {
@@ -210,9 +215,19 @@ public class DiskREST {
       }
     }).call(getDiskService()).getHypothesis(username, domain, id);
   }
-  
+
   public static void addHypothesis(Hypothesis hypothesis,
       final Callback<Void, Throwable> callback) {
+	  
+	DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
+	String date = fm.format(new Date());
+	hypothesis.setCreationDate(date);
+
+	String name = Cookies.getCookie("sname");
+	if (name != null) {
+		hypothesis.setAuthor(name);
+	}
+
     REST.withCallback(new MethodCallback<Void>() {
       @Override
       public void onSuccess(Method method, Void response) {
@@ -330,6 +345,14 @@ public class DiskREST {
 
   public static void addLOI(LineOfInquiry loi,
       final Callback<Void, Throwable> callback) {
+	DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
+	String date = fm.format(new Date());
+	loi.setCreationDate(date);
+	String name = Cookies.getCookie("sname");
+	if (name != null) {
+		loi.setAuthor(name);
+	}
+
     REST.withCallback(new MethodCallback<Void>() {
       @Override
       public void onSuccess(Method method, Void response) {
@@ -376,6 +399,14 @@ public class DiskREST {
    */
   public static void addTriggeredLOI(TriggeredLOI tloi, 
       final Callback<Void, Throwable> callback) {
+	DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
+	String date = fm.format(new Date());
+	tloi.setCreationDate(date);
+	String name = Cookies.getCookie("sname");
+	if (name != null) {
+		tloi.setAuthor(name);
+	}
+
     REST.withCallback(new MethodCallback<Void>() {
       @Override
       public void onSuccess(Method method, Void response) {
@@ -400,7 +431,7 @@ public class DiskREST {
       }
     }).call(getDiskService()).listTriggeredLOIs(username, domain);
   }
-  
+
   public static void getTriggeredLOI(String id, 
       final Callback<TriggeredLOI, Throwable> callback) {
     REST.withCallback(new MethodCallback<TriggeredLOI>() {
@@ -414,7 +445,7 @@ public class DiskREST {
       }
     }).call(getDiskService()).getTriggeredLOI(username, domain, id);
   }
-  
+
   public static void deleteTriggeredLOI(String id,
       final Callback<Void, Throwable> callback) {
     REST.withCallback(new MethodCallback<Void>() {
@@ -428,11 +459,25 @@ public class DiskREST {
       }      
     }).call(getDiskService()).deleteTriggeredLOI(username, domain, id);
   }  
-  
+
+  public static void getTriggeredLOITriples(String id, 
+      final Callback<List<Triple>, Throwable> callback) {
+    REST.withCallback(new MethodCallback<List<Triple>>() {
+      @Override
+      public void onSuccess(Method method, List<Triple> response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(getDiskService()).getTriggeredLOITriples(username, domain, id);
+  }
+
   /*
    * Assertions
    */
-  
+
   public static void updateAssertions(Graph graph,
       final Callback<Void, Throwable> callback) {
     REST.withCallback(new MethodCallback<Void>() {
@@ -529,5 +574,22 @@ public class DiskREST {
 	        callback.onFailure(exception);
 	      }      
 	    }).call(getDiskService()).monitorWorkflow(username, domain, id);
-	  }
+	  } 
+
+  
+  public static void login(final String email, final String password,
+	      final Callback<Boolean, Throwable> callback) {
+	  	User user = new User(email, password);
+	    REST.withCallback(new MethodCallback<Boolean>() {
+	      @Override
+	      public void onSuccess(Method method, Boolean response) {
+	    	  callback.onSuccess(response);
+	      }
+	      @Override
+	      public void onFailure(Method method, Throwable exception) {
+	        callback.onFailure(exception);
+	      }      
+	    }).call(getDiskService()).login(username, domain, user);
+	  } 
+  
 }

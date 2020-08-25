@@ -64,7 +64,11 @@
 				<g:item value='h1'>Is the effect size of genotype in brain trait associated with attribute</g:item>
 				<g:item value='h2'>Is brain characteristic associated with neurological disorder</g:item>
 			</g:ListBox>
+			<br/>
 
+			<label class="small-grey" title="Represents the type of hypotheses that can be explored with this line of inquiry.">
+			  Hypothesis pattern:
+			</label>
 			<div class="hyp-pattern">
 					<span ui:field="h1Section">
 						<span> Is the <span class="code">EffectSize</span> of</span>

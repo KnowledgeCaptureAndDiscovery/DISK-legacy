@@ -73,6 +73,7 @@ public class KBRepository implements TransactionsAPI {
   private void temporaryHacks() {
     this.hackInDataProperty("hasHypothesisQuery", "LineOfInquiry", "string");
     this.hackInDataProperty("hasDataQuery", "LineOfInquiry", "string");    
+    this.hackInDataProperty("author", "LineOfInquiry", "string");    
   }
   
   private void hackInDataProperty(String prop, String domain, String range) {

@@ -3,12 +3,20 @@ package org.diskproject.client.application;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 
-import org.diskproject.client.place.NameTokens;
+import java.util.Date;
 
+import org.diskproject.client.place.NameTokens;
+import org.diskproject.client.rest.AppNotification;
+import org.diskproject.client.rest.DiskREST;
+import org.diskproject.shared.classes.firebase.User;
+
+import com.google.gwt.core.client.Callback;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
+import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.IsWidget;
@@ -20,6 +28,7 @@ import com.vaadin.polymer.Polymer;
 import com.vaadin.polymer.elemental.Function;
 import com.vaadin.polymer.paper.PaperDrawerPanelElement;
 import com.vaadin.polymer.paper.PaperToastElement;
+import com.vaadin.polymer.paper.PaperInputElement;
 
 public class ApplicationView extends ViewImpl implements
     ApplicationPresenter.MyView {
@@ -30,14 +39,17 @@ public class ApplicationView extends ViewImpl implements
   @UiField public static PaperToastElement toast;
   
   @UiField DialogBox loginDialog;
-  private boolean shouldLogin = false;
-  
+  @UiField PaperInputElement username, password;
+  @UiField DivElement loginMsg;
+
   @UiField public static DivElement 
     hypothesesMenu, loisMenu, assertionsMenu, terminologyMenu;
   
   @UiField SimplePanel sidebar;
   @UiField SimplePanel toolbar;
-  @UiField DivElement fog;
+  @UiField DivElement fog, userDiv, logoutDiv;
+  
+  User user = null;
 
   @Inject
   public ApplicationView(Binder binder) {
@@ -110,23 +122,93 @@ public class ApplicationView extends ViewImpl implements
           }
         }
         
-        /* LOGIN STUFF */
-        if (shouldLogin) {
-        	fog.getStyle().setVisibility(Visibility.VISIBLE);
-        	loginDialog.center();
-        	shouldLogin = false;
-        }
-        
+        // LOGIN STUFF 
+        checkLogin();
         return null;
       }
     });
   }
+  
+  public void checkLogin () {
+	if (user == null) {
+	 String sessionID = Cookies.getCookie("sid");
+	 if ( sessionID != null ) {
+		 String name = Cookies.getCookie("sname");
+		 GWT.log("Checking cookies: " + sessionID + " | "+ name);
+		 setUser(name);
+	 } else {
+		showLoginDialog();
+	 }
+	}
+  }
+  
+  public void showLoginDialog () {
+	fog.getStyle().setVisibility(Visibility.VISIBLE);
+	loginMsg.getStyle().setVisibility(Visibility.HIDDEN);
+	loginDialog.center();
+  }
 
-  @UiHandler("cancelButton")
-  void onCanelButtonClicked(ClickEvent event) {   
-	loginDialog.hide();
-	fog.getStyle().setVisibility(Visibility.HIDDEN);
+  @UiHandler("submitButton")
+  void onSubmitButtonClicked(ClickEvent event) {   
+	  String email = username.getValue();
+	  String pass = password.getValue();
+
+	  if (email.length() > 0 && pass.length() > 0) {
+		  loginMsg.setInnerText("Loading...");
+		  loginMsg.getStyle().setVisibility(Visibility.VISIBLE);
+		  DiskREST.login(email, pass, new Callback<Boolean, Throwable>() {
+			  @Override
+			  public void onSuccess(Boolean login) {
+				  if (login) {
+					  loginDialog.hide();
+					  fog.getStyle().setVisibility(Visibility.HIDDEN);
+					  onLogin(email);
+				  } else {
+					  loginMsg.setInnerText("Incorrect email or password.");
+					  loginMsg.getStyle().setVisibility(Visibility.VISIBLE);
+				  }
+			  }
+			  @Override
+			  public void onFailure(Throwable reason) {
+				  GWT.log("Error on login!");
+				  loginMsg.getStyle().setVisibility(Visibility.VISIBLE);
+			  }
+		  });
+	  } else {
+		  loginMsg.setInnerText("You must write and email and password.");
+		  loginMsg.getStyle().setVisibility(Visibility.VISIBLE);
+	  }
   } 
+  
+
+  private void onLogin (String username) {
+	setUser(username);
+    String sessionID = "12"; /*(Get sessionID from server's response to your login request.)*/;
+    final long DURATION = 1000 * 60 * 60 * 24 * 14; //duration remembering login. 2 weeks in this example.
+    Date expires = new Date(System.currentTimeMillis() + DURATION);
+    Cookies.setCookie("sid", sessionID, expires, null, "/", false); 
+    Cookies.setCookie("sname", username, expires, null, "/", false);
+  }
+
+  private void setUser (String username) {
+	  user = new User(username, null);
+	  userDiv.setInnerText("Login as " + user.getEmail());
+	  logoutDiv.getStyle().setVisibility(Visibility.VISIBLE);
+  }
+
+  @UiHandler("logoutButton")
+  void onLogoutButtonClicked(ClickEvent event) {
+	  onLogout();
+  }
+  
+  private void onLogout () {
+	  userDiv.setInnerText("");
+	  logoutDiv.getStyle().setVisibility(Visibility.HIDDEN);
+	  user = null;
+	  Cookies.removeCookie("sid");
+	  Cookies.removeCookie("sname");
+	  showLoginDialog();
+  }
 
   private void clearMenuClasses(DivElement menu) {
     menu.removeClassName("activeMenu");

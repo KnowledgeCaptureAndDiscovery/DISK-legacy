@@ -428,7 +428,17 @@ public class DiskRepository extends KBRepository {
 				if (parentobj != null)
 					parentid = parentobj.getName();
 
-				TreeItem item = new TreeItem(hypobj.getName(), name, description, parentid);
+				String creationDate = null;
+				KBObject dateobj = kb.getPropertyValue(hypobj, pmap.get("dateCreated"));
+				if (dateobj != null)
+					creationDate = dateobj.getValueAsString();
+
+				String author = null;
+				KBObject authorobj = kb.getPropertyValue(hypobj, pmap.get("author"));
+				if (authorobj != null)
+					author = authorobj.getValueAsString();
+
+				TreeItem item = new TreeItem(hypobj.getName(), name, description, parentid, creationDate, author); //TODO
 				list.add(item);
 			}
 		} catch (Exception e) {
@@ -464,6 +474,14 @@ public class DiskRepository extends KBRepository {
 			KBObject parentobj = kb.getPropertyValue(hypitem, pmap.get("hasParentHypothesis"));
 			if (parentobj != null)
 				hypothesis.setParentId(parentobj.getName());
+
+			KBObject dateobj = kb.getPropertyValue(hypitem, pmap.get("dateCreated"));
+			if (dateobj != null)
+				hypothesis.setCreationDate(dateobj.getValueAsString());
+
+			KBObject authorobj = kb.getPropertyValue(hypitem, pmap.get("author"));
+			if (authorobj != null)
+				hypothesis.setAuthor(authorobj.getValueAsString());
 
 			this.updateTripleDetails(graph, provkb);
 
@@ -590,17 +608,12 @@ public class DiskRepository extends KBRepository {
 				String fullparentid = url + "/" + hypothesis.getParentId();
 				kb.setPropertyValue(hypitem, pmap.get("hasParentHypothesis"), kb.getResource(fullparentid));
 			}
-			/* TODO: ADD DATE
-			 try {
-			 
-				Format formatter = new SimpleDateFormat("HH:mm:ss yyyy-MM-dd");
-				String date = formatter.format(new Date());
-				System.out.println("DATE: " + date);
-				//kb.addPropertyValue(hypitem, pmap.get("hasCreationDate"), date);
-			} catch (Exception e) {
-				e.printStackTrace();
+			if (hypothesis.getCreationDate() != null) {
+				kb.setPropertyValue(hypitem, pmap.get("dateCreated"), provkb.createLiteral(hypothesis.getCreationDate()));
 			}
-			*/
+			if (hypothesis.getAuthor() != null) {
+				kb.setPropertyValue(hypitem, pmap.get("author"), provkb.createLiteral(hypothesis.getAuthor()));
+			}
 
 			this.save(kb);
 			this.end();
@@ -1130,6 +1143,10 @@ public class DiskRepository extends KBRepository {
 			if (valobj instanceof Date) {
 				valobj = dateformatter.format((Date) valobj);
 			}
+			if (valobj instanceof String) {
+				//Fix quotes and \n
+				valobj = ((String) valobj).replace("\"", "\\\"").replace("\n", "\\n");
+			}
 			v.setType(Value.Type.LITERAL);
 			v.setValue(valobj);
 			v.setDatatype(obj.getDataType());
@@ -1348,6 +1365,14 @@ public class DiskRepository extends KBRepository {
 				kb.setLabel(loiitem, loi.getName());
 			if (loi.getDescription() != null)
 				kb.setComment(loiitem, loi.getDescription());
+			if (loi.getCreationDate() != null) {
+				kb.setPropertyValue(loiitem, pmap.get("dateCreated"), loikb.createLiteral(loi.getCreationDate()));
+			}
+
+			if (loi.getAuthor() != null) {
+				kb.setPropertyValue(loiitem, pmap.get("author"), loikb.createLiteral(loi.getAuthor()));
+			}
+			
 			this.save(kb);
 			this.end();
 			
@@ -1436,7 +1461,18 @@ public class DiskRepository extends KBRepository {
 				KBObject hypobj = t.getSubject();
 				String name = kb.getLabel(hypobj);
 				String description = kb.getComment(hypobj);
-				TreeItem item = new TreeItem(hypobj.getName(), name, description, null);
+
+				KBObject dateobj = kb.getPropertyValue(hypobj, pmap.get("dateCreated"));
+				String date = null;
+				if (dateobj != null)
+					date = dateobj.getValueAsString();
+
+				KBObject authorobj = kb.getPropertyValue(hypobj, pmap.get("author"));
+				String author = null;
+				if (authorobj != null)
+					author = authorobj.getValueAsString();
+			
+				TreeItem item = new TreeItem(hypobj.getName(), name, description, null, date, author);
 				list.add(item);
 			}
 		} catch (Exception e) {
@@ -1468,6 +1504,14 @@ public class DiskRepository extends KBRepository {
 			KBObject hqueryobj = loikb.getPropertyValue(floiitem, pmap.get("hasHypothesisQuery"));
 			if (hqueryobj != null)
 				loi.setHypothesisQuery(hqueryobj.getValueAsString());
+			
+			KBObject dateobj = kb.getPropertyValue(floiitem, pmap.get("dateCreated"));
+			if (dateobj != null)
+				loi.setCreationDate(dateobj.getValueAsString());
+
+			KBObject authorobj = kb.getPropertyValue(floiitem, pmap.get("author"));
+			if (authorobj != null)
+				loi.setAuthor(authorobj.getValueAsString());
 
 			KBObject dqueryobj = loikb.getPropertyValue(floiitem, pmap.get("hasDataQuery"));
 			if (dqueryobj != null)
@@ -1690,6 +1734,14 @@ public class DiskRepository extends KBRepository {
 		if (stobj != null)
 			tloi.setStatus(Status.valueOf(stobj.getValue().toString()));
 
+		KBObject dateobj = kb.getPropertyValue(obj, pmap.get("dateCreated"));
+		if (dateobj != null)
+			tloi.setCreationDate(dateobj.getValueAsString());
+		
+		KBObject authorobj = kb.getPropertyValue(obj, pmap.get("author"));
+		if (authorobj != null)
+			tloi.setAuthor(authorobj.getValueAsString());
+
 		if (tloikb != null) {
 			KBObject floiitem = tloikb.getIndividual(id);
 			tloi.setWorkflows(
@@ -1698,6 +1750,73 @@ public class DiskRepository extends KBRepository {
 					pmap.get("hasMetaWorkflowBinding")));
 		}
 		return tloi;
+	}
+
+	private void addAllTriplesToList (List<Triple> list, KBAPI api, KBObject s, KBObject p, KBObject o) {
+		for (KBTriple t: api.genericTripleQuery(s, p, o)) {
+			KBObject sub = t.getSubject();
+			String subject = (sub.isAnonymous()) ? sub.shortForm() : sub.getValueAsString();
+			KBObject obj = t.getObject();
+			Value objvalue;
+			if (obj.isAnonymous()) {
+				objvalue = new Value();
+				objvalue.setValue(obj.shortForm());
+				objvalue.setType(Value.Type.URI);
+			} else {
+				objvalue = this.getObjectValue(obj);
+			}
+			list.add(new Triple(subject, t.getPredicate().getValueAsString(), objvalue, null));
+		}
+	}
+
+	public List<Triple> getTriggeredLOITriples(String username, String domain, String id) {
+		try {
+			this.start_read();
+			List<Triple> all = new ArrayList<Triple>();
+			String kburi, fulluri;
+			KBAPI api;
+			KBObject tloi, loi, hyp;
+			ArrayList<KBObject> phyp;
+
+			// Get TLOI and triples
+			kburi = this.TLOIURI(username, domain);
+			api = this.fac.getKB(kburi, OntSpec.PLAIN, true);
+			fulluri = kburi + "/" + id;
+			// Get all subjects related to TLOI
+			tloi = api.getIndividual(fulluri);
+			loi = api.getPropertyValue(tloi, pmap.get("hasLineOfInquiry"));
+			hyp = api.getPropertyValue(tloi, pmap.get("hasParentHypothesis"));
+			phyp = api.getPropertyValues(tloi, pmap.get("hasResultingHypothesis"));
+
+			addAllTriplesToList(all, api, tloi, null, null);
+			
+			api = this.fac.getKB(tloi.getID(), OntSpec.PLAIN, true);
+			addAllTriplesToList(all, api, api.getIndividual(tloi.getName()), null, null);
+
+			// LOI triples
+			api = this.fac.getKB(this.LOIURI(username, domain), OntSpec.PLAIN, true);
+			addAllTriplesToList(all, api, loi, null, null);
+			api = this.fac.getKB(loi.getID(), OntSpec.PLAIN, true);
+			addAllTriplesToList(all, api, api.getIndividual(loi.getName()), null, null);
+
+			// Hyp triples
+			api = this.fac.getKB( this.HYPURI(username, domain) , OntSpec.PLAIN, true);
+			addAllTriplesToList(all, api, hyp, null, null);
+			/*api = this.fac.getKB(hyp.getID(), OntSpec.PLAIN, true); //FIXME
+			addAllTriplesToList(all, api, api.getIndividual(hyp.getName()), null, null); */ 
+
+			// RHyp triples
+			for (KBObject robj : phyp) {
+				addAllTriplesToList(all, api, robj, null, null);
+			}
+
+			return all;
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+		  this.end();
+		}
+		return null;
 	}
 
 	private void updateTriggeredLOI(String username, String domain, String id, TriggeredLOI tloi) {
@@ -1727,6 +1846,14 @@ public class DiskRepository extends KBRepository {
 			}
 			if (tloi.getDescription() != null) {
 				kb.setComment(tloiitem, tloi.getDescription());
+			}
+
+			if (tloi.getCreationDate() != null) {
+				kb.setPropertyValue(tloiitem, pmap.get("dateCreated"), tloikb.createLiteral(tloi.getCreationDate()));
+			}
+
+			if (tloi.getAuthor() != null) {
+				kb.setPropertyValue(tloiitem, pmap.get("author"), tloikb.createLiteral(tloi.getAuthor()));
 			}
 
 			if (tloi.getLoiId() != null) {

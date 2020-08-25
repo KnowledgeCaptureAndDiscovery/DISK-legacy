@@ -40,6 +40,7 @@
 				</g:ListBox>
 				<p></p>
 
+				<label class="small-grey">Set <b>hypothesis question</b> details: </label>
 				<div class="hyp-pattern">
 					<span ui:field="h1Section">
 						<span> Is the <span class="code">EffectSize</span> of</span>

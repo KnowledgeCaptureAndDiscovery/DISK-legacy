@@ -1,6 +1,9 @@
 package org.diskproject.client.application.hypothesis;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,9 +29,11 @@ import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.util.GUID;
 import org.diskproject.shared.classes.workflow.VariableBinding;
 
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.DivElement;
+import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -69,6 +74,8 @@ public class HypothesisView extends ApplicationSubviewImpl
   
   @UiField DialogBox dialog;
   @UiField HTMLPanel dialogContent;
+  
+  @UiField ListBox order;
 
   @UiField DialogBox helpDialog;
   
@@ -166,6 +173,55 @@ public class HypothesisView extends ApplicationSubviewImpl
     });
   }
 
+	@UiHandler("order")
+	void onChange(ChangeEvent event) {
+		loadHypothesisTLOITree();
+	}
+
+  private void applyOrder (List<TreeItem> list)  {
+    String orderType = order.getSelectedValue();
+    GWT.log(">> " + orderType);
+    if (orderType != null) {
+    	if (orderType.compareTo("date") == 0) {
+			Collections.sort(treelist, new Comparator<TreeItem>(){
+				@Override
+				public int compare (TreeItem l, TreeItem r) {
+					String lc = l.getCreationDate();
+					String lr = r.getCreationDate();
+					if (lc != null && lr != null) {
+						DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
+						Date dl = fm.parse(lc);
+						Date dr = fm.parse(lr);
+						if (dl.after(dr)) return -1;
+						else return 1;
+					} else if (lc != null) {
+						return -1;
+					} else if (lr != null) {
+						return 1;
+					}
+					return 0;
+				}
+			});
+    	} else if (orderType.compareTo("author") == 0) {
+			Collections.sort(treelist, new Comparator<TreeItem>(){
+				@Override
+				public int compare (TreeItem l, TreeItem r) {
+					String la = l.getAuthor();
+					String ra = r.getAuthor();
+					if (la != null && ra != null) {
+						return la.compareTo(ra);
+					} else if (la != null) {
+						return -1;
+					} else if (ra != null) {
+						return 1;
+					}
+					return 0;
+				}
+			});
+    	}
+    }
+  }
+
   private void loadHypothesisTLOITree() {
     if(treelist == null || tloilist == null)
       return;
@@ -176,14 +232,18 @@ public class HypothesisView extends ApplicationSubviewImpl
     description.setVisible(true);
     
     TreeNode root = new TreeNode("Hypotheses", "Hypotheses", 
-        "A List of Hypotheses");
+        "A List of Hypotheses", null, null);
+    
+    applyOrder(treelist);
     
     HashMap<String, TreeNode> map = new HashMap<String, TreeNode>();
     for(TreeItem item : treelist) {
       TreeNode node = new TreeNode(
           item.getId(),
           item.getName(), 
-          item.getDescription());
+          item.getDescription(),
+          item.getCreationDate(),
+          item.getAuthor());
       node.setIcon("icons:help-outline");
       node.setExpandedIcon("icons:help-outline");
       node.setIconStyle("orange");

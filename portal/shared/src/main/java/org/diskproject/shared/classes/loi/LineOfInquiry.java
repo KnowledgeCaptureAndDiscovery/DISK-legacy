@@ -11,6 +11,7 @@ public class LineOfInquiry {
   String dataQuery;
   List<WorkflowBindings> workflows;
   List<WorkflowBindings> metaWorkflows;
+  String creationDate, author;
 
   public LineOfInquiry() {
     this.workflows = new ArrayList<WorkflowBindings>();
@@ -95,6 +96,22 @@ public class LineOfInquiry {
   
   public void addMetaWorkflow(WorkflowBindings metaWorkflowid) {
     this.metaWorkflows.add(metaWorkflowid);
+  }
+  
+  public void setCreationDate(String date) {
+	  this.creationDate = date;
+  }
+  
+  public void setAuthor (String author) {
+	  this.author = author;
+  }
+  
+  public String getCreationDate () {
+	  return this.creationDate;
+  }
+  
+  public String getAuthor () {
+	  return this.author;
   }
 
 }

@@ -24,6 +24,8 @@ import org.diskproject.server.repository.WingsAdapter;
 import org.diskproject.shared.api.DiskService;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
+import org.diskproject.shared.classes.common.Triple;
+import org.diskproject.shared.classes.firebase.User;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
@@ -347,6 +349,19 @@ public class DiskResource implements DiskService {
       @PathParam("id") String id) {
     this.repo.deleteTriggeredLOI(username, domain, id);
   }
+ 
+  /*
+   * Triples
+   */
+
+  @GET
+  @Path("{username}/{domain}/triples/{id}")
+  @Override
+  public List<Triple> getTriggeredLOITriples(@PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("id") String id) {
+    return this.repo.getTriggeredLOITriples(username, domain, id);
+  }
   
   /*
    * Workflows
@@ -380,5 +395,16 @@ public class DiskResource implements DiskService {
     // Check execution status
     return WingsAdapter.get().getWorkflowRunStatus(username, domain, id);
   }  
+
+  @POST
+  @Path("{username}/{domain}/login")
+  @Override
+  public Boolean login(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @JsonProperty("user") User user) {
+    //return this.repo.login(username, domain, user);
+    return WingsAdapter.get().login(username, domain, user);
+  }
    
 }

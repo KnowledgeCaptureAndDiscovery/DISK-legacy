@@ -108,11 +108,18 @@
 
 		<g:HTMLPanel ui:field="description">
 		  <div style="padding: 4px 10px; font-size: 14px; color: #666">
+			 <div style="float:right">
+					<label>Order by</label>
+					<g:ListBox ui:field='order'>
+						<g:item value='date'>date</g:item>
+						<g:item value='author'>author</g:item>
+					</g:ListBox>
+			 </div>
 				<div style="margin-top: 5px;">
   				A line of inquiry represents potential analyses that can be pursued to test a type of hypothesis.<br/>
 					A list of all the available Lines of Inquiry in the system is displayed below.
 					To add a <b>new Line of Inquery</b> click on the top-right button.
-			</div>
+			 </div>
 		  </div>
 		</g:HTMLPanel>
 		<l:Loader ui:field="loader" />
