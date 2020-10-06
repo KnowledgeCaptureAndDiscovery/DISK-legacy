@@ -431,28 +431,6 @@
 			}
 		</style>
 
-		<div style="visibility: collapse;">
-      <g:DialogBox modal="true" ui:field='loginDialog'>
-        <g:caption><b>Login</b></g:caption>
-        <g:HTMLPanel>
-         <div style="padding: 0 15px;">
-			     <paper-input label="Username" required="true" autoValidate="true" ui:field="username" class="textfield"/>
-			     <paper-input label="Password" required="true" autoValidate="false" type="password" ui:field="password" class="textfield"/>
-
-						<div ui:field="loginMsg" style="visibility: collapse;">
-						</div>
-			     
-						<!--  g:Button ui:field='cancelButton'>Cancel</g:Button-->
-						<span style="float:right">
-							<g:Button ui:field='submitButton'>Submit</g:Button>
-						</span>
-         </div>
-       </g:HTMLPanel>
-      </g:DialogBox>
-		</div>
-
-		<div class="fog" ui:field="fog"></div>
-		
 		<paper-drawer-panel class="flex" ui:field="drawer">
 			<paper-header-panel drawer="" mode="seamed">
 				<paper-toolbar class="app-logo">
@@ -469,7 +447,7 @@
 						<div class="layout horizontal center" ui:field="hypothesesMenu">
 							<iron-icon class="backbutton grey" icon="icons:chevron-left" />
 							<iron-icon class="orange" icon="icons:help" />
-							 Hypotheses
+							 My Hypotheses
 						</div>
 					</g:Anchor>
 					<g:Anchor 
@@ -496,14 +474,14 @@
 							 Terminology
 						</div>
 					</g:Anchor>
-					<g:Anchor 
+					<!--   g:Anchor 
 					href="#{nameTokens.getAssertions}/{config.getWingsUserid}/{config.getWingsDomain}">
 						<div class="layout horizontal center" ui:field="assertionsMenu">
 							<iron-icon class="backbutton grey" icon="icons:chevron-left" />						
 							<iron-icon class="blue" icon="icons:list" />
 							 Data
 						</div>
-					</g:Anchor>
+					</g:Anchor-->
 					<div>
 						<g:SimplePanel ui:field="sidebar" />
 					</div>
@@ -511,7 +489,7 @@
 					
 					<div ui:field="userDiv" style="padding: 10px; position: fixed; bottom: 25px;"> 
 					</div>
-					<div ui:field="logoutDiv" style="padding: 10px; position: fixed; bottom: 0; visibility: hidden;"> 
+					<div style="padding: 10px; position: fixed; bottom: 0;"> 
 					 <g:Button ui:field='logoutButton'>Logout</g:Button>
 					</div>
 

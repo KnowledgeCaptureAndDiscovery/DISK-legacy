@@ -9,9 +9,11 @@ public class LineOfInquiry {
   String description;
   String hypothesisQuery;
   String dataQuery;
+  String notes;
   List<WorkflowBindings> workflows;
   List<WorkflowBindings> metaWorkflows;
   String creationDate, author;
+  String dateModified;
 
   public LineOfInquiry() {
     this.workflows = new ArrayList<WorkflowBindings>();
@@ -52,6 +54,14 @@ public class LineOfInquiry {
 
   public String getDescription() {
     return description;
+  }
+
+  public String getNotes() {
+    return notes;
+  }
+
+  public void setNotes(String notes) {
+    this.notes = notes;
   }
 
   public void setDescription(String description) {
@@ -113,5 +123,12 @@ public class LineOfInquiry {
   public String getAuthor () {
 	  return this.author;
   }
-
+  
+  public void setDateModified(String date) {
+	  this.dateModified = date;
+  }
+  
+  public String getDateModified () {
+	  return this.dateModified;
+  }
 }

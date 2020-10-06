@@ -25,6 +25,7 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   List<WorkflowBindings> workflows;
   List<WorkflowBindings> metaWorkflows;
   String creationDate, author;
+  String dateModified;
 
   public TriggeredLOI(String id,
   String name,
@@ -203,4 +204,11 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
 	  return this.author;
   }
 
+  public void setDateModified(String date) {
+	  this.dateModified = date;
+  }
+  
+  public String getDateModified () {
+	  return dateModified;
+  }
 }

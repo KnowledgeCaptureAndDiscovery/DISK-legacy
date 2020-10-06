@@ -55,9 +55,9 @@ public class TreeNode implements Comparable<TreeNode> {
     html += "<div class='description'>"+this.description+"</div>";
     html += "<div class='footer' style='display: flex;justify-content: space-between;'>";
     html += "<span><b>Creation date:</b> ";
-    html += (this.creationDate != null) ? this.creationDate : "Not defined";
+    html += (this.creationDate != null) ? this.creationDate : "None specified";
     html += "</span><span><b>Author:</b> ";
-    html += (this.author != null) ? this.author : "Not defined";
+    html += (this.author != null) ? this.author : "None specified";
     html += "</span></div>";
 
     if(this.content != null)

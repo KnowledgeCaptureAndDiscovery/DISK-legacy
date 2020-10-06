@@ -157,6 +157,9 @@
 		<g:HTMLPanel ui:field="description">
 		  <div style="padding: 4px 10px; font-size: 14px; color: #666">
 			 <div style="float:right">
+			    <g:CheckBox ui:field='onlyMine'>
+			    <label>Show only my hypothesis</label>
+			    </g:CheckBox>
 					<label>Order by</label>
 					<g:ListBox ui:field='order'>
 						<g:item value='date'>date</g:item>

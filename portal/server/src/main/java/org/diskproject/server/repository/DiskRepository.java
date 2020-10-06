@@ -433,12 +433,20 @@ public class DiskRepository extends KBRepository {
 				if (dateobj != null)
 					creationDate = dateobj.getValueAsString();
 
+				String dateModified = null;
+				KBObject dateModifiedObj = kb.getPropertyValue(hypobj, pmap.get("dateModified"));
+				if (dateModifiedObj != null)
+					dateModified = dateModifiedObj.getValueAsString();
+
 				String author = null;
 				KBObject authorobj = kb.getPropertyValue(hypobj, pmap.get("author"));
 				if (authorobj != null)
 					author = authorobj.getValueAsString();
 
 				TreeItem item = new TreeItem(hypobj.getName(), name, description, parentid, creationDate, author); //TODO
+				if (dateModified != null) {
+					item.setDateModified(dateModified);
+				}
 				list.add(item);
 			}
 		} catch (Exception e) {
@@ -478,6 +486,10 @@ public class DiskRepository extends KBRepository {
 			KBObject dateobj = kb.getPropertyValue(hypitem, pmap.get("dateCreated"));
 			if (dateobj != null)
 				hypothesis.setCreationDate(dateobj.getValueAsString());
+
+			KBObject dateModifiedObj = kb.getPropertyValue(hypitem, pmap.get("dateModified"));
+			if (dateModifiedObj != null)
+				hypothesis.setDateModified(dateModifiedObj.getValueAsString());
 
 			KBObject authorobj = kb.getPropertyValue(hypitem, pmap.get("author"));
 			if (authorobj != null)
@@ -611,9 +623,15 @@ public class DiskRepository extends KBRepository {
 			if (hypothesis.getCreationDate() != null) {
 				kb.setPropertyValue(hypitem, pmap.get("dateCreated"), provkb.createLiteral(hypothesis.getCreationDate()));
 			}
+			if (hypothesis.getDateModified() != null) {
+				kb.setPropertyValue(hypitem, pmap.get("dateModified"), provkb.createLiteral(hypothesis.getDateModified()));
+			}
 			if (hypothesis.getAuthor() != null) {
 				kb.setPropertyValue(hypitem, pmap.get("author"), provkb.createLiteral(hypothesis.getAuthor()));
 			}
+			/*if (hypothesis.getNotes() != null) {
+				kb.setPropertyValue(hypitem, pmap.get("hasNotes"), hypkb.createLiteral(hypothesis.getNotes()));
+			}*/
 
 			this.save(kb);
 			this.end();
@@ -751,8 +769,12 @@ public class DiskRepository extends KBRepository {
 			ArrayList<ArrayList<SparqlQuerySolution>> allDataSolutions = null;
 			boolean wikiStore = Config.get().getProperties().containsKey("data-store");
 			if(wikiStore) {
-			  String externalStore = Config.get().getProperties().getString("data-store");
-			  allDataSolutions = queryKb.sparqlQueryRemote(dataSparqlQuery, externalStore);
+			  //String externalStore = Config.get().getProperties().getString("data-store");
+			  //allDataSolutions = queryKb.sparqlQueryRemote(dataSparqlQuery, externalStore);
+			  String[] r2 = DataQuery.queryFor(dataSparqlQuery);
+			  for (String r: r2) {
+				  System.out.println(">>>>> " + r);
+			  }
 			} else {
 			  allDataSolutions = queryKb.sparqlQuery(dataSparqlQuery);
 			}
@@ -1368,6 +1390,9 @@ public class DiskRepository extends KBRepository {
 			if (loi.getCreationDate() != null) {
 				kb.setPropertyValue(loiitem, pmap.get("dateCreated"), loikb.createLiteral(loi.getCreationDate()));
 			}
+			if (loi.getDateModified() != null) {
+				kb.setPropertyValue(loiitem, pmap.get("dateModified"), loikb.createLiteral(loi.getDateModified()));
+			}
 
 			if (loi.getAuthor() != null) {
 				kb.setPropertyValue(loiitem, pmap.get("author"), loikb.createLiteral(loi.getAuthor()));
@@ -1384,6 +1409,11 @@ public class DiskRepository extends KBRepository {
 			if (loi.getDataQuery() != null) {
 				KBObject valobj = loikb.createLiteral(loi.getDataQuery());
 				loikb.setPropertyValue(floiitem, pmap.get("hasDataQuery"), valobj);
+			}
+			if (loi.getNotes() != null) {
+				System.out.println("notes detected!:" + loi.getNotes());
+				KBObject valobj = loikb.createLiteral(loi.getNotes());
+				loikb.setPropertyValue(floiitem, pmap.get("hasNotes"), valobj);
 			}
 			this.storeWorkflowBindingsInKB(loikb, floiitem, pmap.get("hasWorkflowBinding"), loi.getWorkflows(),
 					username, domain);
@@ -1467,12 +1497,20 @@ public class DiskRepository extends KBRepository {
 				if (dateobj != null)
 					date = dateobj.getValueAsString();
 
+				KBObject dateModifiedObj = kb.getPropertyValue(hypobj, pmap.get("dateModified"));
+				String dateModified = null;
+				if (dateModifiedObj != null)
+					dateModified = dateModifiedObj.getValueAsString();
+
 				KBObject authorobj = kb.getPropertyValue(hypobj, pmap.get("author"));
 				String author = null;
 				if (authorobj != null)
 					author = authorobj.getValueAsString();
 			
 				TreeItem item = new TreeItem(hypobj.getName(), name, description, null, date, author);
+				if (dateModified != null) {
+					item.setDateModified(dateModified);
+				}
 				list.add(item);
 			}
 		} catch (Exception e) {
@@ -1509,9 +1547,17 @@ public class DiskRepository extends KBRepository {
 			if (dateobj != null)
 				loi.setCreationDate(dateobj.getValueAsString());
 
+			KBObject dateModifiedObj = kb.getPropertyValue(floiitem, pmap.get("dateModified"));
+			if (dateModifiedObj != null)
+				loi.setDateModified(dateModifiedObj.getValueAsString());
+
 			KBObject authorobj = kb.getPropertyValue(floiitem, pmap.get("author"));
 			if (authorobj != null)
 				loi.setAuthor(authorobj.getValueAsString());
+
+			KBObject notesobj = kb.getPropertyValue(floiitem, pmap.get("hasNotes"));
+			if (notesobj != null)
+				loi.setNotes(notesobj.getValueAsString());
 
 			KBObject dqueryobj = loikb.getPropertyValue(floiitem, pmap.get("hasDataQuery"));
 			if (dqueryobj != null)
@@ -1738,6 +1784,10 @@ public class DiskRepository extends KBRepository {
 		if (dateobj != null)
 			tloi.setCreationDate(dateobj.getValueAsString());
 		
+		KBObject dateModifiedObj = kb.getPropertyValue(obj, pmap.get("dateModified"));
+		if (dateModifiedObj != null)
+			tloi.setDateModified(dateModifiedObj.getValueAsString());
+		
 		KBObject authorobj = kb.getPropertyValue(obj, pmap.get("author"));
 		if (authorobj != null)
 			tloi.setAuthor(authorobj.getValueAsString());
@@ -1850,6 +1900,10 @@ public class DiskRepository extends KBRepository {
 
 			if (tloi.getCreationDate() != null) {
 				kb.setPropertyValue(tloiitem, pmap.get("dateCreated"), tloikb.createLiteral(tloi.getCreationDate()));
+			}
+			
+			if (tloi.getDateModified() != null) {
+				kb.setPropertyValue(tloiitem, pmap.get("dateModified"), tloikb.createLiteral(tloi.getDateModified()));
 			}
 
 			if (tloi.getAuthor() != null) {
@@ -2050,6 +2104,26 @@ public class DiskRepository extends KBRepository {
 	 * this.addHypothesis(username, domain, newHypothesis); return
 	 * newHypothesis.getId(); }
 	 */
+
+	public String directQuery(String username, String domain, String query) {
+		//List<List<SparqlQuerySolution>> result = null;
+		String url = this.LOIURI(username, domain);
+		String query2 = "SELECT * WHERE { ?a ?b ?c }";
+		try {
+			this.start_read();
+			KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
+			ArrayList<ArrayList<SparqlQuerySolution>> result2 = kb.sparqlQuery(query2);
+			System.out.println("DOM " + url);
+			System.out.println("<< " + query2);
+			System.out.println(">> " + result2.toString());
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+		  this.end();
+		}
+		return "";
+	}
 
 	class TLOIExecutionThread implements Runnable {
 		String username;

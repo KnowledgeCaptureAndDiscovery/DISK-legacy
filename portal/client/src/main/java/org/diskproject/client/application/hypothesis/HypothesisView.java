@@ -39,6 +39,7 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.CheckBox;
@@ -76,6 +77,7 @@ public class HypothesisView extends ApplicationSubviewImpl
   @UiField HTMLPanel dialogContent;
   
   @UiField ListBox order;
+  @UiField CheckBox onlyMine;
 
   @UiField DialogBox helpDialog;
   
@@ -177,6 +179,12 @@ public class HypothesisView extends ApplicationSubviewImpl
 	void onChange(ChangeEvent event) {
 		loadHypothesisTLOITree();
 	}
+	
+	
+	@UiHandler("onlyMine")
+	void onClick(ClickEvent event) {
+		loadHypothesisTLOITree();
+	}
 
   private void applyOrder (List<TreeItem> list)  {
     String orderType = order.getSelectedValue();
@@ -221,6 +229,15 @@ public class HypothesisView extends ApplicationSubviewImpl
     	}
     }
   }
+  
+  private void applyFilter (List<TreeItem> list) {
+    Boolean mine = onlyMine.getValue();
+    String username = Cookies.getCookie("sname");
+    if (mine && username != null) {
+    	GWT.log("Filtering...");
+    	list.removeIf(c -> c.getAuthor() != username);
+    }
+  }
 
   private void loadHypothesisTLOITree() {
     if(treelist == null || tloilist == null)
@@ -235,6 +252,7 @@ public class HypothesisView extends ApplicationSubviewImpl
         "A List of Hypotheses", null, null);
     
     applyOrder(treelist);
+    applyFilter(treelist);
     
     HashMap<String, TreeNode> map = new HashMap<String, TreeNode>();
     for(TreeItem item : treelist) {
@@ -276,8 +294,10 @@ public class HypothesisView extends ApplicationSubviewImpl
     }
     for(TreeItem item : this.treelist) {
       TreeNode node = map.get(item.getId());
-      if(node.getParent() == null)      
+      if(node.getParent() == null) {
+    	node.setExpanded(false);
         tree.addNode(root, node);
+      }
     }
     tree.setRoot(root);
   }
@@ -292,7 +312,6 @@ public class HypothesisView extends ApplicationSubviewImpl
           public void onSuccess(Hypothesis result) {
             loader.setVisible(false);
             form.setVisible(true);
-            					GWT.log(result.getName());
             form.setNamespace(getNamespace(result.getId()));
             form.load(result);
           }

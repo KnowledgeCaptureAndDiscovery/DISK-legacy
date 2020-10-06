@@ -80,12 +80,11 @@ public class TriggeredLOIViewer extends Composite {
     setLOILink(tloi.getName(), tloi.getLoiId(), loiLink);
 
     List<WorkflowBindings> mwf = tloi.getMetaWorkflows();
+    WFLabel.setInnerText("Triggered Workflows");
     if (mwf.size() == 0) {
     	MetaWFSection.getStyle().setDisplay(Display.NONE);
-    	WFLabel.setInnerText("Triggered Meta-Workflows");
     } else {
     	MetaWFSection.getStyle().setDisplay(Display.INITIAL);
-    	WFLabel.setInnerText("Triggered Workflows");
     }
     	
     setWorkflowsHTML(tloi.getWorkflows(), workflowlist);

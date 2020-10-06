@@ -49,7 +49,7 @@ public class HypothesisEditor extends Composite
   Hypothesis hypothesis;
   
   @UiField PaperInputElement name;
-  @UiField PaperTextareaElement description;
+  @UiField PaperTextareaElement description, notes;
   @UiField HypothesisTripleInput triples;
   @UiField PaperDialog triggerdialog;
   @UiField PaperDialogScrollable dialogcontent;
@@ -151,6 +151,7 @@ public class HypothesisEditor extends Composite
     }
     
     hypothesis.setDescription(description.getValue());
+    hypothesis.setNotes(notes.getValue());
     hypothesis.setName(name.getValue());
     Graph graph = new Graph();
     graph.setTriples(triples.getTriples());
