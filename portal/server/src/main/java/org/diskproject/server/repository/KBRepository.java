@@ -75,7 +75,6 @@ public class KBRepository implements TransactionsAPI {
     this.hackInDataProperty("hasHypothesisQuery", "LineOfInquiry", "string");
     this.hackInDataProperty("hasDataQuery", "LineOfInquiry", "string");    
     this.hackInDataProperty("author", "LineOfInquiry", "string");    
-    this.hackInDataProperty("hasNotes", "LineOfInquiry", "string");    
   }
   
   private void hackInDataProperty(String prop, String domain, String range) {

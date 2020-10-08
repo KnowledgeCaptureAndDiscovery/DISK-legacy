@@ -584,7 +584,6 @@ public class DiskREST {
 	    }).call(getDiskService()).monitorWorkflow(username, domain, id);
 	  } 
 
-  
   public static void sparql(final String query, final Callback<String, Throwable> callback) {
 	    REST.withCallback(new MethodCallback<String>() {
 	      @Override

@@ -8,6 +8,8 @@ import org.diskproject.client.place.NameTokens;
 import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
 
+import com.google.gwt.core.client.Callback;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -21,6 +23,7 @@ import com.vaadin.polymer.Polymer;
 import com.vaadin.polymer.elemental.Function;
 import com.vaadin.polymer.paper.PaperDrawerPanelElement;
 import com.vaadin.polymer.paper.PaperToastElement;
+import com.vaadin.polymer.paper.PaperInputElement;
 
 public class ApplicationView extends ViewImpl implements
     ApplicationPresenter.MyView {
@@ -36,7 +39,7 @@ public class ApplicationView extends ViewImpl implements
   @UiField SimplePanel sidebar;
   @UiField SimplePanel toolbar;
   @UiField DivElement userDiv;
-  
+
   @Inject
   public ApplicationView(Binder binder) {
     initWidget(binder.createAndBindUi(this));

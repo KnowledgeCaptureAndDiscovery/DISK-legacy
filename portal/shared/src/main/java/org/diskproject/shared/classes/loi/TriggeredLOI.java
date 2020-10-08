@@ -24,6 +24,7 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   List<String> resultingHypothesisIds;
   List<WorkflowBindings> workflows;
   List<WorkflowBindings> metaWorkflows;
+  
   String author;
   String notes;
   String dateCreated;

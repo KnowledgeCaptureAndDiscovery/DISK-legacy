@@ -238,7 +238,7 @@ public interface DiskService extends DirectRestService {
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @PathParam("id") String id);
-  
+
   @POST
   @Path("{username}/{domain}/sparql")
   public String sparql(

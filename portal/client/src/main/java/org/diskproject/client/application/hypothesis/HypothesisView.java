@@ -28,6 +28,7 @@ import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.util.GUID;
 import org.diskproject.shared.classes.workflow.VariableBinding;
 
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.DivElement;
@@ -75,7 +76,6 @@ public class HypothesisView extends ApplicationSubviewImpl
   @UiField HTMLPanel dialogContent;
   
   @UiField ListBox order;
-  //@UiField CheckBox onlyMine;
 
   @UiField DialogBox helpDialog;
   
@@ -177,12 +177,6 @@ public class HypothesisView extends ApplicationSubviewImpl
 	void onChange(ChangeEvent event) {
 		loadHypothesisTLOITree();
 	}
-	
-	
-	/*@UiHandler("onlyMine")
-	void onClick(ClickEvent event) {
-		loadHypothesisTLOITree();
-	}*/
 
   private void applyOrder (List<TreeItem> list)  {
     String orderType = order.getSelectedValue();
@@ -198,15 +192,6 @@ public class HypothesisView extends ApplicationSubviewImpl
     	}
     }
   }
-  
-  /*private void applyFilter (List<TreeItem> list) {
-    Boolean mine = onlyMine.getValue();
-    String username = Cookies.getCookie("sname");
-    if (mine && username != null) {
-    	GWT.log("Filtering...");
-    	list.removeIf(c -> c.getAuthor() != username);
-    }
-  }*/
 
   private void loadHypothesisTLOITree() {
     if(treelist == null || tloilist == null)
@@ -221,7 +206,6 @@ public class HypothesisView extends ApplicationSubviewImpl
         "A List of Hypotheses", null, null);
     
     applyOrder(treelist);
-    //applyFilter(treelist);
     
     HashMap<String, TreeNode> map = new HashMap<String, TreeNode>();
     for(TreeItem item : treelist) {

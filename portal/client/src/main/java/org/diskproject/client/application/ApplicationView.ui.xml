@@ -430,7 +430,6 @@
 			  font-size: 12px;
 			}
 		</style>
-
 		<paper-drawer-panel class="flex" ui:field="drawer">
 			<paper-header-panel drawer="" mode="seamed">
 				<paper-toolbar class="app-logo">

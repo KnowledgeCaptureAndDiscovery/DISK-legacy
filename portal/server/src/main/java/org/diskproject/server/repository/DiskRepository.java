@@ -427,7 +427,6 @@ public class DiskRepository extends KBRepository {
 				KBObject parentobj = kb.getPropertyValue(hypobj, pmap.get("hasParentHypothesis"));
 				if (parentobj != null)
 					parentid = parentobj.getName();
-
 				String DateCreated = null;
 				KBObject dateobj = kb.getPropertyValue(hypobj, pmap.get("dateCreated"));
 				if (dateobj != null)
@@ -442,7 +441,7 @@ public class DiskRepository extends KBRepository {
 				KBObject authorobj = kb.getPropertyValue(hypobj, pmap.get("author"));
 				if (authorobj != null)
 					author = authorobj.getValueAsString();
-
+        
 				TreeItem item = new TreeItem(hypobj.getName(), name, description, parentid, DateCreated, author); //TODO
 				if (dateModified != null) {
 					item.setDateModified(dateModified);
@@ -498,7 +497,6 @@ public class DiskRepository extends KBRepository {
 			KBObject notesobj = kb.getPropertyValue(hypitem, pmap.get("hasNotes"));
 			if (notesobj != null)
 				hypothesis.setNotes(notesobj.getValueAsString());
-
 			this.updateTripleDetails(graph, provkb);
 
 			return hypothesis;
