@@ -157,10 +157,15 @@
 		<g:HTMLPanel ui:field="description">
 		  <div style="padding: 4px 10px; font-size: 14px; color: #666">
 			 <div style="float:right">
+			    <!--g:CheckBox ui:field='onlyMine'>
+			    <label>Show only my hypothesis</label>
+			    </g:CheckBox-->
 					<label>Order by</label>
 					<g:ListBox ui:field='order'>
-						<g:item value='date'>date</g:item>
-						<g:item value='author'>author</g:item>
+						<g:item value='dateasc'>Date</g:item>
+						<g:item value='datedesc'>Date (desc)</g:item>
+						<g:item value='authorasc'>Author</g:item>
+						<g:item value='authordesc'>Author (desc)</g:item>
 					</g:ListBox>
 			 </div>
 		    <div style="margin-top: 5px;">

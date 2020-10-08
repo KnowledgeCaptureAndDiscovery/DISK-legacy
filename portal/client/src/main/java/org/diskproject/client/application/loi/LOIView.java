@@ -1,11 +1,10 @@
 package org.diskproject.client.application.loi;
 
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 
 import org.diskproject.client.Config;
+import org.diskproject.client.Utils;
 import org.diskproject.client.application.ApplicationSubviewImpl;
 import org.diskproject.client.components.list.ListNode;
 import org.diskproject.client.components.list.ListWidget;
@@ -22,7 +21,6 @@ import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.util.GUID;
 
 import com.google.gwt.core.client.Callback;
-import com.google.gwt.core.shared.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.i18n.client.DateTimeFormat;
@@ -47,6 +45,7 @@ public class LOIView extends ApplicationSubviewImpl
 
   String userid;
   String domain;
+  String loiid;
   boolean addmode;
   List<TreeItem> LOIList;
 
@@ -87,6 +86,7 @@ public class LOIView extends ApplicationSubviewImpl
     this.setSidebar(sidebar);
     
     if(params.length == 0) {
+    	loiid = null;
     	if (LOIList == null) {
     		this.loadLOIList();
     	} else {
@@ -94,6 +94,7 @@ public class LOIView extends ApplicationSubviewImpl
     	}
     }
     else {
+      loiid = params[0];
       this.showLOI(params[0]);
     }
   }
@@ -130,44 +131,15 @@ public class LOIView extends ApplicationSubviewImpl
 
   private void applyOrder () {
     String orderType = order.getSelectedValue();
-    GWT.log(">> " + orderType);
     if (orderType != null) {
-    	if (orderType.compareTo("date") == 0) {
-			Collections.sort(LOIList, new Comparator<TreeItem>(){
-				@Override
-				public int compare (TreeItem l, TreeItem r) {
-					String lc = l.getCreationDate();
-					String lr = r.getCreationDate();
-					if (lc != null && lr != null) {
-						DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
-						Date dl = fm.parse(lc);
-						Date dr = fm.parse(lr);
-						if (dl.after(dr)) return -1;
-						else return 1;
-					} else if (lc != null) {
-						return -1;
-					} else if (lr != null) {
-						return 1;
-					}
-					return 0;
-				}
-			});
-    	} else if (orderType.compareTo("author") == 0) {
-			Collections.sort(LOIList, new Comparator<TreeItem>(){
-				@Override
-				public int compare (TreeItem l, TreeItem r) {
-					String la = l.getAuthor();
-					String ra = r.getAuthor();
-					if (la != null && ra != null) {
-						return la.compareTo(ra);
-					} else if (la != null) {
-						return -1;
-					} else if (ra != null) {
-						return 1;
-					}
-					return 0;
-				}
-			});
+    	if (orderType.compareTo("dateasc") == 0) {
+			Collections.sort(LOIList, Utils.ascDateOrder);
+    	} else if (orderType.compareTo("datedesc") == 0) {
+			Collections.sort(LOIList, Utils.descDateOrder);
+    	} else if (orderType.compareTo("authorasc") == 0) {
+			Collections.sort(LOIList, Utils.ascAuthorOrder);
+    	} else if (orderType.compareTo("authordesc") == 0) {
+			Collections.sort(LOIList, Utils.descAuthorOrder);
     	}
     }
   }
@@ -189,6 +161,7 @@ public class LOIView extends ApplicationSubviewImpl
 	loader.setVisible(false);  
 	addicon.setVisible(true);
 	loilist.setVisible(true);
+  form.setVisible(false);
 	description.setVisible(true);
   }
 
@@ -204,9 +177,12 @@ public class LOIView extends ApplicationSubviewImpl
           @Override
           public void onSuccess(LineOfInquiry result) {
             loader.setVisible(false);
-            form.setVisible(true);
-            form.setNamespace(getNamespace(result.getId()));
-            form.load(result);            
+            if (loiid != null) {
+            	loilist.setVisible(false);
+				form.setVisible(true);
+				form.setNamespace(getNamespace(result.getId()));
+				form.load(result);            
+            }
           }
           @Override
           public void onFailure(Throwable reason) {
@@ -282,6 +258,7 @@ public class LOIView extends ApplicationSubviewImpl
     final ListNode node = event.getItem();
     if(loilist.getNode(node.getId()) != null) {
       if(Window.confirm("Are you sure you want to delete " + node.getName())) {
+    	LOIView me = this;
         DiskREST.deleteLOI(node.getId(), new Callback<Void, Throwable>() {
           @Override
           public void onFailure(Throwable reason) {
@@ -290,6 +267,7 @@ public class LOIView extends ApplicationSubviewImpl
           @Override
           public void onSuccess(Void result) {
             loilist.removeNode(node);
+        	me.loadLOIList();
           }
         });
       }

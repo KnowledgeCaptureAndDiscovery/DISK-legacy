@@ -25,7 +25,6 @@ import org.diskproject.shared.api.DiskService;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
 import org.diskproject.shared.classes.common.Triple;
-import org.diskproject.shared.classes.firebase.User;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
@@ -397,14 +396,12 @@ public class DiskResource implements DiskService {
   }  
 
   @POST
-  @Path("{username}/{domain}/login")
+  @Path("{username}/{domain}/sparql")
   @Override
-  public Boolean login(
+  public String sparql(
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
-      @JsonProperty("user") User user) {
-    //return this.repo.login(username, domain, user);
-    return WingsAdapter.get().login(username, domain, user);
+      @JsonProperty("query") String query) {
+    return this.repo.directQuery(username, domain, query);
   }
-   
 }

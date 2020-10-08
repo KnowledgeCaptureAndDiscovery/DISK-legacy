@@ -4,7 +4,8 @@ public class TreeItem {
   String id;
   String name;
   String description;
-  String creationDate;
+  String dateCreated;
+  String dateModified;
   String author;
   String parentId;
 
@@ -15,7 +16,7 @@ public class TreeItem {
     this.name = name;
     this.description = description;
     this.parentId = parentId;
-    this.creationDate = creationDate;
+    this.dateCreated = creationDate;
     this.author = author;
   }
   
@@ -52,11 +53,19 @@ public class TreeItem {
   }
   
   public void setCreationDate (String date ) {
-	  this.creationDate = date;
+	  this.dateCreated = date;
   }
   
   public String getCreationDate () {
-	  return creationDate;
+	  return dateCreated;
+  }
+  
+  public void setDateModified (String date) {
+	  this.dateModified = date;
+  }
+  
+  public String getDateModified () {
+	  return dateModified;
   }
   
   public void setAuthor (String author) {

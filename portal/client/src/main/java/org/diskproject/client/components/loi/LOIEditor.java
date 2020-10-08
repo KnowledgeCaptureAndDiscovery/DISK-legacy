@@ -51,7 +51,7 @@ public class LOIEditor extends Composite
   int loadcount=0;
 
   @UiField PaperInputElement name;
-  @UiField PaperTextareaElement description;
+  @UiField PaperTextareaElement description, notes;
   @UiField SparqlInput hypothesisQuery;
   @UiField SparqlInput dataQuery;
   @UiField LOIWorkflowList workflowlist, metaworkflowlist;
@@ -85,6 +85,8 @@ public class LOIEditor extends Composite
     this.loi = loi;
     name.setValue(loi.getName());
     description.setValue(loi.getDescription());
+    notes.setValue(loi.getNotes());
+
     if(loi.getHypothesisQuery() != null && loadcount==12) {
       hypothesisQuery.setValue(loi.getHypothesisQuery());
     }
@@ -168,6 +170,7 @@ public class LOIEditor extends Composite
     }
     
     loi.setDescription(description.getValue());
+    loi.setNotes(notes.getValue());
     loi.setName(name.getValue());
     loi.setHypothesisQuery(hypothesisQuery.getValue());
     loi.setDataQuery(dataQuery.getValue());
@@ -210,6 +213,20 @@ public class LOIEditor extends Composite
           resultContainer.setInnerHTML("An error occurred while executing the query. Please try again.");
         }
       });
+    
+    /* Example to make general queries 
+    DiskREST.sparql(query, new Callback<String, Throwable>() {
+        @Override
+        public void onSuccess(String result) {
+        	GWT.log("200> " + result);
+        }
+
+		@Override
+		public void onFailure(Throwable reason) {
+			// TODO Auto-generated method stub
+			
+		}
+    });*/
   }
 
   @UiHandler("displayVariables")

@@ -7,12 +7,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.diskproject.client.Config;
+import org.diskproject.client.authentication.AuthUser;
 import org.diskproject.client.authentication.AuthenticatedDispatcher;
 import org.diskproject.shared.api.DiskService;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
 import org.diskproject.shared.classes.common.Triple;
-import org.diskproject.shared.classes.firebase.User;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
@@ -28,7 +28,6 @@ import org.fusesource.restygwt.client.REST;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.i18n.shared.DateTimeFormat;
-import com.google.gwt.user.client.Cookies;
 
 public class DiskREST {
   public static DiskService diskService;
@@ -221,12 +220,13 @@ public class DiskREST {
 	  
 	DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
 	String date = fm.format(new Date());
-	hypothesis.setCreationDate(date);
 
-	String name = Cookies.getCookie("sname");
-	if (name != null) {
-		hypothesis.setAuthor(name);
+	if (hypothesis.getDateCreated() != null) {
+		hypothesis.setDateModified(date);
+	} else {
+		hypothesis.setDateCreated(date);
 	}
+	hypothesis.setAuthor(AuthUser.getUsername());
 
     REST.withCallback(new MethodCallback<Void>() {
       @Override
@@ -338,6 +338,8 @@ public class DiskREST {
       @Override
       public void onFailure(Method method, Throwable exception) {
     	GWT.log("-> 2");
+    	GWT.log(method.toString());
+    	GWT.log(exception.toString());
         callback.onFailure(exception);
       }      
     }).call(getDiskService()).testLOI(username, domain, query);
@@ -347,11 +349,13 @@ public class DiskREST {
       final Callback<Void, Throwable> callback) {
 	DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
 	String date = fm.format(new Date());
-	loi.setCreationDate(date);
-	String name = Cookies.getCookie("sname");
-	if (name != null) {
-		loi.setAuthor(name);
+	
+	if (loi.getDateCreated() != null) {
+		loi.setDateModified(date);
+	} else {
+		loi.setDateCreated(date);
 	}
+	loi.setAuthor(AuthUser.getUsername());
 
     REST.withCallback(new MethodCallback<Void>() {
       @Override
@@ -399,13 +403,17 @@ public class DiskREST {
    */
   public static void addTriggeredLOI(TriggeredLOI tloi, 
       final Callback<Void, Throwable> callback) {
+
 	DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
 	String date = fm.format(new Date());
-	tloi.setCreationDate(date);
-	String name = Cookies.getCookie("sname");
-	if (name != null) {
-		tloi.setAuthor(name);
+	
+	if (tloi.getDateCreated() != null) {
+		tloi.setDateModified(date);
+	} else {
+		tloi.setDateCreated(date);
 	}
+	
+	tloi.setAuthor(AuthUser.getUsername());
 
     REST.withCallback(new MethodCallback<Void>() {
       @Override
@@ -576,20 +584,17 @@ public class DiskREST {
 	    }).call(getDiskService()).monitorWorkflow(username, domain, id);
 	  } 
 
-  
-  public static void login(final String email, final String password,
-	      final Callback<Boolean, Throwable> callback) {
-	  	User user = new User(email, password);
-	    REST.withCallback(new MethodCallback<Boolean>() {
+  public static void sparql(final String query, final Callback<String, Throwable> callback) {
+	    REST.withCallback(new MethodCallback<String>() {
 	      @Override
-	      public void onSuccess(Method method, Boolean response) {
+	      public void onSuccess(Method method, String response) {
 	    	  callback.onSuccess(response);
 	      }
 	      @Override
 	      public void onFailure(Method method, Throwable exception) {
 	        callback.onFailure(exception);
 	      }      
-	    }).call(getDiskService()).login(username, domain, user);
+	    }).call(getDiskService()).sparql(username, domain, query);
 	  } 
   
 }

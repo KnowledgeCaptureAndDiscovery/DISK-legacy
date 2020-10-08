@@ -111,8 +111,10 @@
 			 <div style="float:right">
 					<label>Order by</label>
 					<g:ListBox ui:field='order'>
-						<g:item value='date'>date</g:item>
-						<g:item value='author'>author</g:item>
+						<g:item value='dateasc'>Date</g:item>
+						<g:item value='datedesc'>Date (desc)</g:item>
+						<g:item value='authorasc'>Author</g:item>
+						<g:item value='authordesc'>Author (desc)</g:item>
 					</g:ListBox>
 			 </div>
 				<div style="margin-top: 5px;">

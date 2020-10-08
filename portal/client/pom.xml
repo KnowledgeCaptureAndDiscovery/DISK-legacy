@@ -12,7 +12,7 @@
     <parent>
         <groupId>org.disk-project</groupId>
         <artifactId>disk-project</artifactId>
-        <version>2.3.7</version>
+        <version>2.3.8</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -90,18 +90,19 @@
 			<artifactId>gwt-codeserver</artifactId>
 			<scope>provided</scope>
 		</dependency>
-        <dependency>
-            <groupId>com.googlecode.gwtquery</groupId>
-            <artifactId>gwtquery</artifactId>
-            <version>1.4.4-SNAPSHOT</version>
-            <scope>provided</scope>
-            <exclusions>
-              <exclusion>
-                <groupId>com.google.gwt</groupId>
-                <artifactId>gwt-elemental</artifactId>
-              </exclusion>
-            </exclusions>
-        </dependency>		
+
+		<dependency>
+				<groupId>com.googlecode.gwtquery</groupId>
+				<artifactId>gwtquery</artifactId>
+				<version>1.4.4-SNAPSHOT</version>
+				<scope>provided</scope>
+				<exclusions>
+					<exclusion>
+						<groupId>com.google.gwt</groupId>
+						<artifactId>gwt-elemental</artifactId>
+					</exclusion>
+				</exclusions>
+		</dependency>		
 
 		<!-- Vaadin GWT Polymer -->
 		<dependency>
@@ -110,7 +111,7 @@
 			<version>${vaadin-polymer.version}</version>
 			<scope>provided</scope>
 		</dependency>	
-		
+
 		<!-- GWT D3 -->
 		<dependency>
 			<groupId>com.github.gwtd3</groupId>
@@ -155,7 +156,16 @@
 			<version>${restygwt.version}</version>
 			<scope>provided</scope>
 		</dependency>
+		
+		<!-- Keycloak -->
+		<dependency>
+			 <groupId>org.realityforge.gwt.keycloak</groupId>
+			 <artifactId>gwt-keycloak</artifactId>
+			 <version>0.7</version>
+			 <scope>provided</scope>
+		</dependency>
 	</dependencies>
+	
 
 	<build>
 		<plugins>

@@ -5,6 +5,9 @@
 	<inherits name="com.google.gwt.uibinder.UiBinder" />
 	<inherits name="com.google.gwt.inject.Inject" />
 	<inherits name="com.google.gwt.resources.Resources" />
+
+	<!-- Enable the keycloak library -->
+  <inherits name="org.realityforge.gwt.keycloak.Keycloak"/>
 	
 	<!-- Model View Presenter -->
 	<inherits name='com.gwtplatform.mvp.Mvp' />

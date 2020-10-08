@@ -11,7 +11,10 @@ public class LineOfInquiry {
   String dataQuery;
   List<WorkflowBindings> workflows;
   List<WorkflowBindings> metaWorkflows;
-  String creationDate, author;
+  String notes;
+  String author;
+  String dateCreated;
+  String dateModified;
 
   public LineOfInquiry() {
     this.workflows = new ArrayList<WorkflowBindings>();
@@ -52,6 +55,14 @@ public class LineOfInquiry {
 
   public String getDescription() {
     return description;
+  }
+
+  public String getNotes() {
+    return notes;
+  }
+
+  public void setNotes(String notes) {
+    this.notes = notes;
   }
 
   public void setDescription(String description) {
@@ -98,20 +109,27 @@ public class LineOfInquiry {
     this.metaWorkflows.add(metaWorkflowid);
   }
   
-  public void setCreationDate(String date) {
-	  this.creationDate = date;
+  public void setDateCreated(String date) {
+	  this.dateCreated = date;
   }
   
   public void setAuthor (String author) {
 	  this.author = author;
   }
   
-  public String getCreationDate () {
-	  return this.creationDate;
+  public String getDateCreated () {
+	  return this.dateCreated;
   }
   
   public String getAuthor () {
 	  return this.author;
   }
-
+  
+  public void setDateModified(String date) {
+	  this.dateModified = date;
+  }
+  
+  public String getDateModified () {
+	  return this.dateModified;
+  }
 }

@@ -16,7 +16,6 @@ import javax.ws.rs.Produces;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
 import org.diskproject.shared.classes.common.Triple;
-import org.diskproject.shared.classes.firebase.User;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
@@ -241,9 +240,9 @@ public interface DiskService extends DirectRestService {
       @PathParam("id") String id);
 
   @POST
-  @Path("{username}/{domain}/login")
-  public Boolean login(
+  @Path("{username}/{domain}/sparql")
+  public String sparql(
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
-      @JsonProperty("user") User user);
+      @JsonProperty("query") String query);
 }
