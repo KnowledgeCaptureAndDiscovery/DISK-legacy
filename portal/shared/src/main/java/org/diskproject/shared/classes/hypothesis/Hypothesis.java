@@ -71,7 +71,7 @@ public class Hypothesis {
     this.graph = graph;
   }
 
-  public void setCreationDate(String date) {
+  public void setDateCreated(String date) {
 	  this.dateCreated = date;
   }
 
@@ -79,7 +79,7 @@ public class Hypothesis {
 	  this.author = author;
   }
 
-  public String getCreationDate () {
+  public String getDateCreated () {
 	  return this.dateCreated;
   }
 

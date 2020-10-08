@@ -2,13 +2,12 @@ package org.diskproject.client.application.hypothesis;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.diskproject.client.Config;
+import org.diskproject.client.Utils;
 import org.diskproject.client.application.ApplicationSubviewImpl;
 import org.diskproject.client.components.hypothesis.HypothesisEditor;
 import org.diskproject.client.components.hypothesis.events.HypothesisSaveEvent;
@@ -29,7 +28,6 @@ import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.util.GUID;
 import org.diskproject.shared.classes.workflow.VariableBinding;
 
-import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.DivElement;
@@ -77,7 +75,7 @@ public class HypothesisView extends ApplicationSubviewImpl
   @UiField HTMLPanel dialogContent;
   
   @UiField ListBox order;
-  @UiField CheckBox onlyMine;
+  //@UiField CheckBox onlyMine;
 
   @UiField DialogBox helpDialog;
   
@@ -163,7 +161,7 @@ public class HypothesisView extends ApplicationSubviewImpl
       @Override
       public void onSuccess(List<TriggeredLOI> result) {
         tloilist = result;
-        if(treelist != null)
+        if (treelist != null)
           loadHypothesisTLOITree();
       }
       @Override
@@ -181,63 +179,34 @@ public class HypothesisView extends ApplicationSubviewImpl
 	}
 	
 	
-	@UiHandler("onlyMine")
+	/*@UiHandler("onlyMine")
 	void onClick(ClickEvent event) {
 		loadHypothesisTLOITree();
-	}
+	}*/
 
   private void applyOrder (List<TreeItem> list)  {
     String orderType = order.getSelectedValue();
-    GWT.log(">> " + orderType);
     if (orderType != null) {
-    	if (orderType.compareTo("date") == 0) {
-			Collections.sort(treelist, new Comparator<TreeItem>(){
-				@Override
-				public int compare (TreeItem l, TreeItem r) {
-					String lc = l.getCreationDate();
-					String lr = r.getCreationDate();
-					if (lc != null && lr != null) {
-						DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
-						Date dl = fm.parse(lc);
-						Date dr = fm.parse(lr);
-						if (dl.after(dr)) return -1;
-						else return 1;
-					} else if (lc != null) {
-						return -1;
-					} else if (lr != null) {
-						return 1;
-					}
-					return 0;
-				}
-			});
-    	} else if (orderType.compareTo("author") == 0) {
-			Collections.sort(treelist, new Comparator<TreeItem>(){
-				@Override
-				public int compare (TreeItem l, TreeItem r) {
-					String la = l.getAuthor();
-					String ra = r.getAuthor();
-					if (la != null && ra != null) {
-						return la.compareTo(ra);
-					} else if (la != null) {
-						return -1;
-					} else if (ra != null) {
-						return 1;
-					}
-					return 0;
-				}
-			});
+    	if (orderType.compareTo("dateasc") == 0) {
+			Collections.sort(treelist, Utils.ascDateOrder);
+    	} else if (orderType.compareTo("datedesc") == 0) {
+			Collections.sort(treelist, Utils.descDateOrder);
+    	} else if (orderType.compareTo("authorasc") == 0) {
+			Collections.sort(treelist, Utils.ascAuthorOrder);
+    	} else if (orderType.compareTo("authordesc") == 0) {
+			Collections.sort(treelist, Utils.descAuthorOrder);
     	}
     }
   }
   
-  private void applyFilter (List<TreeItem> list) {
+  /*private void applyFilter (List<TreeItem> list) {
     Boolean mine = onlyMine.getValue();
     String username = Cookies.getCookie("sname");
     if (mine && username != null) {
     	GWT.log("Filtering...");
     	list.removeIf(c -> c.getAuthor() != username);
     }
-  }
+  }*/
 
   private void loadHypothesisTLOITree() {
     if(treelist == null || tloilist == null)
@@ -252,7 +221,7 @@ public class HypothesisView extends ApplicationSubviewImpl
         "A List of Hypotheses", null, null);
     
     applyOrder(treelist);
-    applyFilter(treelist);
+    //applyFilter(treelist);
     
     HashMap<String, TreeNode> map = new HashMap<String, TreeNode>();
     for(TreeItem item : treelist) {
@@ -421,13 +390,10 @@ public class HypothesisView extends ApplicationSubviewImpl
 	  for (VariableBinding b: wf.getBindings()) {
 		  varList.addItem(b.getVariable());
 		  dialogContent.add(varList);
-		  //GWT.log(">" + b.getVariable());
-		  //GWT.log("<" + b.getBinding());
 		  String binds = b.getBinding().replace("]", "").replace("[", "");
 		  List<CheckBox> cblist = new ArrayList<CheckBox>();
 		  checkMap.put(b.getVariable(), cblist);
 		  for (String bind: binds.split(",")) {
-			  GWT.log(">>" + bind);
 			  CheckBox cb = new CheckBox(bind);
 			  cb.setValue(true);
 			  cb.setStyleName("block");
@@ -513,6 +479,7 @@ public class HypothesisView extends ApplicationSubviewImpl
     if(event.getAction().getId().equals("delete")) {
       if(Window.confirm("Are you sure you want to delete " + node.getName())) {
         if(node.getType().equals(NameTokens.hypotheses)) {
+          HypothesisView me = this;
           DiskREST.deleteHypothesis(node.getId(), new Callback<Void, Throwable>() {
             @Override
             public void onFailure(Throwable reason) {
@@ -521,6 +488,7 @@ public class HypothesisView extends ApplicationSubviewImpl
             @Override
             public void onSuccess(Void result) {
               AppNotification.notifySuccess("Deleted", 500);
+              me.showHypothesisList();
               tree.removeNode(node);
             }
           });
@@ -560,9 +528,7 @@ public class HypothesisView extends ApplicationSubviewImpl
 	  String strb = "[" + String.join(",", bindings) + "]";
 	  strb = strb.replace(" ", "").replace(",", ", ");
 	  for (VariableBinding b: selectedWorkflow.getBindings()) {
-		  //GWT.log('<' + b.getBinding());
 		  b.setBinding(strb);
-		  //GWT.log('>' + b.getBinding());
 	  }
 	  
 	  showTriggeredLOIOptions(matches);

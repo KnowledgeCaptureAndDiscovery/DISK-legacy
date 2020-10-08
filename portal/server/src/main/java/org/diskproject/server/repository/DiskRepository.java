@@ -428,10 +428,10 @@ public class DiskRepository extends KBRepository {
 				if (parentobj != null)
 					parentid = parentobj.getName();
 
-				String creationDate = null;
+				String DateCreated = null;
 				KBObject dateobj = kb.getPropertyValue(hypobj, pmap.get("dateCreated"));
 				if (dateobj != null)
-					creationDate = dateobj.getValueAsString();
+					DateCreated = dateobj.getValueAsString();
 
 				String dateModified = null;
 				KBObject dateModifiedObj = kb.getPropertyValue(hypobj, pmap.get("dateModified"));
@@ -443,7 +443,7 @@ public class DiskRepository extends KBRepository {
 				if (authorobj != null)
 					author = authorobj.getValueAsString();
 
-				TreeItem item = new TreeItem(hypobj.getName(), name, description, parentid, creationDate, author); //TODO
+				TreeItem item = new TreeItem(hypobj.getName(), name, description, parentid, DateCreated, author); //TODO
 				if (dateModified != null) {
 					item.setDateModified(dateModified);
 				}
@@ -485,7 +485,7 @@ public class DiskRepository extends KBRepository {
 
 			KBObject dateobj = kb.getPropertyValue(hypitem, pmap.get("dateCreated"));
 			if (dateobj != null)
-				hypothesis.setCreationDate(dateobj.getValueAsString());
+				hypothesis.setDateCreated(dateobj.getValueAsString());
 
 			KBObject dateModifiedObj = kb.getPropertyValue(hypitem, pmap.get("dateModified"));
 			if (dateModifiedObj != null)
@@ -494,6 +494,10 @@ public class DiskRepository extends KBRepository {
 			KBObject authorobj = kb.getPropertyValue(hypitem, pmap.get("author"));
 			if (authorobj != null)
 				hypothesis.setAuthor(authorobj.getValueAsString());
+
+			KBObject notesobj = kb.getPropertyValue(hypitem, pmap.get("hasNotes"));
+			if (notesobj != null)
+				hypothesis.setNotes(notesobj.getValueAsString());
 
 			this.updateTripleDetails(graph, provkb);
 
@@ -620,8 +624,8 @@ public class DiskRepository extends KBRepository {
 				String fullparentid = url + "/" + hypothesis.getParentId();
 				kb.setPropertyValue(hypitem, pmap.get("hasParentHypothesis"), kb.getResource(fullparentid));
 			}
-			if (hypothesis.getCreationDate() != null) {
-				kb.setPropertyValue(hypitem, pmap.get("dateCreated"), provkb.createLiteral(hypothesis.getCreationDate()));
+			if (hypothesis.getDateCreated() != null) {
+				kb.setPropertyValue(hypitem, pmap.get("dateCreated"), provkb.createLiteral(hypothesis.getDateCreated()));
 			}
 			if (hypothesis.getDateModified() != null) {
 				kb.setPropertyValue(hypitem, pmap.get("dateModified"), provkb.createLiteral(hypothesis.getDateModified()));
@@ -629,9 +633,9 @@ public class DiskRepository extends KBRepository {
 			if (hypothesis.getAuthor() != null) {
 				kb.setPropertyValue(hypitem, pmap.get("author"), provkb.createLiteral(hypothesis.getAuthor()));
 			}
-			/*if (hypothesis.getNotes() != null) {
+			if (hypothesis.getNotes() != null) {
 				kb.setPropertyValue(hypitem, pmap.get("hasNotes"), hypkb.createLiteral(hypothesis.getNotes()));
-			}*/
+			}
 
 			this.save(kb);
 			this.end();
@@ -726,6 +730,28 @@ public class DiskRepository extends KBRepository {
 		return pattern;
 	}
 
+	private String addQueryAssertions (String queryPattern, String assertionUri) {
+	  Pattern ASSERTION_PATTERN = Pattern.compile("(user:[^\\s]+)");
+  	  String extra = "";
+	  try {
+  		this.start_read();
+  		Graph graph = this.getKBGraph(assertionUri);
+  		Matcher m = ASSERTION_PATTERN.matcher(queryPattern);
+  		while (m.find()) {
+  		    String s = m.group(1);
+  		    String id = s.replace("user:", "http://localhost:8080/disk-project-server/admin/test/assertions#");
+  			for (Triple t: graph.getTriplesForSubject(id)) {
+  				extra += s + " <" + t.getPredicate().toString() + "> " + t.getObject().toString() + " .\n";
+  				System.out.println("+ " + extra);
+  			}
+  		}
+	  }
+	  finally {
+	    this.end();
+	  }
+	  return queryPattern + extra;
+	}
+
 	private String getSparqlQuery(String queryPattern, String assertionsUri) {
 
 		return "PREFIX bio: <" + KBConstants.OMICSNS() + ">\n" + "PREFIX neuro: <" + KBConstants.NEURONS() + ">\n"
@@ -769,11 +795,14 @@ public class DiskRepository extends KBRepository {
 			ArrayList<ArrayList<SparqlQuerySolution>> allDataSolutions = null;
 			boolean wikiStore = Config.get().getProperties().containsKey("data-store");
 			if(wikiStore) {
-			  //String externalStore = Config.get().getProperties().getString("data-store");
-			  //allDataSolutions = queryKb.sparqlQueryRemote(dataSparqlQuery, externalStore);
-			  String[] r2 = DataQuery.queryFor(dataSparqlQuery);
-			  for (String r: r2) {
-				  System.out.println(">>>>> " + r);
+			  String externalStore = Config.get().getProperties().getString("data-store");
+			  String dataUser = Config.get().getProperties().getString("ENIGMA.username");
+			  String dataPass = Config.get().getProperties().getString("ENIGMA.password");
+			  if (dataUser != null && dataPass != null) {
+				  //Data store is password protected.
+				  allDataSolutions = queryKb.sparqlQueryRemote(dataSparqlQuery, externalStore, dataUser, dataPass);
+			  } else {
+				  allDataSolutions = queryKb.sparqlQueryRemote(dataSparqlQuery, externalStore);
 			  }
 			} else {
 			  allDataSolutions = queryKb.sparqlQuery(dataSparqlQuery);
@@ -786,6 +815,7 @@ public class DiskRepository extends KBRepository {
 					List<String> val = new ArrayList<String>();
 					val.add(solution.getVariable());
 					val.add(solution.getObject().getValueAsString());
+					System.out.println(solution.getObject().getValueAsString());
 					row.add(val);
 				}
 				result.add(row);
@@ -870,7 +900,10 @@ public class DiskRepository extends KBRepository {
 
 					//boundDataQuery = hypPattern + boundHypothesisQuery + boundDataQuery;
 					boundDataQuery = this.filterQueryBindings(boundDataQuery, "hyp:");
+					boundDataQuery = this.addQueryAssertions(boundDataQuery, assertions);
+					boundDataQuery = boundDataQuery.replace("user:", "?");
 					String dataSparqlQuery = this.getSparqlQuery(boundDataQuery, assertions);
+					
 					TriggeredLOI tloi = null;
 
 					ArrayList<ArrayList<SparqlQuerySolution>> allDataSolutions = null;
@@ -878,7 +911,14 @@ public class DiskRepository extends KBRepository {
 					
 					if(wikiStore) {
 					  String externalStore = Config.get().getProperties().getString("data-store");
-					  allDataSolutions = queryKb.sparqlQueryRemote(dataSparqlQuery, externalStore);
+					  String dataUser = Config.get().getProperties().getString("ENIGMA.username");
+					  String dataPass = Config.get().getProperties().getString("ENIGMA.password");
+					  if (dataUser != null && dataPass != null) {
+						  //Data store is password protected.
+						  allDataSolutions = queryKb.sparqlQueryRemote(dataSparqlQuery, externalStore, dataUser, dataPass);
+					  } else {
+						  allDataSolutions = queryKb.sparqlQueryRemote(dataSparqlQuery, externalStore);
+					  }
 					}
 					else {
 					  allDataSolutions = queryKb.sparqlQuery(dataSparqlQuery);
@@ -934,7 +974,7 @@ public class DiskRepository extends KBRepository {
 		nsmap.put(assertions + "#", "user:");
 		nsmap.put(hypuri + "#", "?");
 
-		//System.out.println("-- queryHypothesisData --");
+		System.out.println("-- queryHypothesisData --");
 		
         Map<String, List<String>> data = new HashMap<String, List<String>>();
 
@@ -952,7 +992,7 @@ public class DiskRepository extends KBRepository {
 			for (TreeItem item : this.listLOIs(username, domain)) {
 				LineOfInquiry loi = this.getLOI(username, domain, item.getId());
 				String hypothesisQuery = loi.getHypothesisQuery();
-				//System.out.println("Check LOI id=" + loi.getId());
+				System.out.println("Check LOI id=" + loi.getId());
 
 				String dataQuery = loi.getDataQuery();
 				if (hypothesisQuery == null || hypothesisQuery.equals("") || dataQuery == null || dataQuery.equals(""))
@@ -962,7 +1002,7 @@ public class DiskRepository extends KBRepository {
 
 				String hypSparqlQuery = this.getSparqlQuery(hypothesisQuery, assertions);
 				
-				//System.out.println("Hypothesis Query\n" + hypSparqlQuery);
+				System.out.println("Hypothesis Query\n" + hypSparqlQuery);
 				
 				this.start_read();
 				for (ArrayList<SparqlQuerySolution> hypothesisSolutions : queryKb.sparqlQuery(hypSparqlQuery)) {
@@ -979,24 +1019,38 @@ public class DiskRepository extends KBRepository {
 								value = "<" + solution.getObject().getID() + ">";
 						}
 						hypVarBindings.put(solution.getVariable(), value);
-						//System.out.println("Solution: " + solution.getVariable() + " - " + value);
+						System.out.println("Solution: " + solution.getVariable() + " - " + value);
 					}
 
 					//String boundHypothesisQuery = this.getQueryBindings(hypothesisQuery, varPattern, hypVarBindings);
 					String boundDataQuery = this.getQueryBindings(dataQuery, varPattern, hypVarBindings);
+					System.out.println("BDQ>  " + boundDataQuery);
 
 					//boundDataQuery = hypPattern + boundHypothesisQuery + boundDataQuery;
 					boundDataQuery = this.filterQueryBindings(boundDataQuery, "hyp:");
+					System.out.println("BDQ2>  " + boundDataQuery);
+					
+					boundDataQuery = this.addQueryAssertions(boundDataQuery, assertions);
+					boundDataQuery = boundDataQuery.replace("user:", "?");
+					System.out.println("BDQ3>  " + boundDataQuery);
+
 					String dataSparqlQuery = this.getSparqlQuery(boundDataQuery, assertions);
-					//System.out.println("Data SPARQL Query:\n" + dataSparqlQuery);
+					System.out.println("Data SPARQL Query:\n" + dataSparqlQuery);
 
 					ArrayList<ArrayList<SparqlQuerySolution>> allDataSolutions = null;
 					boolean wikiStore = Config.get().getProperties().containsKey("data-store");
 					
 					if(wikiStore) {
-					  //System.out.println("Using wikistore");
+					  System.out.println("Using wikistore");
 					  String externalStore = Config.get().getProperties().getString("data-store");
-					  allDataSolutions = queryKb.sparqlQueryRemote(dataSparqlQuery, externalStore);
+					  String dataUser = Config.get().getProperties().getString("ENIGMA.username");
+					  String dataPass = Config.get().getProperties().getString("ENIGMA.password");
+					  if (dataUser != null && dataPass != null) {
+						  //Data store is password protected.
+						  allDataSolutions = queryKb.sparqlQueryRemote(dataSparqlQuery, externalStore, dataUser, dataPass);
+					  } else {
+						  allDataSolutions = queryKb.sparqlQueryRemote(dataSparqlQuery, externalStore);
+					  }
 					} else {
 					  //System.out.println("Using local kb");
 					  allDataSolutions = queryKb.sparqlQuery(dataSparqlQuery);
@@ -1387,15 +1441,17 @@ public class DiskRepository extends KBRepository {
 				kb.setLabel(loiitem, loi.getName());
 			if (loi.getDescription() != null)
 				kb.setComment(loiitem, loi.getDescription());
-			if (loi.getCreationDate() != null) {
-				kb.setPropertyValue(loiitem, pmap.get("dateCreated"), loikb.createLiteral(loi.getCreationDate()));
+			if (loi.getDateCreated() != null) {
+				kb.setPropertyValue(loiitem, pmap.get("dateCreated"), loikb.createLiteral(loi.getDateCreated()));
 			}
 			if (loi.getDateModified() != null) {
 				kb.setPropertyValue(loiitem, pmap.get("dateModified"), loikb.createLiteral(loi.getDateModified()));
 			}
-
 			if (loi.getAuthor() != null) {
 				kb.setPropertyValue(loiitem, pmap.get("author"), loikb.createLiteral(loi.getAuthor()));
+			}
+			if (loi.getNotes() != null) {
+				kb.setPropertyValue(loiitem, pmap.get("hasNotes"), loikb.createLiteral(loi.getNotes()));
 			}
 			
 			this.save(kb);
@@ -1411,7 +1467,6 @@ public class DiskRepository extends KBRepository {
 				loikb.setPropertyValue(floiitem, pmap.get("hasDataQuery"), valobj);
 			}
 			if (loi.getNotes() != null) {
-				System.out.println("notes detected!:" + loi.getNotes());
 				KBObject valobj = loikb.createLiteral(loi.getNotes());
 				loikb.setPropertyValue(floiitem, pmap.get("hasNotes"), valobj);
 			}
@@ -1545,7 +1600,7 @@ public class DiskRepository extends KBRepository {
 			
 			KBObject dateobj = kb.getPropertyValue(floiitem, pmap.get("dateCreated"));
 			if (dateobj != null)
-				loi.setCreationDate(dateobj.getValueAsString());
+				loi.setDateCreated(dateobj.getValueAsString());
 
 			KBObject dateModifiedObj = kb.getPropertyValue(floiitem, pmap.get("dateModified"));
 			if (dateModifiedObj != null)
@@ -1782,7 +1837,7 @@ public class DiskRepository extends KBRepository {
 
 		KBObject dateobj = kb.getPropertyValue(obj, pmap.get("dateCreated"));
 		if (dateobj != null)
-			tloi.setCreationDate(dateobj.getValueAsString());
+			tloi.setDateCreated(dateobj.getValueAsString());
 		
 		KBObject dateModifiedObj = kb.getPropertyValue(obj, pmap.get("dateModified"));
 		if (dateModifiedObj != null)
@@ -1791,6 +1846,10 @@ public class DiskRepository extends KBRepository {
 		KBObject authorobj = kb.getPropertyValue(obj, pmap.get("author"));
 		if (authorobj != null)
 			tloi.setAuthor(authorobj.getValueAsString());
+
+		KBObject notesobj = kb.getPropertyValue(obj, pmap.get("hasNotes"));
+		if (notesobj != null)
+			tloi.setAuthor(notesobj.getValueAsString());
 
 		if (tloikb != null) {
 			KBObject floiitem = tloikb.getIndividual(id);
@@ -1898,8 +1957,8 @@ public class DiskRepository extends KBRepository {
 				kb.setComment(tloiitem, tloi.getDescription());
 			}
 
-			if (tloi.getCreationDate() != null) {
-				kb.setPropertyValue(tloiitem, pmap.get("dateCreated"), tloikb.createLiteral(tloi.getCreationDate()));
+			if (tloi.getDateCreated() != null) {
+				kb.setPropertyValue(tloiitem, pmap.get("dateCreated"), tloikb.createLiteral(tloi.getDateCreated()));
 			}
 			
 			if (tloi.getDateModified() != null) {
@@ -1908,6 +1967,9 @@ public class DiskRepository extends KBRepository {
 
 			if (tloi.getAuthor() != null) {
 				kb.setPropertyValue(tloiitem, pmap.get("author"), tloikb.createLiteral(tloi.getAuthor()));
+			}
+			if (tloi.getNotes() != null) {
+				kb.setPropertyValue(tloiitem, pmap.get("hasNotes"), tloikb.createLiteral(tloi.getNotes()));
 			}
 
 			if (tloi.getLoiId() != null) {

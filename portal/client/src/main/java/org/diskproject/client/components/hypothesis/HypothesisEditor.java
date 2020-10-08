@@ -75,6 +75,7 @@ public class HypothesisEditor extends Composite
     this.hypothesis = hypothesis;
     name.setValue(hypothesis.getName());
     description.setValue(hypothesis.getDescription());
+    notes.setValue(hypothesis.getNotes());
     if(hypothesis.getGraph() != null && loadcount==4)
       triples.setValue(hypothesis.getGraph().getTriples());
   }

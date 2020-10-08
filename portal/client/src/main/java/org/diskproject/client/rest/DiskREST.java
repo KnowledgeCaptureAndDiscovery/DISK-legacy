@@ -220,7 +220,12 @@ public class DiskREST {
 	  
 	DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
 	String date = fm.format(new Date());
-	hypothesis.setCreationDate(date);
+
+	if (hypothesis.getDateCreated() != null) {
+		hypothesis.setDateModified(date);
+	} else {
+		hypothesis.setDateCreated(date);
+	}
 	hypothesis.setAuthor(AuthUser.getUsername());
 
     REST.withCallback(new MethodCallback<Void>() {
@@ -333,6 +338,8 @@ public class DiskREST {
       @Override
       public void onFailure(Method method, Throwable exception) {
     	GWT.log("-> 2");
+    	GWT.log(method.toString());
+    	GWT.log(exception.toString());
         callback.onFailure(exception);
       }      
     }).call(getDiskService()).testLOI(username, domain, query);
@@ -342,8 +349,12 @@ public class DiskREST {
       final Callback<Void, Throwable> callback) {
 	DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
 	String date = fm.format(new Date());
-	loi.setCreationDate(date);
-
+	
+	if (loi.getDateCreated() != null) {
+		loi.setDateModified(date);
+	} else {
+		loi.setDateCreated(date);
+	}
 	loi.setAuthor(AuthUser.getUsername());
 
     REST.withCallback(new MethodCallback<Void>() {
@@ -395,7 +406,12 @@ public class DiskREST {
 
 	DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
 	String date = fm.format(new Date());
-	tloi.setCreationDate(date);
+	
+	if (tloi.getDateCreated() != null) {
+		tloi.setDateModified(date);
+	} else {
+		tloi.setDateCreated(date);
+	}
 	
 	tloi.setAuthor(AuthUser.getUsername());
 

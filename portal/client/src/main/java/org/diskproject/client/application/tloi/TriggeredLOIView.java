@@ -105,7 +105,7 @@ public class TriggeredLOIView extends ApplicationSubviewImpl
               item.getId(),
               item.getName(), 
               description,
-              item.getCreationDate(),
+              item.getDateCreated(),
               item.getAuthor());
           node.setIcon("icons:explore");
           node.setIconStyle("orange");
