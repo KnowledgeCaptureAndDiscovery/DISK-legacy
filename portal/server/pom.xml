@@ -43,7 +43,7 @@
 		<dependency>
 			<groupId>edu.isi.kcap</groupId>
 			<artifactId>ontapi</artifactId>
-			<version>${ontapi.version}</version>
+			<version>1.2</version>
 		</dependency>
 
 		<!-- Disk shared -->
