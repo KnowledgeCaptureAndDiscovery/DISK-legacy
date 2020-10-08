@@ -27,5 +27,4 @@
 			<url>http://www.wings-workflows.org/archiva/repository/snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
-
 </project>
