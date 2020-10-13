@@ -1,8 +1,10 @@
 package org.diskproject.client.application.loi;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.diskproject.client.Config;
+import org.diskproject.client.Utils;
 import org.diskproject.client.application.ApplicationSubviewImpl;
 import org.diskproject.client.components.list.ListNode;
 import org.diskproject.client.components.list.ListWidget;
@@ -19,8 +21,9 @@ import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.util.GUID;
 
 import com.google.gwt.core.client.Callback;
-import com.google.gwt.core.shared.GWT;
+import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
@@ -29,6 +32,7 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
@@ -41,13 +45,16 @@ public class LOIView extends ApplicationSubviewImpl
 
   String userid;
   String domain;
+  String loiid;
   boolean addmode;
+  List<TreeItem> LOIList;
 
   @UiField Loader loader;
   @UiField PaperFab addicon;
   @UiField ListWidget loilist; 
   @UiField LOIEditor form;
   @UiField HTMLPanel description;
+  @UiField ListBox order;
   
   @UiField DialogBox helpDialog;
   
@@ -59,7 +66,7 @@ public class LOIView extends ApplicationSubviewImpl
     initWidget(binder.createAndBindUi(this));
     loilist.addDeleteAction();
   }
-  
+
   @Override
   public void initializeParameters(String userid, String domain, 
       String[] params, boolean edit, 
@@ -79,13 +86,19 @@ public class LOIView extends ApplicationSubviewImpl
     this.setSidebar(sidebar);
     
     if(params.length == 0) {
-      this.showLOIList();
+    	loiid = null;
+    	if (LOIList == null) {
+    		this.loadLOIList();
+    	} else {
+    		this.showLOIList();
+    	}
     }
     else {
+      loiid = params[0];
       this.showLOI(params[0]);
     }
   }
-  
+
   private void clear() {
     loader.setVisible(false);
     form.setVisible(false);
@@ -94,36 +107,64 @@ public class LOIView extends ApplicationSubviewImpl
     addicon.setVisible(false);
     addmode = false;
   }
-  
-  private void showLOIList() {
+
+  private void loadLOIList () {
     loader.setVisible(true);
     DiskREST.listLOI(new Callback<List<TreeItem>, Throwable>() {
       @Override
       public void onSuccess(List<TreeItem> result) {
-        loilist.clear();
-        for(TreeItem item : result) {
-          ListNode node = new ListNode(
-              item.getId(),
-              item.getName(), 
-              item.getDescription());
-          node.setIcon("icons:explore");
-          node.setIconStyle("green");
-          loilist.addNode(node);
-        }
-        loader.setVisible(false);  
-        addicon.setVisible(true);
-        loilist.setVisible(true);
-        description.setVisible(true);
+    	  LOIList = result;
+    	  showLOIList();
       }
       @Override
       public void onFailure(Throwable reason) {
         loader.setVisible(false);   
         AppNotification.notifyFailure(reason.getMessage());
-        GWT.log("Failed", reason);
       }
     });    
   }
-  
+
+	@UiHandler("order")
+	void onChange(ChangeEvent event) {
+    	showLOIList();
+	}
+
+  private void applyOrder () {
+    String orderType = order.getSelectedValue();
+    if (orderType != null) {
+    	if (orderType.compareTo("dateasc") == 0) {
+			Collections.sort(LOIList, Utils.ascDateOrder);
+    	} else if (orderType.compareTo("datedesc") == 0) {
+			Collections.sort(LOIList, Utils.descDateOrder);
+    	} else if (orderType.compareTo("authorasc") == 0) {
+			Collections.sort(LOIList, Utils.ascAuthorOrder);
+    	} else if (orderType.compareTo("authordesc") == 0) {
+			Collections.sort(LOIList, Utils.descAuthorOrder);
+    	}
+    }
+  }
+
+  private void showLOIList() {
+	loilist.clear();
+	applyOrder();
+	for(TreeItem item : LOIList) {
+	  ListNode node = new ListNode(
+		  item.getId(),
+		  item.getName(), 
+		  item.getDescription(),
+		  item.getCreationDate(),
+		  item.getAuthor());
+	  node.setIcon("icons:explore");
+	  node.setIconStyle("green");
+	  loilist.addNode(node);
+	}
+	loader.setVisible(false);  
+	addicon.setVisible(true);
+	loilist.setVisible(true);
+  form.setVisible(false);
+	description.setVisible(true);
+  }
+
   private void showLOI(final String loiId) {
     loilist.setVisible(false);
     description.setVisible(false);
@@ -136,9 +177,12 @@ public class LOIView extends ApplicationSubviewImpl
           @Override
           public void onSuccess(LineOfInquiry result) {
             loader.setVisible(false);
-            form.setVisible(true);
-            form.setNamespace(getNamespace(result.getId()));
-            form.load(result);            
+            if (loiid != null) {
+            	loilist.setVisible(false);
+				form.setVisible(true);
+				form.setNamespace(getNamespace(result.getId()));
+				form.load(result);            
+            }
           }
           @Override
           public void onFailure(Throwable reason) {
@@ -150,7 +194,7 @@ public class LOIView extends ApplicationSubviewImpl
       }
     });
   }
-  
+
   @UiHandler("addicon")
   void onAddIconClicked(ClickEvent event) {
     loilist.setVisible(false);
@@ -169,7 +213,7 @@ public class LOIView extends ApplicationSubviewImpl
     
     History.newItem(this.getHistoryToken(id), false);
   }
-  
+
   @UiHandler("form")
   void onLOIFormSave(LOISaveEvent event) {
     LineOfInquiry loi = event.getLOI();
@@ -178,6 +222,7 @@ public class LOIView extends ApplicationSubviewImpl
       DiskREST.addLOI(loi, new Callback<Void, Throwable>() {
         @Override
         public void onSuccess(Void result) {
+          LOIList = null;
           AppNotification.notifySuccess("Saved", 500);
         }        
         @Override
@@ -189,6 +234,7 @@ public class LOIView extends ApplicationSubviewImpl
       DiskREST.updateLOI(loi, new Callback<Void, Throwable>() {
         @Override
         public void onSuccess(Void result) {
+          LOIList = null;
           AppNotification.notifySuccess("Updated", 500);
         }        
         @Override
@@ -212,6 +258,7 @@ public class LOIView extends ApplicationSubviewImpl
     final ListNode node = event.getItem();
     if(loilist.getNode(node.getId()) != null) {
       if(Window.confirm("Are you sure you want to delete " + node.getName())) {
+    	LOIView me = this;
         DiskREST.deleteLOI(node.getId(), new Callback<Void, Throwable>() {
           @Override
           public void onFailure(Throwable reason) {
@@ -220,6 +267,7 @@ public class LOIView extends ApplicationSubviewImpl
           @Override
           public void onSuccess(Void result) {
             loilist.removeNode(node);
+        	me.loadLOIList();
           }
         });
       }

@@ -3,13 +3,16 @@ package org.diskproject.client.application;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 
+import org.diskproject.client.authentication.AuthUser;
 import org.diskproject.client.place.NameTokens;
+import org.diskproject.client.rest.AppNotification;
+import org.diskproject.client.rest.DiskREST;
 
+import com.google.gwt.core.client.Callback;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.DivElement;
-import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
-import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -20,6 +23,7 @@ import com.vaadin.polymer.Polymer;
 import com.vaadin.polymer.elemental.Function;
 import com.vaadin.polymer.paper.PaperDrawerPanelElement;
 import com.vaadin.polymer.paper.PaperToastElement;
+import com.vaadin.polymer.paper.PaperInputElement;
 
 public class ApplicationView extends ViewImpl implements
     ApplicationPresenter.MyView {
@@ -29,15 +33,12 @@ public class ApplicationView extends ViewImpl implements
   @UiField public static SimplePanel contentContainer;
   @UiField public static PaperToastElement toast;
   
-  @UiField DialogBox loginDialog;
-  private boolean shouldLogin = false;
-  
   @UiField public static DivElement 
-    hypothesesMenu, loisMenu, assertionsMenu, terminologyMenu;
+    hypothesesMenu, loisMenu, terminologyMenu; //assertionsMenu,
   
   @UiField SimplePanel sidebar;
   @UiField SimplePanel toolbar;
-  @UiField DivElement fog;
+  @UiField DivElement userDiv;
 
   @Inject
   public ApplicationView(Binder binder) {
@@ -52,13 +53,6 @@ public class ApplicationView extends ViewImpl implements
       super.setInSlot(slot, content);
   }
   
-  /*@UiHandler({"username", "password"})
-  void onSoftwareEnter(KeyPressEvent event) {
-    if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER) {
-      submitLoginForm();
-    }
-  }*/
-
   public void initializeParameters(String userid, String domain, 
       String[] params, boolean edit, 
       SimplePanel sidebar, SimplePanel toolbar) {
@@ -79,7 +73,7 @@ public class ApplicationView extends ViewImpl implements
         hypothesesMenu.removeClassName("activeMenu");
         loisMenu.removeClassName("activeMenu");
         //tloisMenu.removeClassName("activeMenu");
-        assertionsMenu.removeClassName("activeMenu");
+        //assertionsMenu.removeClassName("activeMenu");
         terminologyMenu.removeClassName("activeMenu");
         
         DivElement menu = null;
@@ -90,15 +84,15 @@ public class ApplicationView extends ViewImpl implements
         else if(nametoken.equals(NameTokens.tlois))
           //menu = tloisMenu;
           menu = hypothesesMenu;
-        else if(nametoken.equals(NameTokens.assertions))
-          menu = assertionsMenu;
+        /*else if(nametoken.equals(NameTokens.assertions))
+          menu = assertionsMenu;*/
         else if(nametoken.equals(NameTokens.terminology))
           menu = terminologyMenu;
         
         clearMenuClasses(hypothesesMenu);
         clearMenuClasses(loisMenu);
         //clearMenuClasses(tloisMenu);
-        clearMenuClasses(assertionsMenu);
+        //clearMenuClasses(assertionsMenu);
         clearMenuClasses(terminologyMenu);
         
         if(menu != null) {
@@ -109,24 +103,16 @@ public class ApplicationView extends ViewImpl implements
             menu.removeClassName("hiddenMenu");
           }
         }
-        
-        /* LOGIN STUFF */
-        if (shouldLogin) {
-        	fog.getStyle().setVisibility(Visibility.VISIBLE);
-        	loginDialog.center();
-        	shouldLogin = false;
-        }
-        
+        userDiv.setInnerText("Logged in as " + AuthUser.getUsername());
         return null;
       }
     });
   }
-
-  @UiHandler("cancelButton")
-  void onCanelButtonClicked(ClickEvent event) {   
-	loginDialog.hide();
-	fog.getStyle().setVisibility(Visibility.HIDDEN);
-  } 
+  
+  @UiHandler("logoutButton")
+  void onLogoutButtonClicked(ClickEvent event) {
+	  AuthUser.kc.logout();
+  }
 
   private void clearMenuClasses(DivElement menu) {
     menu.removeClassName("activeMenu");
@@ -138,7 +124,7 @@ public class ApplicationView extends ViewImpl implements
     hypothesesMenu.addClassName(cls);
     loisMenu.addClassName(cls);
     //tloisMenu.addClassName(cls);
-    assertionsMenu.addClassName(cls);
+    //assertionsMenu.addClassName(cls);
     terminologyMenu.addClassName(cls);
   }
 

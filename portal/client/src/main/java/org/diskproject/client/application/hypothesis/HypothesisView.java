@@ -1,11 +1,13 @@
 package org.diskproject.client.application.hypothesis;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.diskproject.client.Config;
+import org.diskproject.client.Utils;
 import org.diskproject.client.application.ApplicationSubviewImpl;
 import org.diskproject.client.components.hypothesis.HypothesisEditor;
 import org.diskproject.client.components.hypothesis.events.HypothesisSaveEvent;
@@ -26,14 +28,17 @@ import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.util.GUID;
 import org.diskproject.shared.classes.workflow.VariableBinding;
 
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.DivElement;
+import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.CheckBox;
@@ -69,6 +74,8 @@ public class HypothesisView extends ApplicationSubviewImpl
   
   @UiField DialogBox dialog;
   @UiField HTMLPanel dialogContent;
+  
+  @UiField ListBox order;
 
   @UiField DialogBox helpDialog;
   
@@ -154,7 +161,7 @@ public class HypothesisView extends ApplicationSubviewImpl
       @Override
       public void onSuccess(List<TriggeredLOI> result) {
         tloilist = result;
-        if(treelist != null)
+        if (treelist != null)
           loadHypothesisTLOITree();
       }
       @Override
@@ -164,6 +171,26 @@ public class HypothesisView extends ApplicationSubviewImpl
         GWT.log("Failed", reason);
       }
     });
+  }
+
+	@UiHandler("order")
+	void onChange(ChangeEvent event) {
+		loadHypothesisTLOITree();
+	}
+
+  private void applyOrder (List<TreeItem> list)  {
+    String orderType = order.getSelectedValue();
+    if (orderType != null) {
+    	if (orderType.compareTo("dateasc") == 0) {
+			Collections.sort(treelist, Utils.ascDateOrder);
+    	} else if (orderType.compareTo("datedesc") == 0) {
+			Collections.sort(treelist, Utils.descDateOrder);
+    	} else if (orderType.compareTo("authorasc") == 0) {
+			Collections.sort(treelist, Utils.ascAuthorOrder);
+    	} else if (orderType.compareTo("authordesc") == 0) {
+			Collections.sort(treelist, Utils.descAuthorOrder);
+    	}
+    }
   }
 
   private void loadHypothesisTLOITree() {
@@ -176,14 +203,18 @@ public class HypothesisView extends ApplicationSubviewImpl
     description.setVisible(true);
     
     TreeNode root = new TreeNode("Hypotheses", "Hypotheses", 
-        "A List of Hypotheses");
+        "A List of Hypotheses", null, null);
+    
+    applyOrder(treelist);
     
     HashMap<String, TreeNode> map = new HashMap<String, TreeNode>();
     for(TreeItem item : treelist) {
       TreeNode node = new TreeNode(
           item.getId(),
           item.getName(), 
-          item.getDescription());
+          item.getDescription(),
+          item.getCreationDate(),
+          item.getAuthor());
       node.setIcon("icons:help-outline");
       node.setExpandedIcon("icons:help-outline");
       node.setIconStyle("orange");
@@ -216,8 +247,10 @@ public class HypothesisView extends ApplicationSubviewImpl
     }
     for(TreeItem item : this.treelist) {
       TreeNode node = map.get(item.getId());
-      if(node.getParent() == null)      
+      if(node.getParent() == null) {
+    	node.setExpanded(false);
         tree.addNode(root, node);
+      }
     }
     tree.setRoot(root);
   }
@@ -232,7 +265,6 @@ public class HypothesisView extends ApplicationSubviewImpl
           public void onSuccess(Hypothesis result) {
             loader.setVisible(false);
             form.setVisible(true);
-            					GWT.log(result.getName());
             form.setNamespace(getNamespace(result.getId()));
             form.load(result);
           }
@@ -342,13 +374,10 @@ public class HypothesisView extends ApplicationSubviewImpl
 	  for (VariableBinding b: wf.getBindings()) {
 		  varList.addItem(b.getVariable());
 		  dialogContent.add(varList);
-		  //GWT.log(">" + b.getVariable());
-		  //GWT.log("<" + b.getBinding());
 		  String binds = b.getBinding().replace("]", "").replace("[", "");
 		  List<CheckBox> cblist = new ArrayList<CheckBox>();
 		  checkMap.put(b.getVariable(), cblist);
 		  for (String bind: binds.split(",")) {
-			  GWT.log(">>" + bind);
 			  CheckBox cb = new CheckBox(bind);
 			  cb.setValue(true);
 			  cb.setStyleName("block");
@@ -434,6 +463,7 @@ public class HypothesisView extends ApplicationSubviewImpl
     if(event.getAction().getId().equals("delete")) {
       if(Window.confirm("Are you sure you want to delete " + node.getName())) {
         if(node.getType().equals(NameTokens.hypotheses)) {
+          HypothesisView me = this;
           DiskREST.deleteHypothesis(node.getId(), new Callback<Void, Throwable>() {
             @Override
             public void onFailure(Throwable reason) {
@@ -442,6 +472,7 @@ public class HypothesisView extends ApplicationSubviewImpl
             @Override
             public void onSuccess(Void result) {
               AppNotification.notifySuccess("Deleted", 500);
+              me.showHypothesisList();
               tree.removeNode(node);
             }
           });
@@ -481,9 +512,7 @@ public class HypothesisView extends ApplicationSubviewImpl
 	  String strb = "[" + String.join(",", bindings) + "]";
 	  strb = strb.replace(" ", "").replace(",", ", ");
 	  for (VariableBinding b: selectedWorkflow.getBindings()) {
-		  //GWT.log('<' + b.getBinding());
 		  b.setBinding(strb);
-		  //GWT.log('>' + b.getBinding());
 	  }
 	  
 	  showTriggeredLOIOptions(matches);

@@ -54,6 +54,7 @@ public class KBRepository implements TransactionsAPI {
     this.fac = new OntFactory(OntFactory.JENA, tdbdir);
     try {
       this.transaction = new TransactionsJena(this.fac);
+      System.out.println(">> " + this.onturi);
       
       ontkb = fac.getKB(this.onturi, OntSpec.PELLET, false, true);
       TimeUnit.SECONDS.sleep(2); 
@@ -73,6 +74,7 @@ public class KBRepository implements TransactionsAPI {
   private void temporaryHacks() {
     this.hackInDataProperty("hasHypothesisQuery", "LineOfInquiry", "string");
     this.hackInDataProperty("hasDataQuery", "LineOfInquiry", "string");    
+    this.hackInDataProperty("author", "LineOfInquiry", "string");    
   }
   
   private void hackInDataProperty(String prop, String domain, String range) {
@@ -84,24 +86,25 @@ public class KBRepository implements TransactionsAPI {
       this.ontkb.save();
     }
   }
-  
+
   protected void cacheKBTerms(KBAPI kb) {
+    System.out.println("kb:" + kb.getURI());
     for (KBObject obj : kb.getAllClasses()) {
       if(obj != null) {
         cmap.put(obj.getName(), obj);
-        //System.out.println("cmap: " + obj.getName());
+        System.out.println("cmap: " + obj.getName());
       }
     }
     for (KBObject obj : kb.getAllObjectProperties()) {
       if(obj != null) {
         pmap.put(obj.getName(), obj);
-        //System.out.println("pmap: " + obj.getName());
+        System.out.println("pmap: " + obj.getName());
       }
     }
     for (KBObject obj : kb.getAllDatatypeProperties()) {
       if(obj != null) {
         pmap.put(obj.getName(), obj);
-        //System.out.println("dt pmap: " + obj.getName());
+        System.out.println("dt pmap: " + obj.getName());
       }
     }
   }

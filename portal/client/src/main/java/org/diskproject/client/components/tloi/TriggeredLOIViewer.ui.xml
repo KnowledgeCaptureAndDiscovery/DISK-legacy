@@ -82,8 +82,12 @@
 				<label class="small-grey">Triggered Line of Inquiry</label>
 				<div class="bordered-list padded">
 				  <div><a ui:field="loiLink"/></div>
-				  <div>Data query to execute</div>
-				  <label class="small-grey"></label>
+				  <div style="display: flex; justify-content: space-between;">
+				    <span> Data query to execute </span>
+						<g:CheckBox ui:field='showdq' value="true">
+						  <label>Show data query</label>
+						</g:CheckBox>
+				  </div>
 				  <div style="pointer-events: none;">
 				    <tr:SparqlInput ui:field="loi"/>
 				  </div>
@@ -91,15 +95,21 @@
 			</div>
 
 			<div ui:field="DataSection">
-				<label class="small-grey">Data Retrieved</label>
-				<span style="float:right; display:none;">
+				<div style="display: flex; justify-content: space-between;">
+				  <label class="small-grey">Data Retrieved</label>
+					<g:CheckBox ui:field='showdata'>
+						<label>Show data</label>
+					</g:CheckBox>
+			  </div> 
+				<!--span style="float:right; display:none;">
 			    <p:PaperButton ui:field="dataRelevant">Relevant data</p:PaperButton>
 			    <p:PaperButton ui:field="dataAll">All data</p:PaperButton>
-				</span>
+				</span-->
 				<div class="bordered-list padded">
-				  <div ui:field="data" style="white-space: nowrap; overflow: scroll;"/>
+				  <div ui:field="data" style="white-space: nowrap; overflow: scroll; display: none;"/>
 				  <br/>
 				  <p:PaperButton ui:field="downloadbutton"><iron-icon icon="save" />Download metadata as CSV</p:PaperButton>
+				  <p:PaperButton ui:field="triplesbutton"><iron-icon icon="save" />Download triples</p:PaperButton>
 			  </div>
 			</div>
 			

@@ -14,6 +14,7 @@ import org.diskproject.client.components.triples.TripleViewer;
 import org.diskproject.client.place.NameTokens;
 import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
+import org.diskproject.shared.classes.common.Triple;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
@@ -33,6 +34,7 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Anchor;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
@@ -58,6 +60,25 @@ public class TriggeredLOIViewer extends Composite {
   String datamode = "all";
   TriggeredLOI tloi;
   Map<String, List<String>> dataRetrieved;
+  @UiField CheckBox showdata, showdq;
+  
+  
+	@UiHandler("showdq")
+	void onClickShowDQ(ClickEvent event) {
+		boolean show = showdq.getValue();
+		loi.setVisible(show);
+	}
+  
+	@UiHandler("showdata")
+	void onClickShowData(ClickEvent event) {
+		boolean show = showdata.getValue();
+		if (show) {
+			data.getStyle().setDisplay(Display.INITIAL);
+		} else {
+			data.getStyle().setDisplay(Display.NONE);
+		}
+	}
+  
 
   public TriggeredLOIViewer() {
     initWidget(uiBinder.createAndBindUi(this));
@@ -79,12 +100,11 @@ public class TriggeredLOIViewer extends Composite {
     setLOILink(tloi.getName(), tloi.getLoiId(), loiLink);
 
     List<WorkflowBindings> mwf = tloi.getMetaWorkflows();
+    WFLabel.setInnerText("Triggered Workflows");
     if (mwf.size() == 0) {
     	MetaWFSection.getStyle().setDisplay(Display.NONE);
-    	WFLabel.setInnerText("Triggered Meta-Workflows");
     } else {
     	MetaWFSection.getStyle().setDisplay(Display.INITIAL);
-    	WFLabel.setInnerText("Triggered Workflows");
     }
     	
     setWorkflowsHTML(tloi.getWorkflows(), workflowlist);
@@ -234,10 +254,12 @@ public class TriggeredLOIViewer extends Composite {
           new Callback<Hypothesis, Throwable>() {
         public void onSuccess(Hypothesis result) {
           anchor.setHref(getHypothesisLink(id));
-          anchor.setText(result.getName());
-          if(result.getGraph() != null) {
-            tv.setDefaultNamespace(getNamespace(result.getId()));
-            tv.load(result.getGraph().getTriples());
+          if (result != null) {
+			  anchor.setText(result.getName());
+			  if(result.getGraph() != null) {
+				tv.setDefaultNamespace(getNamespace(result.getId()));
+				tv.load(result.getGraph().getTriples());
+			  }
           }
         }
         public void onFailure(Throwable reason) {}
@@ -257,7 +279,9 @@ public class TriggeredLOIViewer extends Composite {
         new Callback<Hypothesis, Throwable>() {
       public void onSuccess(Hypothesis result) {
         anchor.setHref(getHypothesisLink(id));
-        anchor.setInnerText(result.getName());
+        if (result.getName() != null) {
+          anchor.setInnerText(result.getName());
+        }
         if(result.getGraph() != null) {
           tv.setDefaultNamespace(getNamespace(id));
           tv.load(result.getGraph().getTriples());
@@ -341,26 +365,25 @@ public class TriggeredLOIViewer extends Composite {
 	  }
   }
 
-  	public static native void downloadCSV(String raw) /*-{
-  		var blob = new Blob([raw], {type: 'text/csv;encoding:utf-8'});
+  	public static native void download(String name, String raw, String enc) /*-{
+  		var blob = new Blob([raw], {type: enc});
         var a = document.createElement("a");
         a.style = "display: none";
         document.body.appendChild(a);
         var url = $wnd.window.URL.createObjectURL(blob);
         a.href = url;
-        a.download = 'data.csv';
+        a.download = name;
         a.click();
         window.URL.revokeObjectURL(url);
 	}-*/;
 
 	@UiHandler("downloadbutton")
 	void onSaveButtonClicked(ClickEvent event) {
-		GWT.log("download csv!");
-		GWT.log(rawcsv);
-		downloadCSV(rawcsv);
+		String name = (this.tloi != null) ? this.tloi.getId() + "_metadata.csv" : "metadata.csv";
+		download(name, rawcsv, "text/csv;encoding:utf-8");
 	}
 
-	@UiHandler("dataRelevant")
+	/*@UiHandler("dataRelevant")
 	void onRelevantDataClicked(ClickEvent event) {
 		datamode = "relevant";
     	setDataHTML(data);
@@ -370,7 +393,7 @@ public class TriggeredLOIViewer extends Composite {
 	void onAllDataClicked(ClickEvent event) {
 		datamode = "all";
     	setDataHTML(data);
-	}
+	}*/
 
     Set<String> getRelevantVariables () {
     	Set<String> r = new HashSet<String>();
@@ -385,5 +408,27 @@ public class TriggeredLOIViewer extends Composite {
     	}
     	return r;
     }
-  
+
+	@UiHandler("triplesbutton")
+	void onDlTriplesButtonClicked(ClickEvent event) {
+		GWT.log("Downloading triples...");
+		TriggeredLOI t = tloi;
+		DiskREST.getTriggeredLOITriples(t.getId(),
+			new Callback<List<Triple>, Throwable>() {
+		  @Override
+		  public void onSuccess(List<Triple> result) {
+			  String name = (t != null) ? t.getId() + "_triples.nt" : "triples.nt";
+			  String cont = "";
+			  for (Triple t: result) {
+				  cont += t.toString() + " .\n";
+			  }
+			  GWT.log(cont);
+			  download(name, cont, "application/n-triples");
+		  }
+		  @Override
+		  public void onFailure(Throwable reason) {
+			AppNotification.notifyFailure(reason.getMessage());
+		  }
+		});
+	}
 }

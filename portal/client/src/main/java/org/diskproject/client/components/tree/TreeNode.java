@@ -16,45 +16,57 @@ public class TreeNode implements Comparable<TreeNode> {
   String id;
   String name;
   String description;
+  String creationDate;
+  String author;
   Object data;
   String type;
   HTML content;
-  
+
   PaperItem item;
   IronFlexLayout childrenSection;
-  
+
   IronIcon icon, collapser;
   String iconName, expandedIconName;
-  
+
   boolean expanded;
-  
+
   TreeNode parent;
   List<TreeNode> children;
   Map<String, TreeNode> nodemap;
-  
-  public TreeNode(String id, String name, String description) {
+
+  public TreeNode(String id, String name, String description, String date, String author) {
     this.id = id;
     this.name = name;
     this.description = description;
+    this.creationDate = date;
+    this.author = author;
     this.setContent(name, description);
     this.initialize();
   }
-  
+
   public TreeNode(String id, HTML content) {
     this.id = id;
     this.content = content;
     this.initialize();
   }
-  
+
   private void setContent(String name, String description) {
     String html = "<div class='name'>" + this.name + "</div>";
     html += "<div class='description'>"+this.description+"</div>";
+    html += "<div class='footer' style='display: flex;justify-content: space-between;'>";
+    html += "<span><b>Creation date:</b> ";
+    html += (this.creationDate != null) ? this.creationDate : "None specified";
+    html += "</span><span><b>Author:</b> ";
+    html += (this.author != null) ? this.author : "None specified";
+    html += "</span></div>";
+
     if(this.content != null)
       this.content.setHTML(html);
     else
       this.content = new HTML(html);
+    this.content.addStyleName("treenode");
   }
-  
+
   private void initialize() {
     this.icon = new IronIcon();
     this.children = new ArrayList<TreeNode>();
@@ -89,12 +101,12 @@ public class TreeNode implements Comparable<TreeNode> {
   public void setIconStyle(String style) {
     this.icon.addStyleName(style);
   }
-  
+
   public void setIcon(String iconstr) {
     this.iconName = iconstr;
     this.icon.setIcon(this.iconName);
   }
-  
+
   public void setExpandedIcon(String iconstr) {
     this.expandedIconName = iconstr;
   }
@@ -147,7 +159,7 @@ public class TreeNode implements Comparable<TreeNode> {
   public PaperItem getItem() {
     return this.item;
   }
-  
+
   public PaperItem updateItem() {
     if(this.item == null)
       return null;
@@ -163,7 +175,7 @@ public class TreeNode implements Comparable<TreeNode> {
     
     return this.item;
   }
-  
+
   public IronFlexLayout updateChildrenSection() {
     childrenSection.clear();
     if(expanded)
@@ -178,11 +190,11 @@ public class TreeNode implements Comparable<TreeNode> {
     this.setIcons();
     return childrenSection;
   }
-  
+
   public IronFlexLayout getChildrenSection() {
     return this.childrenSection;
   }
-  
+
   public TreeNode findNode(String id) {
     if(this.id.equals(id))
       return this;
@@ -194,7 +206,7 @@ public class TreeNode implements Comparable<TreeNode> {
     }
     return null;
   }
-  
+
   public boolean removeNode(String id) {
     if(this.id.equals(id)) {
       this.item.removeFromParent();
@@ -209,7 +221,7 @@ public class TreeNode implements Comparable<TreeNode> {
     }
     return false;
   }
-  
+
   public boolean isExpanded() {
     return expanded;
   }
@@ -217,7 +229,7 @@ public class TreeNode implements Comparable<TreeNode> {
   public void setExpanded(boolean expanded) {
     this.expanded = expanded;
   }
-  
+
   public void addChild(TreeNode child) {
     this.children.add(child);
     this.nodemap.put(child.getId(), child);
@@ -258,7 +270,7 @@ public class TreeNode implements Comparable<TreeNode> {
       }
     }
   }  
-  
+
   @Override
   public int compareTo(TreeNode node) {
     return id.compareTo(node.getId());

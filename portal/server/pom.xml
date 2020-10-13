@@ -11,7 +11,7 @@
 	<packaging>war</packaging>
     <parent>
         <groupId>org.disk-project</groupId>
-        <version>2.3.6</version>
+        <version>2.3.8</version>
         <artifactId>disk-project</artifactId>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -22,7 +22,7 @@
 		<jackson.version>2.4.6</jackson.version>
 		<gson.version>2.6.2</gson.version>
 		<commons-configuration.version>1.10</commons-configuration.version>
-		<ontapi.version>1.0-SNAPSHOT</ontapi.version>
+		<ontapi.version>1.2.1</ontapi.version>
 		<jbcrypt.version>0.3m</jbcrypt.version>
 		<java.version>1.7</java.version>
 		<httpclient.version>4.5.2</httpclient.version>
@@ -34,17 +34,17 @@
 		<!-- Local Wings Repository (for wings-ontapi & dependencies) -->
 		<repository>
 			<id>Local archiva.snapshots repository</id>
-			<url>http://www.wings-workflows.org/archiva/repository/snapshots/</url>
+			<url>http://www.wings-workflows.org/archiva/repository/internal/</url>
 		</repository>
 	</repositories>
 
 	<dependencies>
 		<!-- Disk ontapi -->
-        <dependency>
-            <groupId>edu.isi.kcap</groupId>
-            <artifactId>ontapi</artifactId>
-            <version>${ontapi.version}</version>
-        </dependency>
+		<dependency>
+			<groupId>edu.isi.kcap</groupId>
+			<artifactId>ontapi</artifactId>
+			<version>${ontapi.version}</version>
+		</dependency>
 
 		<!-- Disk shared -->
 		<dependency>

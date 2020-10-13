@@ -10,6 +10,7 @@ import org.diskproject.client.application.tloi.TriggeredLOIView;
 import org.diskproject.client.application.users.UserView;
 import org.diskproject.client.place.NameTokens;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.History;
@@ -90,6 +91,8 @@ public class ApplicationPresenter extends
         // Tell application view about the view being loaded in case it wants to change something
         ((ApplicationView)view).initializeParameters(userid, domain, nametoken, params, 
             edit, appview.sidebar, appview.toolbar);
+        
+        // Login if needed
         
         // Reveal called view with parameters & sidebar/toolbar to populate
         if(sectionview != null) {

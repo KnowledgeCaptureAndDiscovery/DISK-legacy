@@ -3,8 +3,12 @@ package org.diskproject.client;
 import java.util.Arrays;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import org.diskproject.client.authentication.SessionStorage;
 import org.diskproject.client.rest.DiskREST;
+import org.realityforge.gwt.keycloak.Keycloak;
+import org.realityforge.gwt.keycloak.KeycloakListenerAdapter;
 
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.EntryPoint;
@@ -16,6 +20,7 @@ import com.vaadin.polymer.iron.IronIconElement;
 import com.vaadin.polymer.iron.IronListElement;
 import com.vaadin.polymer.paper.*;
 import com.vaadin.polymer.vaadin.VaadinComboBoxElement;
+import org.diskproject.client.authentication.AuthUser;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -24,6 +29,16 @@ public class DiskClient implements EntryPoint {
   public final ApplicationController controller = GWT.create(ApplicationController.class);
   
   public void onModuleLoad() {
+	//Login with keycloak https://auth.a.mosorio.dev/
+	final Keycloak keycloak = new Keycloak("DiskClient", "/disk-portal/customise/keycloak.json");
+	keycloak.addKeycloakListener(new KeycloakListenerAdapter()
+		{
+		  @Override
+		  public void onReady( @Nonnull final Keycloak keycloak, final boolean authenticated )
+		  {
+			if( authenticated ) {
+				AuthUser.init(keycloak);
+
     DiskREST.getServerConfig(new Callback<Map<String, String>, Throwable>() {
       @Override
       public void onSuccess(Map<String, String> config) {
@@ -31,6 +46,7 @@ public class DiskClient implements EntryPoint {
         Polymer.startLoading();
         
         SessionStorage.loadSession();
+        
         Polymer.importHref(Arrays.asList(
             "iron-icons/iron-icons.html",
             "paper-styles/color.html",
@@ -72,6 +88,16 @@ public class DiskClient implements EntryPoint {
       public void onFailure(Throwable reason) {
       }
     });
+			  
+			} else {
+			  keycloak.login();
+			}
+		  }
+		} 
+	);
+
+	keycloak.init();
+	  
   }
 }
 

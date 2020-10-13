@@ -16,6 +16,9 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
@@ -38,6 +41,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.diskproject.server.util.Config;
+import org.diskproject.shared.classes.firebase.User;
 import org.diskproject.shared.classes.util.KBConstants;
 import org.diskproject.shared.classes.workflow.Variable;
 import org.diskproject.shared.classes.workflow.VariableBinding;
@@ -1012,6 +1016,40 @@ private String post(String username, String pageid, List<NameValuePair> data) {
 		}
 	}
 	return null;
+}
+
+public Boolean login(String username, String domain, User user) {
+	CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+	String raw = "{\"username\": \""+ user.getEmail() + "\", \"password\": \"" + user.getPassword() + "\"}";
+	
+	try {
+		StringEntity pString = new StringEntity(raw);
+	    HttpPost request = new HttpPost("https://auth.mint.isi.edu/v1/users/login");
+	    request.addHeader("content-type", "application/json");
+	    request.setEntity(pString);
+	    HttpResponse response = httpClient.execute(request);
+	    if (response.getStatusLine().getStatusCode() == 200) {
+	    	//NewCookie cookie = new NewCookie("username", user.getEmail());
+	    	//return Response.ok().cookie(cookie).build();
+	    	return true;
+	    } else {
+	    	//return Response.status(401).build();
+	    	return false;
+	    }
+	// handle response here...
+	} catch (Exception ex) {
+	    // handle exception here
+		System.out.println("-> Exception!");
+		return false;
+	    //return Response.status(401).build();
+	} finally {
+	    try {
+			httpClient.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }
 
 private String upload(String username, String pageid, String type, File file) {

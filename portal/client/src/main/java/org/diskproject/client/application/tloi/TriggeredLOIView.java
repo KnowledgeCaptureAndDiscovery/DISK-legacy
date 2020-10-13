@@ -104,7 +104,9 @@ public class TriggeredLOIView extends ApplicationSubviewImpl
           ListNode node = new ListNode(
               item.getId(),
               item.getName(), 
-              description);
+              description,
+              item.getDateCreated(),
+              item.getAuthor());
           node.setIcon("icons:explore");
           node.setIconStyle("orange");
           tloilist.addNode(node);

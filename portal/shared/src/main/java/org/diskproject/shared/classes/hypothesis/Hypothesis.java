@@ -8,7 +8,11 @@ public class Hypothesis {
   String description;
   String parentId;
   Graph graph;
-  
+  String dateCreated;
+  String dateModified;
+  String author;
+  String notes;
+
   public Hypothesis (String id, String name, String description, String parentId, Graph graph){
 	  this.id = id;
 	  this.name = name;
@@ -16,7 +20,7 @@ public class Hypothesis {
 	  this.parentId = parentId;
 	  this.graph = graph;
   }
-    
+
   public Hypothesis(){}
   
   public String getId() {
@@ -39,6 +43,14 @@ public class Hypothesis {
     return description;
   }
 
+  public String getNotes() {
+    return notes;
+  }
+
+  public void setNotes(String notes) {
+    this.notes = notes;
+  }
+
   public void setDescription(String description) {
     this.description = description;
   }
@@ -57,5 +69,29 @@ public class Hypothesis {
 
   public void setGraph(Graph graph) {
     this.graph = graph;
+  }
+
+  public void setDateCreated(String date) {
+	  this.dateCreated = date;
+  }
+
+  public void setAuthor (String author) {
+	  this.author = author;
+  }
+
+  public String getDateCreated () {
+	  return this.dateCreated;
+  }
+
+  public String getAuthor () {
+	  return this.author;
+  }
+
+  public void setDateModified (String date) {
+	  this.dateModified = date;
+  }
+
+  public String getDateModified () {
+	  return dateModified;
   }
 }

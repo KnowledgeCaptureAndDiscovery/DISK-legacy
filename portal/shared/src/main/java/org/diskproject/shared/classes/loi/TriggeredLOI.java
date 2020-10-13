@@ -24,6 +24,11 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   List<String> resultingHypothesisIds;
   List<WorkflowBindings> workflows;
   List<WorkflowBindings> metaWorkflows;
+  
+  String author;
+  String notes;
+  String dateCreated;
+  String dateModified;
 
   public TriggeredLOI(String id,
   String name,
@@ -99,6 +104,14 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
 
   public Status getStatus() {
     return status;
+  }
+  
+  public String getNotes () {
+	  return this.notes;
+  }
+  
+  public void setNotes (String notes) {
+	  this.notes = notes;
   }
 
   public void setStatus(Status status) {
@@ -185,5 +198,28 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   public int compareTo(TriggeredLOI o) {
     return this.toString().compareTo(o.toString());
   }
+  
+  public void setDateCreated(String date) {
+	  this.dateCreated = date;
+  }
+  
+  public void setAuthor (String author) {
+	  this.author = author;
+  }
+  
+  public String getDateCreated () {
+	  return this.dateCreated;
+  }
+  
+  public String getAuthor () {
+	  return this.author;
+  }
 
+  public void setDateModified(String date) {
+	  this.dateModified = date;
+  }
+  
+  public String getDateModified () {
+	  return dateModified;
+  }
 }

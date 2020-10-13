@@ -91,7 +91,7 @@ public class DataQuery {
 			int offset = 0;
 
 			String MachineReadableQuery = "http://organicdatacuration.org/enigma_new/api.php?action=ask&format=json&query="
-					+ inputQuery.replace(" ", "_").replace("|", "%7C");
+					+ inputQuery.replace(" ", "%20").replace("|", "%7C");
 			// Open query result reader for datasets first
 			HttpPost httppost = new HttpPost(MachineReadableQuery);
 

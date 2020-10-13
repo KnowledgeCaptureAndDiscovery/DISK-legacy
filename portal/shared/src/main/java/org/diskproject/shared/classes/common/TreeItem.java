@@ -4,15 +4,20 @@ public class TreeItem {
   String id;
   String name;
   String description;
+  String dateCreated;
+  String dateModified;
+  String author;
   String parentId;
 
   public TreeItem() { }
   
-  public TreeItem(String id, String name, String description, String parentId) {
+  public TreeItem(String id, String name, String description, String parentId, String creationDate, String author) {
     this.id = id;
     this.name = name;
     this.description = description;
     this.parentId = parentId;
+    this.dateCreated = creationDate;
+    this.author = author;
   }
   
   public String getId() {
@@ -45,5 +50,29 @@ public class TreeItem {
 
   public void setParentId(String parentId) {
     this.parentId = parentId;
+  }
+  
+  public void setCreationDate (String date ) {
+	  this.dateCreated = date;
+  }
+  
+  public String getCreationDate () {
+	  return dateCreated;
+  }
+  
+  public void setDateModified (String date) {
+	  this.dateModified = date;
+  }
+  
+  public String getDateModified () {
+	  return dateModified;
+  }
+  
+  public void setAuthor (String author) {
+	  this.author = author;
+  }
+  
+  public String getAuthor () {
+	  return this.author;
   }
 }
