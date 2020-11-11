@@ -237,6 +237,9 @@
 			.Codemirror-linenumber {
 				padding-left: 0px;
 			}
+			.CodeMirror-scroll {
+				overflow: hidden !important;
+			}
 			.information-gutter {
 				width: 8px;
 				height: 18px;

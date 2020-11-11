@@ -74,8 +74,9 @@
 				</label>
 				<br/>
 				<g:ListBox ui:field='hypQuestion'>
-					<g:item value='h1'>Is the effect size of genotype in brain trait associated with attribute</g:item>
+					<g:item value='h1'>Is the effect size of Genotype in brain trait associated with attribute</g:item>
 					<g:item value='h2'>Is brain characteristic associated with neurological disorder</g:item>
+					<g:item value='h3'>Is the effect size of a Genotype on Brain imaging derived trait of Area is associated with Demographic</g:item>
 				</g:ListBox>
 				<br/>
 
@@ -107,6 +108,25 @@
 								<g:item value="NeurologicalDisorder">Neurological Disorder</g:item>
 							</g:ListBox>
 						</span>
+						<span style="display:none" ui:field="h3Section">
+							<span> Is the <span class="code">EffectSize</span> of a </span>
+							<g:ListBox ui:field="h3r1">
+								<g:item value="Genotype">Genotype</g:item>
+							</g:ListBox>
+							<span> on </span>
+							<g:ListBox ui:field="h3r2">
+								<g:item value="BrainImagingDerivedTrait">Brain imaging derived trait</g:item>
+							</g:ListBox>
+							<span> of </span>
+							<g:ListBox ui:field="h3r3">
+								<g:item value="Area">Area</g:item>
+							</g:ListBox>
+							<span class="code">associated with</span>
+							<g:ListBox ui:field="h3r4">
+								<g:item value="DemographicAttribute">Demographic Attribute</g:item>
+							</g:ListBox>
+						</span>
+
 					<p:PaperButton ui:field="addPattern"> <iron-icon icon="add"/> </p:PaperButton>
 					<p:PaperButton ui:field="helpPattern1"> <iron-icon icon="help-outline"/> </p:PaperButton>
 					<div style="display:none" ui:field="example1">
@@ -160,46 +180,12 @@
 		  </div>
 				
 		</div>
-		<div class="horizontal end-justified layout">
+		<div class="horizontal end-justified layout" style="justify-content: flex-end; padding: 10px;">
 			<p:PaperButton ui:field="savebutton">
 				<iron-icon icon="save" />
 				Save
 			</p:PaperButton>
 		</div>
-		
-		<div style="visibility: collapse">
-      <g:DialogBox autoHide="true" modal="true" ui:field='testDialog'>
-        <g:caption><b>Test data query</b></g:caption>
-        <g:HTMLPanel>
-          <div>
-			      <label class="small-grey">Data Query Pattern (Ctrl-Space for suggestions)</label>
-			      <tr:SparqlInput ui:field="testQuery" />
-          </div>
-
-					<label class="small-grey" style="margin-top:4px;">
-					 Data query results for
-					  <g:ListBox ui:field='displayVariables'>
-							<g:item value='wf'>
-							   Workflow variables
-							</g:item>
-							<g:item value='all'>
-								All variables
-							</g:item>
-						 </g:ListBox>
-					</label>
-
-					<div class="querytest bordered-list">
-						<div class="queryresult" ui:field="resultContainer"></div>
-					</div>
-
-          <g:Button ui:field='cancelButton'>Cancel</g:Button>
-          <g:Button ui:field='okButton'>Save query</g:Button>
-          <span style="float:right">
-            <g:Button ui:field='sendTest'>Test query</g:Button>
-          </span>
-       </g:HTMLPanel>
-      </g:DialogBox>
-    </div>
 
 	</g:HTMLPanel>
 

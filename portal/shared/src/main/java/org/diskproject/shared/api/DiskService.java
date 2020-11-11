@@ -139,12 +139,6 @@ public interface DiskService extends DirectRestService {
   /*
    * Lines of Inquiry
    */
-  @GET
-  @Path("{username}/{domain}/test")  
-  public List<List<List<String>>> testLOI(
-      @PathParam("username") String username, 
-      @PathParam("domain") String domain,
-      @QueryParam("query") String query);
   
   @POST
   @Path("{username}/{domain}/lois")  
@@ -245,4 +239,13 @@ public interface DiskService extends DirectRestService {
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @JsonProperty("query") String query);
+  
+  @GET
+  @Path("{username}/{domain}/test")  
+  public Map<String, List<String>> queryExternalStore(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @QueryParam("variables") String variables,
+      @QueryParam("query") String query);
+  
 }

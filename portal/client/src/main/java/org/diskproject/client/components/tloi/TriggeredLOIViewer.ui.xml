@@ -66,6 +66,46 @@
 			iron-flex-layout.list {
 				display: block;
 			}
+			.pure-table {
+				border-collapse: collapse;
+				border-spacing: 0;
+				empty-cells: show;
+				border: 1px solid #cbcbcb;
+			}
+			.pure-table thead {
+				background-color: #e0e0e0;
+				color: #000;
+				text-align: left;
+				vertical-align: bottom;
+			}
+			.pure-table thead {
+				color: #000;
+				text-align: left;
+			}
+			.pure-table td, .pure-table th {
+				padding: .5em 1em;
+			}
+			.pure-table td, .pure-table th {
+				border-left: 1px solid #cbcbcb;
+				border-bottom-width: 0;
+				border-right-width: 0;
+				border-top-width: 0;
+				font-size: inherit;
+				margin: 0;
+				overflow: visible;
+			}
+			.pure-table td {
+				background-color: transparent;
+			}
+			.pure-table td, .pure-table th {
+				border-left: 1px solid #cbcbcb;
+				border-bottom-width: 0;
+				border-right-width: 0;
+				border-top-width: 0;
+				font-size: inherit;
+				margin: 0;
+				overflow: visible;
+			}
 		</style>
 		<div class="vertical layout section">
 			<div ui:field="header" />
@@ -84,12 +124,12 @@
 				  <div><a ui:field="loiLink"/></div>
 				  <div style="display: flex; justify-content: space-between;">
 				    <span> Data query to execute </span>
-						<g:CheckBox ui:field='showdq' value="true">
+						<g:CheckBox ui:field='showdq' value="false">
 						  <label>Show data query</label>
 						</g:CheckBox>
 				  </div>
-				  <div style="pointer-events: none;">
-				    <tr:SparqlInput ui:field="loi"/>
+				  <div>
+				    <tr:SparqlInput ui:field="dataQuery"/>
 				  </div>
 				</div>
 			</div>
@@ -101,12 +141,8 @@
 						<label>Show data</label>
 					</g:CheckBox>
 			  </div> 
-				<!--span style="float:right; display:none;">
-			    <p:PaperButton ui:field="dataRelevant">Relevant data</p:PaperButton>
-			    <p:PaperButton ui:field="dataAll">All data</p:PaperButton>
-				</span-->
 				<div class="bordered-list padded">
-				  <div ui:field="data" style="white-space: nowrap; overflow: scroll; display: none;"/>
+				  <div ui:field="dataDiv" style="white-space: nowrap; overflow: scroll; display: none;"/>
 				  <br/>
 				  <p:PaperButton ui:field="downloadbutton"><iron-icon icon="save" />Download metadata as CSV</p:PaperButton>
 				  <p:PaperButton ui:field="triplesbutton"><iron-icon icon="save" />Download triples</p:PaperButton>

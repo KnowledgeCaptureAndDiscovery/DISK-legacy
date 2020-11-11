@@ -2,7 +2,6 @@ package org.diskproject.shared.classes.workflow;
 
 
 import java.io.Serializable;
-import java.util.List;
 
 public class VariableBinding implements Serializable, Comparable<VariableBinding> {
   private static final long serialVersionUID = -847994634505985728L;
@@ -33,6 +32,10 @@ public class VariableBinding implements Serializable, Comparable<VariableBinding
   public String[] getBindingAsArray () {
 	String b = getBinding().replace("]", "").replace("[", "").replaceAll(" ", "");
     return b.split(",");
+  }
+  
+  public boolean isCollection () {
+    return (binding.charAt(0) == '[' && binding.charAt(binding.length()-1) == ']');
   }
 
   public void setBinding(String binding) {

@@ -74,4 +74,17 @@ public class Utils {
 			return 0;
 		}
 	};
+	
+	public static String extractPrefix (String URI) {
+		return extractPrefix(URI, "#");
+	}
+	
+	public static String extractPrefix (String URI, String prefix) {
+		String[] sp = URI.split(prefix);
+		if (sp != null && sp.length > 0) {
+			return sp[sp.length-1];
+		} else {
+			return URI;
+		}
+	}
 }

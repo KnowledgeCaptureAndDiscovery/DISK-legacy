@@ -61,6 +61,13 @@
 					padding: 0px;
 				}
 			}			
+			.constbindings-cell {
+				width: calc(100% - 34px);
+    			display: inline-block;
+			}
+			.fixtop {
+				margin-top: 2px;
+			}
 		</style>
 		<div class="vertical center-justified layout">
 			<div class="horizontal layout">
@@ -79,6 +86,17 @@
 				</div>
 				</div>
 				<g:HTMLPanel addStyleNames="varbindings" ui:field="varbindings" />
+			</g:HTMLPanel>
+
+			<g:HTMLPanel ui:field="paramssection" addStyleNames="section">
+				<div class="heading">
+				<div class="horizontal layout">
+					Parameters
+					<p:PaperIconButton ui:field="addparambutton"
+						addStyleNames="smallicon green-button" icon="add-circle" />
+				</div>
+				</div>
+				<g:HTMLPanel addStyleNames="varbindings" ui:field="parambindings" />
 			</g:HTMLPanel>
 
 			<g:HTMLPanel ui:field="workflowstoberunsection" addStyleNames="section">

@@ -297,6 +297,20 @@ public class DiskREST {
     }).call(getDiskService()).queryHypothesisData(username, domain, id);
   }
 
+  /*public static void queryExternalStore(String query, String variables, 
+      final Callback<Map<String, List<String>>, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Map<String, List<String>>>() {
+      @Override
+      public void onSuccess(Method method, Map<String, List<String>> response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(getDiskService()).queryExternalStore(username, domain, query, variables);
+  }*/
+
   /*
    * Lines of Inquiry
    */
@@ -327,34 +341,12 @@ public class DiskREST {
     }).call(getDiskService()).getLOI(username, domain, id);
   }
 
-  public static void testLOI(String query,
-      final Callback<List<List<List<String>>>, Throwable> callback) {
-    REST.withCallback(new MethodCallback<List<List<List<String>>>>() {
-      @Override
-      public void onSuccess(Method method, List<List<List<String>>> response) {
-    	GWT.log("-> 1");
-        callback.onSuccess(response);
-      }
-      @Override
-      public void onFailure(Method method, Throwable exception) {
-    	GWT.log("-> 2");
-    	GWT.log(method.toString());
-    	GWT.log(exception.toString());
-        callback.onFailure(exception);
-      }      
-    }).call(getDiskService()).testLOI(username, domain, query);
-  }
-
   public static void addLOI(LineOfInquiry loi,
       final Callback<Void, Throwable> callback) {
 	DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
 	String date = fm.format(new Date());
 	
-	if (loi.getDateCreated() != null) {
-		loi.setDateModified(date);
-	} else {
-		loi.setDateCreated(date);
-	}
+	loi.setDateCreated(date);
 	loi.setAuthor(AuthUser.getUsername());
 
     REST.withCallback(new MethodCallback<Void>() {
@@ -385,6 +377,19 @@ public class DiskREST {
   
   public static void updateLOI(LineOfInquiry loi,
       final Callback<Void, Throwable> callback) {
+
+	DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
+	String date = fm.format(new Date());
+
+	GWT.log(date);
+	GWT.log(AuthUser.getUsername());
+	
+	if (loi.getDateCreated() == null) {
+		loi.setDateCreated(date);
+	}
+	loi.setDateModified(date);
+	loi.setAuthor(AuthUser.getUsername());
+	  
     REST.withCallback(new MethodCallback<Void>() {
       @Override
       public void onSuccess(Method method, Void response) {
@@ -596,5 +601,21 @@ public class DiskREST {
 	      }      
 	    }).call(getDiskService()).sparql(username, domain, query);
 	  } 
+
+  public static void queryExternalStore(String query, String variables,
+      final Callback<Map<String, List<String>>, Throwable> callback) {
+	 GWT.log("variables: " + variables);
+	 GWT.log("query: " + query);
+    REST.withCallback(new MethodCallback<Map<String, List<String>>>() {
+      @Override
+      public void onSuccess(Method method, Map<String, List<String>> response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }      
+    }).call(getDiskService()).queryExternalStore(username, domain, query, variables);
+  }
   
 }

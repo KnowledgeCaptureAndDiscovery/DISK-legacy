@@ -13,27 +13,28 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class WorkflowBindings implements Comparable<WorkflowBindings>{
   String workflow;
   String workflowLink;
-  List<VariableBinding> bindings;
+  List<VariableBinding> bindings, parameters;
   
   WorkflowRun run;
   MetaWorkflowDetails meta;
 
-  public WorkflowBindings(String workflow,
-  String workflowLink,
-  List<VariableBinding> bindings) {
-	  this.workflow = workflow;
-	  this.workflowLink = workflowLink;
-	  this.bindings = bindings;
+  public WorkflowBindings(String workflow, String workflowLink,
+          List<VariableBinding> bindings, List<VariableBinding> parameters) {
+    this.workflow = workflow;
+    this.workflowLink = workflowLink;
+    this.bindings = bindings;
+    this.parameters = parameters;
     run = new WorkflowRun();
     meta = new MetaWorkflowDetails();
   }
-  
+
   public WorkflowBindings() {
     bindings = new ArrayList<VariableBinding>();
+    parameters = new ArrayList<VariableBinding>();
     run = new WorkflowRun();
     meta = new MetaWorkflowDetails();
   }
-  
+
   public String getWorkflow() {
     return workflow;
   }
@@ -70,6 +71,62 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
     this.bindings.add(binding);
   }
   
+  public List<VariableBinding> getParameters () {
+	  return parameters;
+  }
+  
+  public void setParameters (List<VariableBinding> params) {
+	  this.parameters = params;
+  }
+  
+  public void addParameter (VariableBinding param) {
+    this.parameters.add(param);
+  }
+  
+  public List<String> getSparqlVariables () {
+    List<String> vars = new ArrayList<String>();
+    for (VariableBinding b: bindings) {
+      for (String v: b.getBindingAsArray()) {
+        vars.add(v);
+      }
+    }
+    return vars;
+  }
+
+  public List<String> getSparqlParameters () {
+    List<String> vars = new ArrayList<String>();
+    for (VariableBinding b: parameters) {
+      for (String v: b.getBindingAsArray()) {
+        vars.add(v);
+      }
+    }
+    return vars;
+  }
+
+  public List<String> getCollectionVariables () {
+    List<String> vars = new ArrayList<String>();
+    for (VariableBinding b: bindings) {
+      if (b.isCollection()) {
+        for (String v: b.getBindingAsArray()) {
+          vars.add(v);
+        }
+      }
+    }
+    return vars;
+  }
+
+  public List<String> getNonCollectionVariables () {
+    List<String> vars = new ArrayList<String>();
+    for (VariableBinding b: bindings) {
+      if (!b.isCollection()) {
+        for (String v: b.getBindingAsArray()) {
+          vars.add(v);
+        }
+      }
+    }
+    return vars;
+  }
+
   @JsonIgnore
   public List<String> getVariableBindings(String variable) {
     List<String> bindings = new ArrayList<String>();
@@ -119,6 +176,15 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
   }
 
   @JsonIgnore
+  public String getParametersHTML() {
+    String html = "<ul style=\"margin: 0\">";
+    for (VariableBinding param: parameters)
+      html += "<li><b>" + param.getVariable() + " = </b>" + param.getBinding() + "</li>" ;
+    html += "</ul>";
+    return html;
+  }
+
+  @JsonIgnore
   public String getBindingsDescriptionAsTable() {
     String html = "<ul style=\"margin: 0\">";
     Map<String, String> files = this.getRun().getFiles();
@@ -128,28 +194,28 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
     for(VariableBinding vbinding : bindings) {
       String[] barr = vbinding.getBindingAsArray();
       if (barr.length < 2) {
-    	  html += "<li><b>" + vbinding.getVariable() + " = </b>";
-    	  if (files != null && files.containsKey(barr[0])) {
-    		  html += "<a target='_blank' href='" + prefix + files.get(barr[0]).replace(":", "%3A").replace("#", "%23") + "'>" + barr[0] + "</a>";
-    	  } else html += barr[0];
-    	  html += "</li>";
+          html += "<li><b>" + vbinding.getVariable() + " = </b>";
+          if (files != null && files.containsKey(barr[0])) {
+              html += "<a target='_blank' href='" + prefix + files.get(barr[0]).replace(":", "%3A").replace("#", "%23") + "'>" + barr[0] + "</a>";
+          } else html += barr[0];
+          html += "</li>";
       } else {
-    	  html += "<li><b>" + vbinding.getVariable() + " = </b></li><ul>";
-		  for (String b: barr) {
-			  html += "<li>";
-			  if (files != null && files.containsKey(b))
-				  html += "<a target='_blank' href='" + prefix + files.get(b).replace(":", "%3A").replace("#", "%23") + "'>" + b + "</a>";
-			  else html += b;
-			  html += "</li>";
-		  }
-		  html += "</ul>";
+          html += "<li><b>" + vbinding.getVariable() + " = </b></li><ul>";
+          for (String b: barr) {
+              html += "<li>";
+              if (files != null && files.containsKey(b))
+                  html += "<a target='_blank' href='" + prefix + files.get(b).replace(":", "%3A").replace("#", "%23") + "'>" + b + "</a>";
+              else html += b;
+              html += "</li>";
+          }
+          html += "</ul>";
       }
     }
     if(this.meta.getHypothesis() != null) {
-    	html += "<li><b>" + this.meta.getHypothesis() + "</b>: [Hypothesis]</li>";
+        html += "<li><b>" + this.meta.getHypothesis() + "</b>: [Hypothesis]</li>";
     }
     if(this.meta.getRevisedHypothesis() != null) {
-    	html += "<li><b>" + this.meta.getRevisedHypothesis() + "</b>: [Revised Hypothesis]</li>";
+        html += "<li><b>" + this.meta.getRevisedHypothesis() + "</b>: [Revised Hypothesis]</li>";
     }
     html += "</ul>";
     return html;
@@ -192,28 +258,32 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
 
     String startts = this.getRun().getStartDate();
     if (startts != null) {
-    	html += "<span><b>Start date:</b></span> <span>" + startts + "</span>";
+      html += "<span><b>Start date:</b></span> <span>" + startts + "</span>";
     }
     
     String endts = this.getRun().getEndDate();
     if (endts != null) {
-    	html += "<span><b>End date:</b></span> <span>" + endts + "</span>";
+      html += "<span><b>End date:</b></span> <span>" + endts + "</span>";
     }
-
+    
+    if (parameters != null && parameters.size() > 0) {
+      html += "<span><b>Parameters:</b></span> <span>" + this.getParametersHTML() + "</span>";
+    }
+    
     String description = this.getBindingsDescriptionAsTable();
     if(!description.equals(""))
       html += "<span><b>Variable Bindings:</b></span> <span>" + description + "</span>";
     
     List<String> outputs = this.getRun().getOutputs();
     if (outputs != null) {
-    	int osize = outputs.size();
-    	String prefix = "https://enigma-disk.wings.isi.edu/wings-portal/users/admin/test/data/fetch?data_id=";
-    	html += "<span><b>Output files (" + Integer.toString(osize) + "):</b></span><span><ol style='margin:0'>";
-    	for (String link: this.getRun().getOutputs()) {
-    		String dl = prefix + link.replace(":", "%3A").replace("#", "%23");
-    		html += "<li><a target=\"_blank\" href=\"" + dl + "\">" + link.replaceAll(".*?#", "") + "</a></li>";
-    	}
-    	html += "</ol></span>";
+      int osize = outputs.size();
+      String prefix = "https://enigma-disk.wings.isi.edu/wings-portal/users/admin/test/data/fetch?data_id=";
+      html += "<span><b>Output files (" + Integer.toString(osize) + "):</b></span><span><ol style='margin:0'>";
+      for (String link: this.getRun().getOutputs()) {
+        String dl = prefix + link.replace(":", "%3A").replace("#", "%23");
+        html += "<li><a target=\"_blank\" href=\"" + dl + "\">" + link.replaceAll(".*?#", "") + "</a></li>";
+      }
+      html += "</ol></span>";
     }
     
     html += "</div>";

@@ -181,7 +181,7 @@
 		<h:HypothesisEditor ui:field="form" styleName="padded" />
 		<g:HTMLPanel ui:field="matchlist" styleName="tree list matchlist" />
 		
-		<div style="visibility: collapse">
+		<div style="display:none">
       <g:DialogBox autoHide="true" modal="true" ui:field='dialog'>
         <g:caption><b>Edit variable bindings</b></g:caption>
         <g:VerticalPanel>

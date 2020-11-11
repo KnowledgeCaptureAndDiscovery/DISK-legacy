@@ -128,7 +128,7 @@
 		<lw:ListWidget ui:field="loilist" styleName="list" />
 		<loi:LOIEditor ui:field="form" styleName="padded" />
 		
-		<div style="visibility: collapse;">
+		<div style="display:none">
 			<g:DialogBox modal="true" ui:field='helpDialog'>
 				<g:caption><b>Help:</b> Line of Inquiry</g:caption>
 				<g:HTMLPanel>

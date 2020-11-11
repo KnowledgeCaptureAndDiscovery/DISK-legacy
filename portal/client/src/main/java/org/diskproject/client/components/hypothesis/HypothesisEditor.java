@@ -76,7 +76,7 @@ public class HypothesisEditor extends Composite
     name.setValue(hypothesis.getName());
     description.setValue(hypothesis.getDescription());
     notes.setValue(hypothesis.getNotes());
-    if(hypothesis.getGraph() != null && loadcount==4)
+    if(hypothesis.getGraph() != null && loadcount==5)
       triples.setValue(hypothesis.getGraph().getTriples());
   }
   
@@ -89,6 +89,7 @@ public class HypothesisEditor extends Composite
     triples.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
     triples.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
     triples.loadVocabulary("neuro", KBConstants.NEUROURI(), vocabLoaded);
+    triples.loadVocabulary("disk", KBConstants.DISKURI(), vocabLoaded);
     triples.loadUserVocabulary("user", this.userid, this.domain, vocabLoaded);
   }
 
@@ -96,7 +97,7 @@ public class HypothesisEditor extends Composite
       new Callback<String, Throwable>() {
     public void onSuccess(String result) {
       loadcount++;
-      if (hypothesis != null && hypothesis.getGraph() != null && loadcount==4)
+      if (hypothesis != null && hypothesis.getGraph() != null && loadcount==5)
         triples.setValue(hypothesis.getGraph().getTriples());
       	//--
         ListBox[] lists = {h1r1, h1r2, h1r3, h2r1, h2r2};
