@@ -6,6 +6,7 @@ import java.util.Map;
 import org.diskproject.client.components.hypothesis.events.HasHypothesisHandlers;
 import org.diskproject.client.components.hypothesis.events.HypothesisSaveEvent;
 import org.diskproject.client.components.hypothesis.events.HypothesisSaveHandler;
+import org.diskproject.client.components.question.QuestionFiller;
 import org.diskproject.client.components.triples.HypothesisTripleInput;
 import org.diskproject.client.place.NameTokens;
 import org.diskproject.client.rest.AppNotification;
@@ -53,30 +54,33 @@ public class HypothesisEditor extends Composite
   @UiField HypothesisTripleInput triples;
   @UiField PaperDialog triggerdialog;
   @UiField PaperDialogScrollable dialogcontent;
-  @UiField SpanElement h1Section, h2Section;
+  @UiField QuestionFiller questionFiller;
 
-  @UiField ListBox hypQuestion, h1r1, h1r2, h1r3, h2r1, h2r2;
 
   private static Binder uiBinder = GWT.create(Binder.class);
-  
+
   public HypothesisEditor() {
     initWidget(uiBinder.createAndBindUi(this));
     handlerManager = new HandlerManager(this); 
   }
-  
+
   public void initialize(String username, String domain) {
     this.userid = username;
     this.domain = domain;
     triples.setDomainInformation(username, domain);
     this.loadVocabularies();
+    questionFiller.setParent(this);
+    questionFiller.setUsername(username);
+    questionFiller.setDomain(domain);
   }
-  
+
   public void load(Hypothesis hypothesis) {
     this.hypothesis = hypothesis;
     name.setValue(hypothesis.getName());
     description.setValue(hypothesis.getDescription());
     notes.setValue(hypothesis.getNotes());
-    if(hypothesis.getGraph() != null && loadcount==4)
+    questionFiller.setQuestion(hypothesis.getQuestion());
+    if(hypothesis.getGraph() != null && loadcount==5)
       triples.setValue(hypothesis.getGraph().getTriples());
   }
   
@@ -89,6 +93,7 @@ public class HypothesisEditor extends Composite
     triples.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
     triples.loadVocabulary("hyp", KBConstants.HYPURI(), vocabLoaded);
     triples.loadVocabulary("neuro", KBConstants.NEUROURI(), vocabLoaded);
+    triples.loadVocabulary("disk", KBConstants.DISKURI(), vocabLoaded);
     triples.loadUserVocabulary("user", this.userid, this.domain, vocabLoaded);
   }
 
@@ -96,13 +101,8 @@ public class HypothesisEditor extends Composite
       new Callback<String, Throwable>() {
     public void onSuccess(String result) {
       loadcount++;
-      if (hypothesis != null && hypothesis.getGraph() != null && loadcount==4)
+      if (hypothesis != null && hypothesis.getGraph() != null && loadcount==5)
         triples.setValue(hypothesis.getGraph().getTriples());
-      	//--
-        ListBox[] lists = {h1r1, h1r2, h1r3, h2r1, h2r2};
-        for (ListBox l: lists) {
-        	l.clear();
-        }
 
 		String[] prefixes = {"neuro", "hyp", "user"};
 		Map<String, Map<String, Individual>> individuals = new HashMap<String, Map<String,Individual>>();
@@ -117,12 +117,10 @@ public class HypothesisEditor extends Composite
 			}
 		}
 
-		GWT.log("---------");
-		for (String prefix: individuals.keySet()) {
+		/*for (String prefix: individuals.keySet()) {
 			for (String k: individuals.get(prefix).keySet()) {
 				String id = individuals.get(prefix).get(k).getName();
 				String label = individuals.get(prefix).get(k).getLabel();
-				GWT.log("inv: "+label + " | " + prefix + ":" + id);
 				for (ListBox l: lists) {
 					l.addItem("(" + prefix + ") " + label, prefix + ":" + id);
 				}
@@ -154,6 +152,7 @@ public class HypothesisEditor extends Composite
     hypothesis.setDescription(description.getValue());
     hypothesis.setNotes(notes.getValue());
     hypothesis.setName(name.getValue());
+    hypothesis.setQuestion(questionFiller.getSelectedQuestion());
     Graph graph = new Graph();
     graph.setTriples(triples.getTriples());
     hypothesis.setGraph(graph);
@@ -182,57 +181,8 @@ public class HypothesisEditor extends Composite
     return handlerManager.addHandler(HypothesisSaveEvent.TYPE, handler);
   }
 
-	@UiHandler("addPattern")
-	void onAddTermButtonClicked(ClickEvent event) {
-		String selectedHyp = hypQuestion.getSelectedValue();
-		if (selectedHyp.equals("h1")) {
-			setH1();
-		} else if (selectedHyp.equals("h2")) {
-			setH2();
-		}
-	}
-
-	@UiHandler("hypQuestion")
-	void onChange(ChangeEvent event) {
-		String h = hypQuestion.getSelectedValue();
-		if (h.equals("h1")) {
-			h1Section.getStyle().setDisplay(Display.INITIAL);
-			h2Section.getStyle().setDisplay(Display.NONE);
-		} else if (h.equals("h2")) {
-			h2Section.getStyle().setDisplay(Display.INITIAL);
-			h1Section.getStyle().setDisplay(Display.NONE);
-		}
-	}
-
-	void setH1 () {
-		String p1v = h1r1.getSelectedValue();
-		String p2v = h1r2.getSelectedValue();
-		String p3v = h1r3.getSelectedValue();
-		if (p1v == "" || p2v == "" || p3v == "") {
-		    AppNotification.notifyFailure("Must select all requested properties.");
-			return;
-		}
-		
-		String t1 =  ":EffectSize neuro:sourceGene " + p1v;
-		String t2 =  ":EffectSize neuro:targetCharacteristic " + p2v;
-		String t3 =  ":EffectSize hyp:associatedWith " + p3v;
-		
-		String merged =  t1 + '\n' + t2 + '\n' + t3;
-		GWT.log(merged);
-		triples.setStringValue(merged);
-		
-	}
-
-	void setH2 () {
-		String p1v = h2r1.getSelectedValue();
-		String p2v = h2r2.getSelectedValue();
-		if (p1v == "" || p2v == "") {
-		    AppNotification.notifyFailure("Must select all requested properties.");
-			return;
-		}
-		
-		String t =  p1v + " hyp:associatedWith " + p2v;
-		triples.setStringValue(t);
+	public void setHypothesis (String hyp) {
+	  triples.setStringValue(hyp);
 	}
 
 }

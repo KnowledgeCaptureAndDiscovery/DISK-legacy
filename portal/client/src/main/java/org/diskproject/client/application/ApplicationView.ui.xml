@@ -237,6 +237,9 @@
 			.Codemirror-linenumber {
 				padding-left: 0px;
 			}
+			.CodeMirror-scroll {
+				overflow: hidden !important;
+			}
 			.information-gutter {
 				width: 8px;
 				height: 18px;
@@ -453,7 +456,7 @@
 					href="#{nameTokens.getLOIs}/{config.getWingsUserid}/{config.getWingsDomain}">
 						<div class="layout horizontal center" ui:field="loisMenu">
 							<iron-icon class="backbutton grey" icon="icons:chevron-left" />			
-							<iron-icon class="green" icon="icons:explore" />
+							<iron-icon class="green" icon="icons:settings" />
 							 Lines of Inquiry
 						</div>
 					</g:Anchor>
@@ -469,7 +472,7 @@
 					href="#{nameTokens.getTerminology}/{config.getWingsUserid}/{config.getWingsDomain}">
 						<div class="layout horizontal center" ui:field="terminologyMenu">
 							<iron-icon class="backbutton grey" icon="icons:chevron-left" />						
-							<iron-icon class="blue" icon="icons:chrome-reader-mode" />
+							<iron-icon class="blue" icon="icons:book" />
 							 Terminology
 						</div>
 					</g:Anchor>

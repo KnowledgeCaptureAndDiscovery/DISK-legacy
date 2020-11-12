@@ -6,8 +6,7 @@
 	xmlns:p='urn:import:com.vaadin.polymer.paper.widget'
 	xmlns:lw='urn:import:org.diskproject.client.components.list'	
 	xmlns:tr='urn:import:org.diskproject.client.components.triples'	
-	xmlns:n='urn:import:com.vaadin.polymer.neon.widget'
-	>
+	xmlns:n='urn:import:com.vaadin.polymer.neon.widget'>
 
 	<g:HTMLPanel>
 		<style is="custom-style">
@@ -99,11 +98,22 @@
 						  min-width: 24px;
 						  display: inline-block;
 						}
-						.assertion-pattern {
-						  border: 1px solid #aaa;
-							padding: 8px;
-							width: fit-content;
-							border-radius: 5px;
+						
+						table.terms-table {
+							border-collapse: collapse;
+						}
+
+						th {
+							border-bottom:1px solid black;
+						}
+
+						tr > td:nth-child(2) {
+							width: 40px;
+							text-align: center;
+						}
+
+						tr > td:nth-child(1) {
+							font-weight: bold;
 						}
 		</style>
 
@@ -111,100 +121,27 @@
 			addStyleNames="addicon" title="Add Data" tabindex="0" disabled="true"/>
 		<div style="padding: 4px 10px; font-size: 14px;">
 			The Neuro DISK system uses the following ontologies:
-		  <!--  To add a new Ontologies click on the top-right button.-->
 		  <ul>
-		    <!--li> 
-		      <h4 style="margin:0">The DISK Ontology:</h4>
-		      <ul>
-		        <li>
-		      <b>Documentation:</b>
-		      <a target="_blank" href="http://disk-project.org/ontology/disk">The DISK ontology</a>
-		        </li>
-		        <li>
-		      <b>Ontology file:</b>
-		      <a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/disk/release/1.1.0/ontology.ttl">
-		        ontology.ttl
-		      </a>
-		        </li>
-		      </ul>
+		    <li> 
+		      <h4 style="margin:0; display: inline-block;">
+		        <a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/enigma_hypothesis/release/2.0.0/index.html#">The ENIGMA Hypothesis Ontology</a>
+		      </h4> 
+	        (<a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/enigma_hypothesis/release/2.0.0/ontology.ttl">.ttl</a>)
+		    </li>
+
+		    <!--  li> 
+		      <h4 style="margin:0; display: inline-block;">
+		        <a target="_blank" href="https://disk-project.org/ontology/omics/index-en.html#">The Omics Hypothesis Ontology</a>
+		      </h4>
+	        (<a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/omics_hypothesis/release/0.0.1/ontology.ttl">.ttl</a>)
 		    </li-->
 
 		    <li> 
-		      <h4 style="margin:0">The ENIGMA Hypothesis Ontology</h4>
-		      <ul>
-		        <li>
-		      <b>Prefix:</b>
-		      <span class="code">neuro:</span>
-		        </li>
-		        <li>
-		      <b>Documentation:</b>
-		      <a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/enigma_hypothesis/release/2.0.0/index.html#">The ENIGMA Hypothesis Ontology</a>
-		        </li>
-		        <li>
-		      <b>Ontology file:</b>
-		      <a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/enigma_hypothesis/release/2.0.0/ontology.ttl">
-		        ontology.ttl
-		      </a>
-		        </li>
-		      </ul>
+		      <h4 style="margin:0; display: inline-block;">
+		        <a target="_blank" href="https://disk-project.org/ontology/hypothesis/index-en.html#">The DISK-hypothesis Ontology </a>
+		      </h4>
+	        (<a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/hypothesis/release/0.0.1/ontology.owl">.ttl</a>)
 		    </li>
-
-		    <li> 
-		      <h4 style="margin:0">The Omics Hypothesis Ontology</h4>
-		      <ul>
-		        <li>
-		      <b>Prefix:</b>
-		      <span class="code">bio:</span>
-		        </li>
-		        <li>
-		      <b>Documentation:</b>
-		      <a target="_blank" href="https://disk-project.org/ontology/omics/index-en.html#">The Omics Hypothesis Ontology</a>
-		        </li>
-		        <li>
-		      <b>Ontology file:</b>
-		      <a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/omics_hypothesis/release/0.0.1/ontology.ttl">
-		        ontology.ttl
-		      </a>
-		        </li>
-		      </ul>
-		    </li>
-
-		    <li> 
-		      <h4 style="margin:0">The DISK-hypothesis Ontology</h4>
-		      <ul>
-		        <li>
-		      <b>Prefix:</b>
-		      <span class="code">hyp:</span>
-		        </li>
-		        <li>
-		      <b>Documentation:</b>
-		      <a target="_blank" href="https://disk-project.org/ontology/hypothesis/index-en.html#">The DISK-hypothesis Ontology </a>
-		        </li>
-		        <li>
-		      <b>Ontology file:</b>
-		      <a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/hypothesis/release/0.0.1/ontology.owl">
-		        ontology.ttl
-		      </a>
-		        </li>
-		      </ul>
-		    </li>
-
-		    <!--li> 
-		      <h4 style="margin:0">The DISK-User Ontology (Vocabulary)</h4>
-		      <ul>
-		        <li>
-		      <b>Prefix:</b>
-		      <span class="code">user:</span>
-		        </li>
-		        <li>
-		      <b>Documentation:</b>
-		      <a target="_blank" href="#">Scroll to documentation</a>
-		        </li>
-		        <li>
-		      <b>Ontology:</b> Described <a href="#">here</a>
-		        </li>
-		      </ul>
-		    </li-->
 		  </ul>
 		</div>
 
@@ -215,51 +152,59 @@
 		<g:HTMLPanel ui:field="form" styleName="padded">
 			<div class="vertical center-justified layout">
 				<div class="vertical-section">
-				<div style="padding: 4px 10px; font-size: 14px;">
-		      <h4>User defined terms:</h4>
-		      <p>
-		        DISK provides a user defined vocabulary designed to help on the creation of hypothesis and data patterns. 
-		        <br/>
-		        You can add a new terms using the following pattern:
-		      </p>
-		      <div class="assertion-pattern">
-		        <input type="text" ui:field='termid' placeholder="name"></input>
-		        <span> is a </span>
-					  <g:ListBox ui:field='termtype'>
-							<g:item value=''>loading...</g:item>
-						 </g:ListBox>
-				    <p:PaperButton ui:field="addterm"> <iron-icon icon="add"/> </p:PaperButton>
-				    <p:PaperButton ui:field="helpterm"> <iron-icon icon="help-outline"/> </p:PaperButton>
-				    <div style="display:none" ui:field="example1">
-				      <hr/>
-							As example, we can define Parkinsons as follow: 
-							<div>
-								<input type="text" value="Parkinsons"></input>
-								<span> is a </span>
-								<g:ListBox>
-									<g:item value=''>(neuro) Brain Characteristic</g:item>
-								</g:ListBox>
+					<div style="padding: 4px 10px; font-size: 14px;">
+						<h4 style="margin:0px;">User defined terms:</h4>
+						<p>The following table show all the user defined resources currently on the system. You can add new resources on the last row.</p>
+						
+						<table class="terms-table">
+								<thead>
+									<th>Name</th>
+									<th></th>
+									<th>Type</th>
+									<th></th>
+								</thead>
+								<tbody ui:field="table">
+									<!-- GENERATED TABLE -->
+									<tr ui:field="inputRow">
+										<td>
+											<input type="text" ui:field='inputName' placeholder="name"></input>
+										</td>
+										<td>is a</td>
+										<td>
+											<g:ListBox ui:field='inputType'>
+												<g:item value=''>loading...</g:item>
+											</g:ListBox>
+										</td>
+										<td>
+										 <p:PaperButton ui:field="addterm"> <iron-icon icon="add"/> </p:PaperButton>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+							
+							<div style="padding-top:10px">
+								<g:CheckBox ui:field='toggleTriples' value="false" text="Show metadata as turtle file"/>
+							
+								<label class="small-grey" ui:field="trilesLabel">
+									(Ctrl-Space for suggestions)
+								</label>
+								<tr:TripleInput ui:field="triples" />
 							</div>
-				    </div>
-		      </div>
-				  <p>
-					You can also add terms to the vocabulary directly in the textbox below using the prefix <span class="code">:</span>.
-          </p>
-          <!-- p>
-          For example, we can define a named resource in one line with
-          <span class="code">:example rdfs:label "Example_name"^^xsd:string</span>.<br/>
-          To reference this resource in a hypothesis we can use <span class="code">user:example</span>.
-          </p-->
+						</div>
 				</div>
-					<label class="small-grey">Metadata (Ctrl-Space for suggestions)</label>
-					<tr:TripleInput ui:field="triples" />
+
+				<div class="horizontal end-justified layout" style="display: flex; align-content: center; height: 30px; justify-content: flex-end;">
+					<p:PaperButton ui:field="discardbutton">
+					  <span style="margin-top: 3px; display: inline-block; padding: 0px 4px;">Discard changes</span>
+					</p:PaperButton>
+					<p:PaperButton ui:field="savebutton">
+						<iron-icon icon="save" />
+					  <span style="margin-top: 3px; display: inline-block;">Save</span>
+					</p:PaperButton>
 				</div>
+
 			</div>
-			<div class="horizontal end-justified layout">
-				<p:PaperButton ui:field="discardbutton">Discard changes</p:PaperButton>
-				<p:PaperButton ui:field="savebutton">
-					<iron-icon icon="save" />Save</p:PaperButton>
-			</div>
+
 		</g:HTMLPanel>		
 	</g:HTMLPanel>
 </ui:UiBinder>

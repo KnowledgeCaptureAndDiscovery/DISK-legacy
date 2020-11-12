@@ -54,7 +54,7 @@ public class KBRepository implements TransactionsAPI {
     this.fac = new OntFactory(OntFactory.JENA, tdbdir);
     try {
       this.transaction = new TransactionsJena(this.fac);
-      System.out.println(">> " + this.onturi);
+      System.out.println("Initialize KB: " + this.onturi);
       
       ontkb = fac.getKB(this.onturi, OntSpec.PELLET, false, true);
       TimeUnit.SECONDS.sleep(2); 
@@ -65,16 +65,40 @@ public class KBRepository implements TransactionsAPI {
       pmap = new HashMap<String, KBObject>();
       cmap = new HashMap<String, KBObject>();
       this.cacheKBTerms(ontkb);
+      //this.stddump();
       this.end();
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
   
+  private void stddump () { 
+	  System.out.println("CLASSES:");
+	  for (String key: cmap.keySet()) {
+		  KBObject el = cmap.get(key);
+		  if (el.isAnonymous()) {
+			  System.out.println(key + ": is anonymous");
+		  } else {
+			  System.out.println(key + ": " + el.getValueAsString());
+		  }
+	  }
+	  System.out.println("PROPERTIES:");
+	  for (String key: pmap.keySet()) {
+		  KBObject el = pmap.get(key);
+		  if (el.isAnonymous()) {
+			  System.out.println(key + ": is anonymous");
+		  } else {
+			  System.out.println(key + ": " + el.getValueAsString());
+		  }
+	  }
+  }
+  
   private void temporaryHacks() {
-    this.hackInDataProperty("hasHypothesisQuery", "LineOfInquiry", "string");
-    this.hackInDataProperty("hasDataQuery", "LineOfInquiry", "string");    
-    this.hackInDataProperty("author", "LineOfInquiry", "string");    
+	//ADDs properties to the ontology being loaded.
+    this.hackInDataProperty("hasRelevantVariables", "LineOfInquiry", "string");
+    this.hackInObjectProperty("hasParameter", "WorkflowBinding", "VariableBinding");
+    this.hackInDataProperty("hasParameterValue", "LineOfInquiry", "string");
+    //this.hackInClass("Parameter");
   }
   
   private void hackInDataProperty(String prop, String domain, String range) {
@@ -87,24 +111,38 @@ public class KBRepository implements TransactionsAPI {
     }
   }
 
+  private void hackInObjectProperty(String prop, String domain, String range) {
+    String ns = ontns;
+    if(!this.ontkb.containsResource(ns+prop)) {
+      this.ontkb.createObjectProperty(ns+prop);
+      this.ontkb.setPropertyDomain(ns+prop, ns+domain);
+      this.ontkb.setPropertyRange(ns+prop, ns+range);
+      this.ontkb.save();
+    }
+  }
+  
+  private void hackInClass(String classname) {
+    String ns = ontns;
+    if(!this.ontkb.containsResource(ns+classname)) {
+      this.ontkb.createClass(ns+ classname);
+      this.ontkb.save();
+    }
+  }
+
   protected void cacheKBTerms(KBAPI kb) {
-    System.out.println("kb:" + kb.getURI());
     for (KBObject obj : kb.getAllClasses()) {
-      if(obj != null) {
+      if(obj != null && obj.getName() != null) {
         cmap.put(obj.getName(), obj);
-        System.out.println("cmap: " + obj.getName());
       }
     }
     for (KBObject obj : kb.getAllObjectProperties()) {
       if(obj != null) {
         pmap.put(obj.getName(), obj);
-        System.out.println("pmap: " + obj.getName());
       }
     }
     for (KBObject obj : kb.getAllDatatypeProperties()) {
       if(obj != null) {
         pmap.put(obj.getName(), obj);
-        System.out.println("dt pmap: " + obj.getName());
       }
     }
   }

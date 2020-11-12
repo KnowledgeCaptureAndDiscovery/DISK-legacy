@@ -195,17 +195,6 @@ public class DiskResource implements DiskService {
     return this.repo.queryHypothesis(username, domain, id);
   }
 
-  @GET
-  @Path("{username}/{domain}/hypotheses/{id}/data")
-  @Produces("application/json")
-  @Override
-  public Map<String, List<String>> queryHypothesisData(
-      @PathParam("username") String username, 
-      @PathParam("domain") String domain,
-      @PathParam("id") String id) {
-    return this.repo.queryHypothesisData(username, domain, id);
-  }
-
   /**
    * Assertions
    */
@@ -251,16 +240,6 @@ public class DiskResource implements DiskService {
   /**
    * Lines of Inquiry
    */
-  @GET
-  @Path("{username}/{domain}/test")
-  @Override
-  public List<List<List<String>>> testLOI(
-      @PathParam("username") String username, 
-      @PathParam("domain") String domain, 
-      @QueryParam("query") String query) {
-	return repo.testDataQuery(username, domain, query);
-  }
-  
   @POST
   @Path("{username}/{domain}/lois")
   @Override
@@ -403,5 +382,16 @@ public class DiskResource implements DiskService {
       @PathParam("domain") String domain,
       @JsonProperty("query") String query) {
     return this.repo.directQuery(username, domain, query);
+  }
+
+  @GET
+  @Path("{username}/{domain}/test")
+  @Override
+  public Map<String, List<String>> queryExternalStore(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain, 
+      @QueryParam("variables") String variables,
+      @QueryParam("query") String query) {
+	return repo.queryExternalStore(username, domain, variables, query);
   }
 }

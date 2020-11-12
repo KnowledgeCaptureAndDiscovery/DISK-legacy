@@ -64,7 +64,7 @@ public class ApplicationView extends ViewImpl implements
       final String nametoken, final String[] params, boolean edit, 
       SimplePanel sidebar, SimplePanel toolbar) {
     toolbar.clear();
-    toolbar.add(new HTML("<h3>Neuro DISK Home</h3>"));
+    toolbar.add(new HTML("<h3>NeuroDISK: An AI Discovery System Driven by Your Questions</h3>"));
      
     Polymer.ready(drawer, new Function<Object, Object>() {
       @Override

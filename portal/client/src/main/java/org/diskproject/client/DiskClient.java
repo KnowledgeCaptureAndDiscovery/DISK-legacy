@@ -29,7 +29,7 @@ public class DiskClient implements EntryPoint {
   public final ApplicationController controller = GWT.create(ApplicationController.class);
   
   public void onModuleLoad() {
-	//Login with keycloak https://auth.a.mosorio.dev/
+	//Login with keycloak 
 	final Keycloak keycloak = new Keycloak("DiskClient", "/disk-portal/customise/keycloak.json");
 	keycloak.addKeycloakListener(new KeycloakListenerAdapter()
 		{

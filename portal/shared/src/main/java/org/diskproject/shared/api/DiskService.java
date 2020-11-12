@@ -97,14 +97,6 @@ public interface DiskService extends DirectRestService {
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @PathParam("id") String id);
-  
-  @GET
-  @Produces("application/json")
-  @Path("{username}/{domain}/hypotheses/{id}/data")
-  public Map<String, List<String>> queryHypothesisData(
-	  @PathParam("username") String username, 
-	  @PathParam("domain") String domain,
-	  @PathParam("id") String id);
 
   /*
    * Assertions
@@ -139,12 +131,6 @@ public interface DiskService extends DirectRestService {
   /*
    * Lines of Inquiry
    */
-  @GET
-  @Path("{username}/{domain}/test")  
-  public List<List<List<String>>> testLOI(
-      @PathParam("username") String username, 
-      @PathParam("domain") String domain,
-      @QueryParam("query") String query);
   
   @POST
   @Path("{username}/{domain}/lois")  
@@ -167,7 +153,7 @@ public interface DiskService extends DirectRestService {
       @PathParam("id") String id);
   
   @PUT
-  @Path("{username}/{domain}/lois/{id}")  
+  @Path("{username}/{domain}/lois/{id}")
   public void updateLOI(
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
@@ -180,7 +166,7 @@ public interface DiskService extends DirectRestService {
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @PathParam("id") String id);
-  
+
   /*
    * Triggered LOIs
    */
@@ -245,4 +231,13 @@ public interface DiskService extends DirectRestService {
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @JsonProperty("query") String query);
+  
+  @GET
+  @Path("{username}/{domain}/test")  
+  public Map<String, List<String>> queryExternalStore(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @QueryParam("variables") String variables,
+      @QueryParam("query") String query);
+  
 }

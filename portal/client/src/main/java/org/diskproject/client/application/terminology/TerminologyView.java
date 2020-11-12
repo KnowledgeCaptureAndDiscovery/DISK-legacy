@@ -1,7 +1,9 @@
 package org.diskproject.client.application.terminology;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.diskproject.client.application.ApplicationSubviewImpl;
@@ -11,8 +13,10 @@ import org.diskproject.client.components.loader.Loader;
 import org.diskproject.client.components.triples.TripleInput;
 import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
+import org.diskproject.client.Utils;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.Triple;
+import org.diskproject.shared.classes.common.Value;
 import org.diskproject.shared.classes.util.KBConstants;
 import org.diskproject.shared.classes.vocabulary.Individual;
 import org.diskproject.shared.classes.vocabulary.Type;
@@ -20,13 +24,16 @@ import org.diskproject.shared.classes.vocabulary.Vocabulary;
 
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.DivElement;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.InputElement;
-import com.google.gwt.dom.client.Style.Display;
+import com.google.gwt.dom.client.TableSectionElement;
+import com.google.gwt.dom.client.TableRowElement;
+import com.google.gwt.dom.client.TableCellElement;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.ListBox;
@@ -50,14 +57,26 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 	@UiField ListWidget datalist;
 	@UiField TripleInput triples;
 	
-	@UiField InputElement termid;
-	@UiField ListBox termtype;
-	@UiField DivElement example1;
+	@UiField InputElement inputName;
+	@UiField ListBox inputType;
+
+	@UiField CheckBox toggleTriples;
 	List<Triple> loadedTriples;
+
+	@UiField TableSectionElement table;
+	@UiField TableRowElement inputRow;
+	private static Map<String, String> tableLabel;
+	private static Map<String, String> tableType;
 
 	Vocabulary vocab;
 
 	Graph graph;
+
+	@UiHandler("toggleTriples")
+	void onClickToggleTriples(ClickEvent event) {
+		boolean show = toggleTriples.getValue();
+		triples.setVisible(show);
+	}
 
 	interface Binder extends UiBinder<Widget, TerminologyView> {
 	}
@@ -93,13 +112,14 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 				vocab.refreshChildren();
 
 				
-				termtype.clear();
+				inputType.clear();
+				inputType.addItem("- None -", "");
 				for (String p: prefixes) {
 					Set<String> keys = triples.getVocabulary(p).getTypes().keySet();
 					for (String k: keys) {
-						String id = triples.getVocabulary(p).getTypes().get(k).getName();
+						//String id = triples.getVocabulary(p).getTypes().get(k).getName();
 						String label = triples.getVocabulary(p).getTypes().get(k).getLabel();
-						termtype.addItem("(" + p + ") " + label, p + ":" + id);
+						inputType.addItem("[" + p + "] " + label, k);
 					}
 				}
 
@@ -139,22 +159,26 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 	}
 
 	void loadAssertions() {
-		   loader.setVisible(true);
-		    DiskREST.listAssertions(new Callback<Graph, Throwable>() {
-		      @Override
-		      public void onSuccess(final Graph result) {
-		        loader.setVisible(false);
-		        form.setVisible(true);
-		        graph = result;
-		        if(graph != null && loadcount == 5)
-		          showAssertions();
-		      }
-		      @Override
-		      public void onFailure(Throwable reason) {
-		        loader.setVisible(false);
-		        AppNotification.notifyFailure(reason.getMessage());
-		      }      
-		    });
+		loader.setVisible(true);
+		triples.setVisible(false);
+		DiskREST.listAssertions(new Callback<Graph, Throwable>() {
+		  @Override
+		  public void onSuccess(final Graph result) {
+			loader.setVisible(false);
+			form.setVisible(true);
+			graph = result;
+			if (graph != null) {
+				loadedTriples = graph.getTriples();
+				loadTableData(loadedTriples);
+				if (loadcount == 5) showAssertions();
+			}
+		  }
+		  @Override
+		  public void onFailure(Throwable reason) {
+			loader.setVisible(false);
+			AppNotification.notifyFailure(reason.getMessage());
+		  }      
+		});
 	}
 
 	private void showAssertions() {
@@ -163,8 +187,8 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 			public Object call(Object arg) {
 				// Show triples in the editor
 				if (graph != null) {
+					triples.setVisible(true);
 					triples.setValue(graph.getTriples());
-					loadedTriples = triples.getTriples();
 				}
 
 				// Show data list
@@ -173,10 +197,57 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 
 				loader.setVisible(false);
 				datalist.setVisible(true);
+				
+				if (!toggleTriples.getValue()) {
+					triples.setVisible(false);
+				}
 
 				return null;
 			}
 		});
+	}
+
+	private void loadTableData (List<Triple> G) {
+		tableLabel = new HashMap<String, String>();
+		tableType = new HashMap<String, String>();
+		for (Triple t: G) {
+			String s = t.getSubject().toString();
+			String p = t.getPredicate();
+			String o = t.getObject().getValue().toString();
+			if (p.contentEquals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")) {
+				tableType.put(s, o);
+			} else if (p.contentEquals("http://www.w3.org/2000/01/rdf-schema#label")) {
+				tableLabel.put(s, o);
+			}
+			GWT.log(s + "  " + p + "  " + t.getObject().toString());
+		}
+		renderTable(tableLabel,tableType);
+	}
+
+	private void renderTable (Map<String, String> labels, Map<String, String> types) {
+		// CLEAN TABLE 
+		table.removeAllChildren();
+		
+		// NEW ELEMENTS
+		Set<String> ids = labels.keySet();
+		for (String id: ids) {
+			TableRowElement row = Document.get().createTRElement();
+			TableCellElement label = Document.get().createTDElement();
+			TableCellElement info = Document.get().createTDElement();
+			TableCellElement type = Document.get().createTDElement();
+			label.setInnerText(tableLabel.get(id));
+			String t = types.get(id);
+			if (t != null) {
+				type.setInnerText(Utils.extractPrefix(t));
+				info.setInnerText("is a");
+			}
+			row.appendChild(label);
+			row.appendChild(info);
+			row.appendChild(type);
+			table.appendChild(row);
+		}
+		
+		table.appendChild(inputRow);
 	}
 
 	private void showDataList() {
@@ -241,10 +312,10 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 
 	@UiHandler("addterm")
 	void onAddTermButtonClicked(ClickEvent event) {
-		String name = termid.getValue();
+		String name = inputName.getValue();
 		String id = toVarName(name);
 		if (id == "" || name == "") {
-		    AppNotification.notifyFailure("You must add a name and identifier to any new term.");
+		    AppNotification.notifyFailure("You must add a name to any new term.");
 			return;
 		}
 
@@ -257,28 +328,41 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 			}
 		}
 		
+		// Adding labels and types to table.
+		List<Triple> mergedList = triples.getTriples();
+		Value v = new Value(name,"http://www.w3.org/2001/XMLSchema#string");
+		mergedList.add(new Triple(fullid, "http://www.w3.org/2000/01/rdf-schema#label",v,null));
+		String selectedType = inputType.getSelectedValue();
+		if (selectedType != null && selectedType.length() > 1) {
+			v = new Value(selectedType);
+			mergedList.add(new Triple(fullid, "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",v,null));
+		}
+
+		loadTableData(mergedList);
+		triples.setValue(mergedList);
+		
+		/*
 		String all = triples.getTripleString(triples.getTriples());
-		String t1 =  ":" + id + " a " + termtype.getSelectedValue();
+		String t1 =  ":" + id + " a " + inputType.getSelectedValue();
 		String t2 =  ":" + id + " rdfs:label \"" + name + "\"^^xsd:string";
+		
 		
 		String merged =  all + '\n' + t1 + '\n' + t2;
 		GWT.log(merged);
 		triples.setStringValue(merged);
-	}
-
-	@UiHandler("helpterm")
-	void onHelpTermButtonClicked(ClickEvent event) {
-		String actual = example1.getStyle().getDisplay();
-		if (actual == "none")
-			example1.getStyle().setDisplay(Display.INITIAL);
-		else
-			example1.getStyle().setDisplay(Display.NONE);
+		*/
+		
+		// Clear inputs
+		inputName.setValue("");
+		inputType.setValue(0,"");
 	}
 
 	@UiHandler("discardbutton")
 	void onDiscardButtonClicked(ClickEvent event) {
-		if (loadedTriples != null)
+		if (loadedTriples != null) {
 			triples.setValue(loadedTriples);
+		    loadTableData(loadedTriples);
+		}
 	}
 
 	private void setHeader(SimplePanel toolbar) {

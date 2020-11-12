@@ -29,6 +29,8 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   String notes;
   String dateCreated;
   String dateModified;
+  String dataQuery;
+  String relevantVariables;
 
   public TriggeredLOI(String id,
   String name,
@@ -85,6 +87,14 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   public void setId(String id) {
     this.id = id;
   }
+  
+  public void setDataQuery (String dq) {
+    this.dataQuery = dq;
+  }
+  
+  public String getDataQuery () {
+    return this.dataQuery;
+  }
 
   public String getName() {
     return name;
@@ -92,6 +102,14 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public String getRelevantVariables() {
+    return relevantVariables;
+  }
+
+  public void setRelevantVariables(String v) {
+    this.relevantVariables = v;
   }
 
   public String getDescription() {
@@ -182,6 +200,14 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
     if(description != null)
       html += description;
     html += "</div>";
+
+    /* TODO: add date to tloi.
+    html += "<div class='footer' style='display: flex;justify-content: space-between;'>";
+    html += "<span><b>Creation date:</b> ";
+    html += (this.creationDate != null) ? this.creationDate : "None specified";
+    html += "</span><span><b>Author:</b> ";
+    html += (this.author != null) ? this.author : "None specified";
+    html += "</span></div>";*/
 
     return html;
   }

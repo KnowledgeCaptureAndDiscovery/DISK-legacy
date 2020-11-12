@@ -16,7 +16,6 @@ import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
 import org.diskproject.shared.classes.common.Triple;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
-import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.workflow.VariableBinding;
@@ -47,38 +46,21 @@ public class TriggeredLOIViewer extends Composite {
   private static Binder uiBinder = GWT.create(Binder.class);
 
   @UiField DivElement header;
-  @UiField DivElement hypothesisSection, LOISection, DataSection, data, WFSection, MetaWFSection;
+  @UiField DivElement hypothesisSection, LOISection, dataDiv, WFSection, MetaWFSection;
   @UiField LabelElement WFLabel;
-  @UiField HTMLPanel revHypothesisSection;
+  @UiField HTMLPanel revHypothesisSection, DataSection, DataQuerySection;
   @UiField TripleViewer hypothesis;
-  @UiField SparqlInput loi;
+  @UiField SparqlInput dataQuery;
   @UiField ListWidget workflowlist, metaworkflowlist;
   @UiField AnchorElement hypothesisLink, loiLink;
-  @UiField PaperButton downloadbutton;
+  @UiField PaperButton downloadbutton, triplesbutton;
   String username, domain;
   String rawcsv; //USED to save the downloadable CSV.
   String datamode = "all";
   TriggeredLOI tloi;
   Map<String, List<String>> dataRetrieved;
   @UiField CheckBox showdata, showdq;
-  
-  
-	@UiHandler("showdq")
-	void onClickShowDQ(ClickEvent event) {
-		boolean show = showdq.getValue();
-		loi.setVisible(show);
-	}
-  
-	@UiHandler("showdata")
-	void onClickShowData(ClickEvent event) {
-		boolean show = showdata.getValue();
-		if (show) {
-			data.getStyle().setDisplay(Display.INITIAL);
-		} else {
-			data.getStyle().setDisplay(Display.NONE);
-		}
-	}
-  
+
 
   public TriggeredLOIViewer() {
     initWidget(uiBinder.createAndBindUi(this));
@@ -92,6 +74,10 @@ public class TriggeredLOIViewer extends Composite {
         "icons:build", "blue-button run-link");
     metaworkflowlist.addCustomAction("runlink", "Run details", 
         "icons:build", "blue-button run-link");    
+    downloadbutton.setVisible(false);
+    triplesbutton.setVisible(false);
+    DataSection.setVisible(false);
+    DataQuerySection.setVisible(false);
   }
 
   public void load(TriggeredLOI tloi) {
@@ -112,25 +98,75 @@ public class TriggeredLOIViewer extends Composite {
     
     setHypothesisHTML(tloi.getParentHypothesisId(), 
         hypothesisSection, hypothesis, hypothesisLink);
-    setLOIHTML(tloi.getLoiId(), LOISection, loi);
+    setDataQueryHTML(tloi.getDataQuery(), LOISection, dataQuery);
     setRevisedHypothesesHTML(tloi.getResultingHypothesisIds(), revHypothesisSection);
     
-    showHypothesisData(tloi.getParentHypothesisId());
   }
 
-  private void showHypothesisData(final String id) {
-    DiskREST.queryHypothesisData(id,
-        new Callback<Map<String, List<String>>, Throwable>() {
-      @Override
-      public void onSuccess(Map<String, List<String>> result) {
-    	  dataRetrieved = result;
-    	  setDataHTML(data);
-      }
-      @Override
-      public void onFailure(Throwable reason) {
-        AppNotification.notifyFailure(reason.getMessage());
-      }
-    });
+  @UiHandler("showdq")
+  void onClickShowDQ(ClickEvent event) {
+    boolean show = showdq.getValue();
+    if (show) {
+      dataQuery.setVisible(false);
+      dataQuery.setValue("");
+      dataQuery.setVisible(true);
+      dataQuery.setValue(tloi.getDataQuery());
+    }
+    DataQuerySection.setVisible(show);
+  }
+
+  @UiHandler("showdata")
+  void onClickShowData(ClickEvent event) {
+    boolean show = showdata.getValue();
+    if (show) {
+      if (dataRetrieved == null) loadAndShowData();
+      DataSection.setVisible(true);
+    } else {
+      DataSection.setVisible(false);
+    }
+  }
+
+  private void loadAndShowData () {
+    String vars = tloi.getRelevantVariables();
+    String dq = tloi.getDataQuery();
+    if (vars != null && dq != null && dataRetrieved == null) {
+      dataDiv.setInnerText("Loading...");
+      DiskREST.queryExternalStore(dq, vars, new Callback<Map<String, List<String>>, Throwable>() {
+        @Override
+        public void onSuccess(Map<String, List<String>> response) {
+          if (response != null) {
+            dataRetrieved = response;
+            setDataHTML(dataDiv);
+          }
+        }
+        @Override
+        public void onFailure(Throwable reason) {
+          AppNotification.notifyFailure(reason.getMessage());
+          dataDiv.setInnerText("An error has ocurred");
+        }
+      });
+    }
+  }
+
+
+  private void showHypothesisData() {
+    String vars = tloi.getRelevantVariables();
+    String dq = tloi.getDataQuery();
+    if (vars != null && dq != null) {
+      DiskREST.queryExternalStore(dq, vars, new Callback<Map<String, List<String>>, Throwable>() {
+        @Override
+        public void onSuccess(Map<String, List<String>> response) {
+          if (response != null) {
+            dataRetrieved = response;
+            setDataHTML(dataDiv);
+          }
+        }
+        @Override
+        public void onFailure(Throwable reason) {
+          AppNotification.notifyFailure(reason.getMessage());
+        }
+      });
+    }
   }
 
   public TriggeredLOI getTLOI() {
@@ -139,28 +175,29 @@ public class TriggeredLOIViewer extends Composite {
   
   private void setDataHTML(final DivElement section) {
     if (dataRetrieved == null) {
-      section.getStyle().setVisibility(Visibility.HIDDEN);
+      DataSection.setVisible(false);
       downloadbutton.setVisible(false);
+      triplesbutton.setVisible(false);
       return;
     }
     
-    Set<String> vars = datamode.equals("all") ?
-    		dataRetrieved.keySet() : getRelevantVariables();
+    Set<String> vars = dataRetrieved.keySet();
     
     if (vars.size() == 0) {
     	section.setInnerHTML("No data retrieved.");
     	downloadbutton.setVisible(false);
+    	triplesbutton.setVisible(false);
     	return;
     }
     rawcsv = "";
-    section.getStyle().setVisibility(Visibility.VISIBLE);
+    DataSection.setVisible(true);
     downloadbutton.setVisible(true);
+    triplesbutton.setVisible(true);
     
     int lines = 0;
     
-    String html = "<table><thead><tr>";
+    String html = "<table class=\"pure-table\"><thead><tr>";
     for (String v: vars) {
-    	//GWT.log("---->" + v);
     	html += "<th><b>" + v + "</b></th>";
     	rawcsv += v + ",";
     	if (dataRetrieved.get(v).size() > lines) {
@@ -194,30 +231,18 @@ public class TriggeredLOIViewer extends Composite {
     html += "</table>";
     
     section.setInnerHTML(html);
-	  /*for (String var: dataRetrieved.keySet()) {
-		  GWT.log("-" + var);
-		  for (String bind: dataRetrieved.get(var)) {
-			  GWT.log("  +" + bind);
-		  }
-	  }*/
   }
 
-  private void setLOIHTML(final String id, final DivElement section, 
+  private void setDataQueryHTML(final String strDataQuery, final DivElement section, 
       final SparqlInput tv) {
-    if(id == null) {
+    if (strDataQuery == null || strDataQuery.equals("")) {
       section.setAttribute("style", "display:none");
       return;
     }
     section.setAttribute("style", "");
-    
-    DiskREST.getLOI(id, new Callback<LineOfInquiry, Throwable> () {
-      public void onSuccess(LineOfInquiry result) {
-        if(result != null && result.getDataQuery() != null) {
-          tv.setValue(result.getDataQuery());
-        }
-      }
-      public void onFailure(Throwable reason) {}
-    });
+    GWT.log("dataquery: " + strDataQuery);
+    tv.setValue(strDataQuery);
+    GWT.log(tv.getValue());
   }
 
   private void setLOILink(String tname, String id, AnchorElement anchor) {
@@ -326,7 +351,7 @@ public class TriggeredLOIViewer extends Composite {
 		  WorkflowBindings bindings = (WorkflowBindings) node.getData();
 		  String base = bindings.getHTML();
 		  String html = base + "<div>Loading...</div>";
-		  node.setFullContent(html);     
+		  node.setFullContent(html);
 
 		  //Request data from wings
 		  WorkflowRun run = bindings.getRun();
@@ -382,18 +407,6 @@ public class TriggeredLOIViewer extends Composite {
 		String name = (this.tloi != null) ? this.tloi.getId() + "_metadata.csv" : "metadata.csv";
 		download(name, rawcsv, "text/csv;encoding:utf-8");
 	}
-
-	/*@UiHandler("dataRelevant")
-	void onRelevantDataClicked(ClickEvent event) {
-		datamode = "relevant";
-    	setDataHTML(data);
-	}
-
-	@UiHandler("dataAll")
-	void onAllDataClicked(ClickEvent event) {
-		datamode = "all";
-    	setDataHTML(data);
-	}*/
 
     Set<String> getRelevantVariables () {
     	Set<String> r = new HashSet<String>();

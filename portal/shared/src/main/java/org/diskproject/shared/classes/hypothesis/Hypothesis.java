@@ -12,6 +12,16 @@ public class Hypothesis {
   String dateModified;
   String author;
   String notes;
+  //FIXME
+  String question;
+  
+  public void setQuestion (String q) {
+    this.question = q;
+  }
+  
+  public String getQuestion () {
+    return this.question;
+  }
 
   public Hypothesis (String id, String name, String description, String parentId, Graph graph){
 	  this.id = id;

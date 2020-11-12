@@ -18,6 +18,7 @@ import org.diskproject.shared.classes.vocabulary.Type;
 import org.diskproject.shared.classes.vocabulary.Vocabulary;
 
 import com.google.gwt.core.client.Callback;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
@@ -340,8 +341,14 @@ public class TripleInput extends GWTCodeMirror {
       @Override
       public void onSuccess(Vocabulary result) {
         vocabularies.put(prefix, result);
-        util.addNamespacePrefix(prefix, result.getNamespace());        
+        util.addNamespacePrefix(prefix, result.getNamespace());
         loadTerms(prefix, result);
+        /*GWT.log("user vocabulary loaded:");
+        Map<String, Individual> indvs = result.getIndividuals();
+        for (String key: indvs.keySet()) {
+          GWT.log(key + ": " + indvs.get(key).getName());
+        }*/
+          
         if(callback != null)
           callback.onSuccess(prefix);
       }      

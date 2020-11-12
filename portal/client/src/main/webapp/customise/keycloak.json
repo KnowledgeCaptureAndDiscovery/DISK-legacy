@@ -1,8 +1,8 @@
 {
   "realm": "master",
-  "auth-server-url": "https://auth.a.mosorio.dev/auth/",
+  "auth-server-url": "https://auth.mint.isi.edu/auth/",
   "ssl-required": "external",
-  "resource": "mint",
+  "resource": "enigma-disk",
   "public-client": true,
   "confidential-port": 0
 }
