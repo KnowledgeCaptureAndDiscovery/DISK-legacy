@@ -9,6 +9,9 @@
 
 	<g:HTMLPanel>
 		<style is="custom-style">
+		    .clickable {
+		      cursor: pointer;
+		    }
             .list .item {
                 @apply(--layout-horizontal);
                 margin: 16px 16px 0 16px;
@@ -125,6 +128,12 @@
 		  </div>
 		</g:HTMLPanel>
 		<l:Loader ui:field="loader" />
+		<g:HTMLPanel ui:field="retryDiv">
+		  <div style="display: block; font-size: 1.1em; height: 40px; line-height: 40px; text-align: center;">
+			  An error has occurred while loading this page.
+			  <a class="clickable" ui:field="retryLink">Click here to retry.</a>
+		  </div>
+		</g:HTMLPanel>
 		<lw:ListWidget ui:field="loilist" styleName="list" />
 		<loi:LOIEditor ui:field="form" styleName="padded" />
 		

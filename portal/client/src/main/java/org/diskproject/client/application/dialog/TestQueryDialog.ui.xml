@@ -58,7 +58,7 @@
 
 		<label class="small-grey">Results:</label>
 		<div class="querytest bordered-list">
-		  <div class="queryresult" ui:field="resultContainer">
+		  <div class="queryresult" style="white-space: nowrap;" ui:field="resultContainer">
 		    Click on "Test query" to see the available results
 		  </div>
 		</div>

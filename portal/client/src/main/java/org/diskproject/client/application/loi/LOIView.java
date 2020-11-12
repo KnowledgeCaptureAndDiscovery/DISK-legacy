@@ -21,11 +21,15 @@ import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.util.GUID;
 
 import com.google.gwt.core.client.Callback;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.AnchorElement;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.EventListener;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.DialogBox;
@@ -54,6 +58,9 @@ public class LOIView extends ApplicationSubviewImpl
   @UiField LOIEditor form;
   @UiField HTMLPanel description;
   @UiField ListBox order;
+
+  @UiField HTMLPanel retryDiv;
+  @UiField AnchorElement retryLink;
   
   @UiField DialogBox helpDialog;
   
@@ -64,6 +71,15 @@ public class LOIView extends ApplicationSubviewImpl
   public LOIView(Binder binder) {
     initWidget(binder.createAndBindUi(this));
     loilist.addDeleteAction();
+
+    LOIView me = this;
+    Event.sinkEvents(retryLink, Event.ONCLICK);
+    Event.setEventListener(retryLink, new EventListener() {
+      @Override
+      public void onBrowserEvent(Event event) {
+        me.loadLOIList();
+      }
+    });
   }
 
   @Override
@@ -99,6 +115,7 @@ public class LOIView extends ApplicationSubviewImpl
   }
 
   private void clear() {
+    retryDiv.setVisible(false);
     loader.setVisible(false);
     form.setVisible(false);
     loilist.setVisible(false);
@@ -107,13 +124,24 @@ public class LOIView extends ApplicationSubviewImpl
     addmode = false;
   }
 
+  private void showErrorWhileLoading() {
+    clear();
+    retryDiv.setVisible(true);
+  }
+
   private void loadLOIList () {
     loader.setVisible(true);
     DiskREST.listLOI(new Callback<List<TreeItem>, Throwable>() {
       @Override
       public void onSuccess(List<TreeItem> result) {
-    	  LOIList = result;
-    	  showLOIList();
+          if (result != null) {
+            LOIList = result;
+            GWT.log("YES");
+            showLOIList();
+          } else {
+            loader.setVisible(false);   
+            showErrorWhileLoading();
+          }
       }
       @Override
       public void onFailure(Throwable reason) {
@@ -144,6 +172,7 @@ public class LOIView extends ApplicationSubviewImpl
   }
 
   private void showLOIList() {
+            GWT.log("show loi");
 	loilist.clear();
 	applyOrder();
 	for(TreeItem item : LOIList) {
@@ -153,7 +182,7 @@ public class LOIView extends ApplicationSubviewImpl
 		  item.getDescription(),
 		  item.getCreationDate(),
 		  item.getAuthor());
-	  node.setIcon("icons:explore");
+	  node.setIcon("icons:settings");
 	  node.setIconStyle("green");
 	  loilist.addNode(node);
 	}
@@ -277,7 +306,7 @@ public class LOIView extends ApplicationSubviewImpl
     // Set Toolbar header
     toolbar.clear();
     String title = "<h3>Lines of Inquiry</h3>";
-    String icon = "icons:explore";
+    String icon = "icons:settings";
 
     HTML div = new HTML("<nav><div class='layout horizontal center'>"
         + "<iron-icon class='green' icon='" + icon + "'/></div></nav>");

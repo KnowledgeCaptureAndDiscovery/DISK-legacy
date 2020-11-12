@@ -343,11 +343,11 @@ public class TripleInput extends GWTCodeMirror {
         vocabularies.put(prefix, result);
         util.addNamespacePrefix(prefix, result.getNamespace());
         loadTerms(prefix, result);
-        GWT.log("user vocabulary loaded:");
+        /*GWT.log("user vocabulary loaded:");
         Map<String, Individual> indvs = result.getIndividuals();
         for (String key: indvs.keySet()) {
           GWT.log(key + ": " + indvs.get(key).getName());
-        }
+        }*/
           
         if(callback != null)
           callback.onSuccess(prefix);

@@ -3,7 +3,7 @@
 	xmlns:g="urn:import:com.google.gwt.user.client.ui" 
 	xmlns:lw='urn:import:org.diskproject.client.components.list'
 	xmlns:tr='urn:import:org.diskproject.client.components.triples'	
-	xmlns:p='urn:import:com.vaadin.polymer.paper.widget' xmlns:G="urn:import:com.google.gwt.thirdparty.common.css.compiler.gssfunctions.GssFunctions">
+	xmlns:p='urn:import:com.vaadin.polymer.paper.widget' xmlns:G="urn:import:com.google.gwt.thirdparty.common.css.compiler.gssfunctions.GssFunctions" xmlns:s="urn:import:com.google.gwt.dom.builder.shared">
 
 	<g:HTMLPanel>
 		<style is="custom-style">
@@ -109,7 +109,6 @@
 		</style>
 		<div class="vertical layout section">
 			<div ui:field="header" />
-
 			<div ui:field="hypothesisSection">
 				<label class="small-grey">Hypothesis</label>
 				<div class="bordered-list padded">				
@@ -120,35 +119,34 @@
 			
 			<div ui:field="LOISection">
 				<label class="small-grey">Triggered Line of Inquiry</label>
+
 				<div class="bordered-list padded">
-				  <div><a ui:field="loiLink"/></div>
-				  <div style="display: flex; justify-content: space-between;">
-				    <span> Data query to execute </span>
-						<g:CheckBox ui:field='showdq' value="false">
-						  <label>Show data query</label>
-						</g:CheckBox>
-				  </div>
-				  <div>
-				    <tr:SparqlInput ui:field="dataQuery"/>
-				  </div>
+					<div style="display: flex; justify-content: space-between;">
+					   <div><a ui:field="loiLink"/></div>
+						<span>
+							<g:CheckBox ui:field='showdq' value="false">
+								<label>Show data query</label>
+							</g:CheckBox>
+							<g:CheckBox ui:field='showdata'>
+								<label>Show data</label>
+							</g:CheckBox>
+						</span>
+					</div>
+					<g:HTMLPanel ui:field="DataQuerySection">
+						<b>Data query to execute:</b>
+						<tr:SparqlInput ui:field="dataQuery"/>
+					   <br/>
+					</g:HTMLPanel>
+					<g:HTMLPanel ui:field="DataSection">
+						<b>Data Retrieved:</b>
+						<div ui:field="dataDiv" style="white-space: nowrap; overflow: scroll;"/>
+						<br/>
+						<p:PaperButton ui:field="downloadbutton"><iron-icon icon="save" />Download metadata as CSV</p:PaperButton>
+						<p:PaperButton ui:field="triplesbutton"><iron-icon icon="save" />Download triples</p:PaperButton>
+					</g:HTMLPanel>
 				</div>
 			</div>
 
-			<div ui:field="DataSection">
-				<div style="display: flex; justify-content: space-between;">
-				  <label class="small-grey">Data Retrieved</label>
-					<g:CheckBox ui:field='showdata'>
-						<label>Show data</label>
-					</g:CheckBox>
-			  </div> 
-				<div class="bordered-list padded">
-				  <div ui:field="dataDiv" style="white-space: nowrap; overflow: scroll; display: none;"/>
-				  <br/>
-				  <p:PaperButton ui:field="downloadbutton"><iron-icon icon="save" />Download metadata as CSV</p:PaperButton>
-				  <p:PaperButton ui:field="triplesbutton"><iron-icon icon="save" />Download triples</p:PaperButton>
-			  </div>
-			</div>
-			
 			<div ui:field="WFSection">
 				<label ui:field="WFLabel" class="small-grey">Triggered Workflows</label>
 				<div class="bordered-list">

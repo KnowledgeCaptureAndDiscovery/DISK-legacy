@@ -28,9 +28,9 @@ import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.util.GUID;
 import org.diskproject.shared.classes.workflow.VariableBinding;
 
-import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.dom.client.AnchorElement;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -38,7 +38,8 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.Cookies;
+import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.EventListener;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.CheckBox;
@@ -70,6 +71,8 @@ public class HypothesisView extends ApplicationSubviewImpl
   @UiField PaperFab addicon;
   @UiField HTMLPanel matchlist;
   @UiField HTMLPanel description;
+  @UiField HTMLPanel retryDiv;
+  @UiField AnchorElement retryLink;
   @UiField DivElement notloi;
   
   @UiField DialogBox dialog;
@@ -83,7 +86,7 @@ public class HypothesisView extends ApplicationSubviewImpl
   Map<String, List<CheckBox>> checkMap;
   WorkflowBindings selectedWorkflow;
   
-  List<TreeItem> treelist;
+  List<TreeItem> hypothesisList;
   List<TriggeredLOI> tloilist; 
   List<TriggeredLOI> matches; 
 
@@ -96,6 +99,15 @@ public class HypothesisView extends ApplicationSubviewImpl
     tree.addCustomAction("query", null, "icons:explore", 
         "green-button query-action");
     tree.addDeleteAction();
+
+    HypothesisView me = this;
+    Event.sinkEvents(retryLink, Event.ONCLICK);
+    Event.setEventListener(retryLink, new EventListener() {
+      @Override
+      public void onBrowserEvent(Event event) {
+        me.showHypothesisList();
+      }
+    });
   }
 
   @Override
@@ -125,13 +137,11 @@ public class HypothesisView extends ApplicationSubviewImpl
     else if(params.length == 2 && params[1].equals("query")) {
       this.showHypothesisMatches(params[0]);
     }
-    else if(params.length == 2 && params[1].equals("data")) {
-      this.showHypothesisData(params[0]);
-    }
   }
 
   private void clear() {
 	notloi.removeAttribute("visible");
+	retryDiv.setVisible(false);
     loader.setVisible(false);
     form.setVisible(false);
     tree.setVisible(false);
@@ -140,29 +150,45 @@ public class HypothesisView extends ApplicationSubviewImpl
     matchlist.setVisible(false);
     addmode = false;
   }
+  
+  private void showErrorWhileLoading() {
+    clear();
+    retryDiv.setVisible(true);
+  }
 
   private void showHypothesisList() {
     loader.setVisible(true);
+    // This can be a problem, the server is not handling concurrency correctly.
+    // Will make this sequential, but multiple users can make this error to happen.
     DiskREST.listHypotheses(new Callback<List<TreeItem>, Throwable>() {
       @Override
       public void onSuccess(List<TreeItem> result) {
-        treelist = result;
-        if(tloilist != null)
-          loadHypothesisTLOITree();
+        if (result != null) {
+          hypothesisList = result;
+          generateHypothesisTree();
+        } else {
+          AppNotification.notifyFailure("Error loading hypothesis");
+          showErrorWhileLoading();
+        }
       }
       @Override
       public void onFailure(Throwable reason) {
         loader.setVisible(false);   
         AppNotification.notifyFailure(reason.getMessage());
-        GWT.log("Failed", reason);
+        showErrorWhileLoading();
       }
     });
     DiskREST.listTriggeredLOIs(new Callback<List<TriggeredLOI>, Throwable>() {
       @Override
       public void onSuccess(List<TriggeredLOI> result) {
-        tloilist = result;
-        if (treelist != null)
-          loadHypothesisTLOITree();
+        if (result != null) {
+          tloilist = result;
+          if (hypothesisList != null)
+             generateHypothesisTree();
+        } else {
+          AppNotification.notifyFailure("Error loading trigered lines of inquiry");
+          showErrorWhileLoading();
+        }
       }
       @Override
       public void onFailure(Throwable reason) {
@@ -175,83 +201,89 @@ public class HypothesisView extends ApplicationSubviewImpl
 
 	@UiHandler("order")
 	void onChange(ChangeEvent event) {
-		loadHypothesisTLOITree();
+	  generateHypothesisTree();
 	}
 
   private void applyOrder (List<TreeItem> list)  {
     String orderType = order.getSelectedValue();
     if (orderType != null) {
     	if (orderType.compareTo("dateasc") == 0) {
-			Collections.sort(treelist, Utils.ascDateOrder);
+			Collections.sort(hypothesisList, Utils.ascDateOrder);
     	} else if (orderType.compareTo("datedesc") == 0) {
-			Collections.sort(treelist, Utils.descDateOrder);
+			Collections.sort(hypothesisList, Utils.descDateOrder);
     	} else if (orderType.compareTo("authorasc") == 0) {
-			Collections.sort(treelist, Utils.ascAuthorOrder);
+			Collections.sort(hypothesisList, Utils.ascAuthorOrder);
     	} else if (orderType.compareTo("authordesc") == 0) {
-			Collections.sort(treelist, Utils.descAuthorOrder);
+			Collections.sort(hypothesisList, Utils.descAuthorOrder);
     	}
     }
   }
 
-  private void loadHypothesisTLOITree() {
-    if(treelist == null || tloilist == null)
-      return;
+  private void generateHypothesisTree () {
+    if (hypothesisList == null) return;
     
     clear();
     addicon.setVisible(true);
     tree.setVisible(true);
     description.setVisible(true);
-    
+
     TreeNode root = new TreeNode("Hypotheses", "Hypotheses", 
         "A List of Hypotheses", null, null);
+    TreeNode missing = new TreeNode("Missing","Orphan TLOIs",
+        "TLOIs with missing LOI are displayed here", null, null);
     
-    applyOrder(treelist);
+    applyOrder(hypothesisList);
     
     HashMap<String, TreeNode> map = new HashMap<String, TreeNode>();
-    for(TreeItem item : treelist) {
+    for(TreeItem hyp : hypothesisList) {
       TreeNode node = new TreeNode(
-          item.getId(),
-          item.getName(), 
-          item.getDescription(),
-          item.getCreationDate(),
-          item.getAuthor());
+          hyp.getId(),
+          hyp.getName(), 
+          hyp.getDescription(),
+          hyp.getCreationDate(),
+          hyp.getAuthor());
       node.setIcon("icons:help-outline");
       node.setExpandedIcon("icons:help-outline");
       node.setIconStyle("orange");
       node.setType(NameTokens.hypotheses);
-      map.put(item.getId(), node);
+      map.put(hyp.getId(), node);
+     //node.setParent(root);
     }
-    for(TriggeredLOI item : tloilist) {
-      TreeNode node = new TreeNode(
-          item.getId(),
-          new HTML(item.getHeaderHTML()));
-      node.setName(item.getName(), false);
-      node.setIcon("icons:explore");
-      node.setExpandedIcon("icons:explore");
-      node.setIconStyle("orange");
-      node.setType(NameTokens.tlois);
-      
-      TreeNode parent = root;
-      if(map.containsKey(item.getParentHypothesisId()))
-        parent = map.get(item.getParentHypothesisId());
-      parent.setExpanded(true);      
-      tree.addNode(parent, node);
-      
-      for(String hypid : item.getResultingHypothesisIds()) {
-        if(map.containsKey(hypid)) {
-          TreeNode child = map.get(hypid);
-          node.setExpanded(true);      
-          tree.addNode(node, child);
+    
+    if (tloilist != null) {
+      for (TriggeredLOI tloi : tloilist) {
+        TreeNode node = new TreeNode(
+            tloi.getId(),
+            new HTML(tloi.getHeaderHTML())
+            ); // ADD more data to tloi item
+        node.setName(tloi.getName(), false);
+        node.setIcon("icons:explore");
+        node.setExpandedIcon("icons:explore");
+        node.setIconStyle("green");
+        node.setType(NameTokens.tlois);
+        
+        String phid = tloi.getParentHypothesisId();
+        TreeNode parent = (map.containsKey(phid)) ? map.get(phid) : missing;
+        tree.addNode(parent, node);
+        
+        for(String hypid : tloi.getResultingHypothesisIds()) {
+          if(map.containsKey(hypid)) {
+            TreeNode child = map.get(hypid);
+            tree.addNode(node, child);
+          }
         }
       }
+      
     }
-    for(TreeItem item : this.treelist) {
+    for(TreeItem item : this.hypothesisList) {
       TreeNode node = map.get(item.getId());
       if(node.getParent() == null) {
     	node.setExpanded(false);
         tree.addNode(root, node);
       }
     }
+    List<TreeNode> ms = missing.getChildren();
+    if (ms.size() > 0) tree.addNode(root, missing);
     tree.setRoot(root);
   }
 
@@ -293,20 +325,6 @@ public class HypothesisView extends ApplicationSubviewImpl
       @Override
       public void onFailure(Throwable reason) {
         loader.setVisible(false);
-        AppNotification.notifyFailure(reason.getMessage());
-      }
-    });
-  }
-
-  private void showHypothesisData(final String id) {
-    DiskREST.queryHypothesisData(id,
-        new Callback<Map<String, List<String>>, Throwable>() {
-      @Override
-      public void onSuccess(Map<String, List<String>> result) {
-    	  GWT.log(result.keySet().toString());
-      }
-      @Override
-      public void onFailure(Throwable reason) {
         AppNotification.notifyFailure(reason.getMessage());
       }
     });

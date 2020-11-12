@@ -8,6 +8,7 @@ import org.diskproject.client.application.dialog.TestQueryDialog;
 import org.diskproject.client.components.loi.events.HasLOIHandlers;
 import org.diskproject.client.components.loi.events.LOISaveEvent;
 import org.diskproject.client.components.loi.events.LOISaveHandler;
+import org.diskproject.client.components.question.QuestionSelector;
 import org.diskproject.client.components.triples.SparqlInput;
 import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
@@ -52,9 +53,7 @@ public class LOIEditor extends Composite
   @UiField SparqlInput hypothesisQuery;
   @UiField SparqlInput dataQuery;
   @UiField LOIWorkflowList workflowlist, metaworkflowlist;
-
-  @UiField ListBox hypQuestion, h1r1, h1r2, h1r3, h2r1, h2r2;
-  @UiField SpanElement h1Section, h2Section, h3Section;
+  @UiField QuestionSelector questionSelector;
 
   LineOfInquiry loi;
   List<List<List<String>>> testResults = null;
@@ -72,6 +71,7 @@ public class LOIEditor extends Composite
     this.domain = domain;
     this.loadVocabularies();
     this.loadWorkflows();
+    this.questionSelector.setParent(this);
   }
 
   public void load(LineOfInquiry loi) {
@@ -93,6 +93,8 @@ public class LOIEditor extends Composite
     }
     workflowlist.loadBindingsList(loi.getWorkflows());
     metaworkflowlist.loadBindingsList(loi.getMetaWorkflows());  
+    String q = loi.getQuestion();
+    if (q != null) questionSelector.setQuestion(q);
   }
 
   public void setNamespace(String ns) {
@@ -168,6 +170,7 @@ public class LOIEditor extends Composite
     loi.setWorkflows(workflowlist.getBindingsList());
     loi.setMetaWorkflows(metaworkflowlist.getBindingsList());
     loi.setRelevantVariables(metaVariables.getValue());
+    loi.setQuestion(questionSelector.getSelectedQuestion());
     
     fireEvent(new LOISaveEvent(loi));
   }
@@ -202,7 +205,7 @@ public class LOIEditor extends Composite
       LOISaveHandler handler) {
     return handlerManager.addHandler(LOISaveEvent.TYPE, handler);
   }
-  
+
   static String toVarName (String stdname) {
 	  String[] parts = stdname.split(" ");
 	  String endString = "";
@@ -218,72 +221,9 @@ public class LOIEditor extends Composite
 	  return endString;
   }
 
-	@UiHandler("addPattern")
-	void onAddTermButtonClicked(ClickEvent event) {
-		String selectedHyp = hypQuestion.getSelectedValue();
-		if (selectedHyp.equals("h1")) {
-			setH1();
-		} else if (selectedHyp.equals("h2")) {
-			setH2();
-		} else if (selectedHyp.equals("h3")) {
-			setH3();
-		}
-	}
-
-	@UiHandler("hypQuestion")
-	void onHypChange(ChangeEvent event) {
-		String h = hypQuestion.getSelectedValue();
-		if (h.equals("h1")) {
-			h1Section.getStyle().setDisplay(Display.INITIAL);
-			h2Section.getStyle().setDisplay(Display.NONE);
-			h3Section.getStyle().setDisplay(Display.NONE);
-		} else if (h.equals("h2")) {
-			h2Section.getStyle().setDisplay(Display.INITIAL);
-			h1Section.getStyle().setDisplay(Display.NONE);
-			h3Section.getStyle().setDisplay(Display.NONE);
-		} else if (h.equals("h3")) {
-			h3Section.getStyle().setDisplay(Display.INITIAL);
-			h1Section.getStyle().setDisplay(Display.NONE);
-			h2Section.getStyle().setDisplay(Display.NONE);
-		}
-	}
-
-	void setH1 () {
-		String p1v = h1r1.getSelectedValue();
-		String p2v = h1r2.getSelectedValue();
-		String p3v = h1r3.getSelectedValue();
-		if (p1v == "" || p2v == "" || p3v == "") {
-		    AppNotification.notifyFailure("Must select all requested properties.");
-			return;
-		}
-		
-		String t1 =  ":EffectSize neuro:sourceGene ?" + p1v;
-		String t2 =  ":EffectSize neuro:targetCharacteristic ?" + p2v;
-		String t3 =  ":EffectSize hyp:associatedWith ?" + p3v;
-		
-		String merged =  t1 + '\n' + t2 + '\n' + t3;
-		hypothesisQuery.setStringValue(merged);
-		
-	}
-
-	void setH2 () {
-		String p1v = h2r1.getSelectedValue();
-		String p2v = h2r2.getSelectedValue();
-		if (p1v == "" || p2v == "") {
-		    AppNotification.notifyFailure("Must select all requested properties.");
-			return;
-		}
-		
-		String t = "?" + p1v + " hyp:associatedWith ?" + p2v;
-		hypothesisQuery.setStringValue(t);
-	}
-
-	void setH3 () {
-		hypothesisQuery.setStringValue("?EffectSize neuro:sourceGene ?Gene\n" + 
-				"?EffectSize neuro:targetCharacteristic ?BrainImagingTrait\n" + 
-				"?EffectSize neuro:targetCharacteristic ?Area\n" + 
-				"?EffectSize hyp:associatedWith ?Demographic\n" + 
-				"?Gene rdfs:label ?SNP");
+	public void setHypothesis (String hypothesis) {
+		hypothesisQuery.setStringValue(hypothesis);
+	  
 	}
 
 }

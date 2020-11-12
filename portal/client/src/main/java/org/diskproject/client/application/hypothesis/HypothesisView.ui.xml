@@ -10,6 +10,9 @@
 
 	<g:HTMLPanel>
 		<style is="custom-style">
+		    .clickable {
+		      cursor: pointer;
+		    }
             div.content {
                 padding: 0px;
             }		
@@ -153,7 +156,12 @@
 			addStyleNames="addicon" title="Add Hypothesis" tabindex="0" />
 		<p:PaperFab ui:field="helpicon" icon="help-outline" mini="true" 
 			addStyleNames="helploiicon" title="Help: Line of Inquiry" tabindex="0" />
-
+		<g:HTMLPanel ui:field="retryDiv">
+		  <div style="display: block; font-size: 1.1em; height: 40px; line-height: 40px; text-align: center;">
+			  An error has occurred while loading this page.
+			  <a class="clickable" ui:field="retryLink">Click here to retry.</a>
+		  </div>
+		</g:HTMLPanel>
 		<g:HTMLPanel ui:field="description">
 		  <div style="padding: 4px 10px; font-size: 14px; color: #666">
 			 <div style="float:right">

@@ -108,7 +108,7 @@ public class TriggeredLOIView extends ApplicationSubviewImpl
               item.getDateCreated(),
               item.getAuthor());
           node.setIcon("icons:explore");
-          node.setIconStyle("orange");
+          node.setIconStyle("green");
           tloilist.addNode(node);
         }
         loader.setVisible(false);  
@@ -198,7 +198,7 @@ public class TriggeredLOIView extends ApplicationSubviewImpl
     String icon = "icons:explore";
 
     HTML div = new HTML("<nav><div class='layout horizontal center'>"
-        + "<iron-icon class='orange' icon='" + icon + "'/></div></nav>");
+        + "<iron-icon style=\"color: #229E6A;\" icon='" + icon + "'/></div></nav>");
     div.getElement().getChild(0).getChild(0).appendChild(new HTML(title).getElement());
     toolbar.add(div);    
   }

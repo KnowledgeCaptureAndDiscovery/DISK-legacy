@@ -283,34 +283,6 @@ public class DiskREST {
     }).call(getDiskService()).queryHypothesis(username, domain, id);
   }
 
-  public static void queryHypothesisData(String id,
-      final Callback<Map<String, List<String>>, Throwable> callback) {
-    REST.withCallback(new MethodCallback<Map<String, List<String>>>() {
-      @Override
-      public void onSuccess(Method method, Map<String, List<String>> response) {
-        callback.onSuccess(response);
-      }
-      @Override
-      public void onFailure(Method method, Throwable exception) {
-        callback.onFailure(exception);
-      }
-    }).call(getDiskService()).queryHypothesisData(username, domain, id);
-  }
-
-  /*public static void queryExternalStore(String query, String variables, 
-      final Callback<Map<String, List<String>>, Throwable> callback) {
-    REST.withCallback(new MethodCallback<Map<String, List<String>>>() {
-      @Override
-      public void onSuccess(Method method, Map<String, List<String>> response) {
-        callback.onSuccess(response);
-      }
-      @Override
-      public void onFailure(Method method, Throwable exception) {
-        callback.onFailure(exception);
-      }
-    }).call(getDiskService()).queryExternalStore(username, domain, query, variables);
-  }*/
-
   /*
    * Lines of Inquiry
    */

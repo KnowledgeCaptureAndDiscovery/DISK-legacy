@@ -18,6 +18,16 @@ public class LineOfInquiry {
   String dateCreated;
   String dateModified;
   String relevantVariables; //To show on the table.
+  //FIXME
+  String question;
+  
+  public void setQuestion (String q) {
+    this.question = q;
+  }
+  
+  public String getQuestion () {
+    return this.question;
+  }
 
   public LineOfInquiry() {
     this.workflows = new ArrayList<WorkflowBindings>();

@@ -46,9 +46,9 @@ public class TriggeredLOIViewer extends Composite {
   private static Binder uiBinder = GWT.create(Binder.class);
 
   @UiField DivElement header;
-  @UiField DivElement hypothesisSection, LOISection, DataSection, dataDiv, WFSection, MetaWFSection;
+  @UiField DivElement hypothesisSection, LOISection, dataDiv, WFSection, MetaWFSection;
   @UiField LabelElement WFLabel;
-  @UiField HTMLPanel revHypothesisSection;
+  @UiField HTMLPanel revHypothesisSection, DataSection, DataQuerySection;
   @UiField TripleViewer hypothesis;
   @UiField SparqlInput dataQuery;
   @UiField ListWidget workflowlist, metaworkflowlist;
@@ -74,9 +74,10 @@ public class TriggeredLOIViewer extends Composite {
         "icons:build", "blue-button run-link");
     metaworkflowlist.addCustomAction("runlink", "Run details", 
         "icons:build", "blue-button run-link");    
-    dataQuery.setVisible(false);
     downloadbutton.setVisible(false);
     triplesbutton.setVisible(false);
+    DataSection.setVisible(false);
+    DataQuerySection.setVisible(false);
   }
 
   public void load(TriggeredLOI tloi) {
@@ -105,8 +106,13 @@ public class TriggeredLOIViewer extends Composite {
   @UiHandler("showdq")
   void onClickShowDQ(ClickEvent event) {
     boolean show = showdq.getValue();
-    if (show) dataQuery.setValue( tloi.getDataQuery() );
-    dataQuery.setVisible(show);
+    if (show) {
+      dataQuery.setVisible(false);
+      dataQuery.setValue("");
+      dataQuery.setVisible(true);
+      dataQuery.setValue(tloi.getDataQuery());
+    }
+    DataQuerySection.setVisible(show);
   }
 
   @UiHandler("showdata")
@@ -114,9 +120,9 @@ public class TriggeredLOIViewer extends Composite {
     boolean show = showdata.getValue();
     if (show) {
       if (dataRetrieved == null) loadAndShowData();
-      dataDiv.getStyle().setDisplay(Display.INITIAL);
+      DataSection.setVisible(true);
     } else {
-      dataDiv.getStyle().setDisplay(Display.NONE);
+      DataSection.setVisible(false);
     }
   }
 
@@ -124,6 +130,7 @@ public class TriggeredLOIViewer extends Composite {
     String vars = tloi.getRelevantVariables();
     String dq = tloi.getDataQuery();
     if (vars != null && dq != null && dataRetrieved == null) {
+      dataDiv.setInnerText("Loading...");
       DiskREST.queryExternalStore(dq, vars, new Callback<Map<String, List<String>>, Throwable>() {
         @Override
         public void onSuccess(Map<String, List<String>> response) {
@@ -135,6 +142,7 @@ public class TriggeredLOIViewer extends Composite {
         @Override
         public void onFailure(Throwable reason) {
           AppNotification.notifyFailure(reason.getMessage());
+          dataDiv.setInnerText("An error has ocurred");
         }
       });
     }
@@ -167,7 +175,7 @@ public class TriggeredLOIViewer extends Composite {
   
   private void setDataHTML(final DivElement section) {
     if (dataRetrieved == null) {
-      section.getStyle().setVisibility(Visibility.HIDDEN);
+      DataSection.setVisible(false);
       downloadbutton.setVisible(false);
       triplesbutton.setVisible(false);
       return;
@@ -178,10 +186,11 @@ public class TriggeredLOIViewer extends Composite {
     if (vars.size() == 0) {
     	section.setInnerHTML("No data retrieved.");
     	downloadbutton.setVisible(false);
+    	triplesbutton.setVisible(false);
     	return;
     }
     rawcsv = "";
-    section.getStyle().setVisibility(Visibility.VISIBLE);
+    DataSection.setVisible(true);
     downloadbutton.setVisible(true);
     triplesbutton.setVisible(true);
     

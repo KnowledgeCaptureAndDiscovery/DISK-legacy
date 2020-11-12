@@ -72,7 +72,7 @@ public class KBRepository implements TransactionsAPI {
     }
   }
   
-  private void stddump () {
+  private void stddump () { 
 	  System.out.println("CLASSES:");
 	  for (String key: cmap.keySet()) {
 		  KBObject el = cmap.get(key);

@@ -201,6 +201,14 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
       html += description;
     html += "</div>";
 
+    /* TODO: add date to tloi.
+    html += "<div class='footer' style='display: flex;justify-content: space-between;'>";
+    html += "<span><b>Creation date:</b> ";
+    html += (this.creationDate != null) ? this.creationDate : "None specified";
+    html += "</span><span><b>Author:</b> ";
+    html += (this.author != null) ? this.author : "None specified";
+    html += "</span></div>";*/
+
     return html;
   }
   

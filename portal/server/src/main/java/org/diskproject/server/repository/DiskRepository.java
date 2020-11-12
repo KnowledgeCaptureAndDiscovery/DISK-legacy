@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -451,8 +452,12 @@ public class DiskRepository extends KBRepository {
 				}
 				list.add(item);
 			}
+		} catch (ConcurrentModificationException e) {
+		   System.out.println("ERROR: Concurrent modification exception on listHypothesis");
+		   return null;
 		} catch (Exception e) {
 			e.printStackTrace();
+			
 		} finally {
 		  this.end();
 		}
@@ -500,6 +505,11 @@ public class DiskRepository extends KBRepository {
 			KBObject notesobj = kb.getPropertyValue(hypitem, pmap.get("hasNotes"));
 			if (notesobj != null)
 				hypothesis.setNotes(notesobj.getValueAsString());
+
+			KBObject questionobj = kb.getPropertyValue(hypitem, pmap.get("hasQuestion"));
+			if (questionobj != null)
+				hypothesis.setQuestion(questionobj.getValueAsString());
+
 			this.updateTripleDetails(graph, provkb);
 
 			return hypothesis;
@@ -636,6 +646,9 @@ public class DiskRepository extends KBRepository {
 			}
 			if (hypothesis.getNotes() != null) {
 				kb.setPropertyValue(hypitem, pmap.get("hasNotes"), hypkb.createLiteral(hypothesis.getNotes()));
+			}
+			if (hypothesis.getQuestion() != null) {
+				kb.setPropertyValue(hypitem, pmap.get("hasQuestion"), hypkb.createLiteral(hypothesis.getQuestion()));
 			}
 
 			this.save(kb);
@@ -804,7 +817,7 @@ public class DiskRepository extends KBRepository {
 		Map<String, List<String>> dataVarBindings = new HashMap<String, List<String>>();
 		
 		//TODO, should check the variables.
-		String v = (variables != null && variables.contentEquals("")) ? variables : "*";
+		String v = (variables == null || variables.contentEquals("")) ? "*" : variables;
 		
 		String dataQuery = "PREFIX bio: <http://disk-project.org/ontology/omics#>\n" + 
 				"PREFIX neuro: <https://w3id.org/disk/ontology/enigma_hypothesis#>\n" + 
@@ -1152,137 +1165,6 @@ public class DiskRepository extends KBRepository {
 		System.out.println("DONE");
 		return tlois;
   }
-
-  public Map<String, List<String>> queryHypothesisData(String username, String domain, String id) {
-		String hypuri = this.HYPURI(username, domain) + "/" + id;
-		String assertions = this.ASSERTIONSURI(username, domain);
-
-		Map<String, String> nsmap = new HashMap<String, String>();
-		nsmap.put(KBConstants.OMICSNS(), "bio:");
-		nsmap.put(KBConstants.NEURONS(), "neuro:");
-		nsmap.put(KBConstants.HYPNS(), "hyp:");
-		nsmap.put(KBConstants.XSDNS(), "xsd:");
-		nsmap.put(assertions + "#", "user:");
-		nsmap.put(hypuri + "#", "?");
-
-		System.out.println("-- queryHypothesisData --");
-		
-        Map<String, List<String>> data = new HashMap<String, List<String>>();
-        if (true) return data;
-
-		try {
-			this.start_read();
-			KBAPI queryKb = this.fac.getKB(OntSpec.PLAIN);
-			KBAPI hypkb = this.fac.getKB(hypuri, OntSpec.PLAIN);
-			queryKb.importFrom(this.omicsontkb);
-			queryKb.importFrom(this.neuroontkb);
-			queryKb.importFrom(this.hypontkb);
-			queryKb.importFrom(hypkb);
-			queryKb.importFrom(this.fac.getKB(assertions, OntSpec.PLAIN));
-			this.end();
-
-			for (TreeItem item : this.listLOIs(username, domain)) {
-				LineOfInquiry loi = this.getLOI(username, domain, item.getId());
-				String hypothesisQuery = loi.getHypothesisQuery();
-				System.out.println("Check LOI id=" + loi.getId());
-
-				String dataQuery = loi.getDataQuery();
-				if (hypothesisQuery == null || hypothesisQuery.equals("") || dataQuery == null || dataQuery.equals(""))
-					continue;
-
-				hypothesisQuery = this.getQueryBindings(hypothesisQuery, null, null);
-
-				String hypSparqlQuery = this.getSparqlQuery(hypothesisQuery, assertions);
-				
-				System.out.println("Hypothesis Query\n" + hypSparqlQuery);
-				
-				this.start_read();
-				for (ArrayList<SparqlQuerySolution> hypothesisSolutions : queryKb.sparqlQuery(hypSparqlQuery)) {
-					Map<String, String> hypVarBindings = new HashMap<String, String>();
-					for (SparqlQuerySolution solution : hypothesisSolutions) {
-						String value;
-						if (solution.getObject().isLiteral())
-							value = '"' + solution.getObject().getValueAsString() + '"';
-						else {
-							String valns = solution.getObject().getNamespace();
-							if (nsmap.containsKey(valns))
-								value = nsmap.get(valns) + solution.getObject().getName();
-							else
-								value = "<" + solution.getObject().getID() + ">";
-						}
-						hypVarBindings.put(solution.getVariable(), value);
-						System.out.println("Solution: " + solution.getVariable() + " - " + value);
-					}
-
-					//String boundHypothesisQuery = this.getQueryBindings(hypothesisQuery, varPattern, hypVarBindings);
-					String boundDataQuery = this.getQueryBindings(dataQuery, varPattern, hypVarBindings);
-					System.out.println("BDQ>  " + boundDataQuery);
-
-					//boundDataQuery = hypPattern + boundHypothesisQuery + boundDataQuery;
-					boundDataQuery = this.filterQueryBindings(boundDataQuery, "hyp:");
-					System.out.println("BDQ2>  " + boundDataQuery);
-					
-					boundDataQuery = this.addQueryAssertions(boundDataQuery, assertions);
-					boundDataQuery = boundDataQuery.replace("user:", "?");
-					System.out.println("BDQ3>  " + boundDataQuery);
-
-					String dataSparqlQuery = this.getDistinctSparqlQuery(boundDataQuery, assertions);
-					System.out.println("Data SPARQL Query:\n" + dataSparqlQuery);
-
-					ArrayList<ArrayList<SparqlQuerySolution>> allDataSolutions = null;
-					boolean wikiStore = Config.get().getProperties().containsKey("data-store");
-					
-					if(wikiStore) {
-					  System.out.println("Using wikistore");
-					  String externalStore = Config.get().getProperties().getString("data-store");
-					  String dataUser = Config.get().getProperties().getString("ENIGMA.username");
-					  String dataPass = Config.get().getProperties().getString("ENIGMA.password");
-					  if (dataUser != null && dataPass != null) {
-						  //Data store is password protected.
-						  allDataSolutions = queryKb.sparqlQueryRemote(dataSparqlQuery, externalStore, dataUser, dataPass);
-					  } else {
-						  allDataSolutions = queryKb.sparqlQueryRemote(dataSparqlQuery, externalStore);
-					  }
-					} else {
-					  //System.out.println("Using local kb");
-					  allDataSolutions = queryKb.sparqlQuery(dataSparqlQuery);
-					}
-
-					// Store solutions in dataVarBindings
-					Map<String, List<String>> dataVarBindings = new HashMap<String, List<String>>();
-					for (ArrayList<SparqlQuerySolution> dataSolutions : allDataSolutions) {
-						for (SparqlQuerySolution solution : dataSolutions) {
-						  String var = solution.getVariable();
-						  List<String> curValues = dataVarBindings.containsKey(var) ? dataVarBindings.get(var) 
-							  : new ArrayList<String>();
-						  if (solution.getObject().isLiteral()) {
-							curValues.add(solution.getObject().getValueAsString());
-						  }
-						  else
-							curValues.add(wikiStore ? solution.getObject().getID() : solution.getObject().getName());
-						  dataVarBindings.put(var, curValues);
-						}
-					}
-
-					// To save all the data retrieved for the query.
-					for (String var: dataVarBindings.keySet()) {
-						  //System.out.println("-" + var);
-						  List<String> tmp = new ArrayList<String>();
-						  for (String bind: dataVarBindings.get(var)) {
-							  //System.out.println("  +" + bind);
-							  tmp.add(bind);
-						  }
-						  data.put(var, tmp);
-					}
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-		  this.end();
-		}
-		return data;
-	}
 
 	@SuppressWarnings("unchecked")
   private List<WorkflowBindings> getTLOIBindings(
@@ -1691,6 +1573,10 @@ public class DiskRepository extends KBRepository {
 				KBObject valobj = loikb.createLiteral(loi.getRelevantVariables());
 				loikb.setPropertyValue(floiitem, pmap.get("hasRelevantVariables"), valobj);
 			}
+			if (loi.getQuestion() != null) {
+				KBObject valobj = loikb.createLiteral(loi.getQuestion());
+				loikb.setPropertyValue(floiitem, pmap.get("hasQuestion"), valobj);
+			}
 
 			this.storeWorkflowBindingsInKB(loikb, floiitem, pmap.get("hasWorkflowBinding"), loi.getWorkflows(),
 					username, domain);
@@ -1768,6 +1654,7 @@ public class DiskRepository extends KBRepository {
 	}
 
 	public List<TreeItem> listLOIs(String username, String domain) {
+	    System.out.println("GET LOI LIST ");
 		List<TreeItem> list = new ArrayList<TreeItem>();
 		String url = this.LOIURI(username, domain);
 		try {
@@ -1802,6 +1689,9 @@ public class DiskRepository extends KBRepository {
 				}
 				list.add(item);
 			}
+		} catch (ConcurrentModificationException e) {
+		   System.out.println("ERROR: Concurrent modification exception on listLOIs");
+		   return null;
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -1855,6 +1745,10 @@ public class DiskRepository extends KBRepository {
 			KBObject dqueryobj = loikb.getPropertyValue(floiitem, pmap.get("hasDataQuery"));
 			if (dqueryobj != null)
 				loi.setDataQuery(dqueryobj.getValueAsString());
+
+			KBObject questionobj = loikb.getPropertyValue(floiitem, pmap.get("hasQuestion"));
+			if (questionobj != null)
+				loi.setQuestion(questionobj.getValueAsString());
 			
 
 			loi.setWorkflows(
@@ -1989,6 +1883,9 @@ public class DiskRepository extends KBRepository {
 
 				list.add(tloi);
 			}
+		} catch (ConcurrentModificationException e) {
+		   System.out.println("ERROR: Concurrent modification exception on listTriggeredLOIs");
+		   return null;
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
