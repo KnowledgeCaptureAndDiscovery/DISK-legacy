@@ -751,9 +751,10 @@ public class DiskRepository extends KBRepository {
   		this.start_read();
   		Graph graph = this.getKBGraph(assertionUri);
   		Matcher m = ASSERTION_PATTERN.matcher(queryPattern);
+		String aURL = assertionUri + "#";
   		while (m.find()) {
   		    String s = m.group(1);
-  		    String id = s.replace("user:", "http://localhost:8080/disk-project-server/admin/test/assertions#");
+  		    String id = s.replace("user:", aURL);
   			for (Triple t: graph.getTriplesForSubject(id)) {
   			  String o = t.getObject().toString();
   			  String p = t.getPredicate().toString();
