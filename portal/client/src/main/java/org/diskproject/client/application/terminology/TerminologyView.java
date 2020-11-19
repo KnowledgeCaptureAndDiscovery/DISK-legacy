@@ -13,6 +13,7 @@ import org.diskproject.client.components.loader.Loader;
 import org.diskproject.client.components.triples.TripleInput;
 import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
+import org.diskproject.client.Config;
 import org.diskproject.client.Utils;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.Triple;
@@ -319,7 +320,7 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 			return;
 		}
 
-		String fullid = "http://localhost:8080/disk-project-server/admin/test/assertions#" + id;
+		String fullid = Config.getServerURL() + "/" + Config.getWingsUserid() + "/" + Config.getWingsDomain() +"/assertions#" + id;
 		List<Triple> allt = triples.getTriples();
 		for (Triple t: allt) {
 			if (t.getSubject() == fullid) {
@@ -341,16 +342,6 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 		loadTableData(mergedList);
 		triples.setValue(mergedList);
 		
-		/*
-		String all = triples.getTripleString(triples.getTriples());
-		String t1 =  ":" + id + " a " + inputType.getSelectedValue();
-		String t2 =  ":" + id + " rdfs:label \"" + name + "\"^^xsd:string";
-		
-		
-		String merged =  all + '\n' + t1 + '\n' + t2;
-		GWT.log(merged);
-		triples.setStringValue(merged);
-		*/
 		
 		// Clear inputs
 		inputName.setValue("");

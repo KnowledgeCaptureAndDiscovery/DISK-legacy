@@ -855,20 +855,6 @@ public class DiskRepository extends KBRepository {
 			  allDataSolutions = queryKb.sparqlQuery(dataQuery);
 			}
 
-			/*for (ArrayList<SparqlQuerySolution> list : allDataSolutions) {
-				ArrayList<List<String>> row = new ArrayList<List<String>>();
-				for (SparqlQuerySolution solution : list) {
-					KBObject sol = solution.getObject();
-					if (sol != null) {
-						List<String> val = new ArrayList<String>();
-						val.add(solution.getVariable());
-						val.add(sol.getValueAsString());
-						row.add(val);
-					}
-				}
-				if (row.size() > 0) result.add(row);
-			}*/
-
 			// Store solutions in dataVarBindings
 			for (ArrayList<SparqlQuerySolution> dataSolutions : allDataSolutions) {
 			  for (SparqlQuerySolution solution : dataSolutions) {
@@ -918,7 +904,7 @@ public class DiskRepository extends KBRepository {
     String hypuri = this.HYPURI(username, domain) + "/" + hypId;
     String assertions = this.ASSERTIONSURI(username, domain);
 
-    Hypothesis hypothesis = this.getHypothesis(username, domain, hypId);
+    //Hypothesis hypothesis = this.getHypothesis(username, domain, hypId);
 
     Map<String, String> nsmap = new HashMap<String, String>();
     nsmap.put(KBConstants.OMICSNS(), "bio:");
@@ -942,7 +928,7 @@ public class DiskRepository extends KBRepository {
       this.end();
 
       for (TreeItem item : this.listLOIs(username, domain)) {
-        //System.out.println("\nChecking LOI "+ item.getId());
+        System.out.println("\nChecking LOI "+ item.getId());
         LineOfInquiry loi = this.getLOI(username, domain, item.getId());
         //Check hypothesis and data query
         String hypothesisQuery = loi.getHypothesisQuery();
@@ -997,7 +983,7 @@ public class DiskRepository extends KBRepository {
             KBObject obj = solution.getObject();
             if (var == null || obj == null) continue;
             if (obj.isLiteral())
-              value = obj.getValueAsString();
+              value = '"' + obj.getValueAsString() + '"';
             else {
               String valns = obj.getNamespace();
               if (nsmap.containsKey(valns))
@@ -1088,7 +1074,11 @@ public class DiskRepository extends KBRepository {
                 } else {
                   allDataSolutions = queryKb.sparqlQuery(dataQuery);
                 }
-                System.out.println("Query done!!");
+                System.out.println("Query done!! " + allDataSolutions.size());
+                if (allDataSolutions.size() == 0) {
+                	System.out.println("No results on the external store");
+                	continue;
+                }
 
                 // Store solutions in dataVarBindings
                 Map<String, List<String>> dataVarBindings = new HashMap<String, List<String>>();
@@ -1178,18 +1168,31 @@ public class DiskRepository extends KBRepository {
 
         // For each loi Workflow binding, create an empty tloi Binding
         WorkflowBindings tloiBinding = new WorkflowBindings(
-             bindings.getWorkflow(), bindings.getWorkflowLink(),
-             new ArrayList<VariableBinding>(), new ArrayList<VariableBinding>());
+             bindings.getWorkflow(),
+             bindings.getWorkflowLink(),
+             new ArrayList<VariableBinding>(),
+             new ArrayList<VariableBinding>());
         tloiBinding.setMeta(bindings.getMeta());
         tloiBindings.add(tloiBinding);
         
+        System.out.println("adding parameters for " + bindings.getWorkflow());
         // Add parameters
         for (VariableBinding param: bindings.getParameters()) {
           String binding = param.getBinding();
-          if (binding.charAt(0)=='?') binding.substring(1);
+          if (binding.charAt(0)=='?') binding = binding.substring(1);
           System.out.println("param binding: " + binding);
+          if (dataVarBindings.containsKey(binding)) {
+        	  List<String> possibleBindings = dataVarBindings.get(binding);
+        	  if (possibleBindings.size() == 1) {
+        		  param.setBinding(possibleBindings.get(0));
+        	  } else {
+        		  System.out.println("more than one value for " + binding);
+        	  }
+          } else {
+        	  System.out.println("dict does not contain " + binding);
+          }
           // parameters can not be collections.
-          Matcher mat = varPattern.matcher(binding);
+          /*Matcher mat = varPattern.matcher(binding);
           String sparqlvar = null;
           if(mat.find() && dataVarBindings.containsKey(mat.group(1))) {
             sparqlvar = mat.group(1);
@@ -1202,7 +1205,7 @@ public class DiskRepository extends KBRepository {
                     allb.get(0)
                 ));
             }
-          }
+          }*/
         }
       
       for (VariableBinding vbinding : bindings.getBindings()) {
@@ -2087,6 +2090,9 @@ public class DiskRepository extends KBRepository {
 	private boolean saveTriggeredLOI(String username, String domain, TriggeredLOI tloi) {
 		if (tloi.getId() == null)
 			return false;
+		
+		
+		System.out.println("- SAVE TLOI -");
 
 		String url = this.TLOIURI(username, domain);
 		String fullid = url + "/" + tloi.getId();
@@ -2365,8 +2371,18 @@ public class DiskRepository extends KBRepository {
 					// Get workflow input details
 					Map<String, Variable> inputs = wings.getWorkflowInputs(username, domain, bindings.getWorkflow());
 					List<VariableBinding> vbindings = bindings.getBindings();
+					List<VariableBinding> params = bindings.getParameters();
 					List<VariableBinding> sendbindings = new ArrayList<VariableBinding>(vbindings);
-
+					
+					//Remove " on parameters
+					for (VariableBinding p: params) {
+						String bind = p.getBinding();
+						if (bind.charAt(0) == '"') {
+							bind = bind.substring(1, bind.length() - 1);
+						}
+						sendbindings.add(new VariableBinding(p.getVariable(), bind));
+					}
+					
 					// Special processing for Meta Workflows
 					if (this.metamode) {
 						// Replace workflow ids with workflow run ids in
