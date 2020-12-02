@@ -18,9 +18,10 @@ public class LineOfInquiry {
   String dateCreated;
   String dateModified;
   String relevantVariables; //To show on the table.
+  String explanation; //To describe the table
   //FIXME
   String question;
-  
+
   public void setQuestion (String q) {
     this.question = q;
   }
@@ -29,6 +30,14 @@ public class LineOfInquiry {
     return this.question;
   }
 
+  public String getExplanation () {
+	  return this.explanation;
+  }
+  
+  public void setExplanation (String e) {
+	  this.explanation = e;
+  }
+  
   public LineOfInquiry() {
     this.workflows = new ArrayList<WorkflowBindings>();
     this.metaWorkflows = new ArrayList<WorkflowBindings>();

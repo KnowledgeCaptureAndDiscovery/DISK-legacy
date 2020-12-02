@@ -48,6 +48,7 @@ public class TriggeredLOIViewer extends Composite {
   @UiField DivElement header;
   @UiField DivElement hypothesisSection, LOISection, dataDiv, WFSection, MetaWFSection;
   @UiField LabelElement WFLabel;
+  @UiField Label DataLabel;
   @UiField HTMLPanel revHypothesisSection, DataSection, DataQuerySection;
   @UiField TripleViewer hypothesis;
   @UiField SparqlInput dataQuery;
@@ -78,6 +79,7 @@ public class TriggeredLOIViewer extends Composite {
     triplesbutton.setVisible(false);
     DataSection.setVisible(false);
     DataQuerySection.setVisible(false);
+    DataLabel.setVisible(false);
   }
 
   public void load(TriggeredLOI tloi) {
@@ -91,6 +93,10 @@ public class TriggeredLOIViewer extends Composite {
     	MetaWFSection.getStyle().setDisplay(Display.NONE);
     } else {
     	MetaWFSection.getStyle().setDisplay(Display.INITIAL);
+    }
+    
+    if (tloi.getExplanation() != null) {
+    	DataLabel.setText(tloi.getExplanation());
     }
     	
     setWorkflowsHTML(tloi.getWorkflows(), workflowlist);
@@ -121,8 +127,10 @@ public class TriggeredLOIViewer extends Composite {
     if (show) {
       if (dataRetrieved == null) loadAndShowData();
       DataSection.setVisible(true);
+      DataLabel.setVisible(true);
     } else {
       DataSection.setVisible(false);
+      DataLabel.setVisible(false);
     }
   }
 
@@ -176,6 +184,7 @@ public class TriggeredLOIViewer extends Composite {
   private void setDataHTML(final DivElement section) {
     if (dataRetrieved == null) {
       DataSection.setVisible(false);
+      DataLabel.setVisible(false);
       downloadbutton.setVisible(false);
       triplesbutton.setVisible(false);
       return;
@@ -191,6 +200,7 @@ public class TriggeredLOIViewer extends Composite {
     }
     rawcsv = "";
     DataSection.setVisible(true);
+    DataLabel.setVisible(true);
     downloadbutton.setVisible(true);
     triplesbutton.setVisible(true);
     
