@@ -38,6 +38,7 @@ import org.diskproject.shared.classes.common.TripleUtil;
 import org.diskproject.shared.classes.common.Value;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
+import org.diskproject.shared.classes.loi.MetaWorkflowDetails;
 import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.loi.TriggeredLOI.Status;
@@ -59,6 +60,7 @@ import edu.isi.kcap.ontapi.SparqlQuerySolution;
 
 public class DiskRepository extends KBRepository {
 	static DiskRepository singleton;
+	private static boolean creatingKB = false;
 
 	private static SimpleDateFormat dateformatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
 
@@ -82,13 +84,11 @@ public class DiskRepository extends KBRepository {
 	}
 
 	public static DiskRepository get() {
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		if (singleton == null)
+		if (!creatingKB && singleton == null) {
+			creatingKB = true;
 			singleton = new DiskRepository(); // Here
+			creatingKB = false;
+		}
 		return singleton;
 	}
 
@@ -829,7 +829,7 @@ public class DiskRepository extends KBRepository {
 				"SELECT DISTINCT " + v + " WHERE {\n" +
 				sparqlQuery + "\n} LIMIT 30";
 		
-		System.out.println(dataQuery);
+		//System.out.println(dataQuery);
 
 		try {
 			this.start_read();
@@ -1046,7 +1046,7 @@ public class DiskRepository extends KBRepository {
                 boolean ok = false;
                 for (String key: hypBinds.keySet()) {
                   String val = hypBinds.get(key);
-                  System.out.println("R:" + key + " -> " + val);
+                  //System.out.println("R:" + key + " -> " + val);
                   if (val.charAt(0) != '?') ok = true;
                 }
                 if (!ok) continue;
@@ -1132,16 +1132,9 @@ public class DiskRepository extends KBRepository {
                     );
                 tloi.setMetaWorkflows(
                     this.getTLOIBindings(username, domain, loi.getMetaWorkflows(), dataVarBindings));
-                //TEST
-                List<WorkflowBindings> wl = tloi.getWorkflows();
-                for (WorkflowBindings wf: wl) {
-                  for (VariableBinding b: wf.getParameters()) {
-                    System.out.println(b.getVariable() + " = " + b.getBinding());
-                  }
-                }
-                //--
                 tloi.setDataQuery(dq);
                 tloi.setRelevantVariables(loi.getRelevantVariables());
+                tloi.setExplanation(loi.getExplanation());
                 tlois.add(tloi);
 
                 System.out.println("TLOI created and added!");
@@ -1153,7 +1146,6 @@ public class DiskRepository extends KBRepository {
 		  this.end();
 		}
 		
-		System.out.println("DONE");
 		return tlois;
   }
 
@@ -1191,21 +1183,6 @@ public class DiskRepository extends KBRepository {
           } else {
         	  System.out.println("dict does not contain " + binding);
           }
-          // parameters can not be collections.
-          /*Matcher mat = varPattern.matcher(binding);
-          String sparqlvar = null;
-          if(mat.find() && dataVarBindings.containsKey(mat.group(1))) {
-            sparqlvar = mat.group(1);
-          }
-          if(sparqlvar != null) {
-            List<String> allb = dataVarBindings.get(sparqlvar);
-            if (allb.size() == 1) {
-              tloiBinding.addParameter(new VariableBinding(
-                    param.getVariable(),
-                    allb.get(0)
-                ));
-            }
-          }*/
         }
       
       for (VariableBinding vbinding : bindings.getBindings()) {
@@ -1269,6 +1246,7 @@ public class DiskRepository extends KBRepository {
                     vbinding.getVariable(),
                     dsname
                 ));
+                newWorkflowBindings.setMeta(bindings.getMeta());
                 newTloiBindings.add(newWorkflowBindings);
               }
             }
@@ -1542,7 +1520,6 @@ public class DiskRepository extends KBRepository {
 			this.start_write();
 			
 			KBObject loiitem = kb.createObjectOfClass(fullid, this.cmap.get("LineOfInquiry"));
-			KBObject floiitem = loikb.createObjectOfClass(fullid, this.cmap.get("LineOfInquiry"));
 			if (loi.getName() != null)
 				kb.setLabel(loiitem, loi.getName());
 			if (loi.getDescription() != null)
@@ -1553,14 +1530,11 @@ public class DiskRepository extends KBRepository {
 				kb.setPropertyValue(loiitem, pmap.get("dateModified"), loikb.createLiteral(loi.getDateModified()));
 			if (loi.getAuthor() != null)
 				kb.setPropertyValue(loiitem, pmap.get("hasAuthor"), loikb.createLiteral(loi.getAuthor()));
-			/*if (loi.getNotes() != null) {
-				kb.setPropertyValue(loiitem, pmap.get("hasNotes"), loikb.createLiteral(loi.getNotes()));
-			}*/
-
 			this.save(kb);
 			this.end();
 			
 			this.start_write();
+			KBObject floiitem = loikb.createObjectOfClass(fullid, this.cmap.get("LineOfInquiry"));
 			if (loi.getHypothesisQuery() != null) {
 				KBObject valobj = loikb.createLiteral(loi.getHypothesisQuery());
 				loikb.setPropertyValue(floiitem, pmap.get("hasHypothesisQuery"), valobj);
@@ -1580,6 +1554,10 @@ public class DiskRepository extends KBRepository {
 			if (loi.getQuestion() != null) {
 				KBObject valobj = loikb.createLiteral(loi.getQuestion());
 				loikb.setPropertyValue(floiitem, pmap.get("hasQuestion"), valobj);
+			}
+			if (loi.getExplanation() != null) {
+				KBObject valobj = loikb.createLiteral(loi.getExplanation());
+				loikb.setPropertyValue(floiitem, pmap.get("dataQueryDescription"), valobj);
 			}
 
 			this.storeWorkflowBindingsInKB(loikb, floiitem, pmap.get("hasWorkflowBinding"), loi.getWorkflows(),
@@ -1753,7 +1731,11 @@ public class DiskRepository extends KBRepository {
 			KBObject questionobj = loikb.getPropertyValue(floiitem, pmap.get("hasQuestion"));
 			if (questionobj != null)
 				loi.setQuestion(questionobj.getValueAsString());
-			
+
+			KBObject explobj = loikb.getPropertyValue(floiitem, pmap.get("dataQueryDescription"));
+			if (explobj != null) {
+				loi.setExplanation(explobj.getValueAsString());
+			}
 
 			loi.setWorkflows(
 					this.getWorkflowBindingsFromKB(username, domain, loikb, floiitem, pmap.get("hasWorkflowBinding")));
@@ -1998,9 +1980,17 @@ public class DiskRepository extends KBRepository {
 		if (authorobj != null)
 			tloi.setAuthor(authorobj.getValueAsString());
 
-		KBObject notesobj = kb.getPropertyValue(obj, pmap.get("hasNotes"));
-		if (notesobj != null)
-			tloi.setAuthor(notesobj.getValueAsString());
+		KBObject dqobj = kb.getPropertyValue(obj, pmap.get("hasDataQuery"));
+		if (dqobj != null)
+			tloi.setDataQuery(dqobj.getValueAsString());
+
+		KBObject rvobj = kb.getPropertyValue(obj, pmap.get("hasRelevantVariables"));
+		if (rvobj != null)
+			tloi.setDataQuery(rvobj.getValueAsString());
+
+		KBObject explobj = kb.getPropertyValue(obj, pmap.get("dataQueryDescription"));
+		if (explobj != null)
+			tloi.setDataQuery(explobj.getValueAsString());
 
 		if (tloikb != null) {
 			KBObject floiitem = tloikb.getIndividual(id);
@@ -2091,7 +2081,6 @@ public class DiskRepository extends KBRepository {
 		if (tloi.getId() == null)
 			return false;
 		
-		
 		System.out.println("- SAVE TLOI -");
 
 		String url = this.TLOIURI(username, domain);
@@ -2100,6 +2089,7 @@ public class DiskRepository extends KBRepository {
 		String loins = this.LOIURI(username, domain) + "/";
 
 		try {
+			// TODO: We store stuff on two graphs, the general one and one created for LOI/TLOI...
 			KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
 			KBAPI tloikb = this.fac.getKB(fullid, OntSpec.PLAIN, true);
 			this.start_write();
@@ -2114,7 +2104,7 @@ public class DiskRepository extends KBRepository {
 			if (tloi.getDateCreated() != null) {
 				kb.setPropertyValue(tloiitem, pmap.get("dateCreated"), tloikb.createLiteral(tloi.getDateCreated()));
 			}
-			
+
 			if (tloi.getDateModified() != null) {
 				kb.setPropertyValue(tloiitem, pmap.get("dateModified"), tloikb.createLiteral(tloi.getDateModified()));
 			}
@@ -2122,8 +2112,17 @@ public class DiskRepository extends KBRepository {
 			if (tloi.getAuthor() != null) {
 				kb.setPropertyValue(tloiitem, pmap.get("hasAuthor"), tloikb.createLiteral(tloi.getAuthor()));
 			}
-			if (tloi.getNotes() != null) {
-				kb.setPropertyValue(tloiitem, pmap.get("hasNotes"), tloikb.createLiteral(tloi.getNotes()));
+
+			if (tloi.getDataQuery() != null) {
+				kb.setPropertyValue(tloiitem, pmap.get("hasDataQuery"), tloikb.createLiteral(tloi.getDataQuery()));
+			}
+
+			if (tloi.getRelevantVariables() != null) {
+				kb.setPropertyValue(tloiitem, pmap.get("hasRelevantVariables"), tloikb.createLiteral(tloi.getRelevantVariables()));
+			}
+
+			if (tloi.getExplanation() != null) {
+				kb.setPropertyValue(tloiitem, pmap.get("dataQueryDescription"), tloikb.createLiteral(tloi.getExplanation()));
 			}
 
 			if (tloi.getLoiId() != null) {
@@ -2142,14 +2141,14 @@ public class DiskRepository extends KBRepository {
 				KBObject stobj = kb.createLiteral(tloi.getStatus().toString());
 				kb.setPropertyValue(tloiitem, pmap.get("hasTriggeredLineOfInquiryStatus"), stobj);
 			}
-			if(this.save(kb) && this.end()) {
-			  this.start_write();
-  	    KBObject ftloiitem = tloikb.createObjectOfClass(fullid, this.cmap.get("TriggeredLineOfInquiry"));
-  			this.storeWorkflowBindingsInKB(tloikb, ftloiitem, pmap.get("hasWorkflowBinding"), tloi.getWorkflows(),
-  					username, domain);
-  			this.storeWorkflowBindingsInKB(tloikb, ftloiitem, pmap.get("hasMetaWorkflowBinding"),
-  					tloi.getMetaWorkflows(), username, domain);
-  			return this.save(tloikb) && this.end();
+			if (this.save(kb) && this.end()) {
+				this.start_write();
+				KBObject ftloiitem = tloikb.createObjectOfClass(fullid, this.cmap.get("TriggeredLineOfInquiry"));
+				this.storeWorkflowBindingsInKB(
+						tloikb, ftloiitem, pmap.get("hasWorkflowBinding"), tloi.getWorkflows(), username, domain);
+				this.storeWorkflowBindingsInKB(
+						tloikb, ftloiitem, pmap.get("hasMetaWorkflowBinding"), tloi.getMetaWorkflows(), username, domain);
+				return this.save(tloikb) && this.end();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -2359,6 +2358,8 @@ public class DiskRepository extends KBRepository {
 		public void run() {
 			try {
 				System.out.println("Running execution thread");
+				if (this.metamode)
+					System.out.println("METAMODE enabled!");
 
 				WingsAdapter wings = WingsAdapter.get();
 
@@ -2382,6 +2383,10 @@ public class DiskRepository extends KBRepository {
 						}
 						sendbindings.add(new VariableBinding(p.getVariable(), bind));
 					}
+					System.out.println("Bindings to be send on run:");
+					for (VariableBinding b: sendbindings) {
+						System.out.println(b.getVariable()+  " = " + b.getBinding());
+					}
 					
 					// Special processing for Meta Workflows
 					if (this.metamode) {
@@ -2390,11 +2395,12 @@ public class DiskRepository extends KBRepository {
 						for (VariableBinding vbinding : vbindings) {
 							String runids = getWorkflowExecutionRunIds(tloi, vbinding.getBinding());
 							if( runids != null && runids.length() > 0 )
-							vbinding.setBinding(runids);
+								vbinding.setBinding(runids);
 						}
 						// Upload hypothesis to Wings as a file, and add to
 						// Variable Bindings
 						String hypVarId = bindings.getMeta().getHypothesis();
+						System.out.println("Hypothesis Variable ID: " + hypVarId);
 						if (hypVarId != null && inputs.containsKey(hypVarId)) {
 							Variable hypVar = inputs.get(hypVarId);
 							String hypId = tloi.getParentHypothesisId();

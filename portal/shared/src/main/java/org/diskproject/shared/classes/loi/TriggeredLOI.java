@@ -31,6 +31,7 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   String dateModified;
   String dataQuery;
   String relevantVariables;
+  String explanation;
 
   public TriggeredLOI(String id,
   String name,
@@ -94,6 +95,14 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   
   public String getDataQuery () {
     return this.dataQuery;
+  }
+  
+  public String getExplanation () {
+	  return this.explanation;
+  }
+  
+  public void setExplanation (String explanation) {
+	  this.explanation = explanation;
   }
 
   public String getName() {

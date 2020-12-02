@@ -49,7 +49,7 @@ public class LOIEditor extends Composite
   int loadcount=0;
 
   @UiField PaperInputElement name, metaVariables;
-  @UiField PaperTextareaElement description, notes;
+  @UiField PaperTextareaElement description, notes, explanation;
   @UiField SparqlInput hypothesisQuery;
   @UiField SparqlInput dataQuery;
   @UiField LOIWorkflowList workflowlist, metaworkflowlist;
@@ -79,6 +79,7 @@ public class LOIEditor extends Composite
     name.setValue(loi.getName());
     description.setValue(loi.getDescription());
     notes.setValue(loi.getNotes());
+    explanation.setValue(loi.getExplanation());
 
     if(loi.getHypothesisQuery() != null && loadcount==9) {
       hypothesisQuery.setValue(loi.getHypothesisQuery());
@@ -164,6 +165,7 @@ public class LOIEditor extends Composite
     
     loi.setDescription(description.getValue());
     loi.setNotes(notes.getValue());
+    loi.setExplanation(explanation.getValue());
     loi.setName(name.getValue());
     loi.setHypothesisQuery(hypothesisQuery.getValue());
     loi.setDataQuery(dataQuery.getValue());

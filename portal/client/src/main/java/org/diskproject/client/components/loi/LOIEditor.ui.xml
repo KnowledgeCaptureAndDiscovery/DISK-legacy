@@ -104,9 +104,12 @@
 				<tr:SparqlInput ui:field="dataQuery" />
 
 				<paper-input label="Data query result table"
-					autoValidate="true" ui:field="metaVariables" placeholder="This table will be used to list the dataset found"/>
+					autoValidate="true" ui:field="metaVariables" placeholder="?var1 ?var2 ?var3..."/>
 				<!-- paper-textarea label="Data Query Pattern Explanation" required="true"
 					autoValidate="true" ui:field="dqDesc" /-->
+				<paper-input label="Table explanation"
+					autoValidate="true" ui:field="explanation" placeholder="Write an explanation about the data to be shown in the table above"/>
+
 		  </div>
 
 		  <h4>Methods:</h4>
