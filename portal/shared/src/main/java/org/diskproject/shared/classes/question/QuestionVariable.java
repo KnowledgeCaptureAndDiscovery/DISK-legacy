@@ -5,12 +5,21 @@ public class QuestionVariable {
   String varname;
   String constraints;
 
+  public QuestionVariable () {
+  }
+
   public QuestionVariable (String id, String varname, String constraints) {
 	  this.id = id;
 	  this.varname = varname;
 	  this.constraints = constraints;
   }
   
+  public String toString () {
+	  String text = "- " + this.varname + " (" + this.id + ")";
+	  if (this.constraints != null) text = text + " [" + this.constraints + "]";
+	  return text;
+  }
+
   public String getId() {
     return id;
   }

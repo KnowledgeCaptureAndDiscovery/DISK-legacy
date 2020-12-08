@@ -10,6 +10,9 @@ public class Question {
   String pattern;
   List<QuestionVariable> variables;
 
+  public Question () {
+  }
+
   public Question (String id, String name, String template, String pattern, List<QuestionVariable> vars) {
 	  this.id = id;
 	  this.name = name;
@@ -20,6 +23,18 @@ public class Question {
 	  } else {
 		  this.variables = new ArrayList<QuestionVariable>();
 	  }
+  }
+  
+  public String toString () {
+	  String text = "NAME: " + this.name + "\tID: " + this.id + "\n" +
+			  "TEMPLATE: " + this.template + "\n" +
+			  "PATTERN: " + this.pattern + "\n";
+	  if (this.variables != null && this.variables.size() > 0) {
+		  for (QuestionVariable qv : this.variables) {
+			  text = text + " " + qv.toString() + "\n";
+		  }
+	  }
+	  return text;
   }
   
   public String getId() {

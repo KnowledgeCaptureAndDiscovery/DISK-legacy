@@ -1,11 +1,13 @@
 package org.diskproject.server.repository;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -16,6 +18,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,6 +45,8 @@ import org.diskproject.shared.classes.loi.MetaWorkflowDetails;
 import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.loi.TriggeredLOI.Status;
+import org.diskproject.shared.classes.question.Question;
+import org.diskproject.shared.classes.question.QuestionVariable;
 import org.diskproject.shared.classes.util.GUID;
 import org.diskproject.shared.classes.util.KBConstants;
 import org.diskproject.shared.classes.vocabulary.Individual;
@@ -67,6 +72,7 @@ public class DiskRepository extends KBRepository {
 	protected KBAPI hypontkb;
 	protected KBAPI omicsontkb;
 	protected KBAPI neuroontkb;
+	protected KBAPI questionkb;
 
 	Map<String, Vocabulary> vocabularies;
 	ScheduledExecutorService monitor;
@@ -167,10 +173,12 @@ public class DiskRepository extends KBRepository {
 			this.neuroontkb = fac.getKB(KBConstants.NEUROURI(), OntSpec.PLAIN, false, true);
 			this.hypontkb = fac.getKB(KBConstants.HYPURI(), OntSpec.PLAIN, false, true);
 			this.omicsontkb = fac.getKB(KBConstants.OMICSURI(), OntSpec.PLAIN, false, true);
+
 			
 			this.vocabularies = new HashMap<String, Vocabulary>();
 			
 			this.start_read();			
+			
 			this.vocabularies.put(KBConstants.NEUROURI(),
 					this.initializeVocabularyFromKB(this.neuroontkb, KBConstants.NEURONS()));
 			this.vocabularies.put(KBConstants.HYPURI(),
@@ -179,12 +187,82 @@ public class DiskRepository extends KBRepository {
 					this.initializeVocabularyFromKB(this.omicsontkb, KBConstants.OMICSNS()));
 			this.vocabularies.put(KBConstants.DISKURI(),
 					this.initializeVocabularyFromKB(this.ontkb, KBConstants.DISKNS()));
-			this.end();
+
+			
+			ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+			InputStream is = classloader.getResourceAsStream("hypothesisQuestions.xml");
+			//InputStream is = new FileInputStream("hypothesisQuestions.xml");
+			
+			// Theres a problem doing this... it works but bugs everything else.
+			//this.questionkb = fac.getKB(is, "http://disk-project.org/resources/question", OntSpec.PLAIN);
+			//this.listHypothesesQuestions();
 			
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			this.end();
 		}
 	}
+	
+	public List<Question> listHypothesesQuestions () {
+		List<Question> all = new ArrayList<Question>();
+		KBAPI kb = this.questionkb;
+		if (kb != null)
+		try {
+			this.start_read();
+			KBObject hypcls = this.cmap.get("Question");
+			KBObject typeprop = kb.getProperty(KBConstants.RDFNS() + "type");
+			KBObject labelprop = kb.getProperty(KBConstants.RDFNS() + "label");
+			for (KBTriple t : kb.genericTripleQuery(null, typeprop, hypcls)) {
+				KBObject question = t.getSubject();
+				KBObject name = kb.getPropertyValue(question, labelprop);
+				KBObject template = kb.getPropertyValue(question, pmap.get("hasQuestionTemplate"));
+				KBObject pattern = kb.getPropertyValue(question, pmap.get("hasQuestionPattern"));
+				ArrayList<KBObject> variables = kb.getPropertyValues(question, pmap.get("hasQuestionVariable"));
+
+				if (name != null && template != null && pattern != null) {
+					List<QuestionVariable> vars = null;
+					
+					if (variables != null && variables.size() > 0) {
+						vars = new ArrayList<QuestionVariable>();
+						for (KBObject var : variables) {
+							KBObject vname = kb.getPropertyValue(var, pmap.get("hasVariableName"));
+							KBObject vconstraints = kb.getPropertyValue(var, pmap.get("hasConstraints"));
+							if (vname != null) {
+								vars.add(new QuestionVariable(var.getID(), vname.getValueAsString(), 
+										vconstraints == null ? null : vconstraints.getValueAsString()));
+							}
+						}
+					}
+
+					Question q = new Question(question.getID(), name.getValueAsString(), template.getValueAsString(), pattern.getValueAsString(), vars);
+					all.add(q);
+					System.out.println(q.toString());
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			this.end();
+		}
+		return all;
+	}
+
+			/*
+				KBObject hypobj = t.getSubject();
+				String name = kb.getLabel(hypobj);
+				String description = kb.getComment(hypobj);
+
+				KBObject dateobj = kb.getPropertyValue(hypobj, pmap.get("dateCreated"));
+				String date = null;
+				if (dateobj != null)
+					date = dateobj.getValueAsString();
+
+				KBObject dateModifiedObj = kb.getPropertyValue(hypobj, pmap.get("dateModified"));
+				String dateModified = null;
+				if (dateModifiedObj != null)
+					dateModified = dateModifiedObj.getValueAsString();
+			 */
 
 	/**
 	 * Method that will download an ontology given its URI, doing content
@@ -1986,11 +2064,11 @@ public class DiskRepository extends KBRepository {
 
 		KBObject rvobj = kb.getPropertyValue(obj, pmap.get("hasRelevantVariables"));
 		if (rvobj != null)
-			tloi.setDataQuery(rvobj.getValueAsString());
+			tloi.setRelevantVariables(rvobj.getValueAsString());
 
 		KBObject explobj = kb.getPropertyValue(obj, pmap.get("dataQueryDescription"));
 		if (explobj != null)
-			tloi.setDataQuery(explobj.getValueAsString());
+			tloi.setExplanation(explobj.getValueAsString());
 
 		if (tloikb != null) {
 			KBObject floiitem = tloikb.getIndividual(id);
@@ -2020,9 +2098,9 @@ public class DiskRepository extends KBRepository {
 	}
 
 	public List<Triple> getTriggeredLOITriples(String username, String domain, String id) {
+		List<Triple> all = new ArrayList<Triple>();
 		try {
 			this.start_read();
-			List<Triple> all = new ArrayList<Triple>();
 			String kburi, fulluri;
 			KBAPI api;
 			KBObject tloi, loi, hyp;
@@ -2034,9 +2112,11 @@ public class DiskRepository extends KBRepository {
 			fulluri = kburi + "/" + id;
 			// Get all subjects related to TLOI
 			tloi = api.getIndividual(fulluri);
+			if (tloi == null) return all;
 			loi = api.getPropertyValue(tloi, pmap.get("hasLineOfInquiry"));
 			hyp = api.getPropertyValue(tloi, pmap.get("hasParentHypothesis"));
 			phyp = api.getPropertyValues(tloi, pmap.get("hasResultingHypothesis"));
+			
 
 			addAllTriplesToList(all, api, tloi, null, null);
 			
@@ -2059,14 +2139,12 @@ public class DiskRepository extends KBRepository {
 			for (KBObject robj : phyp) {
 				addAllTriplesToList(all, api, robj, null, null);
 			}
-
-			return all;
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 		  this.end();
 		}
-		return null;
+		return all;
 	}
 
 	private void updateTriggeredLOI(String username, String domain, String id, TriggeredLOI tloi) {
