@@ -28,6 +28,7 @@ import org.diskproject.shared.classes.common.Triple;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
+import org.diskproject.shared.classes.question.Question;
 import org.diskproject.shared.classes.vocabulary.Vocabulary;
 import org.diskproject.shared.classes.workflow.Variable;
 import org.diskproject.shared.classes.workflow.Workflow;
@@ -393,5 +394,18 @@ public class DiskResource implements DiskService {
       @QueryParam("variables") String variables,
       @QueryParam("query") String query) {
 	return repo.queryExternalStore(username, domain, variables, query);
+  }
+  
+  
+  /*
+   * Question
+   */
+  @GET
+  @Path("{username}/{domain}/questions")
+  @Override
+  public List<Question> listQuestions(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain) {
+    return this.repo.listHypothesesQuestions();
   }
 }

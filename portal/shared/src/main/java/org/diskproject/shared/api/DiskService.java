@@ -19,6 +19,7 @@ import org.diskproject.shared.classes.common.Triple;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
+import org.diskproject.shared.classes.question.Question;
 import org.diskproject.shared.classes.vocabulary.Vocabulary;
 import org.diskproject.shared.classes.workflow.Variable;
 import org.diskproject.shared.classes.workflow.Workflow;
@@ -127,31 +128,31 @@ public interface DiskService extends DirectRestService {
       @PathParam("username") String username, 
       @PathParam("domain") String domain, 
       @JsonProperty("assertions") Graph assertions);
-  
+
   /*
    * Lines of Inquiry
    */
-  
+
   @POST
   @Path("{username}/{domain}/lois")  
   public void addLOI(
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @JsonProperty("loi") LineOfInquiry loi);
-  
+
   @GET
   @Path("{username}/{domain}/lois")  
   public List<TreeItem> listLOIs(
       @PathParam("username") String username, 
       @PathParam("domain") String domain);
-  
+
   @GET
   @Path("{username}/{domain}/lois/{id}")  
   public LineOfInquiry getLOI(
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @PathParam("id") String id);
-  
+
   @PUT
   @Path("{username}/{domain}/lois/{id}")
   public void updateLOI(
@@ -159,7 +160,7 @@ public interface DiskService extends DirectRestService {
       @PathParam("domain") String domain,
       @PathParam("id") String id,
       @JsonProperty("loi") LineOfInquiry loi);
-  
+
   @DELETE
   @Path("{username}/{domain}/lois/{id}")  
   public void deleteLOI(
@@ -239,5 +240,14 @@ public interface DiskService extends DirectRestService {
       @PathParam("domain") String domain,
       @QueryParam("variables") String variables,
       @QueryParam("query") String query);
-  
+
+  /*
+   * Hypothesis questions
+   */
+
+  @GET
+  @Path("{username}/{domain}/questions")
+  public List<Question> listQuestions(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain);
 }

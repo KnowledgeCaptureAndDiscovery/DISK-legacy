@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:ns0="http://disk-project.org/ontology/disk#">
+
+  <rdf:Description rdf:about="http://disk-project.org/resources/question/HQ1">
+    <rdf:type rdf:resource="http://disk-project.org/ontology/disk#Question"/>
+    <rdf:label>Is the effect size of genotype in brain trait associated with attribute</rdf:label>
+    <ns0:hasQuestionTemplate>Is the EffectSize of ?Genotype on ?BrainImagingTrait associated with ?DemographicAttribute</ns0:hasQuestionTemplate>
+    <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Genotype .
+ ?EffectSize neuro:targetCharacteristic ?BrainImagingTrait .
+ ?EffectSize hyp:associatedWith ?DemographicAttribute</ns0:hasQuestionPattern>
+    <ns0:hasQuestionVariable>
+      <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ1V1">
+        <ns0:hasVariableName>?Genotype</ns0:hasVariableName>
+        <ns0:hasConstraints>?Genotype a neuro:Genotype</ns0:hasConstraints>
+      </ns0:QuestionVariable>
+    </ns0:hasQuestionVariable>
+
+    <ns0:hasQuestionVariable>
+      <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ1V2">
+        <ns0:hasVariableName>?BrainImagingTrait</ns0:hasVariableName>
+        <ns0:hasConstraints>?BrainImagingTrait a neuro:BrainCharacteristic </ns0:hasConstraints>
+      </ns0:QuestionVariable>
+    </ns0:hasQuestionVariable>
+
+    <ns0:hasQuestionVariable>
+      <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ1V3">
+        <ns0:hasVariableName>?DemographicAttribute</ns0:hasVariableName>
+        <ns0:hasConstraints>?DemographicAttribute a neuro:DemographicCharacteristic </ns0:hasConstraints>
+      </ns0:QuestionVariable>
+    </ns0:hasQuestionVariable>
+
+  </rdf:Description>
+
+  <ns0:Question rdf:about="http://disk-project.org/resources/question/HQ2">
+    <rdf:label>Is brain characteristic associated with neurological disorder</rdf:label>
+    <ns0:hasQuestionTemplate>Is ?BrainCharacteristic associated with ?NeurologicalDisorder</ns0:hasQuestionTemplate>
+    <ns0:hasQuestionPattern>?BrainCharacteristic hyp:associatedWith ?NeurologicalDisorder</ns0:hasQuestionPattern>
+    <ns0:hasQuestionVariable>
+      <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ2V1">
+        <ns0:hasVariableName>?BrainCharacteristic</ns0:hasVariableName>
+        <ns0:hasConstraints>?BrainCharacteristic a neuro:BrainCharacteristic</ns0:hasConstraints>
+      </ns0:QuestionVariable>
+    </ns0:hasQuestionVariable>
+
+    <ns0:hasQuestionVariable>
+      <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ2V2">
+        <ns0:hasVariableName>?NeurologicalDisorder</ns0:hasVariableName>
+        <ns0:hasConstraints>?NeurologicalDisorder a neuro:NeurologicalDisorder</ns0:hasConstraints>
+      </ns0:QuestionVariable>
+    </ns0:hasQuestionVariable>
+
+  </ns0:Question>
+
+  <ns0:Question rdf:about="http://disk-project.org/resources/question/HQ3">
+    <rdf:label>Is the effect size of genotype in brain imaging derived trait of area associated with demographic</rdf:label>
+    <ns0:hasQuestionTemplate>Is the EffectSize of ?Genotype on ?BrainImagingTrait of ?Area associated with ?Demographic</ns0:hasQuestionTemplate>
+    <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Gene .
+ ?EffectSize neuro:targetCharacteristic ?BrainImagingTrait .
+ ?EffectSize neuro:targetCharacteristic ?Area .
+ ?EffectSize hyp:associatedWith ?Demographic</ns0:hasQuestionPattern>
+    <ns0:hasQuestionVariable>
+      <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ3V1">
+        <ns0:hasVariableName>?Genotype</ns0:hasVariableName>
+        <ns0:hasConstraints>?Genotype a neuro:Genotype</ns0:hasConstraints>
+      </ns0:QuestionVariable>
+    </ns0:hasQuestionVariable>
+
+    <ns0:hasQuestionVariable>
+      <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ3V2">
+        <ns0:hasVariableName>?BrainImagingTrait</ns0:hasVariableName>
+        <ns0:hasConstraints>?BrainImagingTrait a neuro:BrainCharacteristic </ns0:hasConstraints>
+      </ns0:QuestionVariable>
+    </ns0:hasQuestionVariable>
+
+    <ns0:hasQuestionVariable>
+      <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ3V3">
+        <ns0:hasVariableName>?Area</ns0:hasVariableName>
+      </ns0:QuestionVariable>
+    </ns0:hasQuestionVariable>
+
+    <ns0:hasQuestionVariable>
+      <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ3V4">
+        <ns0:hasVariableName>?Demographic</ns0:hasVariableName>
+        <ns0:hasConstraints>?Demographic a neuro:DemographicCharacteristic </ns0:hasConstraints>
+      </ns0:QuestionVariable>
+    </ns0:hasQuestionVariable>
+
+  </ns0:Question>
+
+</rdf:RDF>

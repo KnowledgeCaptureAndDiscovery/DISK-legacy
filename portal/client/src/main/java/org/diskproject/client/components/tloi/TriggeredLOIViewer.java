@@ -17,6 +17,7 @@ import org.diskproject.client.rest.DiskREST;
 import org.diskproject.shared.classes.common.Triple;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
+import org.diskproject.shared.classes.loi.TriggeredLOI.Status;
 import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.workflow.VariableBinding;
 import org.diskproject.shared.classes.workflow.WorkflowRun;
@@ -202,7 +203,10 @@ public class TriggeredLOIViewer extends Composite {
     DataSection.setVisible(true);
     DataLabel.setVisible(true);
     downloadbutton.setVisible(true);
-    triplesbutton.setVisible(true);
+    if (this.tloi != null) {
+    	Status s = this.tloi.getStatus();
+    	if (s != null) triplesbutton.setVisible(true);
+    }
     
     int lines = 0;
     

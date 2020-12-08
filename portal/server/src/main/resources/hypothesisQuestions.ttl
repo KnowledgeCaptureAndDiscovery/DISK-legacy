@@ -3,8 +3,8 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix disk: <http://disk-project.org/ontology/disk#> .
-@prefix : <https://enigma-disk.wings.isi.edu/disk-server/admin/test/hq/> .
-@base <https://enigma-disk.wings.isi.edu/disk-server/admin/test/hq> .
+@prefix : <http://disk-project.org/resources/question/> .
+@base <http://disk-project.org/resources/question> .
 
 :HQ1 a disk:Question ;
 	rdf:label "Is the effect size of genotype in brain trait associated with attribute" ;

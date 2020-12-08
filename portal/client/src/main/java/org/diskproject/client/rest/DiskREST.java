@@ -16,6 +16,7 @@ import org.diskproject.shared.classes.common.Triple;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
+import org.diskproject.shared.classes.question.Question;
 import org.diskproject.shared.classes.vocabulary.Vocabulary;
 import org.diskproject.shared.classes.workflow.Variable;
 import org.diskproject.shared.classes.workflow.Workflow;
@@ -590,4 +591,19 @@ public class DiskREST {
     }).call(getDiskService()).queryExternalStore(username, domain, query, variables);
   }
   
+  /*
+   * Questions
+   */
+  public static void listHypothesesQuestions(final Callback<List<Question>, Throwable> callback) {
+    REST.withCallback(new MethodCallback<List<Question>>() {
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+      @Override
+      public void onSuccess(Method method, List<Question> response) {
+        callback.onSuccess(response);
+      }
+    }).call(getDiskService()).listQuestions(username, domain);
+  }
 }
