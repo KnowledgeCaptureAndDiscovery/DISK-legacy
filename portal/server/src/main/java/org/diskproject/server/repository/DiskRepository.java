@@ -2128,16 +2128,27 @@ public class DiskRepository extends KBRepository {
 			addAllTriplesToList(all, api, loi, null, null);
 			api = this.fac.getKB(loi.getID(), OntSpec.PLAIN, true);
 			addAllTriplesToList(all, api, api.getIndividual(loi.getName()), null, null);
-
+			
 			// Hyp triples
 			api = this.fac.getKB( this.HYPURI(username, domain) , OntSpec.PLAIN, true);
 			addAllTriplesToList(all, api, hyp, null, null);
-			/*api = this.fac.getKB(hyp.getID(), OntSpec.PLAIN, true); //FIXME
-			addAllTriplesToList(all, api, api.getIndividual(hyp.getName()), null, null); */ 
+
+			api = this.fac.getKB(hyp.getID(), OntSpec.PLAIN, true);
+			addAllTriplesToList(all, api, api.getIndividual(hyp.getName()), null, null);
+			//prov
+			String prov = hyp.getID() + "/provenance";
+			api = this.fac.getKB(prov, OntSpec.PLAIN, true);
+			Graph graph = this.getKBGraph(prov);
+			this.updateTripleDetails(graph, api);
+			all.addAll( graph.getTriples() );
 
 			// RHyp triples
 			for (KBObject robj : phyp) {
-				addAllTriplesToList(all, api, robj, null, null);
+				prov = robj.getID() + "/provenance";
+				api = this.fac.getKB(prov, OntSpec.PLAIN, true);
+				Graph graph2 = this.getKBGraph(prov);
+				this.updateTripleDetails(graph2, api);
+				all.addAll( graph2.getTriples() );
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
