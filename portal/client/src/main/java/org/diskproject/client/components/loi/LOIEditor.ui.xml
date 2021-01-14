@@ -99,7 +99,7 @@
 				</g:ListBox>
 
 				<paper-input label="Data table description"
-					autoValidate="true" ui:field="explanation" placeholder="Write an explanation about the data to be shown in the table"/>
+					autoValidate="true" ui:field="explanation" placeholder="Write a description about the data to be shown in the table"/>
 
 				<p:PaperButton ui:field="testbutton" style="float:right">
 					<iron-icon icon="flip-to-front" />
