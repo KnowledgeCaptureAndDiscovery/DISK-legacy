@@ -280,11 +280,16 @@ public class TriggeredLOIViewer extends Composite {
     for(final String id : ids) {
       HTMLPanel panel = new HTMLPanel("");
       panel.addStyleName("bordered-list padded");
+
       HTMLPanel anchordiv = new HTMLPanel("");
+      anchordiv.addStyleName("rev-hyp-title");
       final Anchor anchor = new Anchor();
       anchordiv.add(anchor);
+      
+      
       final TripleViewer tv = new TripleViewer("");
       tv.initialize(username, domain);
+
       panel.add(anchordiv);
       panel.add(tv);
       section.add(panel);
@@ -295,9 +300,23 @@ public class TriggeredLOIViewer extends Composite {
           anchor.setHref(getHypothesisLink(id));
           if (result != null) {
 			  anchor.setText(result.getName());
-			  if(result.getGraph() != null) {
+			  if (result.getGraph() != null) {
 				tv.setDefaultNamespace(getNamespace(result.getId()));
-				tv.load(result.getGraph().getTriples());
+				List<Triple> triples = result.getGraph().getTriples();
+				tv.load(triples);
+				//write the confidence value.
+				String cv = "";
+				for(final Triple t : triples) {
+					if (t.getDetails() != null) {
+						cv = "" + t.getDetails().getConfidenceValue();
+						if (cv.length() > 4) cv = cv.substring(0, 4);
+						break;
+					}
+				}
+				if (!cv.contentEquals("")) {
+					final Anchor pval = new Anchor("Confidence: " + cv);
+					anchordiv.add(pval);
+				}
 			  }
           }
         }

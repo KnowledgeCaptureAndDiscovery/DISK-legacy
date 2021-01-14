@@ -106,6 +106,10 @@
 				margin: 0;
 				overflow: visible;
 			}
+			.rev-hyp-title {
+				display: flex;
+    			justify-content: space-between;
+			}
 		</style>
 		<div class="vertical layout section">
 			<div ui:field="header" />
