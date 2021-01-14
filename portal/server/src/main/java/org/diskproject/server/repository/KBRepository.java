@@ -98,6 +98,7 @@ public class KBRepository implements TransactionsAPI {
     this.hackInDataProperty("hasRelevantVariables", "LineOfInquiry", "string");
     this.hackInDataProperty("hasQuestionPattern", "Question", "string");
     this.hackInDataProperty("dataQueryDescription", "LineOfInquiry", "string");
+    this.hackInDataProperty("hasDataSource", "LineOfInquiry", "string");
     this.hackInObjectProperty("hasParameter", "WorkflowBinding", "VariableBinding");
     this.hackInDataProperty("hasParameterValue", "LineOfInquiry", "string");
   }

@@ -893,6 +893,7 @@ public class DiskRepository extends KBRepository {
 
 	public Map<String, List<String>> queryExternalStore(String username, String domain, String sparqlQuery, String variables) {
 		//List<List<List<String>>> result = new ArrayList<List<List<String>>>();
+		String endpoint = null;
 		Map<String, List<String>> dataVarBindings = new HashMap<String, List<String>>();
 		
 		//TODO, should check the variables.
@@ -920,7 +921,8 @@ public class DiskRepository extends KBRepository {
 			ArrayList<ArrayList<SparqlQuerySolution>> allDataSolutions = null;
 			boolean wikiStore = Config.get().getProperties().containsKey("data-store");
 			if(wikiStore) {
-			  String externalStore = Config.get().getProperties().getString("data-store");
+			  String externalStore = endpoint != null ? endpoint :
+					  Config.get().getProperties().getString("data-store");
 			  String dataUser = Config.get().getProperties().getString("ENIGMA.username");
 			  String dataPass = Config.get().getProperties().getString("ENIGMA.password");
 			  if (dataUser != null && dataPass != null) {
@@ -1140,7 +1142,8 @@ public class DiskRepository extends KBRepository {
                 ArrayList<ArrayList<SparqlQuerySolution>> allDataSolutions = null;
                 boolean wikiStore = Config.get().getProperties().containsKey("data-store");
                 if(wikiStore) {
-                  String externalStore = Config.get().getProperties().getString("data-store");
+                  String externalStore = loi.getDataSource() != null ? loi.getDataSource() :
+                		  Config.get().getProperties().getString("data-store");
                   String dataUser = Config.get().getProperties().getString("ENIGMA.username");
                   String dataPass = Config.get().getProperties().getString("ENIGMA.password");
                   if (dataUser != null && dataPass != null) {
@@ -1621,6 +1624,10 @@ public class DiskRepository extends KBRepository {
 				KBObject valobj = loikb.createLiteral(loi.getDataQuery());
 				loikb.setPropertyValue(floiitem, pmap.get("hasDataQuery"), valobj);
 			}
+			if (loi.getDataSource() != null) {
+				KBObject valobj = loikb.createLiteral(loi.getDataSource());
+				loikb.setPropertyValue(floiitem, pmap.get("hasDataSource"), valobj);
+			}
 			if (loi.getNotes() != null) {
 				KBObject valobj = loikb.createLiteral(loi.getNotes());
 				loikb.setPropertyValue(floiitem, pmap.get("hasNotes"), valobj);
@@ -1781,6 +1788,10 @@ public class DiskRepository extends KBRepository {
 			KBObject dateobj = kb.getPropertyValue(floiitem, pmap.get("dateCreated"));
 			if (dateobj != null)
 				loi.setDateCreated(dateobj.getValueAsString());
+
+			KBObject datasourceobj = kb.getPropertyValue(floiitem, pmap.get("hasDataSource"));
+			if (datasourceobj != null)
+				loi.setDataSource(datasourceobj.getValueAsString());
 
 			KBObject dateModifiedObj = kb.getPropertyValue(floiitem, pmap.get("dateModified"));
 			if (dateModifiedObj != null)
@@ -2061,6 +2072,10 @@ public class DiskRepository extends KBRepository {
 		KBObject dqobj = kb.getPropertyValue(obj, pmap.get("hasDataQuery"));
 		if (dqobj != null)
 			tloi.setDataQuery(dqobj.getValueAsString());
+		
+		KBObject dataSourceObj = kb.getPropertyValue(obj, pmap.get("hasDataSource"));
+		if (dataSourceObj != null)
+			tloi.setDataSource(dataSourceObj.getValueAsString());
 
 		KBObject rvobj = kb.getPropertyValue(obj, pmap.get("hasRelevantVariables"));
 		if (rvobj != null)
@@ -2188,6 +2203,10 @@ public class DiskRepository extends KBRepository {
 			}
 			if (tloi.getDescription() != null) {
 				kb.setComment(tloiitem, tloi.getDescription());
+			}
+
+			if (tloi.getDataSource() != null) {
+				kb.setPropertyValue(tloiitem, pmap.get("hasDataSource"), tloikb.createLiteral(tloi.getDataSource()));
 			}
 
 			if (tloi.getDateCreated() != null) {

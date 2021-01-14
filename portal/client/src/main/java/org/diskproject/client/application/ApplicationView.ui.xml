@@ -439,7 +439,7 @@
 					<g:Anchor href="#{nameTokens.getHome}">
 						<div class="horizontal layout center app-logo">
 							<img src="customise/Logo.png" class="app-logo" />
-							<h1 class="app-logo">Neuro DISK</h1>
+							<h1 class="app-logo">NeuroDISK</h1>
 						</div>
 					</g:Anchor>
 				</paper-toolbar>
@@ -449,7 +449,7 @@
 						<div class="layout horizontal center" ui:field="hypothesesMenu">
 							<iron-icon class="backbutton grey" icon="icons:chevron-left" />
 							<iron-icon class="orange" icon="icons:help" />
-							 My Hypotheses
+							 Hypotheses
 						</div>
 					</g:Anchor>
 					<g:Anchor 
@@ -476,14 +476,34 @@
 							 Terminology
 						</div>
 					</g:Anchor>
-					<!--   g:Anchor 
+					<g:Anchor 
 					href="#{nameTokens.getAssertions}/{config.getWingsUserid}/{config.getWingsDomain}">
 						<div class="layout horizontal center" ui:field="assertionsMenu">
 							<iron-icon class="backbutton grey" icon="icons:chevron-left" />						
 							<iron-icon class="blue" icon="icons:list" />
 							 Data
 						</div>
-					</g:Anchor-->
+					</g:Anchor>
+
+					<hr style="margin: 5px 10px;"/>
+					
+					<g:Anchor 
+					href="#{nameTokens.getMyHypotheses}/{config.getWingsUserid}/{config.getWingsDomain}">
+						<div class="layout horizontal center" ui:field="myHypothesesMenu">
+							<iron-icon class="backbutton grey" icon="icons:chevron-left" />
+							<iron-icon class="orange" icon="icons:help" />
+							 My Hypotheses
+						</div>
+					</g:Anchor>
+					<g:Anchor 
+					href="#{nameTokens.getMyTerminology}/{config.getWingsUserid}/{config.getWingsDomain}">
+						<div class="layout horizontal center" ui:field="myTerminologyMenu">
+							<iron-icon class="backbutton grey" icon="icons:chevron-left" />						
+							<iron-icon class="blue" icon="icons:book" />
+							 My Terminology
+						</div>
+					</g:Anchor>
+					
 					<div>
 						<g:SimplePanel ui:field="sidebar" />
 					</div>

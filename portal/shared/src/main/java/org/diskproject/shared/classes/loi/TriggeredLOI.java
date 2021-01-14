@@ -32,19 +32,22 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   String dataQuery;
   String relevantVariables;
   String explanation;
+  String dataSource;
 
   public TriggeredLOI(String id,
-  String name,
-  String description,
-  Status status,
-  String loiId,
-  String parentHypothesisId,
-  List<String> resultingHypothesisIds,
-  List<WorkflowBindings> workflows,
-  List<WorkflowBindings> metaWorkflows) {
+		  String name,
+		  String description,
+		  String dataSource,
+		  Status status,
+		  String loiId,
+		  String parentHypothesisId,
+		  List<String> resultingHypothesisIds,
+		  List<WorkflowBindings> workflows,
+		  List<WorkflowBindings> metaWorkflows) {
 	  this.id = id;
 	  this.name = name;
 	  this.description = description;
+	  this.dataSource = dataSource;
 	  this.status = status;
 	  this.loiId = loiId;
 	  this.parentHypothesisId = parentHypothesisId;
@@ -52,24 +55,33 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
 	  this.workflows = workflows;
 	  this.metaWorkflows = metaWorkflows;
 	  }
-  
+
   public TriggeredLOI() {
     workflows = new ArrayList<WorkflowBindings>();
     metaWorkflows = new ArrayList<WorkflowBindings>();
     resultingHypothesisIds = new ArrayList<String>();
   }
-  
+
   public TriggeredLOI(LineOfInquiry loi, String hypothesisId) {
     this.id = GUID.randomId("TriggeredLOI");
     this.loiId = loi.getId();
     this.name = "Triggered: " + loi.getName();
     this.description = loi.getDescription();
+    this.dataSource = loi.getDataSource();
     this.parentHypothesisId = hypothesisId;
     workflows = new ArrayList<WorkflowBindings>();
     metaWorkflows = new ArrayList<WorkflowBindings>();
     resultingHypothesisIds = new ArrayList<String>();
   }
+
+  public void setDataSource (String ds) {
+	  this.dataSource = ds;
+  }
   
+  public String getDataSource () {
+	  return this.dataSource;
+  }
+
   public void copyWorkflowBindings(List<WorkflowBindings> fromlist,
       List<WorkflowBindings> tolist) {
     for(WorkflowBindings from : fromlist) {
@@ -80,7 +92,7 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
       tolist.add(to);
     }
   }
-  
+
   public String getId() {
     return id;
   }
@@ -189,6 +201,7 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
     this.metaWorkflows = metaWorkflows;
   }
   
+  //FIXME: This is the way it looks in the list.
   @JsonIgnore
   public String getHeaderHTML() {
     String extra ="", extracls="";

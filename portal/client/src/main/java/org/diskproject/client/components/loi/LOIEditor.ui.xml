@@ -86,6 +86,21 @@
 		  
 		  <h4>Data query</h4>
 		  <div class="subs">
+				<label class="small-grey" title="Data Source">
+					Select data source:
+				</label>
+				<br/>
+				<g:ListBox ui:field='dataSource'>
+					<g:item value='http://linkedearth.isi.edu:3030/enigma_dev_db'>Dev Wiki</g:item>
+					<g:item value='http://linkedearth.isi.edu:3030/enigma_scz_db'>Schizophrenia Wiki</g:item>
+					<g:item value='http://linkedearth.isi.edu:3030/enigma_pd_db'>Parkinson's Wiki</g:item>
+					<g:item value='http://linkedearth.isi.edu:3030/enigma_stb_db'>Suicide Wiki</g:item>
+					<g:item value='http://linkedearth.isi.edu:3030/db'>Old Wiki</g:item>
+				</g:ListBox>
+
+				<paper-input label="Data table description"
+					autoValidate="true" ui:field="explanation" placeholder="Write an explanation about the data to be shown in the table"/>
+
 				<p:PaperButton ui:field="testbutton" style="float:right">
 					<iron-icon icon="flip-to-front" />
 					Open sparql query tester
@@ -103,13 +118,8 @@
 				</label>
 				<tr:SparqlInput ui:field="dataQuery" />
 
-				<paper-input label="Data query result table"
+				<paper-input label="Data query variables to show"
 					autoValidate="true" ui:field="metaVariables" placeholder="?var1 ?var2 ?var3..."/>
-				<!-- paper-textarea label="Data Query Pattern Explanation" required="true"
-					autoValidate="true" ui:field="dqDesc" /-->
-				<paper-input label="Table explanation"
-					autoValidate="true" ui:field="explanation" placeholder="Write an explanation about the data to be shown in the table above"/>
-
 		  </div>
 
 		  <h4>Methods:</h4>

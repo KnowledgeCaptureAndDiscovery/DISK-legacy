@@ -117,16 +117,15 @@
 						}
 		</style>
 
-		<p:PaperFab ui:field="addicon" icon="add" mini="true" style="--paper-fab-background: var(--paper-blue-200);"
-			addStyleNames="addicon" title="Add Data" tabindex="0" disabled="true"/>
 		<div style="padding: 4px 10px; font-size: 14px;">
-			The Neuro DISK system uses the following ontologies:
+			Hypotheses in NeuroDISK are expressed using a vocabulary of terms defined in the system, which can be easily extended by users. The default vocabularies are defined in the following ontologies:
 		  <ul>
 		    <li> 
 		      <h4 style="margin:0; display: inline-block;">
 		        <a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/enigma_hypothesis/release/2.0.0/index.html#">The ENIGMA Hypothesis Ontology</a>
 		      </h4> 
-	        (<a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/enigma_hypothesis/release/2.0.0/ontology.ttl">.ttl</a>)
+	        (<a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/enigma_hypothesis/release/2.0.0/index.html#">doc</a> |
+	        <a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/enigma_hypothesis/release/2.0.0/ontology.ttl">ttl</a>)
 		    </li>
 
 		    <!--  li> 
@@ -140,71 +139,17 @@
 		      <h4 style="margin:0; display: inline-block;">
 		        <a target="_blank" href="https://disk-project.org/ontology/hypothesis/index-en.html#">The DISK-hypothesis Ontology </a>
 		      </h4>
-	        (<a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/hypothesis/release/0.0.1/ontology.owl">.ttl</a>)
+	        (<a target="_blank" href="https://disk-project.org/ontology/hypothesis/index-en.html#">doc</a> |
+	        <a target="_blank" href="https://knowledgecaptureanddiscovery.github.io/DISK-Ontologies/hypothesis/release/0.0.1/ontology.owl">ttl</a>)
 		    </li>
 		  </ul>
+			<p>Users can add new terms to the vocabularies on the <b>My Terminology</b> section.</p>
 		</div>
 
-		<l:Loader ui:field="loader" />
+		<!--l:Loader ui:field="loader" />
 		<div class="outlined">
 			<lw:ListWidget ui:field="datalist" styleName="list" />
-		</div>
-		<g:HTMLPanel ui:field="form" styleName="padded">
-			<div class="vertical center-justified layout">
-				<div class="vertical-section">
-					<div style="padding: 4px 10px; font-size: 14px;">
-						<h4 style="margin:0px;">User defined terms:</h4>
-						<p>The following table show all the user defined resources currently on the system. You can add new resources on the last row.</p>
-						
-						<table class="terms-table">
-								<thead>
-									<th>Name</th>
-									<th></th>
-									<th>Type</th>
-									<th></th>
-								</thead>
-								<tbody ui:field="table">
-									<!-- GENERATED TABLE -->
-									<tr ui:field="inputRow">
-										<td>
-											<input type="text" ui:field='inputName' placeholder="name"></input>
-										</td>
-										<td>is a</td>
-										<td>
-											<g:ListBox ui:field='inputType'>
-												<g:item value=''>loading...</g:item>
-											</g:ListBox>
-										</td>
-										<td>
-										 <p:PaperButton ui:field="addterm"> <iron-icon icon="add"/> </p:PaperButton>
-										</td>
-									</tr>
-								</tbody>
-							</table>
-							
-							<div style="padding-top:10px">
-								<g:CheckBox ui:field='toggleTriples' value="false" text="Show metadata as turtle file"/>
-							
-								<label class="small-grey" ui:field="trilesLabel">
-									(Ctrl-Space for suggestions)
-								</label>
-								<tr:TripleInput ui:field="triples" />
-							</div>
-						</div>
-				</div>
+		</div-->
 
-				<div class="horizontal end-justified layout" style="display: flex; align-content: center; height: 30px; justify-content: flex-end;">
-					<p:PaperButton ui:field="discardbutton">
-					  <span style="margin-top: 3px; display: inline-block; padding: 0px 4px;">Discard changes</span>
-					</p:PaperButton>
-					<p:PaperButton ui:field="savebutton">
-						<iron-icon icon="save" />
-					  <span style="margin-top: 3px; display: inline-block;">Save</span>
-					</p:PaperButton>
-				</div>
-
-			</div>
-
-		</g:HTMLPanel>		
 	</g:HTMLPanel>
 </ui:UiBinder>

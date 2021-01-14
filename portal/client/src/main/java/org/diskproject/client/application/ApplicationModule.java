@@ -17,6 +17,11 @@ import org.diskproject.client.application.tloi.TriggeredLOIView;
 import org.diskproject.client.application.users.UserPresenter;
 import org.diskproject.client.application.users.UserView;
 
+import org.diskproject.client.application.terminology.MyTerminologyPresenter;
+import org.diskproject.client.application.terminology.MyTerminologyView;
+import org.diskproject.client.application.hypothesis.MyHypothesesPresenter;
+import org.diskproject.client.application.hypothesis.MyHypothesesView;
+
 import com.google.gwt.core.client.GWT;
 import com.gwtplatform.mvp.client.gin.AbstractPresenterModule;
 
@@ -47,6 +52,10 @@ public class ApplicationModule extends AbstractPresenterModule {
         AssertionView.class, AssertionPresenter.MyProxy.class);
     bindPresenter(TerminologyPresenter.class, TerminologyPresenter.MyView.class,
         TerminologyView.class, TerminologyPresenter.MyProxy.class);
+    bindPresenter(MyTerminologyPresenter.class, MyTerminologyPresenter.MyView.class,
+        MyTerminologyView.class, MyTerminologyPresenter.MyProxy.class);
+    bindPresenter(MyHypothesesPresenter.class, MyHypothesesPresenter.MyView.class,
+        MyHypothesesView.class, MyHypothesesPresenter.MyProxy.class);
   }
 
 }

@@ -19,8 +19,40 @@ public class LineOfInquiry {
   String dateModified;
   String relevantVariables; //To show on the table.
   String explanation; //To describe the table
+  String dataSource;
   //FIXME
   String question;
+
+  public LineOfInquiry() {
+    this.workflows = new ArrayList<WorkflowBindings>();
+    this.metaWorkflows = new ArrayList<WorkflowBindings>();
+  }
+
+  public LineOfInquiry(String id,
+		  String name, 
+		  String description, 
+		  String dataSource,
+		  String hypothesisQuery, 
+		  String dataQuery, 
+		  List<WorkflowBindings> workflows, 
+		  List<WorkflowBindings> metaWorkflows){
+	  this.id = id;
+	  this.name = name;
+	  this.description = description;
+	  this.dataSource = dataSource;
+	  this.hypothesisQuery = hypothesisQuery;
+	  this.dataQuery = dataQuery;
+	  this.workflows = workflows;
+	  this.metaWorkflows = metaWorkflows;
+  }
+  
+  public void setDataSource (String ds) {
+	  this.dataSource = ds;
+  }
+  
+  public String getDataSource () {
+	  return this.dataSource;
+  }
 
   public void setQuestion (String q) {
     this.question = q;
@@ -38,26 +70,6 @@ public class LineOfInquiry {
 	  this.explanation = e;
   }
   
-  public LineOfInquiry() {
-    this.workflows = new ArrayList<WorkflowBindings>();
-    this.metaWorkflows = new ArrayList<WorkflowBindings>();
-  }
-
-  public LineOfInquiry(String id,
-		  String name, 
-		  String description, 
-		  String hypothesisQuery, 
-		  String dataQuery, 
-		  List<WorkflowBindings> workflows, 
-		  List<WorkflowBindings> metaWorkflows){
-	  this.id = id;
-	  this.name = name;
-	  this.description = description;
-	  this.hypothesisQuery = hypothesisQuery;
-	  this.dataQuery = dataQuery;
-	  this.workflows = workflows;
-	  this.metaWorkflows = metaWorkflows;
-  }
 
   public Set<String> getAllWorkflowVariables () {
     Set<String> allVars = new HashSet<String>();
