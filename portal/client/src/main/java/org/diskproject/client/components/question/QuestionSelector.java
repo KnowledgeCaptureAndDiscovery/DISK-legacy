@@ -109,9 +109,8 @@ public class QuestionSelector extends Composite {
 	private String getH3 () {
 		return "?EffectSize neuro:sourceGene ?Gene\n" + 
 				"?EffectSize neuro:targetCharacteristic ?BrainImagingTrait\n" + 
-				"?EffectSize neuro:targetCharacteristic ?Area\n" + 
-				"?EffectSize hyp:associatedWith ?Demographic\n" + 
-				"?Gene rdfs:label ?SNP";
+				"?EffectSize neuro:targetCharacteristic ?Region\n" + 
+				"?EffectSize hyp:associatedWith ?Demographic\n";
 	}
 
 }

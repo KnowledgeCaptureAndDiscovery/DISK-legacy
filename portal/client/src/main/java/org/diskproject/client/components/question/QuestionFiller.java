@@ -204,7 +204,6 @@ public class QuestionFiller extends Composite {
 		String t2 = ":EffectSize neuro:targetCharacteristic " + p2v;
 		String t3 = ":EffectSize neuro:targetCharacteristic " + p3v;
 		String t4 = ":EffectSize hyp:associatedWith " + p4v;
-		String t5 = ":Gene rdfs:label \"parameter_1\"";
-		return t1 + '\n' + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5;
+		return t1 + '\n' + t2 + '\n' + t3 + '\n' + t4;
 	}
 }
