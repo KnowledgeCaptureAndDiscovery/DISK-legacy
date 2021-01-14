@@ -9,9 +9,19 @@ public class NameTokens {
   public static final String tlois = "tlois";
   public static final String assertions = "assertions";
   public static final String terminology = "terminology";
+  public static final String myHypotheses = "myHypotheses";
+  public static final String myTerminology = "myTerminology";
 
   public static String getHome() {
     return home;
+  }
+  
+  public static String getMyHypotheses() {
+    return myHypotheses;
+  }
+
+  public static String getMyTerminology() {
+    return myTerminology;
   }
 
   public static String getLoader() {

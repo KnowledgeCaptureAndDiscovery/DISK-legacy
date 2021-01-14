@@ -11,7 +11,7 @@
 		<g:ListBox ui:field='hypQuestion'>
 			<g:item value='h1'>Is the effect size of Genotype in brain trait associated with attribute</g:item>
 			<g:item value='h2'>Is brain characteristic associated with neurological disorder</g:item>
-			<g:item value='h3'>Is the effect size of a Genotype on Brain imaging derived trait of Area is associated with Demographic</g:item>
+			<g:item value='h3'>Is the effect size of a Genotype on Brain imaging derived trait of Region is associated with Demographic</g:item>
 		</g:ListBox>
 		<br/>
 
@@ -54,7 +54,7 @@
 					</g:ListBox>
 					<span> of </span>
 					<g:ListBox ui:field="h3r3">
-						<g:item value="Area">Area</g:item>
+						<g:item value="Region">Region</g:item>
 					</g:ListBox>
 					<span class="code">associated with</span>
 					<g:ListBox ui:field="h3r4">

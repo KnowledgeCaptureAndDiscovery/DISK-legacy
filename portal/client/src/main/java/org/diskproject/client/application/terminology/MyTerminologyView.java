@@ -1,3 +1,5 @@
+
+
 package org.diskproject.client.application.terminology;
 
 import java.util.ArrayList;
@@ -44,8 +46,8 @@ import com.google.inject.Inject;
 import com.vaadin.polymer.Polymer;
 import com.vaadin.polymer.elemental.Function;
 
-public class TerminologyView extends ApplicationSubviewImpl implements
-		TerminologyPresenter.MyView {
+public class MyTerminologyView extends ApplicationSubviewImpl implements
+		MyTerminologyPresenter.MyView {
 
 	String userid;
 	String domain;
@@ -53,19 +55,19 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 
 	int loadcount = 0;
 
-	/*@UiField Loader loader;
+	@UiField Loader loader;
 	@UiField HTMLPanel form;
-	@UiField ListWidget datalist;
+	//@UiField ListWidget datalist;
 	@UiField TripleInput triples;
 	
 	@UiField InputElement inputName;
 	@UiField ListBox inputType;
 
-	@UiField CheckBox toggleTriples;*/
+	@UiField CheckBox toggleTriples;
 	List<Triple> loadedTriples;
 
-	/*@UiField TableSectionElement table;
-	@UiField TableRowElement inputRow;*/
+	@UiField TableSectionElement table;
+	@UiField TableRowElement inputRow;
 	private static Map<String, String> tableLabel;
 	private static Map<String, String> tableType;
 
@@ -73,22 +75,22 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 
 	Graph graph;
 
-	/*@UiHandler("toggleTriples")
+	@UiHandler("toggleTriples")
 	void onClickToggleTriples(ClickEvent event) {
 		boolean show = toggleTriples.getValue();
 		triples.setVisible(show);
-	}*/
+	}
 
-	interface Binder extends UiBinder<Widget, TerminologyView> {
+	interface Binder extends UiBinder<Widget, MyTerminologyView> {
 	}
 
 	@Inject
-	public TerminologyView(Binder binder) {
+	public MyTerminologyView(Binder binder) {
 		initWidget(binder.createAndBindUi(this));
 	}
 
 
-	/*void loadVocabularies() {
+	void loadVocabularies() {
 		loadcount = 0;
 		triples.loadVocabulary("bio", KBConstants.OMICSURI(), vocabLoaded);
 		triples.loadVocabulary("neuro", KBConstants.NEUROURI(), vocabLoaded);
@@ -105,6 +107,11 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 				vocab = new Vocabulary();
 				for (String p: prefixes)
 					vocab.mergeWith(triples.getVocabulary(p));
+				/*vocab.mergeWith(triples.getVocabulary("bio"));
+				vocab.mergeWith(triples.getVocabulary("neuro"));
+				vocab.mergeWith(triples.getVocabulary("hyp"));
+				vocab.mergeWith(triples.getVocabulary("disk"));
+				vocab.mergeWith(triples.getVocabulary(""));*/
 				vocab.refreshChildren();
 
 				
@@ -126,34 +133,34 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 
 		public void onFailure(Throwable reason) {
 		}
-	};*/
-	
+	};
+
 	@Override
 	public void initializeParameters(String userid, String domain,
 			String[] params, boolean edit, SimplePanel sidebar,
 			SimplePanel toolbar) {
 
-		//clear();
+		clear();
 
 		 if(this.userid != userid || this.domain != domain) {
 		      this.userid = userid;
 		      this.domain = domain;
 		      DiskREST.setDomain(domain);
 		      DiskREST.setUsername(userid);
-		      //this.loadVocabularies();
+		      this.loadVocabularies();
 		    }
-		    //this.loadAssertions();
+		    this.loadAssertions();
 		    
 		    this.setHeader(toolbar);    
 		    this.setSidebar(sidebar);
 		  }
 
-/*
 	private void clear() {
 		loader.setVisible(false);
-		datalist.setVisible(false);
+		//datalist.setVisible(false);
 		form.setVisible(false);
 	}
+
 	void loadAssertions() {
 		loader.setVisible(true);
 		triples.setVisible(false);
@@ -188,11 +195,11 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 				}
 
 				// Show data list
-				datalist.clear();
+				//datalist.clear();
 				showDataList(); 
 
 				loader.setVisible(false);
-				datalist.setVisible(true);
+				//datalist.setVisible(true);
 				
 				if (!toggleTriples.getValue()) {
 					triples.setVisible(false);
@@ -259,7 +266,7 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 			ListNode node = new ListNode(dataset.getId(), new HTML(dname));
 			node.setIcon("icons:list");
 			node.setIconStyle("blue");
-			datalist.addNode(node);
+			//datalist.addNode(node);
 		}
 	}
 
@@ -349,12 +356,12 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 			triples.setValue(loadedTriples);
 		    loadTableData(loadedTriples);
 		}
-	}*/
+	}
 
 	private void setHeader(SimplePanel toolbar) {
 		// Set Toolbar header
 		toolbar.clear();
-		String title = "<h3>Terminology</h3>";
+		String title = "<h3>My Terminology</h3>";
 		String icon = "icons:chrome-reader-mode";
 
 		HTML div = new HTML("<nav><div class='layout horizontal center'>"

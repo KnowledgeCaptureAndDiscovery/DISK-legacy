@@ -54,6 +54,7 @@ public class LOIEditor extends Composite
   @UiField SparqlInput dataQuery;
   @UiField LOIWorkflowList workflowlist, metaworkflowlist;
   @UiField QuestionSelector questionSelector;
+  @UiField ListBox dataSource;
 
   LineOfInquiry loi;
   List<List<List<String>>> testResults = null;
@@ -80,6 +81,16 @@ public class LOIEditor extends Composite
     description.setValue(loi.getDescription());
     notes.setValue(loi.getNotes());
     explanation.setValue(loi.getExplanation());
+    
+    String ds = loi.getDataSource();
+    if (ds != null) {
+    	if (ds.equals("http://linkedearth.isi.edu:3030/enigma_dev_db")) dataSource.setSelectedIndex(0);
+    	else if (ds.equals("http://linkedearth.isi.edu:3030/enigma_scz_db")) dataSource.setSelectedIndex(1);
+    	else if (ds.equals("http://linkedearth.isi.edu:3030/enigma_pd_db")) dataSource.setSelectedIndex(2);
+    	else if (ds.equals("http://linkedearth.isi.edu:3030/enigma_stb_db")) dataSource.setSelectedIndex(3);
+    	else if (ds.equals("http://linkedearth.isi.edu:3030/db")) dataSource.setSelectedIndex(4);
+    }
+    GWT.log("DATA SOURCE: " + ds);
 
     if(loi.getHypothesisQuery() != null && loadcount==9) {
       hypothesisQuery.setValue(loi.getHypothesisQuery());
@@ -158,12 +169,15 @@ public class LOIEditor extends Composite
     boolean ok2 = this.description.validate();
     boolean ok3 = this.hypothesisQuery.validate();
     boolean ok4 = this.dataQuery.validate();
-    if(!ok1 || !ok2 || !ok3 || !ok4) {
+    String db = this.dataSource.getSelectedValue();
+    
+    if(!ok1 || !ok2 || !ok3 || !ok4 || db == null) {
       AppNotification.notifyFailure("Please fix errors before saving");
       return;
     }
     
     loi.setDescription(description.getValue());
+    loi.setDataSource(db);
     loi.setNotes(notes.getValue());
     loi.setExplanation(explanation.getValue());
     loi.setName(name.getValue());

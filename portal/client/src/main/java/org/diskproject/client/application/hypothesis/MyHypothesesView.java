@@ -5,10 +5,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.diskproject.client.Config;
 import org.diskproject.client.Utils;
 import org.diskproject.client.application.ApplicationSubviewImpl;
+import org.diskproject.client.authentication.AuthUser;
 import org.diskproject.client.components.hypothesis.HypothesisEditor;
 import org.diskproject.client.components.hypothesis.events.HypothesisSaveEvent;
 import org.diskproject.client.components.loader.Loader;
@@ -57,8 +59,8 @@ import com.vaadin.polymer.iron.widget.IronIcon;
 import com.vaadin.polymer.paper.widget.PaperButton;
 import com.vaadin.polymer.paper.widget.PaperFab;
 
-public class HypothesisView extends ApplicationSubviewImpl 
-  implements HypothesisPresenter.MyView {
+public class MyHypothesesView extends ApplicationSubviewImpl 
+  implements MyHypothesesPresenter.MyView {
 
   String userid;
   String domain;
@@ -90,17 +92,17 @@ public class HypothesisView extends ApplicationSubviewImpl
   List<TriggeredLOI> tloilist; 
   List<TriggeredLOI> matches; 
 
-  interface Binder extends UiBinder<Widget, HypothesisView> {
+  interface Binder extends UiBinder<Widget, MyHypothesesView> {
   }
 
   @Inject
-  public HypothesisView(Binder binder) {
+  public MyHypothesesView(Binder binder) {
     initWidget(binder.createAndBindUi(this));
     tree.addCustomAction("query", null, "icons:explore", 
         "green-button query-action");
     tree.addDeleteAction();
 
-    HypothesisView me = this;
+    MyHypothesesView me = this;
     Event.sinkEvents(retryLink, Event.ONCLICK);
     Event.setEventListener(retryLink, new EventListener() {
       @Override
@@ -164,7 +166,8 @@ public class HypothesisView extends ApplicationSubviewImpl
       @Override
       public void onSuccess(List<TreeItem> result) {
         if (result != null) {
-          hypothesisList = result;
+          // Only my hypotheses
+          hypothesisList = result.stream().filter(p -> p.getAuthor() != null && p.getAuthor().equals(AuthUser.getUsername())).collect(Collectors.toList());
           generateHypothesisTree();
         } else {
           AppNotification.notifyFailure("Error loading hypothesis");
@@ -291,7 +294,7 @@ public class HypothesisView extends ApplicationSubviewImpl
       }
     }
     List<TreeNode> ms = missing.getChildren();
-    if (ms.size() > 0) tree.addNode(root, missing);
+    //if (ms.size() > 0) tree.addNode(root, missing);
     tree.setRoot(root);
   }
 
@@ -489,7 +492,7 @@ public class HypothesisView extends ApplicationSubviewImpl
     if(event.getAction().getId().equals("delete")) {
       if(Window.confirm("Are you sure you want to delete " + node.getName())) {
         if(node.getType().equals(NameTokens.hypotheses)) {
-          HypothesisView me = this;
+          MyHypothesesView me = this;
           DiskREST.deleteHypothesis(node.getId(), new Callback<Void, Throwable>() {
             @Override
             public void onFailure(Throwable reason) {
@@ -553,7 +556,7 @@ public class HypothesisView extends ApplicationSubviewImpl
   private void setHeader(SimplePanel toolbar) {
     // Set Toolbar header
     toolbar.clear();
-    String title = "<h3>Hypotheses</h3>";
+    String title = "<h3>My Hypotheses</h3>";
     String icon = "icons:help";
 
     HTML div = new HTML("<nav><div class='layout horizontal center'>"

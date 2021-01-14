@@ -34,7 +34,7 @@ public class ApplicationView extends ViewImpl implements
   @UiField public static PaperToastElement toast;
   
   @UiField public static DivElement 
-    hypothesesMenu, loisMenu, terminologyMenu; //assertionsMenu,
+    hypothesesMenu, loisMenu, terminologyMenu, assertionsMenu, myHypothesesMenu, myTerminologyMenu;
   
   @UiField SimplePanel sidebar;
   @UiField SimplePanel toolbar;
@@ -73,8 +73,10 @@ public class ApplicationView extends ViewImpl implements
         hypothesesMenu.removeClassName("activeMenu");
         loisMenu.removeClassName("activeMenu");
         //tloisMenu.removeClassName("activeMenu");
-        //assertionsMenu.removeClassName("activeMenu");
+        assertionsMenu.removeClassName("activeMenu");
         terminologyMenu.removeClassName("activeMenu");
+        myHypothesesMenu.removeClassName("activeMenu");
+        myTerminologyMenu.removeClassName("activeMenu");
         
         DivElement menu = null;
         if(nametoken.equals(NameTokens.hypotheses))
@@ -84,16 +86,22 @@ public class ApplicationView extends ViewImpl implements
         else if(nametoken.equals(NameTokens.tlois))
           //menu = tloisMenu;
           menu = hypothesesMenu;
-        /*else if(nametoken.equals(NameTokens.assertions))
-          menu = assertionsMenu;*/
+        else if(nametoken.equals(NameTokens.assertions))
+          menu = assertionsMenu;
         else if(nametoken.equals(NameTokens.terminology))
           menu = terminologyMenu;
+        else if(nametoken.equals(NameTokens.myTerminology))
+          menu = myTerminologyMenu;
+        else if(nametoken.equals(NameTokens.myHypotheses))
+          menu = myHypothesesMenu;
         
         clearMenuClasses(hypothesesMenu);
         clearMenuClasses(loisMenu);
         //clearMenuClasses(tloisMenu);
-        //clearMenuClasses(assertionsMenu);
+        clearMenuClasses(assertionsMenu);
         clearMenuClasses(terminologyMenu);
+        clearMenuClasses(myHypothesesMenu);
+        clearMenuClasses(myTerminologyMenu);
         
         if(menu != null) {
           menu.addClassName("activeMenu");

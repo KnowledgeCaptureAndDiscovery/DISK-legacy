@@ -123,7 +123,7 @@
 				<div style="margin-top: 5px;">
   				A line of inquiry represents potential analyses that can be pursued to test a type of hypothesis.<br/>
 					A list of all the available Lines of Inquiry in the system is displayed below.
-					To add a <b>new Line of Inquery</b> click on the top-right button.
+					To add a <b>new Line of Inquiry</b> click on the top-right button.
 			 </div>
 		  </div>
 		</g:HTMLPanel>
