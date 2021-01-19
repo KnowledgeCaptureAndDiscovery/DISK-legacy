@@ -60,7 +60,8 @@
 
 :HQ3V3 a disk:QuestionVariable ;
 	disk:hasVariableName "?Region" .
+	disk:hasConstraints "?A ?regprop ?Region . ?regprop rdfs:label \"BrainRegion\" ." .
 
 :HQ3V4 a disk:QuestionVariable ;
 	disk:hasVariableName "?DemographicAttribute" ;
-	disk:hasConstraints "?DemographicAttribute a neuro:DemographicCharacteristic " .
+	disk:hasCrontraintsList "AGE" .
