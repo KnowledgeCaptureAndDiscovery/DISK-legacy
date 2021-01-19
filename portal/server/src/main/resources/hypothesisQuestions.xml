@@ -4,7 +4,7 @@
 
   <rdf:Description rdf:about="http://disk-project.org/resources/question/HQ1">
     <rdf:type rdf:resource="http://disk-project.org/ontology/disk#Question"/>
-    <rdf:label>Is the effect size of genotype in brain trait associated with attribute</rdf:label>
+    <rdf:label>Is the effect size of Genotype in Brain Trait associated with Demographic Attribute</rdf:label>
     <ns0:hasQuestionTemplate>Is the EffectSize of ?Genotype on ?BrainImagingTrait associated with ?DemographicAttribute</ns0:hasQuestionTemplate>
     <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Genotype .
  ?EffectSize neuro:targetCharacteristic ?BrainImagingTrait .
@@ -33,7 +33,7 @@
   </rdf:Description>
 
   <ns0:Question rdf:about="http://disk-project.org/resources/question/HQ2">
-    <rdf:label>Is brain characteristic associated with neurological disorder</rdf:label>
+    <rdf:label>Is Brain Characteristic associated with Neurological Disorder</rdf:label>
     <ns0:hasQuestionTemplate>Is ?BrainCharacteristic associated with ?NeurologicalDisorder</ns0:hasQuestionTemplate>
     <ns0:hasQuestionPattern>?BrainCharacteristic hyp:associatedWith ?NeurologicalDisorder</ns0:hasQuestionPattern>
     <ns0:hasQuestionVariable>
@@ -53,8 +53,8 @@
   </ns0:Question>
 
   <ns0:Question rdf:about="http://disk-project.org/resources/question/HQ3">
-    <rdf:label>Is the effect size of genotype in brain imaging derived trait of area associated with demographic</rdf:label>
-    <ns0:hasQuestionTemplate>Is the EffectSize of ?Genotype on ?BrainImagingTrait of ?Area associated with ?Demographic</ns0:hasQuestionTemplate>
+    <rdf:label>Is the effect size of Genotype on Brain imaging derived trait of Region associated with Demographic</rdf:label>
+    <ns0:hasQuestionTemplate>Is the EffectSize of ?Genotype on ?BrainImagingTrait of ?Region associated with ?DemographicAttribute</ns0:hasQuestionTemplate>
     <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Gene .
  ?EffectSize neuro:targetCharacteristic ?BrainImagingTrait .
  ?EffectSize neuro:targetCharacteristic ?Area .
@@ -75,14 +75,14 @@
 
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ3V3">
-        <ns0:hasVariableName>?Area</ns0:hasVariableName>
+        <ns0:hasVariableName>?Region</ns0:hasVariableName>
       </ns0:QuestionVariable>
     </ns0:hasQuestionVariable>
 
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ3V4">
-        <ns0:hasVariableName>?Demographic</ns0:hasVariableName>
-        <ns0:hasConstraints>?Demographic a neuro:DemographicCharacteristic </ns0:hasConstraints>
+        <ns0:hasVariableName>?DemographicAttribute</ns0:hasVariableName>
+        <ns0:hasConstraints>?DemographicAttribute a neuro:DemographicCharacteristic </ns0:hasConstraints>
       </ns0:QuestionVariable>
     </ns0:hasQuestionVariable>
 

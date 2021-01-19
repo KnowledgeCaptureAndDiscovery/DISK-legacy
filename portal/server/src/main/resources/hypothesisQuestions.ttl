@@ -7,7 +7,7 @@
 @base <http://disk-project.org/resources/question> .
 
 :HQ1 a disk:Question ;
-	rdf:label "Is the effect size of genotype in brain trait associated with attribute" ;
+	rdf:label "Is the effect size of Genotype in Brain Trait associated with Demographic Attribute" ;
 	disk:hasQuestionTemplate "Is the EffectSize of ?Genotype on ?BrainImagingTrait associated with ?DemographicAttribute" ;
 	disk:hasQuestionPattern "?EffectSize neuro:sourceGene ?Genotype .\n ?EffectSize neuro:targetCharacteristic ?BrainImagingTrait .\n ?EffectSize hyp:associatedWith ?DemographicAttribute" ;
 	disk:hasQuestionVariable :HQ1V1 ;
@@ -27,7 +27,7 @@
 	disk:hasConstraints "?DemographicAttribute a neuro:DemographicCharacteristic " .
 
 :HQ2 a disk:Question ;
-	rdf:label "Is brain characteristic associated with neurological disorder" ;
+	rdf:label "Is Brain Characteristic associated with Neurological Disorder" ;
 	disk:hasQuestionTemplate "Is ?BrainCharacteristic associated with ?NeurologicalDisorder" ;
 	disk:hasQuestionPattern "?BrainCharacteristic hyp:associatedWith ?NeurologicalDisorder" ;
 	disk:hasQuestionVariable :HQ2V1 ;
@@ -42,8 +42,8 @@
 	disk:hasConstraints "?NeurologicalDisorder a neuro:NeurologicalDisorder" .
 
 :HQ3 a disk:Question ;
-	rdf:label "Is the effect size of genotype in brain imaging derived trait of area associated with demographic" ;
-	disk:hasQuestionTemplate "Is the EffectSize of ?Genotype on ?BrainImagingTrait of ?Area associated with ?Demographic" ;
+	rdf:label "Is the effect size of Genotype on Brain imaging derived trait of Region associated with Demographic" ;
+	disk:hasQuestionTemplate "Is the EffectSize of ?Genotype on ?BrainImagingTrait of ?Region associated with ?DemographicAttribute" ;
 	disk:hasQuestionPattern "?EffectSize neuro:sourceGene ?Gene .\n ?EffectSize neuro:targetCharacteristic ?BrainImagingTrait .\n ?EffectSize neuro:targetCharacteristic ?Area .\n ?EffectSize hyp:associatedWith ?Demographic" ;
 	disk:hasQuestionVariable :HQ3V1 ;
 	disk:hasQuestionVariable :HQ3V2 ;
@@ -59,8 +59,8 @@
 	disk:hasConstraints "?BrainImagingTrait a neuro:BrainCharacteristic " .
 
 :HQ3V3 a disk:QuestionVariable ;
-	disk:hasVariableName "?Area" .
+	disk:hasVariableName "?Region" .
 
 :HQ3V4 a disk:QuestionVariable ;
-	disk:hasVariableName "?Demographic" ;
-	disk:hasConstraints "?Demographic a neuro:DemographicCharacteristic " .
+	disk:hasVariableName "?DemographicAttribute" ;
+	disk:hasConstraints "?DemographicAttribute a neuro:DemographicCharacteristic " .
