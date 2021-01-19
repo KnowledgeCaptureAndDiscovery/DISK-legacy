@@ -57,7 +57,7 @@
     <ns0:hasQuestionTemplate>Is the EffectSize of ?Genotype on ?BrainImagingTrait of ?Region associated with ?DemographicAttribute</ns0:hasQuestionTemplate>
     <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Gene .
  ?EffectSize neuro:targetCharacteristic ?BrainImagingTrait .
- ?EffectSize neuro:targetCharacteristic ?Area .
+ ?EffectSize neuro:targetCharacteristic ?Region .
  ?EffectSize hyp:associatedWith ?Demographic</ns0:hasQuestionPattern>
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ3V1">
