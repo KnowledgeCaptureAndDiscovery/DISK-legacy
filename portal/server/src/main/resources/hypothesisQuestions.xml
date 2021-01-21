@@ -6,8 +6,8 @@
     <rdf:type rdf:resource="http://disk-project.org/ontology/disk#Question"/>
     <rdf:label>Is the effect size of Genotype in Brain Trait associated with Demographic Attribute</rdf:label>
     <ns0:hasQuestionTemplate>Is the EffectSize of ?Genotype on ?BrainImagingTrait associated with ?DemographicAttribute</ns0:hasQuestionTemplate>
-    <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Genotype
-?EffectSize neuro:targetCharacteristic ?BrainImagingTrait
+    <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Genotype 
+?EffectSize neuro:targetCharacteristic ?BrainImagingTrait 
 ?EffectSize hyp:associatedWith ?DemographicAttribute</ns0:hasQuestionPattern>
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ1V1">
@@ -55,34 +55,35 @@
   <ns0:Question rdf:about="http://disk-project.org/resources/question/HQ3">
     <rdf:label>Is the effect size of Genotype on Brain imaging derived trait of Region associated with Demographic</rdf:label>
     <ns0:hasQuestionTemplate>Is the EffectSize of ?Genotype on ?BrainImagingTrait of ?Region associated with ?DemographicAttribute</ns0:hasQuestionTemplate>
-    <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Gene 
+    <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Genotype 
 ?EffectSize neuro:targetCharacteristic ?BrainImagingTrait 
 ?EffectSize neuro:targetCharacteristic ?Region 
 ?EffectSize hyp:associatedWith ?Demographic</ns0:hasQuestionPattern>
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ3V1">
         <ns0:hasVariableName>?Genotype</ns0:hasVariableName>
-        <ns0:hasConstraints>?Genotype a neuro:Genotype</ns0:hasConstraints>
+        <ns0:hasConstraints>?A ?snpprop ?Genotype . ?snpprop rdfs:label &quot;SNP&quot; .</ns0:hasConstraints>
       </ns0:QuestionVariable>
     </ns0:hasQuestionVariable>
 
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ3V2">
         <ns0:hasVariableName>?BrainImagingTrait</ns0:hasVariableName>
-        <ns0:hasConstraints>?BrainImagingTrait a neuro:BrainCharacteristic </ns0:hasConstraints>
+        <ns0:hasConstraints>?A ?traitprop ?BrainImagingTrait . ?traitprop rdfs:label &quot;Trait&quot; .</ns0:hasConstraints>
       </ns0:QuestionVariable>
     </ns0:hasQuestionVariable>
 
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ3V3">
         <ns0:hasVariableName>?Region</ns0:hasVariableName>
+        <ns0:hasConstraints>?A ?regprop ?Region . ?regprop rdfs:label &quot;BrainRegion&quot; .</ns0:hasConstraints>
       </ns0:QuestionVariable>
     </ns0:hasQuestionVariable>
 
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ3V4">
         <ns0:hasVariableName>?DemographicAttribute</ns0:hasVariableName>
-        <ns0:hasConstraints>?DemographicAttribute a neuro:DemographicCharacteristic </ns0:hasConstraints>
+        <ns0:hasFixedOptions>AGE</ns0:hasFixedOptions>
       </ns0:QuestionVariable>
     </ns0:hasQuestionVariable>
 
