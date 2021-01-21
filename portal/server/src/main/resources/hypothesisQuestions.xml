@@ -12,21 +12,21 @@
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ1V1">
         <ns0:hasVariableName>?Genotype</ns0:hasVariableName>
-        <ns0:hasConstraints>?Genotype a neuro:Genotype</ns0:hasConstraints>
+        <ns0:hasConstraints>?A ?geneticDatatypeProp ?Genotype . ?geneticDatatypeProp rdfs:label &quot;HasGeneticDataType (E)&quot; .</ns0:hasConstraints>
       </ns0:QuestionVariable>
     </ns0:hasQuestionVariable>
 
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ1V2">
         <ns0:hasVariableName>?BrainImagingTrait</ns0:hasVariableName>
-        <ns0:hasConstraints>?BrainImagingTrait a neuro:BrainCharacteristic </ns0:hasConstraints>
+        <ns0:hasFixedOptions>HippocampalVolume</ns0:hasFixedOptions>
       </ns0:QuestionVariable>
     </ns0:hasQuestionVariable>
 
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ1V3">
         <ns0:hasVariableName>?DemographicAttribute</ns0:hasVariableName>
-        <ns0:hasConstraints>?DemographicAttribute a neuro:DemographicCharacteristic </ns0:hasConstraints>
+        <ns0:hasFixedOptions>AGE</ns0:hasFixedOptions>
       </ns0:QuestionVariable>
     </ns0:hasQuestionVariable>
 
@@ -58,7 +58,7 @@
     <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Genotype 
 ?EffectSize neuro:targetCharacteristic ?BrainImagingTrait 
 ?EffectSize neuro:targetCharacteristic ?Region 
-?EffectSize hyp:associatedWith ?Demographic</ns0:hasQuestionPattern>
+?EffectSize hyp:associatedWith ?DemographicAttribute</ns0:hasQuestionPattern>
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ3V1">
         <ns0:hasVariableName>?Genotype</ns0:hasVariableName>
