@@ -12,7 +12,10 @@
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ1V1">
         <ns0:hasVariableName>?Genotype</ns0:hasVariableName>
-        <ns0:hasConstraints>?A ?geneticDatatypeProp ?Genotype . ?geneticDatatypeProp rdfs:label &quot;HasGeneticDataType (E)&quot; .</ns0:hasConstraints>
+        <ns0:hasConstraints>?A ?geneticDatatypeProp ?Genotype . 
+?Genotype a ?type . 
+?type rdfs:label &quot;GeneticDataType (E)&quot; . 
+?geneticDatatypeProp rdfs:label &quot;HasGeneticDataType (E)&quot;.</ns0:hasConstraints>
       </ns0:QuestionVariable>
     </ns0:hasQuestionVariable>
 

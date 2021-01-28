@@ -16,7 +16,7 @@
 
 :HQ1V1 a disk:QuestionVariable ;
 	disk:hasVariableName "?Genotype" ;
-	disk:hasConstraints "?A ?geneticDatatypeProp ?Genotype . ?geneticDatatypeProp rdfs:label \"HasGeneticDataType (E)\" ." .
+	disk:hasConstraints "?A ?geneticDatatypeProp ?Genotype . \n?Genotype a ?type . \n?type rdfs:label \"GeneticDataType (E)\" . \n?geneticDatatypeProp rdfs:label \"HasGeneticDataType (E)\"." .
 
 :HQ1V2 a disk:QuestionVariable ;
 	disk:hasVariableName "?BrainImagingTrait" ;
@@ -64,4 +64,4 @@
 
 :HQ3V4 a disk:QuestionVariable ;
 	disk:hasVariableName "?DemographicAttribute" ;
-	disk:hasFixedOptions "AGE" .
+	disk:hasFixedOptions "AGE" .	
