@@ -4,7 +4,7 @@
 
   <rdf:Description rdf:about="http://disk-project.org/resources/question/HQ1">
     <rdf:type rdf:resource="http://disk-project.org/ontology/disk#Question"/>
-    <rdf:label>Is the effect size of Genotype in Brain Trait associated with Demographic Attribute</rdf:label>
+    <rdf:label>Is the effect size of &#60;Genotype&#62; in &#60;Brain Trait&#62; associated with &#60;Demographic Attribute&#62;</rdf:label>
     <ns0:hasQuestionTemplate>Is the EffectSize of ?Genotype on ?BrainImagingTrait associated with ?DemographicAttribute</ns0:hasQuestionTemplate>
     <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Genotype 
 ?EffectSize neuro:targetCharacteristic ?BrainImagingTrait 
@@ -36,7 +36,7 @@
   </rdf:Description>
 
   <ns0:Question rdf:about="http://disk-project.org/resources/question/HQ2">
-    <rdf:label>Is Brain Characteristic associated with Neurological Disorder</rdf:label>
+    <rdf:label>Is &#60;Brain Characteristic&#62; associated with &#60;Neurological Disorder&#62;</rdf:label>
     <ns0:hasQuestionTemplate>Is ?BrainCharacteristic associated with ?NeurologicalDisorder</ns0:hasQuestionTemplate>
     <ns0:hasQuestionPattern>?BrainCharacteristic hyp:associatedWith ?NeurologicalDisorder</ns0:hasQuestionPattern>
     <ns0:hasQuestionVariable>
@@ -56,7 +56,7 @@
   </ns0:Question>
 
   <ns0:Question rdf:about="http://disk-project.org/resources/question/HQ3">
-    <rdf:label>Is the effect size of Genotype on Brain imaging derived trait of Region associated with Demographic</rdf:label>
+    <rdf:label>Is the effect size of &#60;Genotype&#62; on &#60;Brain imaging derived trait&#62; of &#60;Region&#62; associated with &#60;Demographic&#62;</rdf:label>
     <ns0:hasQuestionTemplate>Is the EffectSize of ?Genotype on ?BrainImagingTrait of ?Region associated with ?DemographicAttribute</ns0:hasQuestionTemplate>
     <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Genotype 
 ?EffectSize neuro:targetCharacteristic ?BrainImagingTrait 
