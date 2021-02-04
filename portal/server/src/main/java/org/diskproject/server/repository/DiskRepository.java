@@ -157,12 +157,12 @@ public class DiskRepository extends KBRepository {
 		if (this.neuroontkb != null)
 			this.neuroontkb.delete();
 		this.end();
+		reloadQuestions();
 
 		this.initializeKB();
 	}
 	
 	public void reloadQuestions () {
-		System.out.println("Reload questions!");
 		try {
 			this.start_write();
 			if (this.questionkb != null) {
@@ -170,11 +170,11 @@ public class DiskRepository extends KBRepository {
 				this.questionkb.delete();
 				this.save(this.questionkb);
 			}
-			this.end();
+			/*this.end();
 			this.start_read();			
 			this.questionkb = fac.getKB(KBConstants.QUESTIONSURI(), OntSpec.PLAIN, false, true);
 			this.vocabularies.put(KBConstants.QUESTIONSURI(),
-					this.initializeVocabularyFromKB(this.questionkb, KBConstants.QUESTIONSNS()));
+					this.initializeVocabularyFromKB(this.questionkb, KBConstants.QUESTIONSNS()));*/
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
