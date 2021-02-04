@@ -606,4 +606,20 @@ public class DiskREST {
       }
     }).call(getDiskService()).listQuestions(username, domain);
   }
+
+  public static void listVariableOptions(String id, final Callback<List<List<String>>, Throwable> callback) {
+	//Trim id
+	String[] sp = id.split("/");
+	String qid = sp[sp.length-1];
+    REST.withCallback(new MethodCallback<List<List<String>>>() {
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+      @Override
+      public void onSuccess(Method method, List<List<String>> response) {
+        callback.onSuccess(response);
+      }
+    }).call(getDiskService()).listOptions(username, domain, qid);
+  }
 }

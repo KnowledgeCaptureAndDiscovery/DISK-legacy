@@ -91,11 +91,6 @@
 				</label>
 				<br/>
 				<g:ListBox ui:field='dataSource'>
-					<g:item value='http://linkedearth.isi.edu:3030/enigma_dev_db'>Dev Wiki</g:item>
-					<g:item value='http://linkedearth.isi.edu:3030/enigma_scz_db'>Schizophrenia Wiki</g:item>
-					<g:item value='http://linkedearth.isi.edu:3030/enigma_pd_db'>Parkinson's Wiki</g:item>
-					<g:item value='http://linkedearth.isi.edu:3030/enigma_stb_db'>Suicide Wiki</g:item>
-					<g:item value='http://linkedearth.isi.edu:3030/db'>Old Wiki</g:item>
 				</g:ListBox>
 
 				<paper-input label="Data table description"

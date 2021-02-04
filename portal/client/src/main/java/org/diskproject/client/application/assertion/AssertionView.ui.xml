@@ -98,10 +98,22 @@
 		<div style="padding: 4px 10px; font-size: 14px;">
 			All data that this portal uses is stored and can be modify on the Enigma Wikis:
 			<ul>
-				<li><a target="_blank" href="http://organicdatacuration.org/enigma_dev/index.php/Main_Page">General Wiki</a></li>
-				<li><a target="_blank" href="http://organicdatacuration.org/enigma_scz/index.php/Main_Page">Schizophrenia Wiki</a></li>
-				<li><a target="_blank" href="http://organicdatacuration.org/enigma_pd/index.php/Main_Page">Parkinson's Wiki</a></li>
-				<li><a target="_blank" href="http://organicdatacuration.org/enigma_stb/index.php/Main_Page">Suicide Wiki</a></li>
+				<li>
+					<a target="_blank" href="http://organicdatacuration.org/enigma_dev/index.php/Main_Page"><b>ENIGMA - General</b></a>:
+					A general-purpose Wiki containing basic information about the participants and projects involved in the ENIGMA consortium.
+				</li>
+				<li>
+					<a target="_blank" href="http://organicdatacuration.org/enigma_scz/index.php/Main_Page"><b>ENIGMA - SCZ</b></a>:
+					Wiki containing datasets and content-specific annotations related to the Schizophrenia working group.
+				</li>
+				<li>
+					<a target="_blank" href="http://organicdatacuration.org/enigma_stb/index.php/Main_Page"><b>ENIGMA - STB</b></a>:
+					Wiki containing datasets and content-specific annotations related to the Suicide working group.
+				</li>
+				<li>
+					<a target="_blank" href="http://organicdatacuration.org/enigma_pd/index.php/Main_Page"><b>ENIGMA - PD</b></a>:
+					Wiki containing datasets and content-specific annotations related to the Parkinson's Disease working group.
+				</li>
 			</ul>
 			<!--All data is stored and can be modify on the <a target="_blank" href="http://organicdatapublishing.org/enigma_new/index.php/Main_Page">Enigma Wiki</a>.
 		  <  To add a new Ontologies click on the top-right button.-->

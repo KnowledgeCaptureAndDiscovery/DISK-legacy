@@ -2,6 +2,7 @@ package org.diskproject.server.repository;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Semaphore;
 import java.util.HashMap;
 
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
@@ -51,6 +52,8 @@ public class KBRepository implements TransactionsAPI {
     if(this.tdbdir == null)
       return;
     
+    this.mutex = new Semaphore(1);
+    
     this.fac = new OntFactory(OntFactory.JENA, tdbdir);
     try {
       this.transaction = new TransactionsJena(this.fac);
@@ -98,6 +101,7 @@ public class KBRepository implements TransactionsAPI {
     this.hackInDataProperty("hasRelevantVariables", "LineOfInquiry", "string");
     this.hackInDataProperty("hasQuestionPattern", "Question", "string");
     this.hackInDataProperty("dataQueryDescription", "LineOfInquiry", "string");
+    this.hackInDataProperty("hasFixedOptions", "QuestionVariable", "string");
     this.hackInDataProperty("hasDataSource", "LineOfInquiry", "string");
     this.hackInObjectProperty("hasParameter", "WorkflowBinding", "VariableBinding");
     this.hackInDataProperty("hasParameterValue", "LineOfInquiry", "string");
@@ -150,17 +154,29 @@ public class KBRepository implements TransactionsAPI {
   }
 
 //TransactionsAPI functions
+ private Semaphore mutex;
+  
  @Override
  public boolean start_read() {
    if(transaction != null)
-     return transaction.start_read();
+	 try {
+		 mutex.acquire();
+		 return transaction.start_read();
+	 } catch(InterruptedException ie) {
+		 System.out.println("InterruptedException");
+	 }
    return true;
  }
 
  @Override
  public boolean start_write() {
    if(transaction != null)
-     return transaction.start_write();
+	 try {
+		 mutex.acquire();
+		 return transaction.start_write();
+	 } catch(InterruptedException ie) {
+		 System.out.println("InterruptedException");
+	 }
    return true;
  }
  
@@ -177,7 +193,12 @@ public class KBRepository implements TransactionsAPI {
  @Override
  public boolean end() {
    if(transaction != null)
-     return transaction.end();
+	 try {
+		 mutex.release();
+		 return transaction.end();
+	 } catch (Exception e) {
+		 System.out.println("ERRor on release");
+	 }
    return true;
  }
 

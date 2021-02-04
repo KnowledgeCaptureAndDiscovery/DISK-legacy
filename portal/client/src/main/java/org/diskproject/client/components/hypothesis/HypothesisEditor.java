@@ -79,7 +79,7 @@ public class HypothesisEditor extends Composite
     name.setValue(hypothesis.getName());
     description.setValue(hypothesis.getDescription());
     notes.setValue(hypothesis.getNotes());
-    questionFiller.setQuestion(hypothesis.getQuestion());
+    questionFiller.setQuestion(hypothesis.getQuestion(), hypothesis.getQuestionBindings());
     if(hypothesis.getGraph() != null && loadcount==5)
       triples.setValue(hypothesis.getGraph().getTriples());
   }
@@ -153,6 +153,7 @@ public class HypothesisEditor extends Composite
     hypothesis.setNotes(notes.getValue());
     hypothesis.setName(name.getValue());
     hypothesis.setQuestion(questionFiller.getSelectedQuestion());
+    hypothesis.setQuestionBindings(questionFiller.getVariableBindings());
     Graph graph = new Graph();
     graph.setTriples(triples.getTriples());
     hypothesis.setGraph(graph);

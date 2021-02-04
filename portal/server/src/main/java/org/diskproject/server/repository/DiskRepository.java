@@ -170,10 +170,12 @@ public class DiskRepository extends KBRepository {
 			// String DownloadPath = "C:/Users/rrreg/neuroOnt.ttl";
 			// downloadOntology(KBConstants.NEUROURI(), DownloadPath);
 			// InputStream is = new FileInputStream(new File(DownloadPath));
+			//FIXME: This only adds information, does not update/remove old data, and if the URI changes, we duplicate the graphs.
 			this.neuroontkb = fac.getKB(KBConstants.NEUROURI(), OntSpec.PLAIN, false, true);
 			this.hypontkb = fac.getKB(KBConstants.HYPURI(), OntSpec.PLAIN, false, true);
 			this.omicsontkb = fac.getKB(KBConstants.OMICSURI(), OntSpec.PLAIN, false, true);
-
+			
+			this.questionkb = fac.getKB(KBConstants.QUESTIONSURI(), OntSpec.PLAIN, false, true);
 			
 			this.vocabularies = new HashMap<String, Vocabulary>();
 			
@@ -188,15 +190,9 @@ public class DiskRepository extends KBRepository {
 			this.vocabularies.put(KBConstants.DISKURI(),
 					this.initializeVocabularyFromKB(this.ontkb, KBConstants.DISKNS()));
 
-			
-			ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-			InputStream is = classloader.getResourceAsStream("hypothesisQuestions.xml");
-			//InputStream is = new FileInputStream("hypothesisQuestions.xml");
-			
-			// Theres a problem doing this... it works but bugs everything else.
-			//this.questionkb = fac.getKB(is, "http://disk-project.org/resources/question", OntSpec.PLAIN);
-			//this.listHypothesesQuestions();
-			
+			this.vocabularies.put(KBConstants.QUESTIONSURI(),
+					this.initializeVocabularyFromKB(this.questionkb, KBConstants.QUESTIONSNS()));
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -228,9 +224,14 @@ public class DiskRepository extends KBRepository {
 						for (KBObject var : variables) {
 							KBObject vname = kb.getPropertyValue(var, pmap.get("hasVariableName"));
 							KBObject vconstraints = kb.getPropertyValue(var, pmap.get("hasConstraints"));
+							KBObject vfixedOptions = kb.getPropertyValue(var, pmap.get("hasFixedOptions"));
 							if (vname != null) {
-								vars.add(new QuestionVariable(var.getID(), vname.getValueAsString(), 
-										vconstraints == null ? null : vconstraints.getValueAsString()));
+								QuestionVariable q = new QuestionVariable(var.getID(), vname.getValueAsString(), 
+										vconstraints == null ? null : vconstraints.getValueAsString());
+								if (vfixedOptions != null) {
+									q.setFixedOptions(vfixedOptions.getValueAsString().split(","));
+								}
+								vars.add(q);
 							}
 						}
 					}
@@ -248,21 +249,95 @@ public class DiskRepository extends KBRepository {
 		return all;
 	}
 
-			/*
-				KBObject hypobj = t.getSubject();
-				String name = kb.getLabel(hypobj);
-				String description = kb.getComment(hypobj);
+	public List<List<String>> listVariableOptions (String sid) {
+		String id = "http://disk-project.org/resources/question/" + sid;
+		List<List<String>> options = new ArrayList<List<String>>();
+		String query = null;
+		KBAPI kb = this.questionkb;
+		if (kb != null) try {
+			this.start_read();
+			KBObject qvar = kb.getIndividual(id);
+			KBObject qname = qvar == null ? null : kb.getPropertyValue(qvar, pmap.get("hasVariableName"));
+			if (qvar != null && qname != null) {
+				String varname = qname.getValueAsString();
+				String name = varname.substring(1);
+				KBObject constraints = kb.getPropertyValue(qvar, pmap.get("hasConstraints"));
+				KBObject fixedOptions = kb.getPropertyValue(qvar, pmap.get("hasFixedOptions"));
+				if (fixedOptions != null) {
+					String[] fixedoptions = fixedOptions.getValueAsString().split(",");
+					for (String val: fixedoptions) {
+						List<String> opt = new ArrayList<String>();
+						opt.add(val);
+						opt.add(val);
+						options.add(opt);
+					}
+				} else if (constraints != null) {
+					query = this.getAllPrefixes() + 
+							"SELECT DISTINCT ?label " + varname + " WHERE {\n  " +
+							constraints.getValueAsString() + "\n  " +
+							"OPTIONAL { " + varname + " rdfs:label ?label . }\n  }";
+					System.out.println(query);
+					List<List<SparqlQuerySolution>> solutions = queryAllEndpoints(kb, query);
+					for (List<SparqlQuerySolution> dataSolutions : solutions) {
+						String url = null;
+						String label = null;
+						for (SparqlQuerySolution solution : dataSolutions) {
+							String var = solution.getVariable();
+							KBObject obj = solution.getObject();
+							if (obj != null) {
+								String val = obj.isLiteral() ? obj.getValueAsString() : obj.getID();
+								if (var.equals(name)) {
+									url = val;
+								} else if (var.equals("?label")) {
+									label = val;
+								}
+							} else {
+								System.out.println(var + " has no value");
+							}
+						}
+						if (url != null) {
+							if (label == null) label = url;
+							List<String> opt = new ArrayList<String>();
+							opt.add(url);
+							opt.add(label);
+							options.add(opt);
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			this.end();
+		}
+		System.out.println("options: " + options.size());
+		return options;
+	}
+	
+	private List<List<SparqlQuerySolution>> queryAllEndpoints (KBAPI kb, String query) {
+		List<List<SparqlQuerySolution>> allSolutions = new ArrayList<List<SparqlQuerySolution>>();
+		//FIXME: all endpoinds use the same password.
 
-				KBObject dateobj = kb.getPropertyValue(hypobj, pmap.get("dateCreated"));
-				String date = null;
-				if (dateobj != null)
-					date = dateobj.getValueAsString();
-
-				KBObject dateModifiedObj = kb.getPropertyValue(hypobj, pmap.get("dateModified"));
-				String dateModified = null;
-				if (dateModifiedObj != null)
-					dateModified = dateModifiedObj.getValueAsString();
-			 */
+		String[] endpoints = {
+				"http://linkedearth.isi.edu:3030/enigma_dev_db",
+				"http://linkedearth.isi.edu:3030/enigma_scz_db",
+				"http://linkedearth.isi.edu:3030/enigma_pd_db",
+				"http://linkedearth.isi.edu:3030/enigma_stb_db",
+				"http://linkedearth.isi.edu:3030/db"
+		};
+		String user = Config.get().getProperties().getString("ENIGMA.username");
+		String pass = Config.get().getProperties().getString("ENIGMA.password");
+		for (String endpoint: endpoints) {
+			ArrayList<ArrayList<SparqlQuerySolution>> solutions = 
+					kb.sparqlQueryRemote(query, endpoint, user, pass);
+			System.out.println(solutions.size());
+			if (solutions != null) {
+				allSolutions.addAll(solutions);
+			}
+		}
+		
+		return allSolutions;
+	}
 
 	/**
 	 * Method that will download an ontology given its URI, doing content
@@ -532,6 +607,7 @@ public class DiskRepository extends KBRepository {
 			}
 		} catch (ConcurrentModificationException e) {
 		   System.out.println("ERROR: Concurrent modification exception on listHypothesis");
+			e.printStackTrace();
 		   return null;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -588,7 +664,22 @@ public class DiskRepository extends KBRepository {
 			if (questionobj != null)
 				hypothesis.setQuestion(questionobj.getValueAsString());
 
-			this.updateTripleDetails(graph, provkb);
+			ArrayList<KBObject> questionBindings = kb.getPropertyValues(hypitem, pmap.get("hasVariableBinding"));
+			if (questionBindings != null) {
+				List<VariableBinding> variableBindings = new ArrayList<VariableBinding>();
+				for (KBObject binding: questionBindings) {
+					KBObject kbvar = kb.getPropertyValue(binding, pmap.get("hasVariable"));
+					KBObject kbval = kb.getPropertyValue(binding, pmap.get("hasBindingValue"));
+					if (kbvar != null && kbval != null) {
+						String var = kbvar.getValueAsString();
+						String val = kbval.getValueAsString();
+						variableBindings.add( new VariableBinding(var, val));
+					}
+				}
+				if (variableBindings.size() > 0) hypothesis.setQuestionBindings(variableBindings);
+			}
+
+			this.updateTripleDetails(graph, provkb); //WHY?
 
 			return hypothesis;
 
@@ -663,7 +754,7 @@ public class DiskRepository extends KBRepository {
 			KBAPI provkb = this.fac.getKB(provid, OntSpec.PLAIN, false);
 
 			if (kb != null && hypkb != null && provkb != null) {
-	      this.start_read();
+				this.start_read();
 	      
 				KBObject hypitem = kb.getIndividual(fullid);
 				if (hypitem != null) {
@@ -672,6 +763,11 @@ public class DiskRepository extends KBRepository {
 					}
 					this.end();
 					this.start_write();
+					
+					ArrayList<KBObject> questionBindings = kb.getPropertyValues(hypitem, pmap.get("hasVariableBinding"));
+					if (questionBindings != null) for (KBObject binding: questionBindings) {
+						kb.deleteObject(binding, true, true);
+					}
 					
 					kb.deleteObject(hypitem, true, true);
 					
@@ -727,6 +823,19 @@ public class DiskRepository extends KBRepository {
 			}
 			if (hypothesis.getQuestion() != null) {
 				kb.setPropertyValue(hypitem, pmap.get("hasQuestion"), hypkb.createLiteral(hypothesis.getQuestion()));
+			}
+			List<VariableBinding> questionBindings = hypothesis.getQuestionBindings();
+			if (questionBindings != null) {
+				for (VariableBinding vb: questionBindings) {
+					String ID = fullid + "/bindings/";
+					String[] sp = vb.getVariable().split("/");
+					ID += sp[sp.length-1];
+					System.out.println("varBindingId: " + ID);
+					KBObject binding = kb.createObjectOfClass(ID, this.cmap.get("VariableBinding"));
+					kb.setPropertyValue(binding, pmap.get("hasVariable"), hypkb.createLiteral(vb.getVariable()));
+					kb.setPropertyValue(binding, pmap.get("hasBindingValue"), hypkb.createLiteral(vb.getBinding()));
+					kb.addPropertyValue(hypitem, pmap.get("hasVariableBinding"), binding);
+				}
 			}
 
 			this.save(kb);
@@ -847,6 +956,16 @@ public class DiskRepository extends KBRepository {
 	    this.end();
 	  }
 	  return queryPattern + extra;
+	}
+	
+	private String getAllPrefixes () {
+		return "PREFIX bio: <" + KBConstants.OMICSNS() + ">\n" +
+				"PREFIX neuro: <" + KBConstants.NEURONS() + ">\n" +
+				"PREFIX hyp: <" + KBConstants.HYPNS() + ">\n" +
+				"PREFIX xsd: <" + KBConstants.XSDNS() + ">\n" +
+				"PREFIX rdfs: <" + KBConstants.RDFSNS() + ">\n" +
+				"PREFIX rdf: <" + KBConstants.RDFNS() + ">\n" +
+				"PREFIX disk: <" + KBConstants.DISKNS() + ">\n";
 	}
 	
 	private String getSparqlQuery(String queryPattern, String assertionsUri) {

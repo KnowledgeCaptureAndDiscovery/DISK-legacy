@@ -250,4 +250,12 @@ public interface DiskService extends DirectRestService {
   public List<Question> listQuestions(
       @PathParam("username") String username, 
       @PathParam("domain") String domain);
+  
+  @GET
+  @Path("{username}/{domain}/question/{id}/options")
+  public List<List<String>> listOptions(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("id") String id);
+  
 }

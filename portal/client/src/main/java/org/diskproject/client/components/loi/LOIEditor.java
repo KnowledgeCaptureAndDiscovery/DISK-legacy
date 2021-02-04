@@ -1,8 +1,11 @@
 package org.diskproject.client.components.loi;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.diskproject.client.application.dialog.TestQueryDialog;
 import org.diskproject.client.components.loi.events.HasLOIHandlers;
@@ -58,6 +61,7 @@ public class LOIEditor extends Composite
 
   LineOfInquiry loi;
   List<List<List<String>>> testResults = null;
+  List<String[]> dataSourceList;
 
   private static Binder uiBinder =
       GWT.create(Binder.class);
@@ -73,6 +77,25 @@ public class LOIEditor extends Composite
     this.loadVocabularies();
     this.loadWorkflows();
     this.questionSelector.setParent(this);
+    this.setDataOptions();
+  }
+  
+  private void setDataOptions () {
+	  dataSourceList = new ArrayList<String[]>();
+	  String A[] = {"http://linkedearth.isi.edu:3030/enigma_dev_db", "Dev Wiki"};
+	  String B[] = {"http://linkedearth.isi.edu:3030/enigma_scz_db", "SCZ Wiki"};
+	  String C[] = {"http://linkedearth.isi.edu:3030/enigma_pd_db", "PD Wiki"};
+	  String D[] = {"http://linkedearth.isi.edu:3030/enigma_stb_db", "STB Wiki"};
+	  String E[] = {"http://linkedearth.isi.edu:3030/db", "Production Wiki"};
+	  dataSourceList.add(A);
+	  dataSourceList.add(B);
+	  dataSourceList.add(C);
+	  dataSourceList.add(D);
+	  dataSourceList.add(E);
+	  
+	  for (String[] idname: dataSourceList) {
+		  dataSource.addItem(idname[1], idname[0]);
+	  }
   }
 
   public void load(LineOfInquiry loi) {
@@ -84,13 +107,15 @@ public class LOIEditor extends Composite
     
     String ds = loi.getDataSource();
     if (ds != null) {
-    	if (ds.equals("http://linkedearth.isi.edu:3030/enigma_dev_db")) dataSource.setSelectedIndex(0);
-    	else if (ds.equals("http://linkedearth.isi.edu:3030/enigma_scz_db")) dataSource.setSelectedIndex(1);
-    	else if (ds.equals("http://linkedearth.isi.edu:3030/enigma_pd_db")) dataSource.setSelectedIndex(2);
-    	else if (ds.equals("http://linkedearth.isi.edu:3030/enigma_stb_db")) dataSource.setSelectedIndex(3);
-    	else if (ds.equals("http://linkedearth.isi.edu:3030/db")) dataSource.setSelectedIndex(4);
+    	for (int i = 0; i < dataSourceList.size(); i++) {
+    		String[] idname = dataSourceList.get(i);
+    		if (ds.equals(idname[0])) {
+    			dataSource.setSelectedIndex(i);
+    			break;
+    		}
+    		
+    	}
     }
-    GWT.log("DATA SOURCE: " + ds);
 
     if(loi.getHypothesisQuery() != null && loadcount==9) {
       hypothesisQuery.setValue(loi.getHypothesisQuery());

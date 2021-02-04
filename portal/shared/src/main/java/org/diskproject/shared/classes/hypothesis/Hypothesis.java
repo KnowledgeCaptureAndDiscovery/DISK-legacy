@@ -1,19 +1,23 @@
 package org.diskproject.shared.classes.hypothesis;
 
+import java.util.List;
+
 import org.diskproject.shared.classes.common.Graph;
+import org.diskproject.shared.classes.workflow.VariableBinding;
 
 public class Hypothesis {
   String id;
   String name;
   String description;
-  String parentId;
-  Graph graph;
   String dateCreated;
   String dateModified;
   String author;
   String notes;
-  //FIXME
   String question;
+  List<VariableBinding> questionBindings;
+  Graph graph; // The actual hypothesis.
+  //For revised hypotheses
+  String parentId;
   
   public void setQuestion (String q) {
     this.question = q;
@@ -32,6 +36,14 @@ public class Hypothesis {
   }
 
   public Hypothesis(){}
+  
+  public List<VariableBinding> getQuestionBindings () {
+	  return this.questionBindings;
+  }
+  
+  public void setQuestionBindings (List<VariableBinding> bindings) {
+	  this.questionBindings = bindings;
+  }
   
   public String getId() {
     return id;

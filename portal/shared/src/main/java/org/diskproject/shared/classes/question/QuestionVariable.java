@@ -4,6 +4,7 @@ public class QuestionVariable {
   String id;
   String varname;
   String constraints;
+  String[] fixedOptions;
 
   public QuestionVariable () {
   }
@@ -13,7 +14,7 @@ public class QuestionVariable {
 	  this.varname = varname;
 	  this.constraints = constraints;
   }
-  
+
   public String toString () {
 	  String text = "- " + this.varname + " (" + this.id + ")";
 	  if (this.constraints != null) text = text + " [" + this.constraints + "]";
@@ -40,7 +41,15 @@ public class QuestionVariable {
     return constraints;
   }
 
-  public String setConstraints() {
-    return constraints;
+  public void setConstraints(String constraints) {
+	this.constraints = constraints;
+  }
+
+  public String[] getFixedOptions() {
+    return this.fixedOptions;
+  }
+
+  public void setFixedOptions(String[] options) {
+    this.fixedOptions = options;
   }
 }

@@ -408,4 +408,14 @@ public class DiskResource implements DiskService {
       @PathParam("domain") String domain) {
     return this.repo.listHypothesesQuestions();
   }
+
+  @GET
+  @Path("{username}/{domain}/question/{id}/options")
+  @Override
+  public List<List<String>> listOptions(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+	  @PathParam("id") String id) {
+    return this.repo.listVariableOptions(id);
+  };
 }

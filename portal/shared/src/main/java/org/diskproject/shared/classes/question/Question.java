@@ -65,8 +65,8 @@ public class Question {
     return pattern;
   }
 
-  public void setPattern(String template) {
-    this.template = template;
+  public void setPattern(String pattern) {
+    this.pattern = pattern;
   }  
   
   public List<QuestionVariable> getVariables () {
