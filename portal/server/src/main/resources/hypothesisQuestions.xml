@@ -29,7 +29,7 @@
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ1V3">
         <ns0:hasVariableName>?DemographicAttribute</ns0:hasVariableName>
-        <ns0:hasFixedOptions>AGE</ns0:hasFixedOptions>
+        <ns0:hasFixedOptions>Age</ns0:hasFixedOptions>
       </ns0:QuestionVariable>
     </ns0:hasQuestionVariable>
 
@@ -38,8 +38,8 @@
   <ns0:Question rdf:about="http://disk-project.org/resources/question/HQ2">
     <rdf:label>Is &#60;Brain Characteristic&#62; associated with &#60;Neurological Disorder&#62; in comparison to healthy controls</rdf:label>
     <ns0:hasQuestionTemplate>Is ?BrainCharacteristicLabel associated with ?NeurologicalDisorder</ns0:hasQuestionTemplate>
-    <ns0:hasQuestionPattern>:BrainCharacteristic hyp:associatedWith ?NeurologicalDisorder
-  :BrainCharacteristic rdfs:label ?BrainCharacteristicLabel</ns0:hasQuestionPattern>
+    <ns0:hasQuestionPattern>?BrainCharacteristic hyp:associatedWith ?NeurologicalDisorder
+?BrainCharacteristic rdfs:label ?BrainCharacteristicLabel</ns0:hasQuestionPattern>
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ2V1">
         <ns0:hasVariableName>?BrainCharacteristicLabel</ns0:hasVariableName>
@@ -89,7 +89,7 @@
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ3V4">
         <ns0:hasVariableName>?DemographicAttribute</ns0:hasVariableName>
-        <ns0:hasFixedOptions>AGE</ns0:hasFixedOptions>
+        <ns0:hasFixedOptions>Age</ns0:hasFixedOptions>
       </ns0:QuestionVariable>
     </ns0:hasQuestionVariable>
 

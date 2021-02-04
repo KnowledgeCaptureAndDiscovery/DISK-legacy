@@ -211,8 +211,8 @@ public class QuestionFiller extends Composite {
 	  for (List<String> idname: variableOptions) {
 		  String[] parts = idname.get(0).split("/");
 		  String name = parts[parts.length - 1];
-		  if (name.length() > 15) {
-			  name = name.substring(0, 15) +  "...";
+		  if (name.length() > 20) {
+			  name = name.substring(0, 20) +  "...";
 		  }
 		  optList.addItem(name, idname.get(1));
 	  }
@@ -270,7 +270,15 @@ public class QuestionFiller extends Composite {
 			for (QuestionVariable var : myQuestion.getVariables()) {
 				ListBox lb = options.get(var.getId());
 				String selected = lb.getSelectedValue();
-				base = base.replace(var.getVarName(), '"' + selected + '"');
+				if (selected != null && !selected.equals("")) {
+					String value = null;
+					if (selected.length() > 4 && selected.substring(0, 4).equals("http")) {
+						value = '<' + selected + '>';
+					} else {
+						value = '"' + selected + '"';
+					}
+					base = base.replace(var.getVarName(), value);
+				}
 			}
 			
 			base = base.replace("?", ":");
