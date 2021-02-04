@@ -52,7 +52,7 @@ public class KBRepository implements TransactionsAPI {
     if(this.tdbdir == null)
       return;
     
-    this.mutex = new Semaphore(1);
+    //this.mutex = new Semaphore(1);
     
     this.fac = new OntFactory(OntFactory.JENA, tdbdir);
     try {
@@ -159,24 +159,24 @@ public class KBRepository implements TransactionsAPI {
  @Override
  public boolean start_read() {
    if(transaction != null)
-	 try {
-		 mutex.acquire();
+	 //try {
+	//	 mutex.acquire();
 		 return transaction.start_read();
-	 } catch(InterruptedException ie) {
-		 System.out.println("InterruptedException");
-	 }
+	 //} catch(InterruptedException ie) {
+	//	 System.out.println("InterruptedException");
+	 //}
    return true;
  }
 
  @Override
  public boolean start_write() {
    if(transaction != null)
-	 try {
-		 mutex.acquire();
+	 //try {
+		// mutex.acquire();
 		 return transaction.start_write();
-	 } catch(InterruptedException ie) {
-		 System.out.println("InterruptedException");
-	 }
+	 //} catch(InterruptedException ie) {
+		// System.out.println("InterruptedException");
+	 //}
    return true;
  }
  
@@ -193,12 +193,12 @@ public class KBRepository implements TransactionsAPI {
  @Override
  public boolean end() {
    if(transaction != null)
-	 try {
-		 mutex.release();
+	 //try {
+	//	 mutex.release();
 		 return transaction.end();
-	 } catch (Exception e) {
-		 System.out.println("ERRor on release");
-	 }
+	 //} catch (Exception e) {
+	//	 System.out.println("ERRor on release");
+	 //}
    return true;
  }
 

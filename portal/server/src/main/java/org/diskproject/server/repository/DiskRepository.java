@@ -160,6 +160,27 @@ public class DiskRepository extends KBRepository {
 
 		this.initializeKB();
 	}
+	
+	public void reloadQuestions () {
+		System.out.println("Reload questions!");
+		try {
+			this.start_write();
+			if (this.questionkb != null) {
+				this.questionkb.removeAllTriples();
+				this.questionkb.delete();
+				this.save(this.questionkb);
+			}
+			this.end();
+			this.start_read();			
+			this.questionkb = fac.getKB(KBConstants.QUESTIONSURI(), OntSpec.PLAIN, false, true);
+			this.vocabularies.put(KBConstants.QUESTIONSURI(),
+					this.initializeVocabularyFromKB(this.questionkb, KBConstants.QUESTIONSNS()));
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			this.end();
+		}
+	}
 
 	public void initializeKB() {
 		super.initializeKB();
