@@ -196,6 +196,16 @@ public class DiskResource implements DiskService {
     return this.repo.queryHypothesis(username, domain, id);
   }
 
+  @GET
+  @Path("{username}/{domain}/hypotheses/{id}/tlois")
+  @Override
+  public Map<String, List<TriggeredLOI>> getHypothesisTLOIs(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("id") String id) {
+    return this.repo.getHypothesisTLOIs(username, domain, id);
+  }
+
   /**
    * Assertions
    */
@@ -418,4 +428,19 @@ public class DiskResource implements DiskService {
 	  @PathParam("id") String id) {
     return this.repo.listVariableOptions(id);
   };
+
+  /*
+   * CUSTOM
+   */
+  @GET
+  @Path("{username}/{domain}/executions/{hid}/{lid}")
+  @Override
+  public List<TriggeredLOI> getExecutions(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("hid") String hid, 
+      @PathParam("lid") String lid) {
+	return this.repo.getTLOIsForHypothesisAndLOI(username, domain, hid, lid);
+  }
+  
 }
