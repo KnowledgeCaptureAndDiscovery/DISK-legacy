@@ -712,6 +712,7 @@ public class DiskRepository extends KBRepository {
 		return null;
 	}
 
+	// For provenance on revised hypotheses
 	private Graph updateTripleDetails(Graph graph, KBAPI provkb) {
 		HashMap<String, Triple> tripleMap = new HashMap<String, Triple>();
 		for (Triple t : graph.getTriples())
@@ -1014,22 +1015,6 @@ public class DiskRepository extends KBRepository {
 				+ "PREFIX disk: <" + KBConstants.DISKNS() + ">\n"
 				+ "PREFIX user: <" + assertionsUri + "#>\n\n" + "SELECT DISTINCT * \nWHERE { \n" + queryPattern + "}\n";
 	}
-
-	/*
-	private String getPrefixedItem(KBObject item, Map<String, String> nsmap) {
-		if (item.isLiteral())
-			return item.getValueAsString();
-		else {
-			if (item.getID().equals(KBConstants.RDFNS() + "type"))
-				return "a";
-			String valns = item.getNamespace();
-			if (nsmap.containsKey(valns))
-				return nsmap.get(valns) + item.getName();
-			else
-				return "<" + item.getID() + ">";
-		}
-	}
-	*/
 
 	public Map<String, List<String>> queryExternalStore(String username, String domain, String sparqlQuery, String variables) {
 		//List<List<List<String>>> result = new ArrayList<List<List<String>>>();
@@ -1478,6 +1463,40 @@ public class DiskRepository extends KBRepository {
 
       }
     return tloiBindings;
+	}
+
+	public Map<String, List<TriggeredLOI>> getHypothesisTLOIs (String username, String domain, String id) {
+		Map<String, List<TriggeredLOI>> map = new HashMap<String, List<TriggeredLOI>>();
+
+		String TLOIURI = this.TLOIURI(username, domain);
+		String hypURI = this.HYPURI(username, domain) + "/" + id;
+		try {
+			this.start_read();
+			KBAPI TLOIKB = this.fac.getKB(TLOIURI, OntSpec.PLAIN, true);
+			KBObject hyp = TLOIKB.getResource(hypURI);
+
+			for (KBTriple t : TLOIKB.genericTripleQuery(null, pmap.get("hasParentHypothesis"), hyp)) {
+				KBObject obj = t.getSubject();
+				String tloiid = obj.getID();
+				String[] sp = tloiid.split("/");
+				KBAPI tloiGraph = this.fac.getKB(TLOIURI + '/' + sp[sp.length-1], OntSpec.PLAIN, true);
+
+				TriggeredLOI tloi = this.getTriggeredLOI(username, domain, tloiid, TLOIKB, tloiGraph);
+				String loiId = tloi.getLoiId();
+				if (!map.containsKey(loiId)) {
+					map.put(loiId, new ArrayList<TriggeredLOI>());
+				}
+				map.get(loiId).add(tloi);
+			}
+		} catch (ConcurrentModificationException e) {
+		   System.out.println("ERROR: Concurrent modification exception on listHypothesisTLOIs");
+		   return null;
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+		  this.end();
+		}
+		return map;
 	}
 
 	/**
@@ -2100,6 +2119,50 @@ public class DiskRepository extends KBRepository {
 			}
 		} catch (ConcurrentModificationException e) {
 		   System.out.println("ERROR: Concurrent modification exception on listTriggeredLOIs");
+		   return null;
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+		  this.end();
+		}
+		return list;
+	}
+
+	public List<TriggeredLOI> getTLOIsForHypothesisAndLOI (String username, String domain, String hypid, String loiid) {
+		List<TriggeredLOI> list = new ArrayList<TriggeredLOI>();
+
+		String TLOIURI = this.TLOIURI(username, domain);
+		String hypURI = this.HYPURI(username, domain) + "/" + hypid;
+		String loiURI = this.LOIURI(username, domain) + "/" + loiid;
+		try {
+			this.start_read();
+			KBAPI TLOIKB = this.fac.getKB(TLOIURI, OntSpec.PLAIN, true);
+			KBObject hyp = TLOIKB.getResource(hypURI);
+			KBObject loi = TLOIKB.getResource(loiURI);
+			
+			Set<String> hypSet = new HashSet<String>();
+			Set<String> finalSet = new HashSet<String>();
+
+			System.out.println("hyp: " + hypURI);
+			for (KBTriple t : TLOIKB.genericTripleQuery(null, pmap.get("hasParentHypothesis"), hyp)) {
+				KBObject obj = t.getSubject();
+				String tloiid = obj.getID();
+				hypSet.add(tloiid);
+			}
+			for (KBTriple t : TLOIKB.genericTripleQuery(null, pmap.get("hasLineOfInquiry"), loi)) {
+				KBObject obj = t.getSubject();
+				String tloiid = obj.getID();
+				if (hypSet.contains(tloiid)) finalSet.add(tloiid);
+			}
+			for (String tloiid: finalSet) {	
+				String[] sp = tloiid.split("/");
+				KBAPI tloiGraph = this.fac.getKB(TLOIURI + '/' + sp[sp.length-1], OntSpec.PLAIN, true);
+
+				TriggeredLOI tloi = this.getTriggeredLOI(username, domain, tloiid, TLOIKB, tloiGraph);
+				list.add(tloi);
+			}
+		} catch (ConcurrentModificationException e) {
+		   System.out.println("ERROR: Concurrent modification exception on listHypothesisTLOIs");
 		   return null;
 		} catch (Exception e) {
 			e.printStackTrace();

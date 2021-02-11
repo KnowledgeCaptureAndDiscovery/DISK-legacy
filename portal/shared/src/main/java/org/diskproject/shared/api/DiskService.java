@@ -98,6 +98,13 @@ public interface DiskService extends DirectRestService {
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @PathParam("id") String id);
+  
+  @GET
+  @Path("{username}/{domain}/hypotheses/{id}/tlois")
+  public Map<String, List<TriggeredLOI>> getHypothesisTLOIs(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("id") String id);
 
   /*
    * Assertions
@@ -258,4 +265,16 @@ public interface DiskService extends DirectRestService {
       @PathParam("domain") String domain,
       @PathParam("id") String id);
   
+  /*
+   * CUSTOM
+   */
+
+  @GET
+  @Path("{username}/{domain}/executions/{hid}/{lid}")
+  public List<TriggeredLOI> getExecutions(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("hid") String hid, 
+      @PathParam("lid") String lid);
+
 }
