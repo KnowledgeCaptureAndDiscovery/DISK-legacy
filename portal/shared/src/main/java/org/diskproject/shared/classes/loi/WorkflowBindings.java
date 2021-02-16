@@ -274,14 +274,17 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
     if(!description.equals(""))
       html += "<span><b>Variable Bindings:</b></span> <span>" + description + "</span>";
     
-    List<String> outputs = this.getRun().getOutputs();
+    Map<String, String> outputs = this.getRun().getOutputs();
     if (outputs != null) {
       int osize = outputs.size();
       String prefix = "https://enigma-disk.wings.isi.edu/wings-portal/users/admin/test/data/fetch?data_id=";
       html += "<span><b>Output files (" + Integer.toString(osize) + "):</b></span><span><ol style='margin:0'>";
-      for (String link: this.getRun().getOutputs()) {
-        String dl = prefix + link.replace(":", "%3A").replace("#", "%23");
-        html += "<li><a target=\"_blank\" href=\"" + dl + "\">" + link.replaceAll(".*?#", "") + "</a></li>";
+      for (String outid: outputs.keySet()) {
+    	  String outuri = outputs.get(outid);
+          String dl = prefix + outuri.replace(":", "%3A").replace("#", "%23");
+          String outname = outid.replaceAll("_", " ");
+          outname = outname.substring(0,1).toUpperCase() + outname.substring(1);
+          html += "<li><b>" + outname + " = </b><a target=\"_blank\" href=\"" + dl + "\">" + outuri.replaceAll(".*?#", "") + "</a></li>";
       }
       html += "</ol></span>";
     }
@@ -295,3 +298,4 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
   }
   
 }
+ 

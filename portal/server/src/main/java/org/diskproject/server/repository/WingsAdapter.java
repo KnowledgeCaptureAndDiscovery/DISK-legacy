@@ -329,14 +329,18 @@ public class WingsAdapter {
 			}
 
 			// Try to get output files
-			List<String> outputs = new ArrayList<String>();
+			Map<String, String> outputs = new HashMap<String, String>();
 			try {
 				JsonObject vars = runobj.get("variables").getAsJsonObject();
 				try {
 					JsonArray outs = vars.get("output").getAsJsonArray();
 					for (JsonElement resp: outs) {
-						JsonObject binding = resp.getAsJsonObject().get("binding").getAsJsonObject();
-						outputs.add(binding.get("id").toString().replaceAll("\"", ""));
+						JsonObject outputObj = resp.getAsJsonObject();
+						JsonObject bindingObj = outputObj.get("binding").getAsJsonObject();
+						String outid = outputObj.get("derivedFrom").getAsString();
+						String binding = bindingObj.get("id").toString().replaceAll("\"", "");
+						String sp[] = outid.split("#");
+						outputs.put(sp[sp.length-1], binding);
 					}
 				} catch (Exception e) {
 					System.out.println("Run ID " + runid + ": No output files");
@@ -393,8 +397,8 @@ public class WingsAdapter {
 
 			if (outputs.size() > 0) {
 				System.out.println(" Outputs:");
-				for (String id: outputs) {
-					System.out.println(" - " + id);
+				for (String id: outputs.keySet()) {
+					System.out.println(id + ": " + outputs.get(id));
 				}
 			}
 			System.out.println("------------------------------");
