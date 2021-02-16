@@ -24,7 +24,8 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   List<String> resultingHypothesisIds;
   List<WorkflowBindings> workflows;
   List<WorkflowBindings> metaWorkflows;
-  
+  double confidenceValue;
+
   String author;
   String notes;
   String dateCreated;
@@ -33,6 +34,12 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   String relevantVariables;
   String explanation;
   String dataSource;
+
+  public TriggeredLOI() {
+    workflows = new ArrayList<WorkflowBindings>();
+    metaWorkflows = new ArrayList<WorkflowBindings>();
+    resultingHypothesisIds = new ArrayList<String>();
+  }
 
   public TriggeredLOI(String id,
 		  String name,
@@ -56,12 +63,6 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
 	  this.metaWorkflows = metaWorkflows;
 	  }
 
-  public TriggeredLOI() {
-    workflows = new ArrayList<WorkflowBindings>();
-    metaWorkflows = new ArrayList<WorkflowBindings>();
-    resultingHypothesisIds = new ArrayList<String>();
-  }
-
   public TriggeredLOI(LineOfInquiry loi, String hypothesisId) {
     this.id = GUID.randomId("TriggeredLOI");
     this.loiId = loi.getId();
@@ -74,14 +75,6 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
     resultingHypothesisIds = new ArrayList<String>();
   }
 
-  public void setDataSource (String ds) {
-	  this.dataSource = ds;
-  }
-  
-  public String getDataSource () {
-	  return this.dataSource;
-  }
-
   public void copyWorkflowBindings(List<WorkflowBindings> fromlist,
       List<WorkflowBindings> tolist) {
     for(WorkflowBindings from : fromlist) {
@@ -92,6 +85,22 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
       tolist.add(to);
     }
   }
+  
+  public void setConfidenceValue (double cv) {
+	  this.confidenceValue = cv;
+  }
+  
+  public double getConfidenceValue () {
+	  return this.confidenceValue;
+  }
+
+  public void setDataSource (String ds) {
+	  this.dataSource = ds;
+  }
+
+  public String getDataSource () {
+	  return this.dataSource;
+  }
 
   public String getId() {
     return id;
@@ -100,19 +109,19 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   public void setId(String id) {
     this.id = id;
   }
-  
+
   public void setDataQuery (String dq) {
     this.dataQuery = dq;
   }
-  
+
   public String getDataQuery () {
     return this.dataQuery;
   }
-  
+
   public String getExplanation () {
 	  return this.explanation;
   }
-  
+
   public void setExplanation (String explanation) {
 	  this.explanation = explanation;
   }
@@ -200,7 +209,7 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   public void setMetaWorkflows(List<WorkflowBindings> metaWorkflows) {
     this.metaWorkflows = metaWorkflows;
   }
-  
+
   //FIXME: This is the way it looks in the list.
   @JsonIgnore
   public String getHeaderHTML() {
@@ -233,7 +242,7 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
 
     return html;
   }
-  
+
   public String toString() {
     Collections.sort(this.workflows);
     //Collections.sort(this.metaWorkflows);
@@ -246,19 +255,19 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   public int compareTo(TriggeredLOI o) {
     return this.toString().compareTo(o.toString());
   }
-  
+ 
   public void setDateCreated(String date) {
 	  this.dateCreated = date;
   }
-  
+ 
   public void setAuthor (String author) {
 	  this.author = author;
   }
-  
+ 
   public String getDateCreated () {
 	  return this.dateCreated;
   }
-  
+ 
   public String getAuthor () {
 	  return this.author;
   }
@@ -266,7 +275,7 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   public void setDateModified(String date) {
 	  this.dateModified = date;
   }
-  
+ 
   public String getDateModified () {
 	  return dateModified;
   }

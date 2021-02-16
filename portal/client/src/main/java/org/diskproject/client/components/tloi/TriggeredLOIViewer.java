@@ -401,7 +401,7 @@ public class TriggeredLOIViewer extends Composite {
 				  //Save data
 				  String sdate = result.getStartDate();
 				  String edate = result.getEndDate();
-				  List<String> outputs = result.getOutputs();
+				  Map<String, String> outputs = result.getOutputs();
 				  
 				  if (sdate != null) run.setStartDate(sdate);
 				  if (edate != null) run.setEndDate(edate);

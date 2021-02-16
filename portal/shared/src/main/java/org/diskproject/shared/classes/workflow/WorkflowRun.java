@@ -9,7 +9,7 @@ public class WorkflowRun {
   String link;
   String status;
 
-  List<String> outputs;
+  Map<String, String> outputs;
   Map<String, String> files;
   String startDate;
   String endDate;
@@ -64,11 +64,11 @@ public class WorkflowRun {
 	  return this.endDate;
   }
   
-  public void setOutputs(List<String> outputs) {
+  public void setOutputs(Map<String, String> outputs) {
 	  this.outputs = outputs;
   }
   
-  public List<String> getOutputs () {
+  public Map<String, String> getOutputs () {
 	  return outputs;
   }
   

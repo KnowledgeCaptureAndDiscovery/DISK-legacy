@@ -1,13 +1,11 @@
 package org.diskproject.server.repository;
 
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -18,7 +16,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,7 +38,6 @@ import org.diskproject.shared.classes.common.TripleUtil;
 import org.diskproject.shared.classes.common.Value;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
-import org.diskproject.shared.classes.loi.MetaWorkflowDetails;
 import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.loi.TriggeredLOI.Status;
@@ -643,6 +639,7 @@ public class DiskRepository extends KBRepository {
 		String url = this.HYPURI(username, domain);
 		String fullid = url + "/" + id;
 		String provid = fullid + "/provenance";
+		System.out.println("GET Hypothesis: " + fullid);
 
 		try {
 			KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
@@ -1304,7 +1301,7 @@ public class DiskRepository extends KBRepository {
                 }
 
                 System.out.println("Results proceced");
-                // Maybe can add the parameters here.
+                // Add the parameters
                 for (String param: loi.getAllWorkflowParameters()) {
                    if (param.charAt(0) == '?') param = param.substring(1);
                    String bind = hypBinds.get(param);
@@ -1469,7 +1466,8 @@ public class DiskRepository extends KBRepository {
 		Map<String, List<TriggeredLOI>> map = new HashMap<String, List<TriggeredLOI>>();
 
 		String TLOIURI = this.TLOIURI(username, domain);
-		String hypURI = this.HYPURI(username, domain) + "/" + id;
+		String hypPrefix = this.HYPURI(username, domain);
+		String hypURI = hypPrefix + "/" + id;
 		try {
 			this.start_read();
 			KBAPI TLOIKB = this.fac.getKB(TLOIURI, OntSpec.PLAIN, true);
@@ -2143,7 +2141,6 @@ public class DiskRepository extends KBRepository {
 			Set<String> hypSet = new HashSet<String>();
 			Set<String> finalSet = new HashSet<String>();
 
-			System.out.println("hyp: " + hypURI);
 			for (KBTriple t : TLOIKB.genericTripleQuery(null, pmap.get("hasParentHypothesis"), hyp)) {
 				KBObject obj = t.getSubject();
 				String tloiid = obj.getID();
@@ -2175,19 +2172,20 @@ public class DiskRepository extends KBRepository {
 	public TriggeredLOI getTriggeredLOI(String username, String domain, String id) {
 		String url = this.TLOIURI(username, domain);
 		String fullid = url + "/" + id;
+		TriggeredLOI tloi = null;
 
 		try {
 		  this.start_read();
 		  
 			KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
 			KBAPI tloikb = this.fac.getKB(fullid, OntSpec.PLAIN, true);
-			return this.getTriggeredLOI(username, domain, fullid, kb, tloikb);
+			tloi = this.getTriggeredLOI(username, domain, fullid, kb, tloikb);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 		  this.end();
 		}
-		return null;
+		return tloi;
 	}
 
 	public void addTriggeredLOI(String username, String domain, TriggeredLOI tloi) {
@@ -2213,6 +2211,7 @@ public class DiskRepository extends KBRepository {
 				KBObject item = kb.getIndividual(fullid);
 				KBObject hypobj = kb.getPropertyValue(item, pmap.get("hasResultingHypothesis"));
 				if (hypobj != null) {
+					// delete all tlois with same hypotheses, does not repeat forever??
 					for (KBTriple t : kb.genericTripleQuery(null, pmap.get("hasParentHypothesis"), hypobj)) {
 						this.deleteTriggeredLOI(username, domain, t.getSubject().getName());
 					}
@@ -2253,8 +2252,29 @@ public class DiskRepository extends KBRepository {
 		if (pobj != null)
 			tloi.setParentHypothesisId(pobj.getName());
 
-		for (KBObject robj : kb.getPropertyValues(obj, pmap.get("hasResultingHypothesis")))
-			tloi.addResultingHypothesisId(robj.getName());
+		String hypPrefix = this.HYPURI(username, domain);
+		for (KBObject robj : kb.getPropertyValues(obj, pmap.get("hasResultingHypothesis"))) {
+			String resHypId = robj.getName();
+			tloi.addResultingHypothesisId(resHypId);
+		
+			//ADDs confidence value:
+			String resHypURI = hypPrefix + "/" + resHypId;
+			String prov = resHypURI + "/provenance";
+			Graph g = this.getKBGraph(resHypURI);
+			try {
+				KBAPI provkb = this.fac.getKB(prov, OntSpec.PLAIN, false);
+				this.updateTripleDetails(g, provkb);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			for (Triple t: g.getTriples()) {
+				if (t.getDetails() != null) {
+					tloi.setConfidenceValue(t.getDetails().getConfidenceValue());
+					break;
+				}
+			}
+		}
 
 		KBObject stobj = kb.getPropertyValue(obj, pmap.get("hasTriggeredLineOfInquiryStatus"));
 		if (stobj != null)
@@ -2466,6 +2486,7 @@ public class DiskRepository extends KBRepository {
 		}
 		return true;
 	}
+	
 
 	private String getWorkflowExecutionRunIds(TriggeredLOI tloi, String workflow) {
 		String runids = null;
