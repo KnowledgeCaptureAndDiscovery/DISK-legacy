@@ -14,9 +14,11 @@ import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -27,6 +29,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.apache.commons.lang.SerializationUtils;
+import org.apache.jena.tdb.store.Hash;
 //import org.diskproject.server.repository.GmailService.MailMonitor;
 import org.diskproject.server.util.Config;
 import org.diskproject.server.util.DataQuery;
@@ -166,11 +169,6 @@ public class DiskRepository extends KBRepository {
 				this.questionkb.delete();
 				this.save(this.questionkb);
 			}
-			/*this.end();
-			this.start_read();			
-			this.questionkb = fac.getKB(KBConstants.QUESTIONSURI(), OntSpec.PLAIN, false, true);
-			this.vocabularies.put(KBConstants.QUESTIONSURI(),
-					this.initializeVocabularyFromKB(this.questionkb, KBConstants.QUESTIONSNS()));*/
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -184,10 +182,6 @@ public class DiskRepository extends KBRepository {
 			return;
 		try {
 
-			// String DownloadPath = "C:/Users/rrreg/neuroOnt.ttl";
-			// downloadOntology(KBConstants.NEUROURI(), DownloadPath);
-			// InputStream is = new FileInputStream(new File(DownloadPath));
-			//FIXME: This only adds information, does not update/remove old data, and if the URI changes, we duplicate the graphs.
 			this.neuroontkb = fac.getKB(KBConstants.NEUROURI(), OntSpec.PLAIN, false, true);
 			this.hypontkb = fac.getKB(KBConstants.HYPURI(), OntSpec.PLAIN, false, true);
 			this.omicsontkb = fac.getKB(KBConstants.OMICSURI(), OntSpec.PLAIN, false, true);
@@ -255,7 +249,7 @@ public class DiskRepository extends KBRepository {
 
 					Question q = new Question(question.getID(), name.getValueAsString(), template.getValueAsString(), pattern.getValueAsString(), vars);
 					all.add(q);
-					System.out.println(q.toString());
+					//System.out.println(q.toString());
 				}
 			}
 		} catch (Exception e) {
@@ -266,7 +260,15 @@ public class DiskRepository extends KBRepository {
 		return all;
 	}
 
+	private Map<String, List<List<String>>> optionsCache = new WeakHashMap<String, List<List<String>>>();
 	public List<List<String>> listVariableOptions (String sid) {
+		if (!optionsCache.containsKey(sid)) {
+			optionsCache.put(sid, this.loadVariableOptions(sid));
+		}
+		return optionsCache.get(sid);
+	}
+
+	private List<List<String>> loadVariableOptions (String sid) {
 		String id = "http://disk-project.org/resources/question/" + sid;
 		List<List<String>> options = new ArrayList<List<String>>();
 		String query = null;
@@ -308,8 +310,6 @@ public class DiskRepository extends KBRepository {
 								} else if (var.equals("?label")) {
 									label = val;
 								}
-							} else {
-								System.out.println(var + " has no value");
 							}
 						}
 						if (url != null) {
@@ -331,28 +331,48 @@ public class DiskRepository extends KBRepository {
 		return options;
 	}
 	
+	private Map<String, Map<String,String>> getEndpoints () {
+		PropertyListConfiguration cfg = this.getConfig();
+		Map<String, Map<String,String>> endpoints = new HashMap<String, Map<String,String>>();
+		Iterator<String> a = cfg.getKeys("endpoints");
+		while (a.hasNext()) {
+			String key = a.next();
+			String sp[] = key.split("\\.");
+			if (sp != null && sp.length == 3) {
+				Map<String, String> map;
+				if (endpoints.containsKey(sp[1]))
+					map = endpoints.get(sp[1]);
+				else {
+					map = new HashMap<String, String>();
+					endpoints.put(sp[1], map);
+				}
+				map.put(sp[2], cfg.getProperty(key).toString());
+			}
+		}
+		return endpoints;
+	}
+	
 	private List<List<SparqlQuerySolution>> queryAllEndpoints (KBAPI kb, String query) {
 		List<List<SparqlQuerySolution>> allSolutions = new ArrayList<List<SparqlQuerySolution>>();
-		//FIXME: all endpoinds use the same password.
-
-		String[] endpoints = {
-				"http://linkedearth.isi.edu:3030/enigma_dev_db",
-				"http://linkedearth.isi.edu:3030/enigma_scz_db",
-				"http://linkedearth.isi.edu:3030/enigma_pd_db",
-				"http://linkedearth.isi.edu:3030/enigma_stb_db",
-				"http://linkedearth.isi.edu:3030/db"
-		};
-		String user = Config.get().getProperties().getString("ENIGMA.username");
-		String pass = Config.get().getProperties().getString("ENIGMA.password");
-		for (String endpoint: endpoints) {
+		
+		Map<String, Map<String, String>> allEndpoints = this.getEndpoints();
+		
+		for (String key: allEndpoints.keySet()) {
+			String uri = allEndpoints.get(key).get("URI");
+			String user = allEndpoints.get(key).get("username");
+			String pass = allEndpoints.get(key).get("password");
+			try {
 			ArrayList<ArrayList<SparqlQuerySolution>> solutions = 
-					kb.sparqlQueryRemote(query, endpoint, user, pass);
-			System.out.println(solutions.size());
+					kb.sparqlQueryRemote(query, uri, user, pass);
 			if (solutions != null) {
 				allSolutions.addAll(solutions);
 			}
+				
+			} catch (Exception e) {
+				System.out.println("ERROR querying " + uri);
+				e.printStackTrace(); 
+			}
 		}
-		
 		return allSolutions;
 	}
 
@@ -409,7 +429,7 @@ public class DiskRepository extends KBRepository {
 	}
 
 	public PropertyListConfiguration getConfig() {
-	  return Config.get().getProperties();
+	    return Config.get().getProperties();
 	}
 
 	/**
@@ -1014,6 +1034,7 @@ public class DiskRepository extends KBRepository {
 	}
 
 	public Map<String, List<String>> queryExternalStore(String username, String domain, String sparqlQuery, String variables) {
+		//TODO: This should have and endpoint.
 		//List<List<List<String>>> result = new ArrayList<List<List<String>>>();
 		String endpoint = null;
 		Map<String, List<String>> dataVarBindings = new HashMap<String, List<String>>();
@@ -1262,7 +1283,33 @@ public class DiskRepository extends KBRepository {
                 System.out.println("binded: \n" + dataQuery + "\n");
 
                 ArrayList<ArrayList<SparqlQuerySolution>> allDataSolutions = null;
-                boolean wikiStore = Config.get().getProperties().containsKey("data-store");
+                
+                String dataSource = loi.getDataSource();
+                if (dataSource != null && !dataSource.equals("")) {
+                	Map<String, Map<String, String>> endpoints = this.getEndpoints();
+
+                	String user = null;
+                	String pass = null;
+
+                	for (String key: endpoints.keySet()) {
+                		if (endpoints.get(key).get("URI").equals(dataSource)) {
+                			user = endpoints.get(key).get("username");
+                			pass = endpoints.get(key).get("password");
+                			break;
+                		}
+                	}
+                	
+                	if (user != null && pass != null) {
+                		allDataSolutions = queryKb.sparqlQueryRemote(dataQuery, dataSource, user, pass);
+                	} else {
+                		allDataSolutions = queryKb.sparqlQueryRemote(dataQuery, dataSource);
+                	}
+                } else {
+                  allDataSolutions = queryKb.sparqlQuery(dataQuery);
+                }
+                
+                
+                /* boolean wikiStore = Config.get().getProperties().containsKey("data-store");
                 if(wikiStore) {
                   String externalStore = loi.getDataSource() != null ? loi.getDataSource() :
                 		  Config.get().getProperties().getString("data-store");
@@ -1276,7 +1323,8 @@ public class DiskRepository extends KBRepository {
                   }
                 } else {
                   allDataSolutions = queryKb.sparqlQuery(dataQuery);
-                }
+                } */
+                
                 System.out.println("Query done!! " + allDataSolutions.size());
                 if (allDataSolutions.size() == 0) {
                 	System.out.println("No results on the external store");
@@ -1295,7 +1343,7 @@ public class DiskRepository extends KBRepository {
                       curValues.add(solution.getObject().getValueAsString());
                     }
                     else
-                      curValues.add(wikiStore ? solution.getObject().getID() : solution.getObject().getName());
+                      curValues.add(dataSource != null && !dataSource.equals("") ? solution.getObject().getID() : solution.getObject().getName());
                     dataVarBindings.put(var, curValues);
                   }
                 }
@@ -2211,13 +2259,20 @@ public class DiskRepository extends KBRepository {
 				KBObject item = kb.getIndividual(fullid);
 				KBObject hypobj = kb.getPropertyValue(item, pmap.get("hasResultingHypothesis"));
 				if (hypobj != null) {
-					// delete all tlois with same hypotheses, does not repeat forever??
+					List<KBTriple> alltlois = kb.genericTripleQuery(null, pmap.get("hasParentHypothesis"), hypobj);
+					this.end();
+					if (alltlois != null && alltlois.size() == 1) {
+						this.deleteHypothesis(username, domain, hypobj.getName());
+					} else {
+						System.out.println("Resulting hypotesis cannot be deleted as is being used for other tloi.");
+					}
+					/*
 					for (KBTriple t : kb.genericTripleQuery(null, pmap.get("hasParentHypothesis"), hypobj)) {
 						this.deleteTriggeredLOI(username, domain, t.getSubject().getName());
 					}
 					this.end();
 					
-					this.deleteHypothesis(username, domain, hypobj.getName());
+					this.deleteHypothesis(username, domain, hypobj.getName());*/
 				}
 				else {
 				  this.end();
@@ -2487,7 +2542,6 @@ public class DiskRepository extends KBRepository {
 		return true;
 	}
 	
-
 	private String getWorkflowExecutionRunIds(TriggeredLOI tloi, String workflow) {
 		String runids = null;
 		for (WorkflowBindings bindings : tloi.getWorkflows()) {

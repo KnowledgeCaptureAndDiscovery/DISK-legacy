@@ -35,6 +35,10 @@ public interface DiskService extends DirectRestService {
   @GET
   @Path("server/config")
   public Map<String, String> getConfig();
+
+  @GET
+  @Path("server/endpoints")
+  public Map<String, String> getEndpoints();
   
    /*
    * Vocabulary

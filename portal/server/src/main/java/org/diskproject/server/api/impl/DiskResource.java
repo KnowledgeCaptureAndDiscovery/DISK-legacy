@@ -1,6 +1,7 @@
 package org.diskproject.server.api.impl;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -73,6 +74,29 @@ public class DiskResource implements DiskService {
     }
   }
 
+  @GET
+  @Path("server/endpoints")
+  @Override
+  public Map<String, String> getEndpoints() {
+    try {
+      PropertyListConfiguration config = this.repo.getConfig();
+      Map<String, String> vals = new HashMap<String, String>();
+      
+      Iterator<String> a = config.getKeys("endpoints");
+      while (a.hasNext()) {
+    	  String key = a.next();
+    	  String sp[] = key.split("\\.");
+    	  if (sp != null && sp.length == 3 && sp[2].equals("URI")) {
+    		  vals.put(sp[1], config.getProperty(key).toString());
+    	  }
+      }
+      
+      return vals;
+    } catch (Exception e) {
+      // e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
   
   /*
    * Vocabulary
