@@ -6,15 +6,15 @@
     <rdf:type rdf:resource="http://disk-project.org/ontology/disk#Question"/>
     <rdf:label>Is the effect size of &#60;Genotype&#62; in &#60;Brain Trait&#62; associated with &#60;Demographic Attribute&#62;</rdf:label>
     <ns0:hasQuestionTemplate>Is the EffectSize of ?Genotype on ?BrainImagingTrait associated with ?DemographicAttribute</ns0:hasQuestionTemplate>
-    <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Genotype 
-?EffectSize neuro:targetCharacteristic ?BrainImagingTrait 
+    <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Genotype
+?EffectSize neuro:targetCharacteristic ?BrainImagingTrait
 ?EffectSize hyp:associatedWith ?DemographicAttribute</ns0:hasQuestionPattern>
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ1V1">
         <ns0:hasVariableName>?Genotype</ns0:hasVariableName>
-        <ns0:hasConstraints>?A ?geneticDatatypeProp ?Genotype . 
-?Genotype a ?type . 
-?type rdfs:label &quot;GeneticDataType (E)&quot; . 
+        <ns0:hasConstraints>?A ?geneticDatatypeProp ?Genotype .
+?Genotype a ?type .
+?type rdfs:label &quot;GeneticDataType (E)&quot; .
 ?geneticDatatypeProp rdfs:label &quot;HasGeneticDataType (E)&quot;.</ns0:hasConstraints>
       </ns0:QuestionVariable>
     </ns0:hasQuestionVariable>

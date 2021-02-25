@@ -10,6 +10,10 @@
 
 	<g:HTMLPanel>
 		<style is="custom-style">
+			.floating-right-button {
+			  float: right;
+              padding: 10px;
+			}
 		    .clickable {
 		      cursor: pointer;
 		    }
@@ -189,19 +193,7 @@
 		<h:HypothesisEditor ui:field="form" styleName="padded" />
 		<g:HTMLPanel ui:field="matchlist" styleName="tree list matchlist" />
 		
-		<div style="display:none">
-      <g:DialogBox autoHide="true" modal="true" ui:field='dialog'>
-        <g:caption><b>Edit variable bindings</b></g:caption>
-        <g:VerticalPanel>
-					<g:HTMLPanel ui:field='dialogContent'>
-					</g:HTMLPanel>
-					<g:HTMLPanel>
-						<g:Button ui:field='dialogCancelButton'>Cancel</g:Button>
-						<g:Button ui:field='dialogOkButton'>Save</g:Button>
-					</g:HTMLPanel>
-        </g:VerticalPanel>
-      </g:DialogBox>
-      
+	<div style="display:none">
       <g:DialogBox modal="true" ui:field='helpDialog'>
         <g:caption><b>Help:</b> Hypotheses</g:caption>
         <g:HTMLPanel>

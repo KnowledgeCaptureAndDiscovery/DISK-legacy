@@ -224,6 +224,8 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
       }
       extra = " <iron-icon class='"+status+"' icon='"+icon+"' />";
       extracls = " " +status;
+    } else {
+      extracls = " TORUN";
     }
 
     String html = "<div class='name" + extracls+ "'>"+ name + extra +"</div>";
@@ -245,11 +247,11 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
 
   public String toString() {
     Collections.sort(this.workflows);
-    //Collections.sort(this.metaWorkflows);
+    Collections.sort(this.metaWorkflows);
     return this.getLoiId() + "-" 
         + this.getParentHypothesisId() + "-" 
-        + this.getWorkflows();
-        //+ "-" + this.getMetaWorkflows();
+        + this.getWorkflows() + "-" 
+        + this.getMetaWorkflows();
   }
 
   public int compareTo(TriggeredLOI o) {

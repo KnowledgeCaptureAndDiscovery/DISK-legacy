@@ -260,7 +260,7 @@ public class TriggeredLOIViewer extends Composite {
   }
 
   private void setLOILink(String tname, String id, AnchorElement anchor) {
-    String name = tname.replace("Triggered: ", "");
+    String name = tname.replace("Triggered: ", "").replace("New: ", "");
     anchor.setInnerText(name);
     anchor.setHref(this.getLOILink(id));
   }
