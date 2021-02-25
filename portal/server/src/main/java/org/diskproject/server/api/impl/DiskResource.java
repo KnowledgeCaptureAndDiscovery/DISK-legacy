@@ -467,4 +467,14 @@ public class DiskResource implements DiskService {
 	return this.repo.getTLOIsForHypothesisAndLOI(username, domain, hid, lid);
   }
   
+  
+  @GET
+  @Path("{username}/{domain}/runhypotheses")
+  @Override
+  public Boolean runHypotheses(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain) {
+	return this.repo.runAllHypotheses(username, domain);
+  }
+  
 }

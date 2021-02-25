@@ -1151,7 +1151,7 @@ public class DiskRepository extends KBRepository {
       this.end();
 
       for (TreeItem item : this.listLOIs(username, domain)) {
-        System.out.println("\nChecking LOI "+ item.getId());
+        //System.out.println("\nChecking LOI "+ item.getId());
         LineOfInquiry loi = this.getLOI(username, domain, item.getId());
         //Check hypothesis and data query
         String hypothesisQuery = loi.getHypothesisQuery();
@@ -1260,10 +1260,10 @@ public class DiskRepository extends KBRepository {
 			queryKb.importFrom(this.fac.getKB(hypuri, OntSpec.PLAIN));
 			queryKb.importFrom(this.fac.getKB(assertions, OntSpec.PLAIN));
 			
-            System.out.println("MATCHES:");
+            //System.out.println("MATCHES:");
             for (LineOfInquiry loi: matches.keySet()) {
               List<Map<String, String>> results = matches.get(loi);
-              System.out.println(loi.getName() + ": " + results.size());
+              //System.out.println(loi.getName() + ": " + results.size());
               for (Map<String, String> hypBinds: results) {
                 // At least one binding must be non variable
                 boolean ok = false;
@@ -1280,7 +1280,7 @@ public class DiskRepository extends KBRepository {
                 dq = dq.replace("user:", "?");
                 String dataQuery = this.getDistinctSparqlQuery(dq, assertions, new ArrayList<String>(loi.getAllWorkflowVariables()) );
                 if (dataQuery.charAt(dataQuery.length()-1) == '\n') dataQuery = dataQuery.substring(0, dataQuery.length()-1);
-                System.out.println("binded: \n" + dataQuery + "\n");
+                //System.out.println("binded: \n" + dataQuery + "\n");
 
                 ArrayList<ArrayList<SparqlQuerySolution>> allDataSolutions = null;
                 
@@ -1308,26 +1308,9 @@ public class DiskRepository extends KBRepository {
                   allDataSolutions = queryKb.sparqlQuery(dataQuery);
                 }
                 
-                
-                /* boolean wikiStore = Config.get().getProperties().containsKey("data-store");
-                if(wikiStore) {
-                  String externalStore = loi.getDataSource() != null ? loi.getDataSource() :
-                		  Config.get().getProperties().getString("data-store");
-                  String dataUser = Config.get().getProperties().getString("ENIGMA.username");
-                  String dataPass = Config.get().getProperties().getString("ENIGMA.password");
-                  if (dataUser != null && dataPass != null) {
-                    //Data store is password protected.
-                    allDataSolutions = queryKb.sparqlQueryRemote(dataQuery, externalStore, dataUser, dataPass);
-                  } else {
-                    allDataSolutions = queryKb.sparqlQueryRemote(dataQuery, externalStore);
-                  }
-                } else {
-                  allDataSolutions = queryKb.sparqlQuery(dataQuery);
-                } */
-                
-                System.out.println("Query done!! " + allDataSolutions.size());
+                //System.out.println("Query done!! " + allDataSolutions.size());
                 if (allDataSolutions.size() == 0) {
-                	System.out.println("No results on the external store");
+                	//System.out.println("No results on the external store for " + loi.getId());
                 	continue;
                 }
 
@@ -1348,7 +1331,7 @@ public class DiskRepository extends KBRepository {
                   }
                 }
 
-                System.out.println("Results proceced");
+                //System.out.println("Results proceced");
                 // Add the parameters
                 for (String param: loi.getAllWorkflowParameters()) {
                    if (param.charAt(0) == '?') param = param.substring(1);
@@ -1363,17 +1346,17 @@ public class DiskRepository extends KBRepository {
                 // check collections
                 Set<String> varNonCollection = loi.getAllWorkflowNonCollectionVariables();
 
-                System.out.println("dataBindings:");
+                //System.out.println("dataBindings:");
                 for (String key: dataVarBindings.keySet()) {
-                  System.out.println(" " + key + ":");
+                  //System.out.println(" " + key + ":");
                   String var = (key.charAt(0) != '?') ? '?' + key : key;
                   if (varNonCollection.contains(var)) {
-                    System.out.println("  Is not a collection");
+                    //System.out.println("  Is not a collection");
                     Set<String> fixed = new HashSet<String>(dataVarBindings.get(key));
                     dataVarBindings.put(key, new ArrayList<String>(fixed));
                   }
                   for (String r: dataVarBindings.get(key)) {
-                    System.out.println("  -  " + r);
+                    //System.out.println("  -  " + r);
                   }
                 }
 
@@ -1388,7 +1371,7 @@ public class DiskRepository extends KBRepository {
                 tloi.setExplanation(loi.getExplanation());
                 tlois.add(tloi);
 
-                System.out.println("TLOI created and added!");
+                System.out.println(loi.getId() + " has created " + tloi.getId());
               }
             }
 		} catch (Exception e) {
@@ -1397,8 +1380,33 @@ public class DiskRepository extends KBRepository {
 		  this.end();
 		}
 		
-		return tlois;
+		//return tlois;
+		return checkExistingTLOIs(username, domain, tlois);
   }
+
+  	// This replaces all triggered lines of inquiry already executed. tlois should be from the same hypothesis.
+	private List<TriggeredLOI> checkExistingTLOIs(String username, String domain, List<TriggeredLOI> tlois) {
+		List<TriggeredLOI> checked = new ArrayList<TriggeredLOI>();
+		Map<String, List<TriggeredLOI>> cache = new HashMap<String, List<TriggeredLOI>>();
+		for (TriggeredLOI tloi: tlois) {
+			//System.out.println("Checking " + tloi.getId() + " (" + tloi.getLoiId() + ")");
+			if (!cache.containsKey(tloi.getLoiId())) {
+				cache.put(tloi.getLoiId(), getTLOIsForHypothesisAndLOI(username, domain, tloi.getParentHypothesisId(), tloi.getLoiId()));
+			}
+			List<TriggeredLOI> candidates = cache.get(tloi.getLoiId());
+			TriggeredLOI real = tloi;
+			for (TriggeredLOI cand: candidates) {
+				if (cand.toString().equals(tloi.toString()) ) {
+					//TODO: compare the hash of the input files
+					System.out.println("Replaced " + tloi.getId() + " with " + cand.getId());
+					real = cand;
+					break;
+				}
+			}
+			checked.add(real);
+		}
+		return checked;
+	}
 
 	@SuppressWarnings("unchecked")
   private List<WorkflowBindings> getTLOIBindings(
@@ -1418,12 +1426,12 @@ public class DiskRepository extends KBRepository {
         tloiBinding.setMeta(bindings.getMeta());
         tloiBindings.add(tloiBinding);
         
-        System.out.println("adding parameters for " + bindings.getWorkflow());
+        //System.out.println("adding parameters for " + bindings.getWorkflow());
         // Add parameters
         for (VariableBinding param: bindings.getParameters()) {
           String binding = param.getBinding();
           if (binding.charAt(0)=='?') binding = binding.substring(1);
-          System.out.println("param binding: " + binding);
+          //System.out.println("param binding: " + binding);
           if (dataVarBindings.containsKey(binding)) {
         	  List<String> possibleBindings = dataVarBindings.get(binding);
         	  if (possibleBindings.size() == 1) {
@@ -1543,6 +1551,51 @@ public class DiskRepository extends KBRepository {
 		  this.end();
 		}
 		return map;
+	}
+	
+	
+	
+	public Boolean runAllHypotheses (String username, String domain) {
+		List<String> hlist = new ArrayList<String>();
+		String url = this.HYPURI(username, domain);
+		try {
+			KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
+			KBObject hypcls = this.cmap.get("Hypothesis");
+			
+			this.start_read();
+			KBObject typeprop = kb.getProperty(KBConstants.RDFNS() + "type");
+			for (KBTriple t : kb.genericTripleQuery(null, typeprop, hypcls)) {
+				KBObject hypobj = t.getSubject();
+				String uri = hypobj.getID();
+				String[] sp = uri.split("/");
+				hlist.add(sp[sp.length-1]);
+				System.out.println("Hyp ID: " + sp[sp.length-1]);
+			}
+		} catch (ConcurrentModificationException e) {
+		   System.out.println("Error trying to run all hypotheses. Could not read KB.");
+			e.printStackTrace();
+			return false;
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+		  this.end();
+		}
+		
+		List<TriggeredLOI> tlist = new ArrayList<TriggeredLOI>();
+		
+		for (String hid: hlist) {
+			tlist.addAll(queryHypothesis(username, domain, hid));
+		}
+
+		//Only hypotheses with status == null are new
+		for (TriggeredLOI tloi: tlist) {
+			if (tloi.getStatus() == null) {
+				System.out.println("TLOI " + tloi.getId() + " will be trigger");
+				addTriggeredLOI(username, domain, tloi);
+			}
+		}
+
+		return true;
 	}
 
 	/**

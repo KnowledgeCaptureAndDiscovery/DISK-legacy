@@ -205,14 +205,6 @@ public interface DiskService extends DirectRestService {
       @PathParam("domain") String domain,
       @PathParam("id") String id);
 
-  /*
-   * Export triples
-   */
-  @GET
-  @Path("{username}/{domain}/triples/{id}")
-  public List<Triple> getTriggeredLOITriples(@PathParam("username") String username, 
-      @PathParam("domain") String domain,
-      @PathParam("id") String id);
   
   /*
    * Workflows
@@ -237,20 +229,6 @@ public interface DiskService extends DirectRestService {
       @PathParam("domain") String domain,
       @PathParam("id") String id);
 
-  @POST
-  @Path("{username}/{domain}/sparql")
-  public String sparql(
-      @PathParam("username") String username, 
-      @PathParam("domain") String domain,
-      @JsonProperty("query") String query);
-  
-  @GET
-  @Path("{username}/{domain}/test")  
-  public Map<String, List<String>> queryExternalStore(
-      @PathParam("username") String username, 
-      @PathParam("domain") String domain,
-      @QueryParam("variables") String variables,
-      @QueryParam("query") String query);
 
   /*
    * Hypothesis questions
@@ -272,7 +250,20 @@ public interface DiskService extends DirectRestService {
   /*
    * CUSTOM
    */
+  /* Re execute all hypotheses */
+  @GET
+  @Path("{username}/{domain}/runhypotheses")
+  public Boolean runHypotheses(@PathParam("username") String username, 
+      @PathParam("domain") String domain);
 
+  /* Export triples */
+  @GET
+  @Path("{username}/{domain}/triples/{id}")
+  public List<Triple> getTriggeredLOITriples(@PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("id") String id);
+
+  /* Get TLOIs for Hypothesis ID and LOI ID */
   @GET
   @Path("{username}/{domain}/executions/{hid}/{lid}")
   public List<TriggeredLOI> getExecutions(
@@ -280,5 +271,24 @@ public interface DiskService extends DirectRestService {
       @PathParam("domain") String domain,
       @PathParam("hid") String hid, 
       @PathParam("lid") String lid);
+  
+
+  /* Should query the internal storage, FIXME */
+  @POST
+  @Path("{username}/{domain}/sparql")
+  public String sparql(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @JsonProperty("query") String query);
+  
+  /* Should query the external storages, FIXME */
+  @GET
+  @Path("{username}/{domain}/test")  
+  public Map<String, List<String>> queryExternalStore(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @QueryParam("variables") String variables,
+      @QueryParam("query") String query);
+  
 
 }

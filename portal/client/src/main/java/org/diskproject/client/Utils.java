@@ -1,12 +1,25 @@
 package org.diskproject.client;
 
 import org.diskproject.shared.classes.common.TreeItem;
+import org.diskproject.shared.classes.loi.TriggeredLOI;
+import org.diskproject.shared.classes.loi.TriggeredLOI.Status;
+
 import com.google.gwt.i18n.client.DateTimeFormat;
 
 import java.util.Comparator;
 import java.util.Date;
 
 public class Utils {
+	public static Comparator<TriggeredLOI> tloiSorter = new Comparator<TriggeredLOI>(){
+		public int compare (TriggeredLOI l, TriggeredLOI r) {
+			Status ls = l.getStatus();
+			Status rs = r.getStatus();
+			if (ls == null) return -1;
+			if (rs == null) return 1;
+			return 0;
+		}
+	};
+	
 	public static Comparator<TreeItem> ascDateOrder = new Comparator<TreeItem>() {
 		public int compare (TreeItem l, TreeItem r) {
 			String lc = l.getCreationDate();

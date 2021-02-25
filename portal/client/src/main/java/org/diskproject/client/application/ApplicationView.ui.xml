@@ -284,12 +284,15 @@
             	color: green;
 			}
 			.FAILURE, .FAILED,
-			.FAILURE a, .FAILURE a {
+			.FAILURE a, .FAILED a {
             	color: maroon;
 			}
 			.QUEUED, .RUNNING,
 			.QUEUED a, .RUNNING a {
             	color: #888;
+			}
+			.TORUN, .TORUN a {
+            	color: royalblue;
 			}
 			
 			.list paper-item .name,

@@ -75,9 +75,6 @@ public class HypothesisView extends ApplicationSubviewImpl
   @UiField AnchorElement retryLink;
   @UiField DivElement notloi;
   
-  @UiField DialogBox dialog;
-  @UiField HTMLPanel dialogContent;
-  
   @UiField ListBox order;
 
   @UiField DialogBox helpDialog;
@@ -346,48 +343,46 @@ public class HypothesisView extends ApplicationSubviewImpl
     	return;
     }
     
+    Collections.sort(tlois, Utils.tloiSorter);
+    
     for(final TriggeredLOI tloi : tlois) {
+      final HTMLPanel panel = new HTMLPanel("");
+      panel.setStyleName("bordered-section");
+      
+      if (tloi.getStatus() == null) { 
+    	  //TLOI has not been executed so add the button
+		  HTMLPanel buttonPanel = new HTMLPanel("");
+		  buttonPanel.setStyleName("floating-right-button");      
+		  PaperButton button = new PaperButton();
+		  IronIcon icon = new IronIcon();
+		  icon.setIcon("build");
+		  button.add(icon);
+		  button.add(new InlineHTML("Run this line of inquiry"));
+		  button.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+			  triggerMatchedLOI(tloi);
+			  matchlist.remove(panel);
+			}
+		  });
+		  buttonPanel.add(button);
+		  panel.add(buttonPanel);            
+		  
+		  GWT.log("TLOI name= " + tloi.getName());
+		  tloi.setName( tloi.getName().replace("Triggered", "New") );
+		  
+      }
+
       final TriggeredLOIViewer tviewer = new TriggeredLOIViewer();
       tviewer.initialize(userid, domain);
       tviewer.load(tloi);
-      
-      final HTMLPanel panel = new HTMLPanel("");
-      panel.setStyleName("bordered-section");
       panel.add(tviewer);
       
-      HTMLPanel buttonPanel = new HTMLPanel("");
-      buttonPanel.setStyleName("horizontal end-justified layout");      
-      PaperButton button = new PaperButton();
-      IronIcon icon = new IronIcon();
-      icon.setIcon("build");
-      button.add(icon);
-      button.add(new InlineHTML("Run line of inquiry"));
-      button.addClickHandler(new ClickHandler() {
-        @Override
-        public void onClick(ClickEvent event) {
-          triggerMatchedLOI(tloi);
-          matchlist.remove(panel);
-        }
-      });
-      buttonPanel.add(button);
-      /* Edit bindings button. Move me to the workflow. */
-      PaperButton button2 = new PaperButton();
-      button2.add(new InlineHTML("Edit bindings"));
-      button2.addClickHandler(new ClickHandler() {
-        @Override
-        public void onClick(ClickEvent event) {
-        	updateDialogContent(tloi.getWorkflows());
-        	dialog.center();
-        }
-      });
-      //buttonPanel.add(button2);
-
-      panel.add(buttonPanel);            
       matchlist.add(panel);
     }
   }
 
-  void updateDialogContent (List<WorkflowBindings> workflows) {
+  /*void updateDialogContent (List<WorkflowBindings> workflows) {
 	  dialogContent.clear();
 	  varList = null;
 	  checkMap = null;
@@ -411,7 +406,7 @@ public class HypothesisView extends ApplicationSubviewImpl
 			  cblist.add(cb);
 		  }
 	  }
-  }
+  }*/
 
   void triggerMatchedLOI(final TriggeredLOI tloi) {
     DiskREST.addTriggeredLOI(tloi, new Callback<Void, Throwable>() {
@@ -525,7 +520,7 @@ public class HypothesisView extends ApplicationSubviewImpl
     }
   }
 
-  @UiHandler("dialogOkButton")
+  /*@UiHandler("dialogOkButton")
   void onOkButtonClicked(ClickEvent event) {
 	  String var = varList.getSelectedValue();
 	  List<String> bindings = new ArrayList<String>();
@@ -548,7 +543,7 @@ public class HypothesisView extends ApplicationSubviewImpl
   @UiHandler("dialogCancelButton")
   void onCancelButtonClicked(ClickEvent event) {
 	  dialog.hide();
-  }
+  }*/
 
   private void setHeader(SimplePanel toolbar) {
     // Set Toolbar header
