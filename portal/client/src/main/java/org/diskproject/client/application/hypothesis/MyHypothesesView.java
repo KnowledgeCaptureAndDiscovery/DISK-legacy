@@ -73,8 +73,8 @@ public class MyHypothesesView extends ApplicationSubviewImpl
   @UiField PaperFab addicon;
   @UiField HTMLPanel matchlist;
   @UiField HTMLPanel description;
-  @UiField HTMLPanel retryDiv;
-  @UiField AnchorElement retryLink;
+  @UiField HTMLPanel retryDiv, emptyDiv;
+  @UiField AnchorElement retryLink, addLink;
   @UiField DivElement notloi;
   
   @UiField DialogBox dialog;
@@ -108,6 +108,13 @@ public class MyHypothesesView extends ApplicationSubviewImpl
       @Override
       public void onBrowserEvent(Event event) {
         me.showHypothesisList();
+      }
+    });
+    Event.sinkEvents(addLink, Event.ONCLICK);
+    Event.setEventListener(addLink, new EventListener() {
+      @Override
+      public void onBrowserEvent(Event event) {
+    	  me.onAddIconClicked(null);
       }
     });
   }
@@ -149,6 +156,8 @@ public class MyHypothesesView extends ApplicationSubviewImpl
     tree.setVisible(false);
     description.setVisible(false);
     addicon.setVisible(false);
+    /*if (hypothesisList != null && hypothesisList.size() > 0)
+    	emptyDiv.setVisible(false);*/
     matchlist.setVisible(false);
     addmode = false;
   }
@@ -160,6 +169,7 @@ public class MyHypothesesView extends ApplicationSubviewImpl
 
   private void showHypothesisList() {
     loader.setVisible(true);
+    emptyDiv.setVisible(false);
     // This can be a problem, the server is not handling concurrency correctly.
     // Will make this sequential, but multiple users can make this error to happen.
     DiskREST.listHypotheses(new Callback<List<TreeItem>, Throwable>() {
@@ -169,6 +179,14 @@ public class MyHypothesesView extends ApplicationSubviewImpl
           // Only my hypotheses
           hypothesisList = result.stream().filter(p -> p.getAuthor() != null && p.getAuthor().equals(AuthUser.getUsername())).collect(Collectors.toList());
           generateHypothesisTree();
+          if (hypothesisList.size() == 0) {
+        	  // Show empty message.
+        	  GWT.log("empty!!");
+        	  emptyDiv.setVisible(true);
+          } else {
+        	  // Hide empty message.
+        	  emptyDiv.setVisible(false);
+          }
         } else {
           AppNotification.notifyFailure("Error loading hypothesis");
           showErrorWhileLoading();
@@ -435,6 +453,7 @@ public class MyHypothesesView extends ApplicationSubviewImpl
   @UiHandler("addicon")
   void onAddIconClicked(ClickEvent event) {
     tree.setVisible(false);
+    emptyDiv.setVisible(false);
     description.setVisible(false);
     addicon.setVisible(false);
     form.setVisible(true);        

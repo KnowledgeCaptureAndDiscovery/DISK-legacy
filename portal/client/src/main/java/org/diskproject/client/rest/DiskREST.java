@@ -218,6 +218,11 @@ public class DiskREST {
 
   public static void addHypothesis(Hypothesis hypothesis,
       final Callback<Void, Throwable> callback) {
+	String user = AuthUser.getUsername();
+	if (user.equals("guest")) {
+		AppNotification.notifyFailure("Guest account can not create Hypothesis");
+		return;
+	}
 	  
 	DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
 	String date = fm.format(new Date());
@@ -227,7 +232,7 @@ public class DiskREST {
 	} else {
 		hypothesis.setDateCreated(date);
 	}
-	hypothesis.setAuthor(AuthUser.getUsername());
+	hypothesis.setAuthor(user);
 
     REST.withCallback(new MethodCallback<Void>() {
       @Override
@@ -243,6 +248,11 @@ public class DiskREST {
 
   public static void updateHypothesis(Hypothesis hypothesis,
       final Callback<Void, Throwable> callback) {
+	String user = AuthUser.getUsername();
+	if (user.equals("guest")) {
+		AppNotification.notifyFailure("Guest account can not update Hypothesis");
+		return;
+	}
     REST.withCallback(new MethodCallback<Void>() {
       @Override
       public void onSuccess(Method method, Void response) {
@@ -258,6 +268,11 @@ public class DiskREST {
 
   public static void deleteHypothesis(String id,
       final Callback<Void, Throwable> callback) {
+	String user = AuthUser.getUsername();
+	if (user.equals("guest")) {
+		AppNotification.notifyFailure("Guest account can not delete Hypothesis");
+		return;
+	}
     REST.withCallback(new MethodCallback<Void>() {
       @Override
       public void onSuccess(Method method, Void response) {
@@ -272,6 +287,11 @@ public class DiskREST {
 
   public static void queryHypothesis(String id,
       final Callback<List<TriggeredLOI>, Throwable> callback) {
+	String user = AuthUser.getUsername();
+	if (user.equals("guest")) {
+		AppNotification.notifyFailure("Guest account can not run hypotheses");
+		return;
+	}
     REST.withCallback(new MethodCallback<List<TriggeredLOI>>() {
       @Override
       public void onFailure(Method method, Throwable exception) {
@@ -316,11 +336,16 @@ public class DiskREST {
 
   public static void addLOI(LineOfInquiry loi,
       final Callback<Void, Throwable> callback) {
+	String user = AuthUser.getUsername();
+	if (user.equals("guest")) {
+		AppNotification.notifyFailure("Guest account can not create lines of inquiry");
+		return;
+	}
 	DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
 	String date = fm.format(new Date());
 	
 	loi.setDateCreated(date);
-	loi.setAuthor(AuthUser.getUsername());
+	loi.setAuthor(user);
 
     REST.withCallback(new MethodCallback<Void>() {
       @Override
@@ -336,6 +361,11 @@ public class DiskREST {
 
   public static void deleteLOI(String id,
       final Callback<Void, Throwable> callback) {
+	String user = AuthUser.getUsername();
+	if (user.equals("guest")) {
+		AppNotification.notifyFailure("Guest account can not delete lines of inquiry");
+		return;
+	}
     REST.withCallback(new MethodCallback<Void>() {
       @Override
       public void onSuccess(Method method, Void response) {
@@ -350,6 +380,11 @@ public class DiskREST {
   
   public static void updateLOI(LineOfInquiry loi,
       final Callback<Void, Throwable> callback) {
+	String user = AuthUser.getUsername();
+	if (user.equals("guest")) {
+		AppNotification.notifyFailure("Guest account can not update lines of inquiry");
+		return;
+	}
 
 	DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
 	String date = fm.format(new Date());
@@ -361,7 +396,7 @@ public class DiskREST {
 		loi.setDateCreated(date);
 	}
 	loi.setDateModified(date);
-	loi.setAuthor(AuthUser.getUsername());
+	loi.setAuthor(user);
 	  
     REST.withCallback(new MethodCallback<Void>() {
       @Override
@@ -381,6 +416,11 @@ public class DiskREST {
    */
   public static void addTriggeredLOI(TriggeredLOI tloi, 
       final Callback<Void, Throwable> callback) {
+	String user = AuthUser.getUsername();
+	if (user.equals("guest")) {
+		AppNotification.notifyFailure("Guest account can not create triggered lines of inquiry");
+		return;
+	}
 
 	DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
 	String date = fm.format(new Date());
@@ -391,7 +431,7 @@ public class DiskREST {
 		tloi.setDateCreated(date);
 	}
 	
-	tloi.setAuthor(AuthUser.getUsername());
+	tloi.setAuthor(user);
 
     REST.withCallback(new MethodCallback<Void>() {
       @Override
@@ -434,6 +474,11 @@ public class DiskREST {
 
   public static void deleteTriggeredLOI(String id,
       final Callback<Void, Throwable> callback) {
+	String user = AuthUser.getUsername();
+	if (user.equals("guest")) {
+		AppNotification.notifyFailure("Guest account can not delete triggered lines of inquiry");
+		return;
+	}
     REST.withCallback(new MethodCallback<Void>() {
       @Override
       public void onSuccess(Method method, Void response) {
@@ -466,6 +511,11 @@ public class DiskREST {
 
   public static void updateAssertions(Graph graph,
       final Callback<Void, Throwable> callback) {
+	String user = AuthUser.getUsername();
+	if (user.equals("guest")) {
+		AppNotification.notifyFailure("Guest account can not update assertions");
+		return;
+	}
     REST.withCallback(new MethodCallback<Void>() {
       @Override
       public void onSuccess(Method method, Void response) {
@@ -622,4 +672,21 @@ public class DiskREST {
       }
     }).call(getDiskService()).listOptions(username, domain, qid);
   }
+  
+  /* Narratives */
+
+  public static void getTLOINarratives(final String tloiid,
+		  final Callback<Map<String, String>, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Map<String, String>>() {
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+      @Override
+      public void onSuccess(Method method, Map<String, String> response) {
+        callback.onSuccess(response);
+      }
+    }).call(getDiskService()).getNarratives(username, domain, tloiid);
+  }
+  
 }

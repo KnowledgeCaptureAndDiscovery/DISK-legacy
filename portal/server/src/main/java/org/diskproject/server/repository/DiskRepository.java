@@ -2662,6 +2662,128 @@ public class DiskRepository extends KBRepository {
 		}
 		return null;
 	}
+	
+	
+	/* Narratives */
+	
+	public Map<String, String> getNarratives (String username, String domain, String tloid) {
+		Map<String,String> narratives = new HashMap<String, String>();
+		TriggeredLOI tloi = this.getTriggeredLOI(username, domain, tloid);
+		if (tloi != null) {
+			String hypId = tloi.getParentHypothesisId();
+			String loiId = tloi.getLoiId();
+			Hypothesis hyp = this.getHypothesis(username, domain, hypId);
+			LineOfInquiry loi = this.getLOI(username, domain, loiId);
+			
+			// Assuming each tloi only has a workflow or metaworkdflow:
+			WorkflowBindings wf = null;
+			List<WorkflowBindings> wfs = tloi.getWorkflows();
+			List<WorkflowBindings> mwfs = tloi.getMetaWorkflows();
+
+			if (mwfs != null && mwfs.size() > 0) {
+				wf = mwfs.get(0);
+			} else if (wfs != null && wfs.size() > 0){
+				wf = wfs.get(0);
+			} else {
+				System.out.println("TLOID: " + tloid + " has does not have any workflow.");
+			}
+			
+			String dataset = "";
+			for (VariableBinding ds: wf.getBindings()) {
+				String binding = ds.getBinding();
+				if (binding.startsWith("[")) {
+					for (String datas: ds.getBindingAsArray()) {
+						dataset += "<li>" + datas + "</li>";
+					}
+				}
+				System.out.println("binding: " + binding);
+			}
+			
+			//Execution narratives
+			String execution = "<b>Execution Narrative:</b><br/>"
+							 + "The Hypothesis with title: <b>" + hyp.getName()
+							 + "</b> was tested <span class=\"" + tloi.getStatus() + "\">" 
+							 + tloi.getStatus() + "</span>"
+							 + " with the Line of Inquiry: <b>" + loi.getName()
+							 + "</b>. The LOI triggered the <a target=\"_blank\" href=\"" + wf.getWorkflowLink() 
+							 + "\">workflow on WINGS</a>"
+							 + " where it was tested with the following datasets:<ul>" + dataset
+							 + "</ul>The resulting confidence value is " + tloi.getConfidenceValue() + ".";
+			narratives.put("execution", execution);
+
+			System.out.println("EXECUTION NARRATIVE: " + execution);
+			
+			String dataQuery = "<b>Data Query Narrative:</b><br/>" + this.dataQueryNarrative(loi.getDataQuery());
+
+			System.out.println("DATA Query NARRATIVE: " + dataQuery);
+			
+			narratives.put("dataquery", dataQuery);
+		}
+		return narratives;
+	}
+	
+	private String dataQueryNarrative(String dataQuery) {
+      String dataQuery1 = dataQuery.replaceAll("^(//)n${1}",""); //this is necessary to replace the new line characters in query
+      String[] querylist = dataQuery1.split("\\.");
+      String rdfs_label = "rdfs:label";
+      //storing properties
+      Map<String, String> properties = new HashMap<String, String>();
+      for(int i = 0; i < querylist.length; i++) {
+//          System.out.println("\n"+ querylist[i]);
+          if(querylist[i].contains(rdfs_label)){
+              String[] line = querylist[i].replace("\\","").split(" ");
+              properties.put(line[2],line[4].replace('"',' '));
+          }
+      }
+
+      //We map all the objects to the properties they were identified with, by using the objects dictionary
+      Map<String, List<List<String>>> inputs = new HashMap<>();
+      Map<List<String>, String> outputs = new HashMap<>();
+      for(int i = 0; i < querylist.length; i++) {
+          if(!querylist[i].contains(rdfs_label)){
+              String[] line = querylist[i].split(" ");
+              String schema = "Schema";
+              if(!inputs.containsKey(line[2])&!line[2].contains(schema)){
+                  List<List<String>> list = new ArrayList<List<String>>();
+                  List<String> item = new ArrayList<String>();
+                  item.add(line[2]);
+                  item.add(properties.get(line[3]));
+//                  item.add(line[4]);
+                  list.add(item);
+                  inputs.put(line[2],list);
+                  outputs.put(item,line[4]);
+              } else if(inputs.containsKey(line[2])&!line[2].contains(schema)){
+                  List<List<String>> list2 = inputs.get(line[2]);
+                  List<String> item = new ArrayList<String>();
+                  item.add(line[2]);
+                  item.add(properties.get(line[3]));
+                  list2.add(item);
+                  inputs.put(line[2],list2);
+                  List<String> list = new ArrayList<String>();
+                  list.add(line[2]);
+                  list.add(properties.get(line[3]));
+                  outputs.put(item,line[4]);
+              }
+          }
+      }
+
+      //Now we traverse the path
+      String path = "";
+      for (String key : inputs.keySet()) {
+    	  List<List<String>> value = inputs.get(key);
+          for(int j=0;j<value.size();j++){
+              //p = v
+              List<String> p = value.get(j);
+              try {
+                  path = path+key.replace("?","")+"->"+ p.get(1).toString().trim().replace("?","") +"->"+outputs.get(p).toString().replace("?","")+"<br/>";
+              } catch (NullPointerException e){
+
+              }
+              }
+          }
+//      System.out.println("Narrative"+path);
+      return path;
+  }
 
 	/*
 	private List<WorkflowBindings> addEnimgaFiles(String username, String domain, TriggeredLOI tloi, boolean metamode, boolean upload) {

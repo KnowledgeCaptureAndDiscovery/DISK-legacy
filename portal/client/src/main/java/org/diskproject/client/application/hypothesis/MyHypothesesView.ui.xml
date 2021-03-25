@@ -156,12 +156,6 @@
 			addStyleNames="addicon" title="Add Hypothesis" tabindex="0" />
 		<p:PaperFab ui:field="helpicon" icon="help-outline" mini="true" 
 			addStyleNames="helploiicon" title="Help: Line of Inquiry" tabindex="0" />
-		<g:HTMLPanel ui:field="retryDiv">
-		  <div style="display: block; font-size: 1.1em; height: 40px; line-height: 40px; text-align: center;">
-			  An error has occurred while loading this page.
-			  <a class="clickable" ui:field="retryLink">Click here to retry.</a>
-		  </div>
-		</g:HTMLPanel>
 		<g:HTMLPanel ui:field="description">
 		  <div style="padding: 4px 10px; font-size: 14px; color: #666">
 			 <div style="float:right">
@@ -183,6 +177,18 @@
 		  </div>
 		</g:HTMLPanel>
 		<l:Loader ui:field="loader" />
+		<g:HTMLPanel ui:field="emptyDiv">
+		  <div style="display: block; font-size: 1.1em; height: 40px; line-height: 40px; text-align: center;">
+			  You dont have any hypothesis.
+			  <a class="clickable" ui:field="addLink">Click here</a> to create one.
+		  </div>
+		</g:HTMLPanel>
+		<g:HTMLPanel ui:field="retryDiv">
+		  <div style="display: block; font-size: 1.1em; height: 40px; line-height: 40px; text-align: center;">
+			  An error has occurred while loading this page.
+			  <a class="clickable" ui:field="retryLink">Click here to retry.</a>
+		  </div>
+		</g:HTMLPanel>
 		<div ui:field="notloi" class="aux">No Line of Inquiry matches your hypothesis.</div>
 		<t:TreeWidget ui:field="tree" styleName="tree" />
 		<h:HypothesisEditor ui:field="form" styleName="padded" />

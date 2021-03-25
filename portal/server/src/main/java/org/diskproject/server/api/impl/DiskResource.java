@@ -476,5 +476,15 @@ public class DiskResource implements DiskService {
       @PathParam("domain") String domain) {
 	return this.repo.runAllHypotheses(username, domain);
   }
+
+  @GET
+  @Path("{username}/{domain}/tloi/{tloiid}/narratives")
+  @Override
+  public Map<String, String> getNarratives(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("tloiid") String tloiid) {
+	return this.repo.getNarratives(username, domain, tloiid);
+  }
   
 }

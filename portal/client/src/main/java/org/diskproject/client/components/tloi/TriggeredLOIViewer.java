@@ -51,6 +51,7 @@ public class TriggeredLOIViewer extends Composite {
   @UiField LabelElement WFLabel;
   @UiField Label DataLabel;
   @UiField HTMLPanel revHypothesisSection, DataSection, DataQuerySection;
+  @UiField HTMLPanel executionNarrative, dataQueryNarrative;
   @UiField TripleViewer hypothesis;
   @UiField SparqlInput dataQuery;
   @UiField ListWidget workflowlist, metaworkflowlist;
@@ -61,7 +62,7 @@ public class TriggeredLOIViewer extends Composite {
   String datamode = "all";
   TriggeredLOI tloi;
   Map<String, List<String>> dataRetrieved;
-  @UiField CheckBox showdata, showdq;
+  @UiField CheckBox showdata, showdq, showExecNarrative, showDataQueryNarrative;
 
 
   public TriggeredLOIViewer() {
@@ -108,6 +109,26 @@ public class TriggeredLOIViewer extends Composite {
     setDataQueryHTML(tloi.getDataQuery(), LOISection, dataQuery);
     setRevisedHypothesesHTML(tloi.getResultingHypothesisIds(), revHypothesisSection);
     
+    this.loadNarratives(tloi);
+  }
+  
+  private void loadNarratives (TriggeredLOI tloi) {
+	  String id = tloi.getId();
+      DiskREST.getTLOINarratives(id, new Callback<Map<String,String>, Throwable>() {
+        @Override
+        public void onSuccess(Map<String, String> response) {
+          if (response != null) {
+        	  executionNarrative.clear();
+        	  executionNarrative.add(new HTML(response.get("execution")));
+        	  dataQueryNarrative.clear();
+        	  dataQueryNarrative.add(new HTML(response.get("dataquery")));
+          }
+        }
+        @Override
+        public void onFailure(Throwable reason) {
+          AppNotification.notifyFailure(reason.getMessage());
+        }
+	  });
   }
 
   @UiHandler("showdq")
@@ -133,6 +154,18 @@ public class TriggeredLOIViewer extends Composite {
       DataSection.setVisible(false);
       DataLabel.setVisible(false);
     }
+  }
+
+  @UiHandler("showExecNarrative")
+  void onClickShowExecutionNarrative(ClickEvent event) {
+    boolean show = showExecNarrative.getValue();
+    executionNarrative.setVisible(show);
+  }
+
+  @UiHandler("showDataQueryNarrative")
+  void onClickShowDataQueryNarrative(ClickEvent event) {
+    boolean show = showDataQueryNarrative.getValue();
+    dataQueryNarrative.setVisible(show);
   }
 
   private void loadAndShowData () {

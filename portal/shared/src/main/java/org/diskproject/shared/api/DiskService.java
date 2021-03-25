@@ -272,6 +272,15 @@ public interface DiskService extends DirectRestService {
       @PathParam("hid") String hid, 
       @PathParam("lid") String lid);
   
+  
+  /* Get narratives for tloi id*/
+  @GET
+  @Path("{username}/{domain}/tloi/{tloiid}/narratives")
+  public Map<String, String> getNarratives(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("tloiid") String tloiid);
+
 
   /* Should query the internal storage, FIXME */
   @POST

@@ -152,6 +152,28 @@
 				</div>
 			</div>
 
+			<div ui:field="NarrativesSection">
+				<label class="small-grey">Narratives:</label>
+
+				<div class="bordered-list padded">
+					<span>
+						<g:CheckBox ui:field='showExecNarrative' value="true">
+							<label>Show execution narrative</label>
+						</g:CheckBox>
+						<g:CheckBox ui:field='showDataQueryNarrative' value="true">
+							<label>Show data query narrative</label>
+						</g:CheckBox>
+					</span>
+
+					<div>
+						<g:HTMLPanel ui:field="executionNarrative"> </g:HTMLPanel>
+					</div>
+					<div>
+						<g:HTMLPanel ui:field="dataQueryNarrative"> </g:HTMLPanel>
+					</div>
+				</div>
+			</div>
+
 			<div ui:field="WFSection">
 				<label ui:field="WFLabel" class="small-grey">Triggered Workflows</label>
 				<div class="bordered-list">
