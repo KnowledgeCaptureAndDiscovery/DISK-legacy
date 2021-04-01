@@ -2060,8 +2060,9 @@ public class DiskRepository extends KBRepository {
 				loi.setAuthor(authorobj.getValueAsString());
 
 			KBObject notesobj = loikb.getPropertyValue(floiitem, pmap.get("hasNotes"));
-			if (notesobj != null)
+			if (notesobj != null) {
 				loi.setNotes(notesobj.getValueAsString());
+			}
 
 			KBObject rvarobj = loikb.getPropertyValue(floiitem, pmap.get("hasRelevantVariables"));
 			if (rvarobj != null)
@@ -2699,16 +2700,31 @@ public class DiskRepository extends KBRepository {
 				System.out.println("binding: " + binding);
 			}
 			
+			String pval = Double.toString(tloi.getConfidenceValue());
+			int pvallen = pval.length();
+			if (pval != null && pvallen > 3) {
+				int decimals = 0;
+				String newval = "";
+				for (int i = 0; i < pvallen; i++) {
+					if (pval.charAt(i) != '0' && pval.charAt(i) != '.' && decimals < 2) {
+						decimals += 1;
+					}
+					newval += pval.charAt(i);
+					if (decimals >= 2) break;
+				}
+				pval = newval;
+			}
+			
 			//Execution narratives
 			String execution = "<b>Execution Narrative:</b><br/>"
 							 + "The Hypothesis with title: <b>" + hyp.getName()
-							 + "</b> was tested <span class=\"" + tloi.getStatus() + "\">" 
+							 + "</b> was runned <span class=\"" + tloi.getStatus() + "\">" 
 							 + tloi.getStatus() + "</span>"
 							 + " with the Line of Inquiry: <b>" + loi.getName()
 							 + "</b>. The LOI triggered the <a target=\"_blank\" href=\"" + wf.getWorkflowLink() 
 							 + "\">workflow on WINGS</a>"
 							 + " where it was tested with the following datasets:<ul>" + dataset
-							 + "</ul>The resulting confidence value is " + tloi.getConfidenceValue() + ".";
+							 + "</ul>The resulting p-value is " + pval + ".";
 			narratives.put("execution", execution);
 
 			System.out.println("EXECUTION NARRATIVE: " + execution);

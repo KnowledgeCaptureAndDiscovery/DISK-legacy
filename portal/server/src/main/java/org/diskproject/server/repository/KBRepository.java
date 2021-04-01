@@ -99,6 +99,7 @@ public class KBRepository implements TransactionsAPI {
   private void temporaryHacks() {
 	//ADDs properties to the ontology being loaded.
     this.hackInDataProperty("hasRelevantVariables", "LineOfInquiry", "string");
+    this.hackInDataProperty("hasNotes", "LineOfInquiry", "string");
     this.hackInDataProperty("hasQuestionPattern", "Question", "string");
     this.hackInDataProperty("dataQueryDescription", "LineOfInquiry", "string");
     this.hackInDataProperty("hasFixedOptions", "QuestionVariable", "string");
