@@ -64,7 +64,9 @@
     <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Genotype 
 ?EffectSize neuro:targetCharacteristic ?BrainImagingTrait 
 ?EffectSize neuro:targetCharacteristic ?Region 
-?EffectSize hyp:associatedWith ?DemographicAttribute</ns0:hasQuestionPattern>
+?EffectSize hyp:associatedWith ?DemographicAttribute
+optional { ?DemographicAttribute hyp:lessThan ?maxAge }
+optional { ?DemographicAttribute hyp:moreThan ?minAge }</ns0:hasQuestionPattern>
     <ns0:hasQuestionVariable>
       <ns0:QuestionVariable rdf:about="http://disk-project.org/resources/question/HQ3V1">
         <ns0:hasVariableName>?Genotype</ns0:hasVariableName>
