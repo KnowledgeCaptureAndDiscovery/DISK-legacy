@@ -3,6 +3,7 @@
 	xmlns:g="urn:import:com.google.gwt.user.client.ui" 
 	xmlns:lw='urn:import:org.diskproject.client.components.list'
 	xmlns:tr='urn:import:org.diskproject.client.components.triples'	
+	xmlns:tloi='urn:import:org.diskproject.client.components.tloi'
 	xmlns:p='urn:import:com.vaadin.polymer.paper.widget' xmlns:G="urn:import:com.google.gwt.thirdparty.common.css.compiler.gssfunctions.GssFunctions" xmlns:s="urn:import:com.google.gwt.dom.builder.shared">
 
 	<g:HTMLPanel>
@@ -110,8 +111,23 @@
 				display: flex;
     			justify-content: space-between;
 			}
+			.edit-button {
+				float: right;
+				border: 1px solid gray;
+    			padding: 2px 3px;
+    			display: flex;
+			}
 		</style>
 		<div class="vertical layout section">
+			<p:PaperButton ui:field="runButton" styleName="edit-button">
+				<iron-icon icon="input"/>
+				RUN
+			</p:PaperButton>
+			<p:PaperButton ui:field="editBindingsButton" styleName="edit-button">
+				<iron-icon icon="settings-applications" />
+				EDIT
+			</p:PaperButton>
+
 			<div ui:field="header" />
 			<div ui:field="hypothesisSection">
 				<label class="small-grey">Hypothesis</label>
@@ -190,5 +206,9 @@
 			
 			<g:HTMLPanel ui:field="revHypothesisSection" />
 		</div>
+
+		<p:PaperDialog ui:field="editBindingsDialog" noCancelOnOutsideClick="true" noCancelOnEscKey="true">
+			<tloi:BindingsEditor ui:field="bindingseditor"/>
+		</p:PaperDialog>
 	</g:HTMLPanel>
 </ui:UiBinder>

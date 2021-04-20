@@ -1,6 +1,5 @@
 package org.diskproject.client.application.hypothesis;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +25,6 @@ import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.util.GUID;
-import org.diskproject.shared.classes.workflow.VariableBinding;
 
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
@@ -366,7 +364,7 @@ public class HypothesisView extends ApplicationSubviewImpl
 			}
 		  });
 		  buttonPanel.add(button);
-		  panel.add(buttonPanel);            
+		  //panel.add(buttonPanel);            
 		  
 		  GWT.log("TLOI name= " + tloi.getName());
 		  tloi.setName( tloi.getName().replace("Triggered", "New") );
@@ -376,6 +374,7 @@ public class HypothesisView extends ApplicationSubviewImpl
       final TriggeredLOIViewer tviewer = new TriggeredLOIViewer();
       tviewer.initialize(userid, domain);
       tviewer.load(tloi);
+      tviewer.enableBindingEdition();
       panel.add(tviewer);
       
       matchlist.add(panel);
@@ -409,6 +408,7 @@ public class HypothesisView extends ApplicationSubviewImpl
   }*/
 
   void triggerMatchedLOI(final TriggeredLOI tloi) {
+	tloi.setName(tloi.getName().replace("New:", "Triggered:"));
     DiskREST.addTriggeredLOI(tloi, new Callback<Void, Throwable>() {
       @Override
       public void onFailure(Throwable reason) {

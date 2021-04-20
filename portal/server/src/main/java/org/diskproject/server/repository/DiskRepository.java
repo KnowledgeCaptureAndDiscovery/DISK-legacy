@@ -2381,7 +2381,12 @@ public class DiskRepository extends KBRepository {
 		TriggeredLOI tloi = new TriggeredLOI();
 		KBObject obj = kb.getIndividual(id);
 
-		tloi.setId(obj.getName());
+		try{
+			tloi.setId(obj.getName());
+		} catch (Exception e) {
+			System.out.println("ERROR trying to get " + id);
+			return null;
+		}
 		tloi.setName(kb.getLabel(obj));
 		tloi.setDescription(kb.getComment(obj));
 

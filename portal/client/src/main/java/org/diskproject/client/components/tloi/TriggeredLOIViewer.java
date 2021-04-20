@@ -1,5 +1,6 @@
 package org.diskproject.client.components.tloi;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import org.diskproject.shared.classes.common.Triple;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.loi.TriggeredLOI.Status;
+import org.diskproject.shared.classes.util.GUID;
 import org.diskproject.shared.classes.loi.WorkflowBindings;
 import org.diskproject.shared.classes.workflow.VariableBinding;
 import org.diskproject.shared.classes.workflow.WorkflowRun;
@@ -33,6 +35,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
@@ -41,6 +44,8 @@ import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.polymer.paper.widget.PaperButton;
+import com.vaadin.polymer.paper.widget.PaperDialog;
+import com.vaadin.polymer.iron.widget.event.IronOverlayClosedEvent;
 
 public class TriggeredLOIViewer extends Composite {
   interface Binder extends UiBinder<Widget, TriggeredLOIViewer> {};
@@ -56,7 +61,10 @@ public class TriggeredLOIViewer extends Composite {
   @UiField SparqlInput dataQuery;
   @UiField ListWidget workflowlist, metaworkflowlist;
   @UiField AnchorElement hypothesisLink, loiLink;
-  @UiField PaperButton downloadbutton, triplesbutton;
+  @UiField PaperButton downloadbutton, triplesbutton, editBindingsButton, runButton;
+  @UiField PaperDialog editBindingsDialog;
+  @UiField BindingsEditor bindingseditor;
+
   String username, domain;
   String rawcsv; //USED to save the downloadable CSV.
   String datamode = "all";
@@ -72,6 +80,7 @@ public class TriggeredLOIViewer extends Composite {
   public void initialize(String username, String domain) {
     this.username = username;
     this.domain = domain;
+    editBindingsButton.setVisible(false);
     hypothesis.initialize(username, domain);
     workflowlist.addCustomAction("runlink", "Run details", 
         "icons:build", "blue-button run-link");
@@ -83,10 +92,17 @@ public class TriggeredLOIViewer extends Composite {
     DataQuerySection.setVisible(false);
     DataLabel.setVisible(false);
   }
+  
+  public void enableBindingEdition () {
+	  editBindingsButton.setVisible(true);
+  }
 
   public void load(TriggeredLOI tloi) {
     this.tloi = tloi;
-    header.setInnerHTML(tloi.getHeaderHTML());
+    runButton.setVisible(tloi.getStatus()==null);
+    
+    //header.setInnerHTML(tloi.getHeaderHTML());
+    setHeader(tloi);
     setLOILink(tloi.getName(), tloi.getLoiId(), loiLink);
 
     List<WorkflowBindings> mwf = tloi.getMetaWorkflows();
@@ -112,6 +128,40 @@ public class TriggeredLOIViewer extends Composite {
     this.loadNarratives(tloi);
   }
   
+  private void setHeader(TriggeredLOI tloi) {
+	  String extra ="", extracls="";
+	  Status status = tloi.getStatus();
+	  if (status == null) {
+		  extracls = " TORUN";
+	  } else {
+		  String icon = "icons:hourglass-empty";
+		  if(status == Status.SUCCESSFUL) {
+			  icon = "icons:check";
+		  }
+		  else if(status == Status.FAILED) {
+			  icon = "icons:clear";
+		  }
+		  extra = " <iron-icon class='"+status+"' icon='"+icon+"' />";
+		  extracls = " " +status;
+	  }
+	  
+	  String html = "<div class='name" + extracls+ "'>" + tloi.getName() + extra +"</div>";
+	  
+	  if (tloi.getDescription() != null) {
+		  html += "<div class='description'>" + tloi.getDescription() + "</div>";
+	  }
+
+    /* TODO: add date to tloi.
+    html += "<div class='footer' style='display: flex;justify-content: space-between;'>";
+    html += "<span><b>Creation date:</b> ";
+    html += (this.creationDate != null) ? this.creationDate : "None specified";
+    html += "</span><span><b>Author:</b> ";
+    html += (this.author != null) ? this.author : "None specified";
+    html += "</span></div>";*/
+
+	  header.setInnerHTML(html);
+  }
+
   private void loadNarratives (TriggeredLOI tloi) {
 	  String id = tloi.getId();
       DiskREST.getTLOINarratives(id, new Callback<Map<String,String>, Throwable>() {
@@ -489,7 +539,7 @@ public class TriggeredLOIViewer extends Composite {
     	}
     	return r;
     }
-
+ 
 	@UiHandler("triplesbutton")
 	void onDlTriplesButtonClicked(ClickEvent event) {
 		GWT.log("Downloading triples...");
@@ -512,4 +562,71 @@ public class TriggeredLOIViewer extends Composite {
 		  }
 		});
 	}
+
+	@UiHandler("runButton")
+	void onRunButtonClicked(ClickEvent event) {
+		tloi.setName(tloi.getName().replace("New:", "Triggered:"));
+		DiskREST.addTriggeredLOI(tloi, new Callback<Void, Throwable>() {
+			@Override
+			public void onFailure(Throwable reason) {
+				AppNotification.notifyFailure(reason.getMessage());
+			}
+			@Override
+			public void onSuccess(Void result) {
+				AppNotification.notifySuccess("Submitted.", 1000);
+				String token = NameTokens.getTLOIs() + "/" + username + "/"
+						+ domain + "/" + tloi.getId();
+				History.newItem(token, true);
+			}
+		});
+	}
+
+	@UiHandler("editBindingsButton")
+	void onEditBindingsButtonClicked(ClickEvent event) {
+		//For the moment this works with only one workflow!
+		List<WorkflowBindings> metawfs = tloi.getMetaWorkflows();
+		List<WorkflowBindings> wfs = tloi.getWorkflows();
+		if (metawfs.size() > 0) {
+			bindingseditor.setWorkflowBindings(metawfs.get(0));
+		} else if (wfs.size() > 0) {
+			bindingseditor.setWorkflowBindings(wfs.get(0));
+		} else {
+			GWT.log("Cannot edit, workflow not found.");
+		}
+		
+		editBindingsDialog.open();
+	}
+
+	@UiHandler("editBindingsDialog")
+	void onDialogClose(IronOverlayClosedEvent event) {
+		if(!isConfirmed(event.getPolymerEvent().getDetail()))
+			return;
+		
+		//For the moment this works with only one workflow!
+		List<WorkflowBindings> metawfs = tloi.getMetaWorkflows();
+		List<WorkflowBindings> wfs = tloi.getWorkflows();
+		
+		List<WorkflowBindings> toSet = new ArrayList<WorkflowBindings>();
+		toSet.add( bindingseditor.getWorkflowBindings() );
+		
+		if (metawfs.size() > 0) {
+			tloi.setMetaWorkflows(toSet);
+		} else if (wfs.size() > 0) {
+			tloi.setWorkflows(toSet);
+		} else {
+			GWT.log("Cannot edit, workflow not found.");
+		}
+		// Clear some properties
+		tloi.setResultingHypothesisIds(new ArrayList<String>());
+		tloi.setConfidenceValue(0);
+		tloi.setStatus(null);
+		tloi.setAuthor(null);
+		tloi.setDateCreated(null);
+		tloi.setId(GUID.randomId("TriggeredLOI"));
+		load(tloi);
+	}
+
+	private native boolean isConfirmed(Object obj) /*-{
+    	return obj.confirmed;
+  	}-*/;  
 }
