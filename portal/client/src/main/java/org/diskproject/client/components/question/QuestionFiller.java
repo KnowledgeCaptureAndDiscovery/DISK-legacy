@@ -5,6 +5,7 @@ import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.dom.client.SpanElement;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -21,28 +22,24 @@ import java.util.List;
 import java.util.Map;
 
 import org.diskproject.client.components.hypothesis.HypothesisEditor;
-import org.diskproject.client.components.loi.LOIEditor;
 import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
 import org.diskproject.shared.classes.question.Question;
 import org.diskproject.shared.classes.question.QuestionVariable;
-import org.diskproject.shared.classes.util.KBConstants;
-import org.diskproject.shared.classes.vocabulary.Individual;
-import org.diskproject.shared.classes.vocabulary.Vocabulary;
 import org.diskproject.shared.classes.workflow.VariableBinding;
 
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Widget;
-import com.google.gwt.view.client.SetSelectionModel;
 
 public class QuestionFiller extends Composite {
   interface Binder extends UiBinder<Widget, QuestionFiller> {};
   private static Binder uiBinder = GWT.create(Binder.class);
   
-  @UiField DivElement questionTemplate;
+  @UiField DivElement questionTemplate, filterSection;
   @UiField ListBox questionListBox;
+  @UiField InputElement filter1, filter2;
   private List<Question> questions;
   private Map<String, ListBox> options;
   private Map<String,List<List<String>>> optionsCache;
@@ -121,6 +118,13 @@ public class QuestionFiller extends Composite {
 		  String template = selectedQuestion.getTemplate();
 		  GWT.log(selectedQuestionId + " " + selectedQuestion.getVariables());
 		  List<QuestionVariable> variables = selectedQuestion.getVariables();
+		  
+		  //TODO: hack in filters
+		  if (selectedQuestionId.equals("http://disk-project.org/resources/question/HQ3")) {
+			  filterSection.getStyle().setDisplay(Display.INITIAL);
+		  } else {
+			  filterSection.getStyle().setDisplay(Display.NONE);
+		  }
 
 		  if (template == null || variables == null || template.equals("") || variables.size() == 0) {
 			  GWT.log("ERROR: " + selectedQuestionId + " does not have a template or variables.");
@@ -132,17 +136,17 @@ public class QuestionFiller extends Composite {
 		  for (QuestionVariable q: variables) {
 			  varmap.put(q.getVarName(), q);
 		  }
-		  
+
 		  // Text parts and variables
 		  String parts[] = template.split("\\?[a-zA-Z0-9]*");
 		  List<String> vars = new ArrayList<String>();
 		  for (MatchResult varMatcher = varPattern.exec(template); varMatcher != null; varMatcher = varPattern.exec(template)) {
 			  vars.add(varMatcher.getGroup(0));
 		  }
-		  
+
 		  int varlen = vars.size();
 		  int len = varlen > parts.length ? varlen : parts.length;
-		  
+
 		  //Assuming each questions start with a text part.
 		  questionTemplate.removeAllChildren();
 		  for (int i = 0; i < len; i++) {
@@ -267,6 +271,19 @@ public class QuestionFiller extends Composite {
 		}
 		if (myQuestion != null) {
 			String base = myQuestion.getPattern();
+			//Hack in filters
+			base = base.replaceAll("optional \\{.*\\}\n?", "");
+			if (myQuestion.getId().equals("http://disk-project.org/resources/question/HQ3")) {
+				String lessThan = filter1.getValue();
+				String moreThan = filter2.getValue();
+				if (lessThan != null && !lessThan.equals("")) {
+					base += "\n:Demographic hyp:lessThan \"" + lessThan + "\"^^xsd:string";
+				}
+				if (moreThan != null && !moreThan.equals("")) {
+					base += "\n:Demographic hyp:moreThan \"" + moreThan + "\"^^xsd:string";
+				}
+			}
+
 			for (QuestionVariable var : myQuestion.getVariables()) {
 				ListBox lb = options.get(var.getId());
 				String selected = lb.getSelectedValue();
@@ -282,6 +299,7 @@ public class QuestionFiller extends Composite {
 			}
 			
 			base = base.replace("?", ":");
+			base = base.replaceAll("\n\n", "\n");
 			parent.setHypothesis(base);
 		}
 	}

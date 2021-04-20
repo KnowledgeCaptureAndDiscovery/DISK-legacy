@@ -14,8 +14,18 @@
 			Fill the following <b>template</b> with your hypothesis:
 		</label>
 		<div class="hyp-pattern">
-			<div style="display:inline" ui:field='questionTemplate'></div>
-			<p:PaperButton ui:field="addPattern"> <iron-icon icon="add"/> </p:PaperButton>
+			<div>
+				<div style="display:inline" ui:field='questionTemplate'></div>
+				<p:PaperButton ui:field="addPattern"> <iron-icon icon="add"/> </p:PaperButton>
+			</div>
+			<div ui:field='filterSection' style="display:none;">
+				<b>Optional filters:</b>
+				<ul ui:field='questionFilters' style="margin: 0;">
+					<li style="margin-bottom: 2px;">Demographic is less than <input ui:field='filter1'></input></li>
+					<li>Demographic is more than <input ui:field='filter2'></input></li>
+				</ul>
+			</div>
 		</div>
+
     </g:HTMLPanel>
 </ui:UiBinder>

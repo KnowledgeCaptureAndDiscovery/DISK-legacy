@@ -145,48 +145,19 @@ public class DiskRepository extends KBRepository {
 	 * KB Initialization
 	 */
 
-	public void reloadKBCaches() {
-	  this.start_write();
-		if (this.ontkb != null)
-			this.ontkb.delete();
-		if (this.hypontkb != null)
-			this.hypontkb.delete();
-		if (this.omicsontkb != null)
-			this.omicsontkb.delete();
-		if (this.neuroontkb != null)
-			this.neuroontkb.delete();
-		this.end();
-		reloadQuestions();
-
-		this.initializeKB();
-	}
-	
-	public void reloadQuestions () {
-		try {
-			this.start_write();
-			if (this.questionkb != null) {
-				this.questionkb.removeAllTriples();
-				this.questionkb.delete();
-				this.save(this.questionkb);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			this.end();
-		}
-	}
-
 	public void initializeKB() {
 		super.initializeKB();
 		if (fac == null)
 			return;
 		try {
-
 			this.neuroontkb = fac.getKB(KBConstants.NEUROURI(), OntSpec.PLAIN, false, true);
+			System.out.println("GET KB: " + KBConstants.NEUROURI());
 			this.hypontkb = fac.getKB(KBConstants.HYPURI(), OntSpec.PLAIN, false, true);
+			System.out.println("GET KB: " + KBConstants.HYPURI());
 			this.omicsontkb = fac.getKB(KBConstants.OMICSURI(), OntSpec.PLAIN, false, true);
-			
+			System.out.println("GET KB: " + KBConstants.OMICSURI());
 			this.questionkb = fac.getKB(KBConstants.QUESTIONSURI(), OntSpec.PLAIN, false, true);
+			System.out.println("GET KB: " + KBConstants.QUESTIONSURI());
 			
 			this.vocabularies = new HashMap<String, Vocabulary>();
 			
@@ -200,7 +171,6 @@ public class DiskRepository extends KBRepository {
 					this.initializeVocabularyFromKB(this.omicsontkb, KBConstants.OMICSNS()));
 			this.vocabularies.put(KBConstants.DISKURI(),
 					this.initializeVocabularyFromKB(this.ontkb, KBConstants.DISKNS()));
-
 			this.vocabularies.put(KBConstants.QUESTIONSURI(),
 					this.initializeVocabularyFromKB(this.questionkb, KBConstants.QUESTIONSNS()));
 
@@ -209,6 +179,28 @@ public class DiskRepository extends KBRepository {
 		} finally {
 			this.end();
 		}
+	}
+
+	public void reloadKBCaches () {
+		KBAPI[] kbs = {this.ontkb, this.hypontkb, this.omicsontkb, this.neuroontkb, this.hypontkb};
+
+		try {
+			this.start_write();
+			for (KBAPI kb: kbs) if (kb != null) {
+				System.out.println("Reloading " + kb.getURI());
+				kb.removeAllTriples();
+				kb.delete();
+				this.save(kb);
+				this.end(); this.start_write();
+				
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			this.end();
+		}
+		
+		this.initializeKB();
 	}
 	
 	public List<Question> listHypothesesQuestions () {
@@ -694,7 +686,7 @@ public class DiskRepository extends KBRepository {
 			if (authorobj != null)
 				hypothesis.setAuthor(authorobj.getValueAsString());
 
-			KBObject notesobj = kb.getPropertyValue(hypitem, pmap.get("hasNotes"));
+			KBObject notesobj = kb.getPropertyValue(hypitem, pmap.get("hasUsageNotes"));
 			if (notesobj != null)
 				hypothesis.setNotes(notesobj.getValueAsString());
 
@@ -858,7 +850,7 @@ public class DiskRepository extends KBRepository {
 				kb.setPropertyValue(hypitem, pmap.get("hasAuthor"), provkb.createLiteral(hypothesis.getAuthor()));
 			}
 			if (hypothesis.getNotes() != null) {
-				kb.setPropertyValue(hypitem, pmap.get("hasNotes"), hypkb.createLiteral(hypothesis.getNotes()));
+				kb.setPropertyValue(hypitem, pmap.get("hasUsageNotes"), hypkb.createLiteral(hypothesis.getNotes()));
 			}
 			if (hypothesis.getQuestion() != null) {
 				kb.setPropertyValue(hypitem, pmap.get("hasQuestion"), hypkb.createLiteral(hypothesis.getQuestion()));
@@ -1420,9 +1412,7 @@ public class DiskRepository extends KBRepository {
         // For each loi Workflow binding, create an empty tloi Binding
         WorkflowBindings tloiBinding = new WorkflowBindings(
              bindings.getWorkflow(),
-             bindings.getWorkflowLink(),
-             new ArrayList<VariableBinding>(),
-             new ArrayList<VariableBinding>());
+             bindings.getWorkflowLink());
         tloiBinding.setMeta(bindings.getMeta());
         tloiBindings.add(tloiBinding);
         
@@ -1443,6 +1433,24 @@ public class DiskRepository extends KBRepository {
         	  System.out.println("dict does not contain " + binding);
           }
         }
+
+        // Add optional parameters
+        for (VariableBinding param: bindings.getOptionalParameters()) {
+          String binding = param.getBinding();
+          if (binding.charAt(0)=='?') binding = binding.substring(1);
+          //System.out.println("param binding: " + binding);
+          if (dataVarBindings.containsKey(binding)) {
+        	  List<String> possibleBindings = dataVarBindings.get(binding);
+        	  if (possibleBindings.size() == 1) {
+        		  param.setBinding(possibleBindings.get(0));
+        	  } else {
+        		  System.out.println("more than one value for optional " + binding);
+        	  }
+          } else {
+        	  System.out.println("dict does not contain optional " + binding);
+          }
+        }
+        // CHECK ^
       
       for (VariableBinding vbinding : bindings.getBindings()) {
         // For each Variable binding, check :
@@ -1500,7 +1508,8 @@ public class DiskRepository extends KBRepository {
                     bindings.getWorkflow(), 
                     bindings.getWorkflowLink(), 
                     newBindings,
-                    bindings.getParameters());
+                    bindings.getParameters(),
+                    bindings.getOptionalParameters());
                 newWorkflowBindings.addBinding(new VariableBinding(
                     vbinding.getVariable(),
                     dsname
@@ -1888,7 +1897,7 @@ public class DiskRepository extends KBRepository {
 			}
 			if (loi.getNotes() != null) {
 				KBObject valobj = loikb.createLiteral(loi.getNotes());
-				loikb.setPropertyValue(floiitem, pmap.get("hasNotes"), valobj);
+				loikb.setPropertyValue(floiitem, pmap.get("hasUsageNotes"), valobj);
 			}
 			if (loi.getRelevantVariables() != null) {
 				KBObject valobj = loikb.createLiteral(loi.getRelevantVariables());
@@ -1943,6 +1952,7 @@ public class DiskRepository extends KBRepository {
 							kb.createLiteral(bindings.getRun().getLink()));
 			}
 
+			// Creating workflow data bindings
 			for (VariableBinding vbinding : bindings.getBindings()) {
 				String varid = vbinding.getVariable();
 				String binding = vbinding.getBinding();
@@ -1955,6 +1965,7 @@ public class DiskRepository extends KBRepository {
 				kb.addPropertyValue(bindingobj, pmap.get("hasVariableBinding"), varbindingobj);
 			}
 			
+			// Creating parameters
 			for (VariableBinding param : bindings.getParameters()) {
 				String varid = param.getVariable();
 				String binding = param.getBinding();
@@ -1965,6 +1976,19 @@ public class DiskRepository extends KBRepository {
 					kb.setPropertyValue(paramobj, pmap.get("hasBindingValue"), this.getKBValue(bindingValue, kb));
 
 				kb.addPropertyValue(bindingobj, pmap.get("hasParameter"), paramobj);
+			}
+
+			// Creating optional parameters
+			for (VariableBinding param : bindings.getOptionalParameters()) {
+				String varid = param.getVariable();
+				String binding = param.getBinding();
+				Value bindingValue = new Value(binding, KBConstants.XSDNS() + "string");
+				KBObject paramobj = kb.createObjectOfClass(null, cmap.get("VariableBinding"));
+				kb.setPropertyValue(paramobj, pmap.get("hasVariable"), kb.getResource(workflowuri + "#" + varid));
+				if (bindingValue != null)
+					kb.setPropertyValue(paramobj, pmap.get("hasBindingValue"), this.getKBValue(bindingValue, kb));
+
+				kb.addPropertyValue(bindingobj, pmap.get("hasOptionalParameter"), paramobj);
 			}
 
 			String hypid = bindings.getMeta().getHypothesis();
@@ -2059,7 +2083,7 @@ public class DiskRepository extends KBRepository {
 			if (authorobj != null)
 				loi.setAuthor(authorobj.getValueAsString());
 
-			KBObject notesobj = loikb.getPropertyValue(floiitem, pmap.get("hasNotes"));
+			KBObject notesobj = loikb.getPropertyValue(floiitem, pmap.get("hasUsageNotes"));
 			if (notesobj != null) {
 				loi.setNotes(notesobj.getValueAsString());
 			}
@@ -2144,6 +2168,14 @@ public class DiskRepository extends KBRepository {
 				KBObject bindobj = kb.getPropertyValue(vbobj, pmap.get("hasBindingValue"));
 				VariableBinding param = new VariableBinding(varobj.getName(),bindobj.getValueAsString());
 				bindings.addParameter(param);
+			}
+
+			// Optional parameters details
+			for (KBObject vbobj : kb.getPropertyValues(wbobj, pmap.get("hasOptionalParameter"))) {
+				KBObject varobj = kb.getPropertyValue(vbobj, pmap.get("hasVariable"));
+				KBObject bindobj = kb.getPropertyValue(vbobj, pmap.get("hasBindingValue"));
+				VariableBinding optionalParam = new VariableBinding(varobj.getName(),bindobj.getValueAsString());
+				bindings.addOptionalParameter(optionalParam);
 			}
 
 			KBObject hypobj = kb.getPropertyValue(wbobj, pmap.get("hasHypothesisVariable"));
@@ -2663,10 +2695,9 @@ public class DiskRepository extends KBRepository {
 		}
 		return null;
 	}
-	
-	
+
+
 	/* Narratives */
-	
 	public Map<String, String> getNarratives (String username, String domain, String tloid) {
 		Map<String,String> narratives = new HashMap<String, String>();
 		TriggeredLOI tloi = this.getTriggeredLOI(username, domain, tloid);
@@ -2950,6 +2981,7 @@ public class DiskRepository extends KBRepository {
 					Map<String, Variable> inputs = wings.getWorkflowInputs(username, domain, bindings.getWorkflow());
 					List<VariableBinding> vbindings = bindings.getBindings();
 					List<VariableBinding> params = bindings.getParameters();
+					List<VariableBinding> optionalparams = bindings.getOptionalParameters();
 					List<VariableBinding> sendbindings = new ArrayList<VariableBinding>(vbindings);
 					
 					//Remove " on parameters
@@ -2960,10 +2992,22 @@ public class DiskRepository extends KBRepository {
 						}
 						sendbindings.add(new VariableBinding(p.getVariable(), bind));
 					}
+					//Same for optional parameters
+					for (VariableBinding p: optionalparams) {
+						String bind = p.getBinding();
+						if (!(bind == null || bind.equals("") || bind.equals("\"\""))) {
+							if (bind.charAt(0) == '"') {
+								bind = bind.substring(1, bind.length() - 1);
+							}
+							sendbindings.add(new VariableBinding(p.getVariable(), bind));
+						}
+					}
+					
 					System.out.println("Bindings to be send on run:");
 					for (VariableBinding b: sendbindings) {
 						System.out.println(b.getVariable()+  " = " + b.getBinding());
 					}
+					
 					
 					// Special processing for Meta Workflows
 					if (this.metamode) {

@@ -3,6 +3,7 @@ package org.diskproject.server;
 import javax.annotation.PreDestroy;
 
 import org.diskproject.server.api.impl.DiskResource;
+import org.diskproject.server.api.impl.StaticResource;
 import org.diskproject.server.api.impl.UserResource;
 import org.diskproject.server.filters.AcceptHeaderFilter;
 import org.diskproject.server.filters.CORSResponseFilter;
@@ -21,6 +22,7 @@ class DiskServer extends ResourceConfig {
     register(UserAuthenticationFilter.class);
     register(UserResource.class);
     register(DiskResource.class);
+    register(StaticResource.class);
   }
 
   @PreDestroy

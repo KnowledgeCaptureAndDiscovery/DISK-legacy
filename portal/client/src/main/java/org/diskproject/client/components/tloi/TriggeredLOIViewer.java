@@ -120,8 +120,10 @@ public class TriggeredLOIViewer extends Composite {
           if (response != null) {
         	  executionNarrative.clear();
         	  executionNarrative.add(new HTML(response.get("execution")));
+        	  onClickShowExecutionNarrative(null);
         	  dataQueryNarrative.clear();
         	  dataQueryNarrative.add(new HTML(response.get("dataquery")));
+        	  onClickShowDataQueryNarrative(null);
           }
         }
         @Override

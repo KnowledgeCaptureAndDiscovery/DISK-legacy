@@ -68,6 +68,10 @@
 			.fixtop {
 				margin-top: 2px;
 			}
+			.scrollable {
+			    max-height: 75vh;
+    			overflow-x: scroll;
+			}
 		</style>
 		<div class="vertical center-justified layout">
 			<div class="horizontal layout">
@@ -76,54 +80,67 @@
 				<p:PaperIconButton ui:field="workflowlink"
 					addStyleNames="linkicon smallicon blue-button" icon="link" />
 			</div>
+			
+			<div class="scrollable">
+				<g:HTMLPanel ui:field="varsection" addStyleNames="section">
+					<div class="heading">
+					<div class="horizontal layout">
+						Variable Bindings
+						<p:PaperIconButton ui:field="addbindingbutton"
+							addStyleNames="smallicon green-button" icon="add-circle" />
+					</div>
+					</div>
+					<g:HTMLPanel addStyleNames="varbindings" ui:field="varbindings" />
+				</g:HTMLPanel>
 
-			<g:HTMLPanel ui:field="varsection" addStyleNames="section">
-				<div class="heading">
-				<div class="horizontal layout">
-					Variable Bindings
-					<p:PaperIconButton ui:field="addbindingbutton"
-						addStyleNames="smallicon green-button" icon="add-circle" />
-				</div>
-				</div>
-				<g:HTMLPanel addStyleNames="varbindings" ui:field="varbindings" />
-			</g:HTMLPanel>
+				<g:HTMLPanel ui:field="paramssection" addStyleNames="section">
+					<div class="heading">
+					<div class="horizontal layout">
+						Parameters
+						<p:PaperIconButton ui:field="addparambutton"
+							addStyleNames="smallicon green-button" icon="add-circle" />
+					</div>
+					</div>
+					<g:HTMLPanel addStyleNames="varbindings" ui:field="parambindings" />
+				</g:HTMLPanel>
 
-			<g:HTMLPanel ui:field="paramssection" addStyleNames="section">
-				<div class="heading">
-				<div class="horizontal layout">
-					Parameters
-					<p:PaperIconButton ui:field="addparambutton"
-						addStyleNames="smallicon green-button" icon="add-circle" />
-				</div>
-				</div>
-				<g:HTMLPanel addStyleNames="varbindings" ui:field="parambindings" />
-			</g:HTMLPanel>
+				<g:HTMLPanel ui:field="optonalsection" addStyleNames="section">
+					<div class="heading">
+					<div class="horizontal layout">
+						Optional parameters
+						<p:PaperIconButton ui:field="addoptionalbutton"
+							addStyleNames="smallicon green-button" icon="add-circle" />
+					</div>
+					</div>
+					<g:HTMLPanel addStyleNames="varbindings" ui:field="optionalbindings" />
+				</g:HTMLPanel>
 
-			<g:HTMLPanel ui:field="workflowstoberunsection" addStyleNames="section">
-				<div class="heading">
-				<div class="horizontal layout">
-					Workflows to be run
-					<p:PaperIconButton ui:field="addworkflowstoberunbutton"
-						addStyleNames="smallicon green-button" icon="add-circle" />
+				<g:HTMLPanel ui:field="workflowstoberunsection" addStyleNames="section">
+					<div class="heading">
+					<div class="horizontal layout">
+						Workflows to be run
+						<p:PaperIconButton ui:field="addworkflowstoberunbutton"
+							addStyleNames="smallicon green-button" icon="add-circle" />
+					</div>
+					</div>
+					<g:HTMLPanel addStyleNames="varbindings" ui:field="workflowstoberunbindings" />
+				</g:HTMLPanel>
+			
+				<g:HTMLPanel ui:field="metasection"  addStyleNames="section">
+					<div class="heading">Hypotheses</div>
+					<div class="vertical layout">
+						<v:VaadinComboBox addStyleNames="full-width"
+							label="Hypothesis Variable" ui:field="hypothesismenu" />
+						<v:VaadinComboBox addStyleNames="full-width"
+							label="Revised Hypothesis Variable" ui:field="revhypothesismenu" />
+					</div>
+				</g:HTMLPanel>
+							
+				<div class="buttons">
+					<p:PaperButton attributes="dialog-dismiss">Cancel</p:PaperButton>
+					<p:PaperButton attributes="dialog-confirm">
+						<iron-icon icon="check" />Done</p:PaperButton>
 				</div>
-				</div>
-				<g:HTMLPanel addStyleNames="varbindings" ui:field="workflowstoberunbindings" />
-			</g:HTMLPanel>
-		
-			<g:HTMLPanel ui:field="metasection"  addStyleNames="section">
-				<div class="heading">Hypotheses</div>
-				<div class="vertical layout">
-					<v:VaadinComboBox addStyleNames="full-width"
-						label="Hypothesis Variable" ui:field="hypothesismenu" />
-					<v:VaadinComboBox addStyleNames="full-width"
-						label="Revised Hypothesis Variable" ui:field="revhypothesismenu" />
-				</div>
-			</g:HTMLPanel>
-						
-			<div class="buttons">
-				<p:PaperButton attributes="dialog-dismiss">Cancel</p:PaperButton>
-				<p:PaperButton attributes="dialog-confirm">
-					<iron-icon icon="check" />Done</p:PaperButton>
 			</div>
 		</div>
 	</g:HTMLPanel>

@@ -12,13 +12,13 @@
     <parent>
         <groupId>org.disk-project</groupId>
         <artifactId>disk-project</artifactId>
-        <version>2.4.5</version>
+        <version>2.4.6</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
 	<properties>
-		<gwt.version>2.8.1</gwt.version>
-		<gwt-maven.version>2.8.1</gwt-maven.version>
+		<gwt.version>2.9.0</gwt.version>
+		<gwt-maven.version>2.9.0</gwt-maven.version>
 		<!-- gwt-maven.version>2.8.0-beta1</gwt-maven.version -->
 		<gwtp.version>1.6</gwtp.version>
 		<gin.version>2.1.2</gin.version>
@@ -27,6 +27,7 @@
 		<validation.version>1.0.0.GA</validation.version>
 		<gwt.codemirror.version>2.0.1</gwt.codemirror.version>		
 		<vaadin-polymer.version>1.9.3.1</vaadin-polymer.version>
+		<three4g.version>0.108</three4g.version>
 				
 		<java.version>1.8</java.version>
 		<webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
@@ -163,6 +164,18 @@
 			 <artifactId>gwt-keycloak</artifactId>
 			 <version>0.7</version>
 			 <scope>provided</scope>
+		</dependency>
+		
+		<!-- Three GWT -->
+		<dependency>
+    		<groupId>org.treblereel.gwt</groupId>
+    		<artifactId>three4g</artifactId>
+    		<version>${three4g.version}</version>
+		</dependency>
+		<dependency>
+   			<groupId>org.treblereel.gwt</groupId>
+   			<artifactId>three4g-extensions</artifactId>
+    		<version>${three4g.version}</version>
 		</dependency>
 	</dependencies>
 	

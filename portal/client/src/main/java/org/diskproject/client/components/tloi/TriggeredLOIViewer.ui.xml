@@ -157,10 +157,10 @@
 
 				<div class="bordered-list padded">
 					<span>
-						<g:CheckBox ui:field='showExecNarrative' value="true">
+						<g:CheckBox ui:field='showExecNarrative'>
 							<label>Show execution narrative</label>
 						</g:CheckBox>
-						<g:CheckBox ui:field='showDataQueryNarrative' value="true">
+						<g:CheckBox ui:field='showDataQueryNarrative'>
 							<label>Show data query narrative</label>
 						</g:CheckBox>
 					</span>

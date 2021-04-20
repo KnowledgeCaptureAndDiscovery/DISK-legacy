@@ -57,9 +57,9 @@ public class KBRepository implements TransactionsAPI {
     this.fac = new OntFactory(OntFactory.JENA, tdbdir);
     try {
       this.transaction = new TransactionsJena(this.fac);
-      System.out.println("Initialize KB: " + this.onturi);
       
       ontkb = fac.getKB(this.onturi, OntSpec.PELLET, false, true);
+      System.out.println("GET KB: " + this.onturi);
       TimeUnit.SECONDS.sleep(2); 
       // Temporary hacks
       this.start_write();
@@ -98,14 +98,7 @@ public class KBRepository implements TransactionsAPI {
   
   private void temporaryHacks() {
 	//ADDs properties to the ontology being loaded.
-    this.hackInDataProperty("hasRelevantVariables", "LineOfInquiry", "string");
-    this.hackInDataProperty("hasNotes", "LineOfInquiry", "string");
-    this.hackInDataProperty("hasQuestionPattern", "Question", "string");
-    this.hackInDataProperty("dataQueryDescription", "LineOfInquiry", "string");
-    this.hackInDataProperty("hasFixedOptions", "QuestionVariable", "string");
-    this.hackInDataProperty("hasDataSource", "LineOfInquiry", "string");
-    this.hackInObjectProperty("hasParameter", "WorkflowBinding", "VariableBinding");
-    this.hackInDataProperty("hasParameterValue", "LineOfInquiry", "string");
+    //this.hackInDataProperty("hasRelevantVariables", "LineOfInquiry", "string");
   }
   
   private void hackInDataProperty(String prop, String domain, String range) {

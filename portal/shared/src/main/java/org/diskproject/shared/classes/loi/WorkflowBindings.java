@@ -13,24 +13,38 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class WorkflowBindings implements Comparable<WorkflowBindings>{
   String workflow;
   String workflowLink;
-  List<VariableBinding> bindings, parameters;
+  List<VariableBinding> bindings, parameters, optionalParameters;
   
   WorkflowRun run;
   MetaWorkflowDetails meta;
 
-  public WorkflowBindings(String workflow, String workflowLink,
-          List<VariableBinding> bindings, List<VariableBinding> parameters) {
-    this.workflow = workflow;
-    this.workflowLink = workflowLink;
-    this.bindings = bindings;
-    this.parameters = parameters;
+  public WorkflowBindings() {
+    bindings = new ArrayList<VariableBinding>();
+    parameters = new ArrayList<VariableBinding>();
+    optionalParameters = new ArrayList<VariableBinding>();
     run = new WorkflowRun();
     meta = new MetaWorkflowDetails();
   }
 
-  public WorkflowBindings() {
+  public WorkflowBindings(String workflow, String workflowLink) {
+    this.workflow = workflow;
+    this.workflowLink = workflowLink;
     bindings = new ArrayList<VariableBinding>();
     parameters = new ArrayList<VariableBinding>();
+    optionalParameters = new ArrayList<VariableBinding>();
+    run = new WorkflowRun();
+    meta = new MetaWorkflowDetails();
+  }
+
+  public WorkflowBindings(String workflow, String workflowLink,
+          List<VariableBinding> bindings,
+          List<VariableBinding> parameters,
+          List<VariableBinding> optionalParameters) {
+    this.workflow = workflow;
+    this.workflowLink = workflowLink;
+    this.bindings = bindings;
+    this.parameters = parameters;
+    this.optionalParameters = optionalParameters;
     run = new WorkflowRun();
     meta = new MetaWorkflowDetails();
   }
@@ -81,6 +95,18 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
   
   public void addParameter (VariableBinding param) {
     this.parameters.add(param);
+  }
+  
+  public List<VariableBinding> getOptionalParameters () {
+	  return optionalParameters;
+  }
+  
+  public void setOptionalParameters (List<VariableBinding> optionalParameters) {
+	this.optionalParameters = optionalParameters;
+  }
+  
+  public void addOptionalParameter (VariableBinding binding) {
+	  this.optionalParameters.add(binding);
   }
   
   public List<String> getSparqlVariables () {
@@ -296,6 +322,7 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
   public int compareTo(WorkflowBindings o) {
     return this.toString().compareTo(o.toString());
   }
+
   
 }
  
