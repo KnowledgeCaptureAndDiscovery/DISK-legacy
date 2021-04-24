@@ -116,7 +116,6 @@ public class QuestionFiller extends Composite {
 	  }
 	  if (selectedQuestion != null) {
 		  String template = selectedQuestion.getTemplate();
-		  GWT.log(selectedQuestionId + " " + selectedQuestion.getVariables());
 		  List<QuestionVariable> variables = selectedQuestion.getVariables();
 		  
 		  //TODO: hack in filters

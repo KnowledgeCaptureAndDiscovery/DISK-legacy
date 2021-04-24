@@ -8,6 +8,7 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.diskproject.shared.api.StaticService;
@@ -26,6 +27,7 @@ public class StaticResource implements StaticService {
 
 		return Objects.isNull(resource)
 				? Response.status(404).build()
-						: Response.ok().entity(resource).build();
+						: Response.ok(resource, MediaType.APPLICATION_JSON).build();
+						//: Response.ok().entity(resource).build();
 	}
 }

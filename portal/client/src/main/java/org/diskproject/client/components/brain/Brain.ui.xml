@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:p='urn:import:com.vaadin.polymer.paper.widget'
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+    <g:HTMLPanel>
+    	<b>The brain goes here:</b>
+    	<canvas ui:field="canvas" style="width:600px; height:400px;"></canvas>
+    </g:HTMLPanel>
+</ui:UiBinder>
