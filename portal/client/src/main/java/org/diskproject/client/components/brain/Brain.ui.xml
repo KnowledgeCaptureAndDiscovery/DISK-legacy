@@ -4,7 +4,8 @@
 	xmlns:p='urn:import:com.vaadin.polymer.paper.widget'
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
     <g:HTMLPanel>
-    	<b>The brain goes here:</b>
-    	<canvas ui:field="canvas" style="width:600px; height:400px;"></canvas>
+    	<div ui:field="container">
+    		<canvas ui:field="canvas" width="600" height="400" style="border: 1px solid red;"></canvas>
+    	</div>
     </g:HTMLPanel>
 </ui:UiBinder>

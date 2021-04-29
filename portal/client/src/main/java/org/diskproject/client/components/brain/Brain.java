@@ -1,18 +1,13 @@
 package org.diskproject.client.components.brain;
 
-import com.github.gwtd3.api.arrays.Array;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.ScriptInjector;
 
-import com.google.gwt.event.logical.shared.ResizeEvent;
-import com.google.gwt.event.logical.shared.ResizeHandler;
-import com.google.gwt.typedarrays.client.JsUtils;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -24,18 +19,18 @@ import org.diskproject.client.Config;
 import org.diskproject.client.rest.StaticREST;
 import org.treblereel.gwt.three4g.THREE;
 import org.treblereel.gwt.three4g.cameras.PerspectiveCamera;
-import org.treblereel.gwt.three4g.core.AbstractGeometry;
 import org.treblereel.gwt.three4g.core.BufferGeometry;
 import org.treblereel.gwt.three4g.core.Face3;
 import org.treblereel.gwt.three4g.core.Geometry;
+import org.treblereel.gwt.three4g.core.Raycaster;
+import org.treblereel.gwt.three4g.core.extra.Intersect;
+import org.treblereel.gwt.three4g.extensions.controls.OrbitControls;
 import org.treblereel.gwt.three4g.extensions.controls.TrackballControls;
-import org.treblereel.gwt.three4g.extensions.quickhull.Face;
 import org.treblereel.gwt.three4g.extensions.resources.TK_3JSResourceUtils;
 import org.treblereel.gwt.three4g.lights.DirectionalLight;
-import org.treblereel.gwt.three4g.loaders.BufferGeometryLoader;
-import org.treblereel.gwt.three4g.loaders.ObjectLoader;
 import org.treblereel.gwt.three4g.materials.MeshLambertMaterial;
 import org.treblereel.gwt.three4g.materials.parameters.MeshLambertMaterialParameters;
+import org.treblereel.gwt.three4g.math.Vector2;
 import org.treblereel.gwt.three4g.objects.Mesh;
 import org.treblereel.gwt.three4g.renderers.WebGLRenderer;
 import org.treblereel.gwt.three4g.renderers.parameters.WebGLRendererParameters;
@@ -43,9 +38,12 @@ import org.treblereel.gwt.three4g.scenes.Scene;
 
 import elemental2.core.JsArray;
 import elemental2.dom.DOMRect;
+import elemental2.dom.DomGlobal;
 import elemental2.dom.Event;
 import elemental2.dom.EventListener;
 import elemental2.dom.HTMLCanvasElement;
+import elemental2.dom.HTMLDivElement;
+import elemental2.dom.HTMLElement;
 
 public class Brain extends Composite {
   interface Binder extends UiBinder<Widget, Brain> {};
@@ -54,15 +52,19 @@ public class Brain extends Composite {
   private static boolean threeLoaded = false;
   
   @UiField HTMLCanvasElement canvas;
+  @UiField HTMLDivElement container;
   
   private PerspectiveCamera camera;
-  private TrackballControls controls;
   private WebGLRenderer renderer;
   private Scene scene;
   
+  //Two cameras:
+  private TrackballControls controls;
+  private OrbitControls orbitControls;
+  private boolean useOrbitControls = true;
   //TODO: cur_picked = null;
 
-  private String manifest_url; // "filestoload_all.php"; TODO
+  private String manifest_url; //
   private String data_url;
   
   private Map<String, Mesh> meshes;
@@ -73,44 +75,49 @@ public class Brain extends Composite {
 	  // See https://github.com/treblereel/three4g/issues/155
 	  if (!Brain.threeLoaded) {
 		  ScriptInjector.fromString(TK_3JSResourceUtils.IMPL.getTrackballControls().getText()).setWindow(ScriptInjector.TOP_WINDOW).inject();
+		  ScriptInjector.fromString(TK_3JSResourceUtils.IMPL.getOrbitControls().getText()).setWindow(ScriptInjector.TOP_WINDOW).inject();
 		  Brain.threeLoaded = false;
 	  }
 
 	  initWidget(uiBinder.createAndBindUi(this)); 
 	  initialize();
   }
-  
+
   private void initialize () {
-	  DOMRect sz = canvas.getBoundingClientRect();
+	  float w = (float) canvas.width;
+	  float h = (float) canvas.height;
 	  
 	  // Set manifest_url
 	  manifest_url = Config.getServerURL() + "/public/files.json";
-	  GWT.log("BRAIN VIZ INIT: " + manifest_url);
 
 	  //Some important variables
 	  this.meshes = new HashMap<String, Mesh>();
 	  this.meshProperties = new HashMap<String, MeshProperties>();
 
-	  // The Camera
-	  // Params: x,y,z starting position
-	  this.camera = new PerspectiveCamera((float) 50, (float) (sz.width/sz.height), (float) 0.1, (float) 1e10);
-	  this.camera.position.z = 200;
-	  
-	  GWT.log("Camera: ");
-	  this.camera.aspect = (float) 1.5;
-	  nativeLog(this.camera);
-
 	  // The Renderer
 	  WebGLRendererParameters renderParams = new WebGLRendererParameters();
+	  renderParams.canvas = canvas;
 	  renderParams.antialias = true;
 	  renderParams.alpha = true;
 	  this.renderer = new WebGLRenderer( renderParams );
-	  //this.renderer.setPixelRatio( window.devicePixelRatio );
-	  this.renderer.setSize( sz.width, sz.height );
+	  this.renderer.setPixelRatio(DomGlobal.window.devicePixelRatio);
+	  this.renderer.setSize(w, h);
 
+	  // The Camera
+	  // Params: x,y,z starting position
+	  this.camera = new PerspectiveCamera((float) 50, (w/h), (float) 0.1, (float) 1e10);
+	  this.camera.position.z = 200;
+	  
 	  // The Controls
 	  // Params: None. Just add the camera to controls
-	  this.controls = this.addControls(this.camera);
+	  if (useOrbitControls) {
+		  this.orbitControls = this.addOrbitControls(this.camera, container);
+	  } else {
+		  this.controls = this.addControls(this.camera, container);
+	  }
+	  
+
+	  //nativeLog(this.controls);
 
 	  // The Scene
 	  // Params: None. Just add the camera to the scene
@@ -125,51 +132,92 @@ public class Brain extends Composite {
 	  // Params: None for now... add to scene
 	  this.loadBrain();
 
-	  // The spot in the HTML
-	  //this.container.appendChild( this.renderer.domElement );
-	  this.animate();
-	  Timer t = new Timer() {
+	  /*Window.addResizeHandler(new ResizeHandler() { 	TODO: change size when window resize
 		  @Override
-		  public void run() {
-			  // TODO Auto-generated method stub
-			  animate();
-		  }
-	  };
-	  //t.schedule(1000);
-
-	  Window.addResizeHandler(new ResizeHandler() {
-		  @Override
-		  public void onResize(ResizeEvent event) {
-			  onWindowResize();
-		  }
-	  });
+		  public void onResize(ResizeEvent event) { onWindowResize(); }
+	  });*/
 
 	  canvas.addEventListener("click", new EventListener() {
 		  @Override
-		  public void handleEvent(Event evt) {
-			  onClick(evt);
-		  }
+		  public void handleEvent(Event evt) { onClick(evt); }
 	  });
+	  
+	  //Different ways to start the animation:
+	  Timer timer = new Timer() {
+	      @Override
+	      public void run() {
+	          animate();
+	          this.schedule(1000/12);
+	      }
+	  };
+	  timer.schedule(1000/12);
+
+	  //DomGlobal.requestAnimationFrame(this::eventLoop);
   }
 
-  private TrackballControls addControls (PerspectiveCamera camera){
-	  GWT.log("Adding controls");
-	  controls = new TrackballControls(camera, this.canvas);
+  private void animate () {
+	  GWT.log("- Animated -");
+	  if (useOrbitControls) {
+		  this.orbitControls.update();
+	  } else {
+		  this.controls.update();
+	  }
+	  this.renderer.render( this.scene, this.camera );
+  }
+  
+  void eventLoop(double timestamp) {
+	  animate();
+	  DomGlobal.requestAnimationFrame(this::eventLoop);
+  }
+  
+  private native HTMLElement nativeGetElement (HTMLElement javaElement) /*-{
+  	//This is a hack to obtain the javascript element;
+  	var elem = null;
+  	var keys = Object.keys(javaElement);
+  	for (var i = 0; i < keys.length; i++) {
+  		var key = keys[i];
+  		if (key.length > 5 && key.substring(0, 6) == '__impl') {
+  			elem = javaElement[key];
+  			break;
+  		}
+  	}
+  	console.log(elem);
+  	return elem;
+  }-*/;
 
-	  controls.rotateSpeed = (float) 5.0;
+  private TrackballControls addControls (PerspectiveCamera camera, HTMLElement container) {
+	  controls = new TrackballControls(camera, container);
+	  
+      controls.enabled = true;
+      controls.minDistance = 100;
+      controls.maxDistance = 500;
+
+	  controls.rotateSpeed = 5f;
 	  controls.zoomSpeed = 5;
 	  controls.panSpeed = 2;
+	  
+	  //controls.noZoom = false;
+	  //controls.noPan = false;
 
-	  controls.noZoom = false;
-	  controls.noPan = false;
-
-	  controls.staticMoving = true;
-	  controls.dynamicDampingFactor = (float) 0.3;
+	  //controls.staticMoving = true;
+	  controls.dynamicDampingFactor = 0.3f;
 	  return controls;
   }
+  
+  private OrbitControls addOrbitControls (PerspectiveCamera camera, HTMLElement container) {
+	  OrbitControls orbitControls = new OrbitControls(camera, container);
 
-  private void addLights (PerspectiveCamera camera){
-	  GWT.log("Adding lights");
+      //controls.addEventListener( "change", render ); // call this only in static scenes (i.e., if there is no animation loop)
+      orbitControls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+      orbitControls.dampingFactor = 0.25f;
+      orbitControls.screenSpacePanning = false;
+      orbitControls.minDistance = 100;
+      orbitControls.maxDistance = 500;
+      orbitControls.maxPolarAngle = (float) Math.PI;
+      return orbitControls;
+  }
+
+  private void addLights (PerspectiveCamera camera) {
 	  DirectionalLight dirLight = new DirectionalLight( 0xffffff );
 	  dirLight.position.set( 200, 200, 1000 ).normalize();
 
@@ -177,20 +225,10 @@ public class Brain extends Composite {
 	  camera.add( dirLight.target );
   }
 
-  private void animate () {
-	  GWT.log("- Animated -");
-	  /*setTimeout( function() {
-		  requestAnimationFrame( function() { _this.animate(); });
-	  }, 1000/12);*/
-	  
-	  this.controls.update();
-	  this.renderer.render( this.scene, this.camera );
-	  nativeLog(this.scene);
-  }
-
   private void onWindowResize () {
-	  GWT.log("On resize");
 	  DOMRect sz = this.canvas.getBoundingClientRect();
+	  GWT.log("On resize");
+	  nativeLog(sz);
 	  this.camera.aspect = (float) (sz.width / sz.height);
 	  this.camera.updateProjectionMatrix();
 
@@ -200,22 +238,7 @@ public class Brain extends Composite {
 	  //this.controls.handleResize();
   }
 
-  private void onClick (Event e) {
-	  GWT.log("On click!");
-	  animate();
-	  /*if (!e.shiftKey)
-		  return false;
-
-	  if (_this.onselect) {
-		  //_this.decreaseOpacityAll();
-		  mesh = _this.selectMeshByMouse(e);
-		  _this.increaseOpacity(mesh); 
-		  _this.onselect(mesh);
-	  }*/
-  }
-
   private void loadBrain () {
-	  GWT.log("loading brain... ");
 	  if (this.manifest_url == null || this.manifest_url.equals(""))
 		  return;
 	  /*if (this.label_mapper === null) TODO: I dont understand this
@@ -232,15 +255,6 @@ public class Brain extends Composite {
 			  // TODO Auto-generated method stub
 		  }
 	  });
-	  /*console.log(_this.manifest_url); Should be REST i guess
-	  $.ajax({dataType: "json",
-		  url: _this.manifest_url,
-		  data: function(data) {},
-		  error: function(jqXHR, textStatus, errorThrown) { console.error(textStatus, errorThrown); },
-		  success: function(data, textStatus, jqXHR) {
-			  reset_mesh_props(data, true);
-		  }
-	  });*/
   }
 
   private void clearBrain (String[] keeper_roi_keys) {
@@ -256,10 +270,6 @@ public class Brain extends Composite {
 	  //for (String key: keeper_roi_keys)
 		//  GWT.log("+ " + key);
   }
-  
-  /*private float[] toFloatArray () {
-	  return null {1.0 ,1.0, 1.0};
-  }*/
   
   private float[] toFloatArray (String[] elements) {
 	  float[] array = new float[3];
@@ -318,7 +328,6 @@ public class Brain extends Composite {
 		  } else {  // Didn't load mesh, none existing...
 			  GWT.log("Mesh URL not specified for" + meshProps.roi_key+", no existing mesh, skipping...");
 		  }
-		  break; //FIXME
 		  
 	  }
   }
@@ -342,11 +351,10 @@ public class Brain extends Composite {
   }-*/;
 
   private void loadMesh (String url, MeshProperties mesh_props) {
-	  GWT.log("Trying to load " + url);
 	  boolean found = meshProperties.containsKey(mesh_props.roi_key);
 	  if (found && url.equals(meshProperties.get(mesh_props.roi_key).filename)) {
 		  Mesh mesh = meshes.get(mesh_props.roi_key);
-		  //copy_mesh_props(mesh_props, mesh);
+		  copy_mesh_props(mesh_props, mesh);
 	  } else {
 		  if (found) {// Unreusable mesh; remove it
 			  removeMesh(mesh_props.roi_key);
@@ -354,10 +362,7 @@ public class Brain extends Composite {
 		  StaticREST.getAsString(url, new Callback<String, Throwable>() {
 			  @Override
 			  public void onSuccess(String result) {
-				  //FIXME: Loading vtk files
-				  //BufferGeometry<BufferGeometry> bufferGeometry = (BufferGeometry<BufferGeometry>) new BufferGeometryLoader().load(url);
-				  //BufferGeometry<BufferGeometry> bufferGeometry = VTKLoader(result);
-				  BufferGeometry<BufferGeometry> bufferGeometry = VTKParser.parse(result);
+				  BufferGeometry bufferGeometry = VTKParser.parse(result);
 
 				  Geometry geometry = new Geometry().fromBufferGeometry(bufferGeometry);
 				  geometry.computeFaceNormals();
@@ -367,8 +372,6 @@ public class Brain extends Composite {
 				  MeshLambertMaterialParameters materialParams = new MeshLambertMaterialParameters();
 				  materialParams.vertexColors = THREE.FaceColors;
 				  MeshLambertMaterial material = new MeshLambertMaterial(materialParams);
-				  
-				  //nativeLog(geometry);
 				  
 				  Mesh mesh = new Mesh(geometry, material);
 				  copy_mesh_props(mesh_props, mesh);
@@ -404,6 +407,7 @@ public class Brain extends Composite {
   
   private void copy_mesh_props (MeshProperties meshProp, Mesh mesh) {
 	  set_mesh_color(mesh, meshProp.color);
+	  //TODO hack in mesh properties into mesh.
   }
   
   private void set_mesh_color (Mesh mesh, float[] color) {
@@ -424,5 +428,96 @@ public class Brain extends Composite {
 		  }
 	  }
 	  geometry.colorsNeedUpdate = true;
+  }
+
+  private native boolean shiftKeyPressed (Event e) /*-{
+  	return !!e.shiftKey;
+  }-*/;
+  
+  private void onClick (Event e) {
+	  GWT.log("On click!");
+	  nativeLog(e);
+	  if (!shiftKeyPressed(e))
+		  return;
+
+	  //decreaseOpacityAll();
+	  Mesh clickedmesh = selectMeshByMouse(e);
+	  this.increaseOpacity(clickedmesh);
+	  this.onSelect(clickedmesh);
+  }
+
+  private native float getEventClientX (Event e) /*-{
+	  return e.clientX;
+  }-*/;
+  
+  private native float getEventClientY (Event e) /*-{
+	  return e.clientY;
+  }-*/;
+
+  private Mesh selectMeshByMouse (Event e) {
+	  Raycaster raycaster = new Raycaster();
+	  Vector2 mouse = new Vector2();
+	  DOMRect cpos = renderer.domElement.getBoundingClientRect();
+	  
+	  mouse.x = (float) (( 2 * (getEventClientX(e) - cpos.left) / (cpos.width) ) - 1);
+	  mouse.y = (float) (( 2 * (cpos.top - getEventClientY(e)) / (cpos.height) ) + 1);
+	  
+	  raycaster.setFromCamera(mouse, camera);
+	  Intersect[] intersects = raycaster.intersectObjects(scene.children);
+	  
+	  if (intersects.length > 0) {
+		  String key = intersects[0].object.name;
+		  GWT.log("Clicked: " + key);
+		  //TODO:
+		  return intersects[0].object;
+		  //return this.meshes.get(key);
+	  }
+	  return null;
+  }
+  
+  private Mesh selectMeshByName (String meshName) {
+	  for (String key: meshes.keySet()) {
+		  Mesh cur = meshes.get(key);
+		  if (cur.name.equals(meshName)) {
+			  return cur;
+		  }
+	  }
+	  return null;
+  }
+   
+  private void decreaseOpacity (Mesh mesh) {
+	  mesh.material.opacity = (float) 0.1;
+  }
+
+  private void decreaseOpacityAll () {
+	  for (String key: meshes.keySet()) {
+		  decreaseOpacity(meshes.get(key));
+	  }
+  }
+
+  private void increaseOpacity (Mesh mesh) {
+	  mesh.material.opacity = (float) 1;
+  }
+
+  private void increaseOpacityAll () {
+	  for (String key: meshes.keySet()) {
+		  increaseOpacity(meshes.get(key));
+	  }
+  }
+  
+  //Shrudi code:
+  private void onSelect (Mesh mesh) {
+	  /*if (checked.length ==0) brain.decreaseOpacityAll();
+	  console.log("Mouse selected mesh: "+mesh.name);
+	  var checkbox = document.getElementsByName(mesh.name)[0];
+	  if (checkbox.checked) {
+	      removeMesh(mesh, checkbox.id);
+	      checkbox.checked=false;
+	  }
+	  else {
+	      addMesh(mesh, checkbox.id);
+	      checkbox.checked=true;
+	  }
+	  console.log("checked array:"+ show(checked));*/
   }
 }
