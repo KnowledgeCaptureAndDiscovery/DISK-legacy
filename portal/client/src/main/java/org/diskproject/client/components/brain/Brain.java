@@ -4,11 +4,15 @@ import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.ScriptInjector;
-
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Widget;
 
 import java.util.Arrays;
@@ -53,7 +57,7 @@ public class Brain extends Composite {
   
   @UiField HTMLCanvasElement canvas;
   @UiField HTMLDivElement container;
-  
+
   private PerspectiveCamera camera;
   private WebGLRenderer renderer;
   private Scene scene;
@@ -69,6 +73,7 @@ public class Brain extends Composite {
   
   private Map<String, Mesh> meshes;
   private Map<String, MeshProperties> meshProperties;
+  private Map<String, String> meshIdByName;
 
 
   public Brain() {
@@ -93,6 +98,7 @@ public class Brain extends Composite {
 	  //Some important variables
 	  this.meshes = new HashMap<String, Mesh>();
 	  this.meshProperties = new HashMap<String, MeshProperties>();
+	  this.meshIdByName = new HashMap<String, String>();
 
 	  // The Renderer
 	  WebGLRendererParameters renderParams = new WebGLRendererParameters();
@@ -156,7 +162,6 @@ public class Brain extends Composite {
   }
 
   private void animate () {
-	  GWT.log("- Animated -");
 	  if (useOrbitControls) {
 		  this.orbitControls.update();
 	  } else {
@@ -435,15 +440,15 @@ public class Brain extends Composite {
   }-*/;
   
   private void onClick (Event e) {
-	  GWT.log("On click!");
-	  nativeLog(e);
 	  if (!shiftKeyPressed(e))
 		  return;
 
 	  //decreaseOpacityAll();
 	  Mesh clickedmesh = selectMeshByMouse(e);
-	  this.increaseOpacity(clickedmesh);
-	  this.onSelect(clickedmesh);
+	  if (clickedmesh != null) {
+		  this.increaseOpacity(clickedmesh);
+		  this.onSelect(clickedmesh);
+	  }
   }
 
   private native float getEventClientX (Event e) /*-{
@@ -495,6 +500,13 @@ public class Brain extends Composite {
 	  }
   }
 
+  private void noOpacityAll () {
+	  for (String key: meshes.keySet()) {
+		  Mesh mesh = meshes.get(key);
+		  mesh.material.opacity = 0;
+	  }
+  }
+
   private void increaseOpacity (Mesh mesh) {
 	  mesh.material.opacity = (float) 1;
   }
@@ -502,6 +514,14 @@ public class Brain extends Composite {
   private void increaseOpacityAll () {
 	  for (String key: meshes.keySet()) {
 		  increaseOpacity(meshes.get(key));
+	  }
+  }
+  
+  private void clearColors () {
+	  float[] color = {0.5f, 0.5f, 0.5f};
+	  for (String key: meshes.keySet()) {
+		  Mesh mesh = meshes.get(key);
+		  set_mesh_color(mesh, color);
 	  }
   }
   
@@ -520,4 +540,95 @@ public class Brain extends Composite {
 	  }
 	  console.log("checked array:"+ show(checked));*/
   }
+ 
+  
+  
+  
+  
+  @UiField ListBox example;
+  @UiField Button clear, reset, gray;
+  
+  @UiHandler("clear")
+  void oClearClicked(ClickEvent event) {   
+	  GWT.log("CLICK clear");
+	  decreaseOpacityAll();
+  }
+
+  @UiHandler("reset")
+  void onResetClicked(ClickEvent event) {   
+	  GWT.log("CLICK reset");
+	  increaseOpacityAll();
+  }
+
+  @UiHandler("gray")
+  void onGrayClicked(ClickEvent event) {   
+	  clearColors();
+  }
+
+  @UiHandler("example")
+  void onExampleSelected(ChangeEvent event) {
+	  String value = example.getSelectedValue();
+	  
+	  //Some colors:
+	  float[] red = {0f, 0f, 1f};
+	  float[] green = {0f, 1f, 0f};
+	  float[] blue = {1f, 0f, 0f};
+	  float[] A = {0.5f, 0f, 0.5f};
+	  float[] B = {0.3f, 0.2f, 0.7f};
+	  if (value.equals("")) onResetClicked(null);
+	  else if (value.equals("1")) {
+		  BrainConfigLine[] ex1 = {
+				new BrainConfigLine("banks_of_left_superior_temporal_sulcus", 0.01f, null),
+				new BrainConfigLine("ctx-lh-superiorfrontal", 0.05f, null),
+				new BrainConfigLine("ctx-lh-superiorfrontal", 0.2f, null),
+				new BrainConfigLine("ctx-rh-caudalmiddlefrontal", 0.9f, null),
+				new BrainConfigLine("ctx-lh-parahippocampal", 0.5f, null)
+		  };
+		  readConfig(ex1);
+	  }
+	  else if (value.equals("2")) {
+		  BrainConfigLine[] ex2 = {
+				new BrainConfigLine("banks_of_right_superior_temporal_sulcus", 0f, red),
+				new BrainConfigLine("ctx-rh-superiorfrontal", 0f, blue),
+				new BrainConfigLine("ctx-rh-superiorfrontal", 0f, green),
+				new BrainConfigLine("ctx-lh-caudalmiddlefrontal", 0f, A),
+				new BrainConfigLine("ctx-rh-parahippocampal", 0f, B)
+		  };
+		  readConfig(ex2);
+	  }
+	  else if (value.equals("3")) {
+		  BrainConfigLine[] ex3 = {
+				new BrainConfigLine("banks_of_left_superior_temporal_sulcus", 0.01f, null),
+				new BrainConfigLine("ctx-lh-superiorfrontal", 0.05f, null),
+				new BrainConfigLine("ctx-lh-superiorfrontal", 0.2f, null),
+				new BrainConfigLine("ctx-rh-caudalmiddlefrontal", 0.9f, null),
+				new BrainConfigLine("ctx-lh-parahippocampal", 0.5f, null),
+				new BrainConfigLine("banks_of_right_superior_temporal_sulcus", 0f, red),
+				new BrainConfigLine("ctx-rh-superiorfrontal", 0f, blue),
+				new BrainConfigLine("ctx-rh-superiorfrontal", 0f, green),
+				new BrainConfigLine("ctx-lh-caudalmiddlefrontal", 0f, A),
+				new BrainConfigLine("ctx-rh-parahippocampal", 0f, B)
+		  };
+		  readConfig(ex3);
+	  }
+  }
+
+  private void readConfig (BrainConfigLine[] config) {
+	  noOpacityAll();
+	  for (BrainConfigLine item: config) {
+		  Mesh mesh = selectMeshByName(item.name);
+		  if (mesh != null) {
+			  if (item.pval > 0) {
+				  mesh.material.opacity = item.pval;
+				  
+				  float[] color = {1f, 0f, 0f};
+				  set_mesh_color(mesh, color);
+			  } else if (item.color != null && item.color.length == 3) {
+				  mesh.material.opacity = 1f;
+				  set_mesh_color(mesh, item.color);
+			  }
+		  }
+	  }
+  }
+  
 }
