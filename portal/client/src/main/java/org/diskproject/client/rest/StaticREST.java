@@ -12,6 +12,7 @@ import com.google.gwt.http.client.Response;
 public class StaticREST {
 	public static void getJSObject(String url, final Callback<JavaScriptObject, Throwable> callback) {
 		RequestBuilder builder =  new RequestBuilder(RequestBuilder.GET, url);
+		//builder.setHeader("Access-Control-Allow-Origin", "*");
 		try {
 			builder.sendRequest(null, new RequestCallback() {
 				@Override
@@ -20,7 +21,7 @@ public class StaticREST {
 						JavaScriptObject json = JsonUtils.safeEval(response.getText());
 						callback.onSuccess(json);
 					} else {
-						GWT.log("error3");
+						GWT.log("Status code error:" + response.getStatusCode());
 					}
 				}
 				@Override
@@ -58,5 +59,4 @@ public class StaticREST {
 			// TODO: handle exception
 		}
 	}
-
 }

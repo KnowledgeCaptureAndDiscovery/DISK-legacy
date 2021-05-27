@@ -69,7 +69,7 @@
 					autoValidate="true" ui:field="notes" />
 		  </div>
 
-		  <h4>Hypothesis:</h4>
+		  <h4>Hypothesis linking:</h4>
 		  <div class="subs">
 			    <question:QuestionSelector ui:field="questionSelector"></question:QuestionSelector>
 				<label class="small-grey" title="Represents the type of hypotheses that can be explored with this line of inquiry.">
@@ -83,8 +83,8 @@
 				</label>
 				<tr:SparqlInput ui:field="hypothesisQuery" />
 		  </div>
-		  
-		  <h4>Data query</h4>
+
+		  <h4>Data query:</h4>
 		  <div class="subs">
 				<label class="small-grey" title="Data Source">
 					Select data source:
@@ -92,16 +92,12 @@
 				<br/>
 				<g:ListBox ui:field='dataSource'>
 				</g:ListBox>
-
-				<paper-input label="Data table description"
-					autoValidate="true" ui:field="explanation" placeholder="Write a description about the data to be shown in the table"/>
+				<br/>
 
 				<p:PaperButton ui:field="testbutton" style="float:right">
 					<iron-icon icon="flip-to-front" />
 					Open sparql query tester
 				</p:PaperButton>
-				<!--paper-textarea label="Hypothesis Pattern Explanation" required="true"
-					autoValidate="true" ui:field="hyDesc" /-->
 
 				<label class="small-grey">
 					Data Query Pattern (Prefixes: 
@@ -113,6 +109,8 @@
 				</label>
 				<tr:SparqlInput ui:field="dataQuery" />
 
+				<paper-input label="Data table description"
+					autoValidate="true" ui:field="explanation" placeholder="Write a description about the data to be shown in the table"/>
 				<paper-input label="Data query variables to show"
 					autoValidate="true" ui:field="metaVariables" placeholder="?var1 ?var2 ?var3..."/>
 		  </div>

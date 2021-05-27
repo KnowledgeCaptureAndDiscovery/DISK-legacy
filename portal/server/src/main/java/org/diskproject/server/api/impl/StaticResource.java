@@ -21,8 +21,6 @@ public class StaticResource implements StaticService {
 	@Path("{path:.*}")
 	@Override
 	public Response staticResources(@PathParam("path") final String path) {
-		System.out.println("Trying to get static file: " + String.format("/public/%s", path));
-
 		InputStream resource = context.getResourceAsStream(String.format("/public/%s", path));
 
 		return Objects.isNull(resource)

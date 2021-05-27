@@ -401,7 +401,6 @@ public class WingsAdapter {
 					System.out.println(id + ": " + outputs.get(id));
 				}
 			}
-			System.out.println("------------------------------");
 
 			return wflowstatus;
 		} catch (Exception e) {
@@ -792,6 +791,8 @@ private String get(String username, String pageid, List<NameValuePair> data) {
 			EntityUtils.consume(responseEntity);
 			httpResponse.close();
 			return strResponse;
+		} catch (Exception e) {
+			// TODO: handle exception
 		} finally {
 			httpResponse.close();
 		}

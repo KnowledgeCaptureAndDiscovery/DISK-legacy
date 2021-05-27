@@ -4,6 +4,7 @@
 	xmlns:lw='urn:import:org.diskproject.client.components.list'
 	xmlns:tr='urn:import:org.diskproject.client.components.triples'	
 	xmlns:tloi='urn:import:org.diskproject.client.components.tloi'
+	xmlns:brain='urn:import:org.diskproject.client.components.brain'
 	xmlns:p='urn:import:com.vaadin.polymer.paper.widget' xmlns:G="urn:import:com.google.gwt.thirdparty.common.css.compiler.gssfunctions.GssFunctions" xmlns:s="urn:import:com.google.gwt.dom.builder.shared">
 
 	<g:HTMLPanel>
@@ -128,7 +129,8 @@
 				EDIT
 			</p:PaperButton>
 
-			<div ui:field="header" />
+			<div ui:field="header"/>
+
 			<div ui:field="hypothesisSection">
 				<label class="small-grey">Hypothesis</label>
 				<div class="bordered-list padded">				
@@ -205,10 +207,20 @@
 			</div>
 			
 			<g:HTMLPanel ui:field="revHypothesisSection" />
+
+			<div ui:field="brainSection">
+				<label class="small-grey">Brain visualization</label>
+				<div class="bordered-list">
+					<brain:Brain ui:field="brainVisualization"></brain:Brain>
+				</div>
+			</div>
 		</div>
 
 		<p:PaperDialog ui:field="editBindingsDialog" noCancelOnOutsideClick="true" noCancelOnEscKey="true">
 			<tloi:BindingsEditor ui:field="bindingseditor"/>
 		</p:PaperDialog>
+		
+		
+		
 	</g:HTMLPanel>
 </ui:UiBinder>

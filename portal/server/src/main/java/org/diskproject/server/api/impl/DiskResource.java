@@ -487,4 +487,20 @@ public class DiskResource implements DiskService {
 	return this.repo.getNarratives(username, domain, tloiid);
   }
   
+  @GET
+  @Path("{username}/{domain}/wings-data/{dataid}")
+  @Produces("application/json")
+  @Override
+  public String getDataFromWings(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("dataid") String dataid) {
+	String result = this.repo.getDataFromWings(username, domain, dataid);
+	if (result == null) {
+		System.out.println("ERROR: " + dataid + " not available on WINGS.");
+		result = "";
+	} 
+	return result;
+  }
+  
 }

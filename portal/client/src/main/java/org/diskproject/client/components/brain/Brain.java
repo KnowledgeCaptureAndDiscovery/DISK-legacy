@@ -15,8 +15,10 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Widget;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.diskproject.client.Config;
@@ -85,10 +87,11 @@ public class Brain extends Composite {
 	  }
 
 	  initWidget(uiBinder.createAndBindUi(this)); 
-	  initialize();
+	  //initialize();
   }
 
-  private void initialize () {
+  public void initialize () {
+	  GWT.log("initializing brain...");
 	  float w = (float) canvas.width;
 	  float h = (float) canvas.height;
 	  
@@ -525,9 +528,9 @@ public class Brain extends Composite {
 	  }
   }
   
-  //Shrudi code:
   private void onSelect (Mesh mesh) {
-	  /*if (checked.length ==0) brain.decreaseOpacityAll();
+	  /* TODO: check onSelect function.
+	  if (checked.length ==0) brain.decreaseOpacityAll();
 	  console.log("Mouse selected mesh: "+mesh.name);
 	  var checkbox = document.getElementsByName(mesh.name)[0];
 	  if (checkbox.checked) {
@@ -540,14 +543,12 @@ public class Brain extends Composite {
 	  }
 	  console.log("checked array:"+ show(checked));*/
   }
- 
   
-  
-  
-  
+  /* Some example code to load visualizations... */
+
   @UiField ListBox example;
   @UiField Button clear, reset, gray;
-  
+
   @UiHandler("clear")
   void oClearClicked(ClickEvent event) {   
 	  GWT.log("CLICK clear");
@@ -614,7 +615,27 @@ public class Brain extends Composite {
   }
 
   private void readConfig (BrainConfigLine[] config) {
-	  noOpacityAll();
+	  decreaseOpacityAll();
+	  for (BrainConfigLine item: config) {
+		  Mesh mesh = selectMeshByName(item.name);
+		  if (mesh != null) {
+			  if (item.pval > 0) {
+				  // range of p-value from .2 to 1 opacity
+				  mesh.material.opacity = .2f + item.pval * .8f;
+				  
+				  float[] color = {1f, 0f, 0f};
+				  set_mesh_color(mesh, color);
+			  } else if (item.color != null && item.color.length == 3) {
+				  mesh.material.opacity = 1f;
+				  set_mesh_color(mesh, item.color);
+			  }
+		  }
+	  }
+  }
+
+  private void readConfig (List<BrainConfigLine> config) {
+	  decreaseOpacityAll();
+	  clearColors();
 	  for (BrainConfigLine item: config) {
 		  Mesh mesh = selectMeshByName(item.name);
 		  if (mesh != null) {
@@ -630,5 +651,34 @@ public class Brain extends Composite {
 		  }
 	  }
   }
+
+  public void loadBrainConfigurationFromJSObject (JavaScriptObject obj) {
+	  int len = nativeLen(obj);
+	  
+	  if (len == 0) return;
+	  List<BrainConfigLine> config = new ArrayList<BrainConfigLine>();
+
+	  
+	  for (int i = 0; i < len; i++) {
+		  String name = getJSConfigName(obj, i);
+		  float pval = getJSConfigPVal(obj, i);
+		  //String color = getJSConfigColor(obj, i);
+		  config.add( new BrainConfigLine(name, pval, null) );
+		  GWT.log("name: " + name + ", pval: " + pval);
+	  }
+	  
+	  readConfig(config);
+  }
+
+  private native int nativeLen (JavaScriptObject obj) /*-{
+  	return obj ? obj.length : 0;
+  }-*/;
   
+  private native String getJSConfigName (JavaScriptObject obj, int i) /*-{
+  	return obj[i].name;
+  }-*/;
+
+  private native float getJSConfigPVal (JavaScriptObject obj, int i) /*-{
+  	return obj[i].pval;
+  }-*/;
 }
