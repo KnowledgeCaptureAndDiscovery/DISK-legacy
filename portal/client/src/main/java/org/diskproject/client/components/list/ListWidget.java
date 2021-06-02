@@ -132,6 +132,14 @@ public class ListWidget extends IronFlexLayout implements HasListHandlers {
     this.setActionMenu();
   }
   
+  public void hideActionMenu () {
+	  buttons.setVisible(false);
+  }
+  
+  public void showActionMenu () {
+	  buttons.setVisible(true);
+  }
+  
   private void setActionMenu() {
     buttons.clear();
     for(final ListAction action : this.actions) { 

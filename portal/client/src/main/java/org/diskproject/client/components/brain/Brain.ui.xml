@@ -4,6 +4,7 @@
 	xmlns:p='urn:import:com.vaadin.polymer.paper.widget'
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
     <g:HTMLPanel>
+		<!--
 		<g:ListBox ui:field="example">
 			 <g:item value="">Default</g:item>
 			 <g:item value="1">Example 1</g:item>
@@ -14,9 +15,10 @@
 		<g:Button ui:field="clear">Clear</g:Button>
 		<g:Button ui:field="reset">Reset</g:Button>
 		<g:Button ui:field="gray">Gray</g:Button>
+  		-->
 		
     	<div ui:field="container">
-    		<canvas ui:field="canvas" width="600" height="400" style="border: 1px solid red;"></canvas>
+    		<canvas ui:field="canvas" width="600" height="400"></canvas>
     	</div>
     </g:HTMLPanel>
 </ui:UiBinder>

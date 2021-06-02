@@ -28,15 +28,12 @@ import org.diskproject.shared.classes.workflow.WorkflowRun;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.core.client.JsonUtils;
 import com.google.gwt.dom.client.AnchorElement;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.LabelElement;
+import com.google.gwt.dom.client.IFrameElement;
 import com.google.gwt.dom.client.Style.Display;
-import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.json.client.JSONArray;
-import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
@@ -57,7 +54,7 @@ public class TriggeredLOIViewer extends Composite {
   private static Binder uiBinder = GWT.create(Binder.class);
 
   @UiField DivElement header;
-  @UiField DivElement hypothesisSection, LOISection, dataDiv, WFSection, MetaWFSection, brainSection;
+  @UiField DivElement hypothesisSection, LOISection, dataDiv, WFSection, MetaWFSection, brainSection, shinySection;
   @UiField LabelElement WFLabel;
   @UiField Label DataLabel;
   @UiField HTMLPanel revHypothesisSection, DataSection, DataQuerySection;
@@ -99,7 +96,7 @@ public class TriggeredLOIViewer extends Composite {
     DataSection.setVisible(false);
     DataQuerySection.setVisible(false);
     DataLabel.setVisible(false);
-    brainSection.getStyle().setVisibility(Visibility.HIDDEN);
+    brainSection.getStyle().setDisplay(Display.NONE);
     
     //brainVisualization.setVisible(false);
   }
@@ -518,6 +515,14 @@ public class TriggeredLOIViewer extends Composite {
 					  String id = sp[sp.length-1];
 					  loadBrainViz(id);
 				  }
+
+				  if (outputs.keySet().contains("shiny_visualization")) {
+					  //This workflow returns a shiny visualization
+					  //TODO: Assuming theres only one shiny viz per tloi.
+					  String sp[] = outputs.get("shiny_visualization").split("#");
+					  String id = sp[sp.length-1];
+					  loadShinyViz(id);
+				  }
 				  
 				  node.setFullContent(bindings.getHTML());
 			  }
@@ -534,29 +539,33 @@ public class TriggeredLOIViewer extends Composite {
 	  }
     }
 
-  	private void loadBrainViz (String brainVizId) {
-  		//brainVisualization.loadBrainConfigurationURL(brainVizUri);
-  		/*GWT.log("LOADING: " + brainVizId);
-		DiskREST.getDataFromWings(brainVizId, new Callback<String, Throwable>() {
+  	@UiField IFrameElement shinyIframe;
+  	private void loadShinyViz (String shinyLog) {
+		DiskREST.getDataFromWingsAsJS(shinyLog, new Callback<JavaScriptObject, Throwable>() {
 			@Override
-			public void onSuccess(String result) {
-				if (!brainInitialized) { 
-					brainVisualization.initialize();
+			public void onSuccess(JavaScriptObject result) {
+				// TODO Auto-generated method stub
+				String url = getShinyURL(result);
+				if (url != null && !url.equals("")) {
+					GWT.log("RETURN FROM shinyLog " + url);
+					shinyIframe.setSrc(url);
 				}
-				JSONObject data = new JSONObject(JsonUtils.safeEval(result));
-				JSONArray array = data.get("anArray").isArray();
-				JSONObject obj = data.get("anObject").isObject();
-				
-				GWT.log("DATA FROM WINGS: " + result);
-				GWT.log("arr: " + array);
-				GWT.log("obj: " + obj);
 			}
-				
+			
 			@Override
-			public void onFailure(Throwable reason) { // TODO Auto-generated method stub 
-				GWT.log("FAILUIRE " + reason.toString());
+			public void onFailure(Throwable reason) {
+				// TODO Auto-generated method stub
+				
 			}
-		});*/
+		});
+  		
+  	}
+
+  	public static native String getShinyURL(JavaScriptObject shinyobj) /*-{
+  		return shinyobj && shinyobj.url ? shinyobj.url : "";
+	}-*/;
+
+  	private void loadBrainViz (String brainVizId) {
 		if (!brainInitialized) { 
 			brainVisualization.initialize();
 			brainInitialized = true;
@@ -567,7 +576,8 @@ public class TriggeredLOIViewer extends Composite {
 			public void onSuccess(JavaScriptObject result) {
 				// TODO Auto-generated method stub
 				brainVisualization.loadBrainConfigurationFromJSObject(result);
-				brainSection.getStyle().setVisibility(Visibility.VISIBLE);
+				//brainSection.getStyle().setVisibility(Visibility.VISIBLE);
+				brainSection.getStyle().setDisplay(Display.INITIAL);
 			}
 			
 			@Override

@@ -494,7 +494,7 @@ public class Brain extends Composite {
   }
    
   private void decreaseOpacity (Mesh mesh) {
-	  mesh.material.opacity = (float) 0.1;
+	  mesh.material.opacity = (float) 0.05;
   }
 
   private void decreaseOpacityAll () {
@@ -521,7 +521,7 @@ public class Brain extends Composite {
   }
   
   private void clearColors () {
-	  float[] color = {0.5f, 0.5f, 0.5f};
+	  float[] color = {0.1f, 0.1f, 0.1f};
 	  for (String key: meshes.keySet()) {
 		  Mesh mesh = meshes.get(key);
 		  set_mesh_color(mesh, color);
@@ -546,7 +546,7 @@ public class Brain extends Composite {
   
   /* Some example code to load visualizations... */
 
-  @UiField ListBox example;
+  /*@UiField ListBox example;
   @UiField Button clear, reset, gray;
 
   @UiHandler("clear")
@@ -612,7 +612,7 @@ public class Brain extends Composite {
 		  };
 		  readConfig(ex3);
 	  }
-  }
+  }*/
 
   private void readConfig (BrainConfigLine[] config) {
 	  decreaseOpacityAll();
@@ -640,7 +640,7 @@ public class Brain extends Composite {
 		  Mesh mesh = selectMeshByName(item.name);
 		  if (mesh != null) {
 			  if (item.pval > 0) {
-				  mesh.material.opacity = item.pval;
+				  mesh.material.opacity = .25f + item.pval * .75f;
 				  
 				  float[] color = {1f, 0f, 0f};
 				  set_mesh_color(mesh, color);
