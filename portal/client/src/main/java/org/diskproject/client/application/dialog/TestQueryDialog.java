@@ -1,5 +1,6 @@
 package org.diskproject.client.application.dialog;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +17,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Widget;
 
 public class TestQueryDialog extends DialogBox { //implements ClickHandler {
@@ -25,12 +27,15 @@ public class TestQueryDialog extends DialogBox { //implements ClickHandler {
   private String dataQuery, requestedVariables;
   @UiField SparqlInput sparqlQuery, sparqlVariables;
   @UiField DivElement resultContainer;
+  @UiField ListBox dataSource;
 
   public TestQueryDialog() {
-    setText("Test data query");
-    setAnimationEnabled(true);
     setWidget(uiBinder.createAndBindUi(this));
-	GWT.log("A");
+    setText("Test data query");
+    setAnimationEnabled(false);
+    setModal(true);
+	//setWidth("780px")
+	//setHeight("90vh");
     //initialize();
   }
 
@@ -46,10 +51,19 @@ public class TestQueryDialog extends DialogBox { //implements ClickHandler {
       }
     });
   }
+  
+  public void setDataSourceList (List<String[]> dataSourceList) {
+	  if (dataSourceList == null) return;
+	  for (String[] idname: dataSourceList) {
+		  dataSource.addItem(idname[1], idname[0]);
+	  }
+  }
 
-  public void show () {
-    super.show();
-    center();
+  public void showAndCenter () {
+	  show();
+	  center();
+	  //setWidth("800px");
+	  //center();
   }
 
   @UiHandler("cancelButton")
@@ -130,6 +144,8 @@ public class TestQueryDialog extends DialogBox { //implements ClickHandler {
         }
         html += "</table>";
         resultContainer.setInnerHTML("<table style=\"width:100%\">" + html + "</table>");
+        setHeight("90vh");
+        center();
         return;
       }
     }

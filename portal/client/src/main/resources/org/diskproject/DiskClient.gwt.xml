@@ -7,7 +7,7 @@
 	<inherits name="com.google.gwt.resources.Resources" />
 
 	<!-- Enable the keycloak library -->
-  <inherits name="org.realityforge.gwt.keycloak.Keycloak"/>
+    <inherits name="org.realityforge.gwt.keycloak.Keycloak"/>
 	
 	<!-- Model View Presenter -->
 	<inherits name='com.gwtplatform.mvp.Mvp' />
@@ -21,6 +21,9 @@
 	<!-- CodeMirror editor -->
 	<inherits name="edu.stanford.bmir.gwtcodemirror.CodeMirror"/>
 	
+	<!-- Three4g -->
+	<inherits name="org.treblereel.gwt.Three4G"/>
+
 	<!-- GWT Query -->
 	<inherits name='com.google.gwt.query.Query'/>
 

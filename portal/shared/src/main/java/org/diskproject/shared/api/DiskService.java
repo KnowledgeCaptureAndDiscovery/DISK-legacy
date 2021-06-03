@@ -299,5 +299,11 @@ public interface DiskService extends DirectRestService {
       @QueryParam("variables") String variables,
       @QueryParam("query") String query);
   
-
+  @GET
+  @Produces("application/json")
+  @Path("{username}/{domain}/wings-data/{dataid}")
+  public String getDataFromWings(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("dataid") String dataid);
 }

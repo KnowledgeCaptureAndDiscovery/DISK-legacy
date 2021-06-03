@@ -28,6 +28,12 @@ import org.fusesource.restygwt.client.REST;
 
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.JsonUtils;
+import com.google.gwt.http.client.Request;
+import com.google.gwt.http.client.RequestBuilder;
+import com.google.gwt.http.client.RequestCallback;
+import com.google.gwt.http.client.Response;
 import com.google.gwt.i18n.shared.DateTimeFormat;
 
 public class DiskREST {
@@ -211,6 +217,7 @@ public class DiskREST {
       }
       @Override
       public void onFailure(Method method, Throwable exception) {
+    	  GWT.log("ERROR HERE!");
         callback.onFailure(exception);
       }
     }).call(getDiskService()).getHypothesis(username, domain, id);
@@ -688,5 +695,48 @@ public class DiskREST {
       }
     }).call(getDiskService()).getNarratives(username, domain, tloiid);
   }
-  
+
+  public static void getDataFromWings(String dataid,
+      final Callback<String, Throwable> callback) {
+    REST.withCallback(new MethodCallback<String>() {
+      @Override
+      public void onSuccess(Method method, String response) {
+        callback.onSuccess(response);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }      
+    }).call(getDiskService()).getDataFromWings(username, domain, dataid);
+  }
+
+	public static void getDataFromWingsAsJS(String dataid, final Callback<JavaScriptObject, Throwable> callback) {
+		String url = Config.getServerURL() + "/" + username + "/" + domain + "/wings-data/" + dataid;
+		RequestBuilder builder =  new RequestBuilder(RequestBuilder.GET, url);
+
+		builder.setHeader("Content-Type", "application/json");
+		builder.setHeader("Accept", "application/json");
+
+		try {
+			builder.sendRequest(null, new RequestCallback() {
+				@Override
+				public void onResponseReceived(Request request, Response response) {
+					if (response.getStatusCode() == 200) {
+						JavaScriptObject json = JsonUtils.safeEval(response.getText());
+						callback.onSuccess(json);
+					} else {
+						GWT.log("Status code error:" + response.getStatusCode());
+					}
+				}
+				@Override
+				public void onError(Request request, Throwable exception) {
+					GWT.log("error2");
+					// TODO Auto-generated method stub
+				}
+			});
+		} catch (Exception e) {
+			GWT.log("some error");
+			// TODO: handle exception
+		}
+	}
 }

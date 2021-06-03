@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.diskproject.client.Config;
+import org.diskproject.client.components.brain.Brain;
 import org.diskproject.client.components.list.ListNode;
 import org.diskproject.client.components.list.ListWidget;
 import org.diskproject.client.components.list.events.ListItemActionEvent;
@@ -26,11 +27,12 @@ import org.diskproject.shared.classes.workflow.WorkflowRun;
 
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.AnchorElement;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.LabelElement;
+import com.google.gwt.dom.client.IFrameElement;
 import com.google.gwt.dom.client.Style.Display;
-import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -52,7 +54,7 @@ public class TriggeredLOIViewer extends Composite {
   private static Binder uiBinder = GWT.create(Binder.class);
 
   @UiField DivElement header;
-  @UiField DivElement hypothesisSection, LOISection, dataDiv, WFSection, MetaWFSection;
+  @UiField DivElement hypothesisSection, LOISection, dataDiv, WFSection, MetaWFSection, brainSection, shinySection;
   @UiField LabelElement WFLabel;
   @UiField Label DataLabel;
   @UiField HTMLPanel revHypothesisSection, DataSection, DataQuerySection;
@@ -64,6 +66,9 @@ public class TriggeredLOIViewer extends Composite {
   @UiField PaperButton downloadbutton, triplesbutton, editBindingsButton, runButton;
   @UiField PaperDialog editBindingsDialog;
   @UiField BindingsEditor bindingseditor;
+  @UiField Brain brainVisualization;
+  private Status status;
+  private boolean brainInitialized = false;
 
   String username, domain;
   String rawcsv; //USED to save the downloadable CSV.
@@ -91,6 +96,9 @@ public class TriggeredLOIViewer extends Composite {
     DataSection.setVisible(false);
     DataQuerySection.setVisible(false);
     DataLabel.setVisible(false);
+    brainSection.getStyle().setDisplay(Display.NONE);
+    
+    //brainVisualization.setVisible(false);
   }
   
   public void enableBindingEdition () {
@@ -99,7 +107,8 @@ public class TriggeredLOIViewer extends Composite {
 
   public void load(TriggeredLOI tloi) {
     this.tloi = tloi;
-    runButton.setVisible(tloi.getStatus()==null);
+    status = tloi.getStatus();
+    runButton.setVisible(status==null);
     
     //header.setInnerHTML(tloi.getHeaderHTML());
     setHeader(tloi);
@@ -125,7 +134,9 @@ public class TriggeredLOIViewer extends Composite {
     setDataQueryHTML(tloi.getDataQuery(), LOISection, dataQuery);
     setRevisedHypothesesHTML(tloi.getResultingHypothesisIds(), revHypothesisSection);
     
-    this.loadNarratives(tloi);
+    if (status == Status.SUCCESSFUL) {
+    	loadNarratives(tloi);
+    }
   }
   
   private void setHeader(TriggeredLOI tloi) {
@@ -460,7 +471,7 @@ public class TriggeredLOIViewer extends Composite {
       list.addNode(tnode);
     }
   }
-
+  
   @UiHandler({"workflowlist", "metaworkflowlist"})
   void onWorkflowListAction(ListItemActionEvent event) {
 	  if(event.getAction().getId().equals("runlink")) {
@@ -493,6 +504,26 @@ public class TriggeredLOIViewer extends Composite {
 				  if (outputs != null && outputs.size() > 0) run.setOutputs(outputs);
 				  run.setFiles(result.getFiles());
 				  
+				  for (String key: outputs.keySet()) {
+					  GWT.log(key + ": " + outputs.get(key));
+				  }
+				  
+				  if (outputs.keySet().contains("brain_visualization")) {
+					  //This workflow returns a brain visualizations:
+					  //TODO: Assuming theres only one brainviz per tloi.
+					  String sp[] = outputs.get("brain_visualization").split("#");
+					  String id = sp[sp.length-1];
+					  loadBrainViz(id);
+				  }
+
+				  if (outputs.keySet().contains("shiny_visualization")) {
+					  //This workflow returns a shiny visualization
+					  //TODO: Assuming theres only one shiny viz per tloi.
+					  String sp[] = outputs.get("shiny_visualization").split("#");
+					  String id = sp[sp.length-1];
+					  loadShinyViz(id);
+				  }
+				  
 				  node.setFullContent(bindings.getHTML());
 			  }
 			  @Override
@@ -506,7 +537,56 @@ public class TriggeredLOIViewer extends Composite {
 
 		  //Window.open(bindings.getRun().getLink(), "_blank", "");
 	  }
-  }
+    }
+
+  	@UiField IFrameElement shinyIframe;
+  	private void loadShinyViz (String shinyLog) {
+		DiskREST.getDataFromWingsAsJS(shinyLog, new Callback<JavaScriptObject, Throwable>() {
+			@Override
+			public void onSuccess(JavaScriptObject result) {
+				// TODO Auto-generated method stub
+				String url = getShinyURL(result);
+				if (url != null && !url.equals("")) {
+					GWT.log("RETURN FROM shinyLog " + url);
+					shinyIframe.setSrc(url);
+				}
+			}
+			
+			@Override
+			public void onFailure(Throwable reason) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+  		
+  	}
+
+  	public static native String getShinyURL(JavaScriptObject shinyobj) /*-{
+  		return shinyobj && shinyobj.url ? shinyobj.url : "";
+	}-*/;
+
+  	private void loadBrainViz (String brainVizId) {
+		if (!brainInitialized) { 
+			brainVisualization.initialize();
+			brainInitialized = true;
+		}
+
+		DiskREST.getDataFromWingsAsJS(brainVizId, new Callback<JavaScriptObject, Throwable>() {
+			@Override
+			public void onSuccess(JavaScriptObject result) {
+				// TODO Auto-generated method stub
+				brainVisualization.loadBrainConfigurationFromJSObject(result);
+				//brainSection.getStyle().setVisibility(Visibility.VISIBLE);
+				brainSection.getStyle().setDisplay(Display.INITIAL);
+			}
+			
+			@Override
+			public void onFailure(Throwable reason) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+  	}
 
   	public static native void download(String name, String raw, String enc) /*-{
   		var blob = new Blob([raw], {type: enc});

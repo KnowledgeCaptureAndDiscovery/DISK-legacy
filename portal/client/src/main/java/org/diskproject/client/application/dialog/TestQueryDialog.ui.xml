@@ -47,6 +47,10 @@
 		}
     </style>
     <div>
+		<label class="small-grey" title="Data Source">Select data source:</label>
+		<g:ListBox ui:field='dataSource'></g:ListBox>
+    </div>
+    <div>
 		  <label class="small-grey">Requested variables</label>
 			<tr:SparqlInput ui:field="sparqlVariables" />
     </div>

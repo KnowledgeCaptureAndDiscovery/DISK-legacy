@@ -29,7 +29,6 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.apache.commons.lang.SerializationUtils;
-import org.apache.jena.tdb.store.Hash;
 //import org.diskproject.server.repository.GmailService.MailMonitor;
 import org.diskproject.server.util.Config;
 import org.diskproject.server.util.DataQuery;
@@ -636,7 +635,7 @@ public class DiskRepository extends KBRepository {
 			}
 		} catch (ConcurrentModificationException e) {
 		   System.out.println("ERROR: Concurrent modification exception on listHypothesis");
-			e.printStackTrace();
+		   //e.printStackTrace();
 		   return null;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -2643,6 +2642,12 @@ public class DiskRepository extends KBRepository {
 		}
 		return runids;
 	}
+	
+	public String getDataFromWings (String username, String domain, String id) {
+		WingsAdapter wings = WingsAdapter.get();
+		String dataid = wings.DOMURI(username, domain) + "/data/library.owl#" + id;
+		return wings.fetchDataFromWings(username, domain, dataid);
+	}
 
 	private String fetchOutputHypothesis(String username, String domain, WorkflowBindings bindings, TriggeredLOI tloi) {
 		String varname = bindings.getMeta().getRevisedHypothesis();
@@ -2651,6 +2656,7 @@ public class DiskRepository extends KBRepository {
 		if (varmap.containsKey(varname)) {
 			String dataid = varmap.get(varname);
 			String dataname = dataid.replaceAll(".*#", "");
+			System.out.println("LOADING DATAID: " + dataid);
 			String content = WingsAdapter.get().fetchDataFromWings(username, domain, dataid);
 
 			HashMap<String, Integer> workflows = new HashMap<String, Integer>();
@@ -3000,7 +3006,7 @@ public class DiskRepository extends KBRepository {
 					//Same for optional parameters
 					for (VariableBinding p: optionalparams) {
 						String bind = p.getBinding();
-						if (!(bind == null || bind.equals("") || bind.equals("\"\""))) {
+						if (!(bind == null || bind.equals("") || bind.equals("\"\"") || bind.charAt(0) == '?')) {
 							if (bind.charAt(0) == '"') {
 								bind = bind.substring(1, bind.length() - 1);
 							}

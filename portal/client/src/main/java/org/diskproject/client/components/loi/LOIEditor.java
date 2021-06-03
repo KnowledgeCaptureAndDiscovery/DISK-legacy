@@ -215,9 +215,10 @@ public class LOIEditor extends Composite
     
     fireEvent(new LOISaveEvent(loi));
   }
-
+  
   @UiHandler("testbutton")
   void onTestButtonClicked(ClickEvent event) {   
+
 	/** TODO: new test */
 	String wfvars = "";
 	/*for (WorkflowBindings wfb:  workflowlist.getBindingsList()) {
@@ -232,8 +233,10 @@ public class LOIEditor extends Composite
 	}*/
 	TestQueryDialog dialog = new TestQueryDialog();
 	dialog.show();
+	dialog.setDataSourceList(dataSourceList);
 	dialog.setDataQuery(loi.getDataQuery());
 	dialog.setVariables(wfvars != "" ? wfvars : "*");
+	dialog.center();
   }  
 
   @Override
