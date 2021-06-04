@@ -27,6 +27,8 @@ public class KBRepository implements TransactionsAPI {
   protected String owlns, rdfns, rdfsns;
   protected KBAPI ontkb;
   protected HashMap<String, KBObject> pmap, cmap;
+
+  private Semaphore mutex;
   
   protected void setConfiguration(String onturi, String ontns) {
     if(Config.get() == null)
@@ -52,7 +54,7 @@ public class KBRepository implements TransactionsAPI {
     if(this.tdbdir == null)
       return;
     
-    //this.mutex = new Semaphore(1);
+    this.mutex = new Semaphore(1);
     
     this.fac = new OntFactory(OntFactory.JENA, tdbdir);
     try {
@@ -61,15 +63,16 @@ public class KBRepository implements TransactionsAPI {
       ontkb = fac.getKB(this.onturi, OntSpec.PELLET, false, true);
       System.out.println("GET KB: " + this.onturi);
       TimeUnit.SECONDS.sleep(2); 
+
       // Temporary hacks
       this.start_write();
-      this.temporaryHacks();
       
       pmap = new HashMap<String, KBObject>();
       cmap = new HashMap<String, KBObject>();
       this.cacheKBTerms(ontkb);
       //this.stddump();
       this.end();
+
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -94,11 +97,6 @@ public class KBRepository implements TransactionsAPI {
 			  System.out.println(key + ": " + el.getValueAsString());
 		  }
 	  }
-  }
-  
-  private void temporaryHacks() {
-	//ADDs properties to the ontology being loaded.
-    //this.hackInDataProperty("hasRelevantVariables", "LineOfInquiry", "string");
   }
   
   private void hackInDataProperty(String prop, String domain, String range) {
@@ -147,53 +145,66 @@ public class KBRepository implements TransactionsAPI {
     }
   }
 
-//TransactionsAPI functions
- private Semaphore mutex;
+  //TransactionsAPI functions
+  private void acquire () {
+	  if (is_in_transaction()) {
+		  System.out.println("Waiting... " +  mutex.availablePermits());
+		  //FIXME this is an error! check why you get here, double open probably.
+	  }
+	  try {
+		  mutex.acquire();
+	  } catch(InterruptedException ie) {
+		  System.out.println("InterruptedException");
+	  }
+  }
+  
+  private void release () {
+	  try {
+		  mutex.release();
+	  } catch (Exception e) {
+		  System.out.println("Error on release");
+	  }
+  }
   
  @Override
  public boolean start_read() {
-   if(transaction != null)
-	 //try {
-	//	 mutex.acquire();
+	 if (transaction != null) {
+		 acquire();
+		 //System.out.println("START READ " + mutex.availablePermits());
 		 return transaction.start_read();
-	 //} catch(InterruptedException ie) {
-	//	 System.out.println("InterruptedException");
-	 //}
-   return true;
+	 }
+	 return true; //true??? FIXME
  }
 
  @Override
  public boolean start_write() {
-   if(transaction != null)
-	 //try {
-		// mutex.acquire();
+	 if (transaction != null) {
+		 acquire();
+		 //System.out.println("START WRITE " + mutex.availablePermits());
 		 return transaction.start_write();
-	 //} catch(InterruptedException ie) {
-		// System.out.println("InterruptedException");
-	 //}
-   return true;
+	 }
+	 return true;
+ }
+
+ @Override
+ public boolean end () {
+	 if (transaction != null) {
+		 boolean b = transaction.end();
+		 System.out.println("END " + b);
+		 release();
+		 return b;
+	 }
+	 return true;
  }
  
  @Override
  public boolean save(KBAPI kb) {
-   return transaction.save(kb);
+	 return transaction.save(kb);
  }
  
  @Override
  public boolean saveAll() {
-   return transaction.saveAll();
- }
-
- @Override
- public boolean end() {
-   if(transaction != null)
-	 //try {
-	//	 mutex.release();
-		 return transaction.end();
-	 //} catch (Exception e) {
-	//	 System.out.println("ERRor on release");
-	 //}
-   return true;
+	 return transaction.saveAll();
  }
 
  @Override
@@ -205,4 +216,10 @@ public class KBRepository implements TransactionsAPI {
  public void stop_batch_operation() {
    transaction.stop_batch_operation();
  }
+ 
+ @Override
+ public boolean is_in_transaction() {
+	 return transaction.is_in_transaction();
+ }
+
 }

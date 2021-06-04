@@ -90,7 +90,7 @@ public class DiskRepository extends KBRepository {
 	public static DiskRepository get() {
 		if (!creatingKB && singleton == null) {
 			creatingKB = true;
-			singleton = new DiskRepository(); // Here
+			singleton = new DiskRepository();
 			creatingKB = false;
 		}
 		return singleton;
@@ -444,11 +444,12 @@ public class DiskRepository extends KBRepository {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-      this.end();
+			this.end();
 		}
 		return null;
 	}
 
+	//FIXME: this is weird.
 	public Vocabulary initializeVocabularyFromKB(KBAPI kb, String ns) {
 		Vocabulary vocabulary = new Vocabulary(ns);
 		try {
@@ -456,7 +457,6 @@ public class DiskRepository extends KBRepository {
 			this.fetchPropertiesFromKB(kb, vocabulary);
 			return vocabulary;
 		} catch (Exception e) {
-		  //FIXME: this is weird.
 			e.printStackTrace();
 			vocabulary = new Vocabulary(ns);
 			this.fetchTypesAndIndividualsFromKB(kb, vocabulary); // Here
@@ -612,6 +612,7 @@ public class DiskRepository extends KBRepository {
 				KBObject parentobj = kb.getPropertyValue(hypobj, pmap.get("hasParentHypothesis"));
 				if (parentobj != null)
 					parentid = parentobj.getName();
+				
 				String DateCreated = null;
 				KBObject dateobj = kb.getPropertyValue(hypobj, pmap.get("dateCreated"));
 				if (dateobj != null)
@@ -639,9 +640,8 @@ public class DiskRepository extends KBRepository {
 		   return null;
 		} catch (Exception e) {
 			e.printStackTrace();
-			
 		} finally {
-		  this.end();
+			this.end();
 		}
 		return list;
 	}
@@ -650,7 +650,6 @@ public class DiskRepository extends KBRepository {
 		String url = this.HYPURI(username, domain);
 		String fullid = url + "/" + id;
 		String provid = fullid + "/provenance";
-		System.out.println("GET Hypothesis: " + fullid);
 
 		try {
 			KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
@@ -708,19 +707,19 @@ public class DiskRepository extends KBRepository {
 				if (variableBindings.size() > 0) hypothesis.setQuestionBindings(variableBindings);
 			}
 
-			this.updateTripleDetails(graph, provkb); //WHY?
+			this.updateTripleDetails(graph, provkb); //Updates provenance on READ? FIXME
 
 			return hypothesis;
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-		  this.end();
+			this.end();
 		}
 		return null;
 	}
 
-	// For provenance on revised hypotheses
+	// This add provenance details to the graph
 	private Graph updateTripleDetails(Graph graph, KBAPI provkb) {
 		HashMap<String, Triple> tripleMap = new HashMap<String, Triple>();
 		for (Triple t : graph.getTriples())
@@ -785,32 +784,37 @@ public class DiskRepository extends KBRepository {
 
 			if (kb != null && hypkb != null && provkb != null) {
 				this.start_read();
-	      
 				KBObject hypitem = kb.getIndividual(fullid);
 				if (hypitem != null) {
-					for (KBTriple t : kb.genericTripleQuery(null, pmap.get("hasParentHypothesis"), hypitem)) {
-						this.deleteHypothesis(username, domain, t.getSubject().getName());
-					}
-					this.end();
-					this.start_write();
-					
+					ArrayList<KBTriple> parentHypotheses = kb.genericTripleQuery(null, pmap.get("hasParentHypothesis"), hypitem);
 					ArrayList<KBObject> questionBindings = kb.getPropertyValues(hypitem, pmap.get("hasVariableBinding"));
+					this.end();
+					
+					this.start_write();
 					if (questionBindings != null) for (KBObject binding: questionBindings) {
 						kb.deleteObject(binding, true, true);
 					}
-					
 					kb.deleteObject(hypitem, true, true);
-					
 					this.save(kb);
 					this.end();
+
+					for (KBTriple t : parentHypotheses) {
+						this.deleteHypothesis(username, domain, t.getSubject().getName());
+					}
+
+				} else {
+					this.end();
 				}
+
 				return this.start_write() && hypkb.delete() && this.save(hypkb) && this.end() && 
 				    this.start_write() && provkb.delete() && this.save(provkb) && this.end();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
-		  this.end();
+			if (this.is_in_transaction()) {
+				System.out.println("Exception in transaction!");
+				this.end();
+			}
 		}
 		return false;
 	}
@@ -886,7 +890,6 @@ public class DiskRepository extends KBRepository {
 				this.storeTripleDetails(triple, provid, provkb);
 			}
 			this.save(provkb);
-      this.end();
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -1130,7 +1133,7 @@ public class DiskRepository extends KBRepository {
 
     try {
       // Union of kbs
-      this.start_read();
+      //this.start_read();
       KBAPI queryKb = this.fac.getKB(OntSpec.PLAIN);
       KBAPI hypkb = this.fac.getKB(hypuri, OntSpec.PLAIN);
       KBAPI userkb = this.fac.getKB(assertions, OntSpec.PLAIN);
@@ -1139,10 +1142,9 @@ public class DiskRepository extends KBRepository {
       queryKb.importFrom(this.hypontkb);
       queryKb.importFrom(hypkb);
       queryKb.importFrom(userkb);
-      this.end();
+      //this.end();
 
       for (TreeItem item : this.listLOIs(username, domain)) {
-        //System.out.println("\nChecking LOI "+ item.getId());
         LineOfInquiry loi = this.getLOI(username, domain, item.getId());
         //Check hypothesis and data query
         String hypothesisQuery = loi.getHypothesisQuery();
@@ -1186,6 +1188,7 @@ public class DiskRepository extends KBRepository {
 
         this.start_read();
         ArrayList<ArrayList<SparqlQuerySolution>> allSolutions = queryKb.sparqlQuery(hypSparqlQuery);
+        this.end();
         if (allSolutions.size() == 0) continue;
 
         for (ArrayList<SparqlQuerySolution> hypothesisSolutions : allSolutions) {
@@ -1228,8 +1231,10 @@ public class DiskRepository extends KBRepository {
       }
     } catch (Exception e) {
        e.printStackTrace();
-    } finally {
-      this.end();
+       if (this.is_in_transaction()) {
+    	   System.out.println("Exception on transaction, end()... ");
+    	   this.end();
+       }
     }
     return matches;
   }
@@ -1243,7 +1248,7 @@ public class DiskRepository extends KBRepository {
 		if (matches.size() == 0) return tlois;
 
 		try {
-			this.start_read();
+			//this.start_read();
 			KBAPI queryKb = this.fac.getKB(OntSpec.PLAIN);
 			queryKb.importFrom(this.omicsontkb);
 			queryKb.importFrom(this.neuroontkb);
@@ -1251,7 +1256,6 @@ public class DiskRepository extends KBRepository {
 			queryKb.importFrom(this.fac.getKB(hypuri, OntSpec.PLAIN));
 			queryKb.importFrom(this.fac.getKB(assertions, OntSpec.PLAIN));
 			
-            //System.out.println("MATCHES:");
             for (LineOfInquiry loi: matches.keySet()) {
               List<Map<String, String>> results = matches.get(loi);
               //System.out.println(loi.getName() + ": " + results.size());
@@ -1267,11 +1271,12 @@ public class DiskRepository extends KBRepository {
                 
                 //Creating 1 data query for hypothesis binding solution;
                 String dq = getQueryBindings(loi.getDataQuery(), varPattern, hypBinds);
-                dq = this.addQueryAssertions(dq, assertions);
+                dq = this.addQueryAssertions(dq, assertions);   //FIXME
                 dq = dq.replace("user:", "?");
+
                 String dataQuery = this.getDistinctSparqlQuery(dq, assertions, new ArrayList<String>(loi.getAllWorkflowVariables()) );
-                if (dataQuery.charAt(dataQuery.length()-1) == '\n') dataQuery = dataQuery.substring(0, dataQuery.length()-1);
-                //System.out.println("binded: \n" + dataQuery + "\n");
+                if (dataQuery.charAt(dataQuery.length()-1) == '\n')
+                	dataQuery = dataQuery.substring(0, dataQuery.length()-1);
 
                 ArrayList<ArrayList<SparqlQuerySolution>> allDataSolutions = null;
                 
@@ -1296,7 +1301,9 @@ public class DiskRepository extends KBRepository {
                 		allDataSolutions = queryKb.sparqlQueryRemote(dataQuery, dataSource);
                 	}
                 } else {
-                  allDataSolutions = queryKb.sparqlQuery(dataQuery);
+                	this.start_read();
+                	allDataSolutions = queryKb.sparqlQuery(dataQuery);
+                	this.end();
                 }
                 
                 //System.out.println("Query done!! " + allDataSolutions.size());
@@ -1350,10 +1357,10 @@ public class DiskRepository extends KBRepository {
                     //System.out.println("  -  " + r);
                   }
                 }
-
+                
                 TriggeredLOI tloi = new TriggeredLOI(loi, id);
                 tloi.setWorkflows(
-                    this.getTLOIBindings(username, domain, loi.getWorkflows(), dataVarBindings) //FIXME: the problem is here!
+                    this.getTLOIBindings(username, domain, loi.getWorkflows(), dataVarBindings)
                     );
                 tloi.setMetaWorkflows(
                     this.getTLOIBindings(username, domain, loi.getMetaWorkflows(), dataVarBindings));
@@ -1361,14 +1368,14 @@ public class DiskRepository extends KBRepository {
                 tloi.setRelevantVariables(loi.getRelevantVariables());
                 tloi.setExplanation(loi.getExplanation());
                 tlois.add(tloi);
-
-                System.out.println(loi.getId() + " has created " + tloi.getId());
               }
             }
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
-		  this.end();
+		   if (this.is_in_transaction()) {
+			   System.out.println("Exception on transaction, end()... ");
+			   this.end();
+		   }
 		}
 		
 		//return tlois;
@@ -1446,7 +1453,7 @@ public class DiskRepository extends KBRepository {
         		  System.out.println("more than one value for optional " + binding);
         	  }
           } else {
-        	  System.out.println("dict does not contain optional " + binding);
+        	  //System.out.println("dict does not contain optional " + binding);
           }
         }
         // CHECK ^
@@ -1481,7 +1488,7 @@ public class DiskRepository extends KBRepository {
           for(String dsurl : dsurls) {
             String dsname = dsurl.replaceAll("^.*\\/", "");
             /*System.out.println("tick");
-            WingsAdapter.get().addRemoteDataToWings(username, domain, dsurl);
+		WingsAdapter.get().addRemoteDataToWings(username, domain, dsurl); TODO: this uploads the data to wings
             System.out.println("tock");*/
             dsnames.add(dsname);
           }
@@ -1919,8 +1926,10 @@ public class DiskRepository extends KBRepository {
 			return this.save(loikb) && this.end();
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
-		  this.end();
+			if (this.is_in_transaction()) {
+				System.out.println("Exception on transaction, end()... ");
+				this.end();
+		   	}
 		}
 		return true;
 	}
@@ -2324,6 +2333,7 @@ public class DiskRepository extends KBRepository {
 	public void addTriggeredLOI(String username, String domain, TriggeredLOI tloi) {
 		tloi.setStatus(Status.QUEUED);
 		this.saveTriggeredLOI(username, domain, tloi);
+		//FILES SHOULD BE UPLOAD HERE! TODO
 
 		TLOIExecutionThread wflowThread = new TLOIExecutionThread(username, domain, tloi, false);
 		executor.execute(wflowThread);
@@ -2335,12 +2345,13 @@ public class DiskRepository extends KBRepository {
 
 		String url = this.TLOIURI(username, domain);
 		String fullid = url + "/" + id;
+		boolean status = false;
 
 		try {
 			KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, false);
 			KBAPI tloikb = this.fac.getKB(fullid, OntSpec.PLAIN, false);
 			if (kb != null && tloikb != null) {
-			  this.start_read();
+				this.start_read();
 				KBObject item = kb.getIndividual(fullid);
 				KBObject hypobj = kb.getPropertyValue(item, pmap.get("hasResultingHypothesis"));
 				if (hypobj != null) {
@@ -2351,29 +2362,23 @@ public class DiskRepository extends KBRepository {
 					} else {
 						System.out.println("Resulting hypotesis cannot be deleted as is being used for other tloi.");
 					}
-					/*
-					for (KBTriple t : kb.genericTripleQuery(null, pmap.get("hasParentHypothesis"), hypobj)) {
-						this.deleteTriggeredLOI(username, domain, t.getSubject().getName());
-					}
-					this.end();
-					
-					this.deleteHypothesis(username, domain, hypobj.getName());*/
-				}
-				else {
+				} else {
 				  this.end();
 				}
 				
 				this.start_write();
 				kb.deleteObject(item, true, true);
-				return this.save(kb) && this.end() && 
+				status = this.save(kb) && this.end() && 
 				    this.start_write() && tloikb.delete() && this.save(tloikb) && this.end();
 			}
 		} catch (Exception e) {
+			if (this.is_in_transaction()) {
+				System.out.println("Exception on transaction. Closing...");
+				this.end();
+			}
 			e.printStackTrace();
-		} finally {
-		  this.end();
 		}
-		return false;
+		return status;
 	}
 
 	private TriggeredLOI getTriggeredLOI(String username, String domain, String id, KBAPI kb, KBAPI tloikb) {
@@ -2711,6 +2716,7 @@ public class DiskRepository extends KBRepository {
 	/* Narratives */
 	public Map<String, String> getNarratives (String username, String domain, String tloid) {
 		Map<String,String> narratives = new HashMap<String, String>();
+		if (true) return narratives;
 		TriggeredLOI tloi = this.getTriggeredLOI(username, domain, tloid);
 		if (tloi != null) {
 			String hypId = tloi.getParentHypothesisId();
@@ -3014,12 +3020,6 @@ public class DiskRepository extends KBRepository {
 						}
 					}
 					
-					System.out.println("Bindings to be send on run:");
-					for (VariableBinding b: sendbindings) {
-						System.out.println(b.getVariable()+  " = " + b.getBinding());
-					}
-					
-					
 					// Special processing for Meta Workflows
 					if (this.metamode) {
 						// Replace workflow ids with workflow run ids in
@@ -3145,6 +3145,7 @@ public class DiskRepository extends KBRepository {
 						overallStatus = Status.SUCCESSFUL;
 					} else {
 						overallStatus = Status.RUNNING;
+						System.out.println("Starting metamode after " + numSuccessful + " workflows.");
 
 						// Start meta workflows
 						TLOIExecutionThread wflowThread = new TLOIExecutionThread(username, domain, tloi, true);
@@ -3173,6 +3174,7 @@ public class DiskRepository extends KBRepository {
 		}
 
 		public void run() {
+			System.out.println("Running data monitor thread");
 			try {
 				Thread.sleep(5000);
 				if (stop) {

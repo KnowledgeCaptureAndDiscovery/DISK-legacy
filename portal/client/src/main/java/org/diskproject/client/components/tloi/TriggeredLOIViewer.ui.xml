@@ -131,7 +131,7 @@
 			</p:PaperButton>
 			<p:PaperButton ui:field="editBindingsButton" styleName="edit-button">
 				<iron-icon icon="settings-applications" />
-				EDIT
+				EDIT BINDINGS
 			</p:PaperButton>
 
 			<div ui:field="header"/>
@@ -232,8 +232,6 @@
 		<p:PaperDialog ui:field="editBindingsDialog" noCancelOnOutsideClick="true" noCancelOnEscKey="true">
 			<tloi:BindingsEditor ui:field="bindingseditor"/>
 		</p:PaperDialog>
-		
-		
 		
 	</g:HTMLPanel>
 </ui:UiBinder>
