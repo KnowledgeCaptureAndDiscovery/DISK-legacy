@@ -102,7 +102,21 @@ public class TriggeredLOIViewer extends Composite {
   }
   
   public void enableBindingEdition () {
-	  editBindingsButton.setVisible(true);
+	  // Only show button if theres multiple files. FIXME: only works for the first wf mwf.
+	  List<WorkflowBindings> wfs = tloi.getWorkflows();
+	  List<WorkflowBindings> metawfs = tloi.getMetaWorkflows();
+
+	  if (wfs.size() > 0) {
+		  List<String> cv = wfs.get(0).getCollectionVariables();
+		  if (cv.size() > 0) {
+			  editBindingsButton.setVisible(true);
+		  }
+	  } else if (metawfs.size() > 0) {
+		  List<String> cv = metawfs.get(0).getCollectionVariables();
+		  if (cv.size() > 0) {
+			  editBindingsButton.setVisible(true);
+		  }
+	  }
   }
 
   public void load(TriggeredLOI tloi) {
@@ -673,7 +687,7 @@ public class TriggeredLOIViewer extends Composite {
 		} else {
 			GWT.log("Cannot edit, workflow not found.");
 		}
-		
+
 		editBindingsDialog.open();
 	}
 

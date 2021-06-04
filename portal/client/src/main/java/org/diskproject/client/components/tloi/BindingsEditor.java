@@ -74,7 +74,7 @@ public class BindingsEditor extends Composite {
     		}
     	}
     	variableMenu.setItems(Polymer.asJsArray(names));
-    	variableMenu.setValue(names.get(0));
+    	if (names.size() > 0) variableMenu.setValue(names.get(0));
     	onVariableMenuChanged(null);
     }
   }
