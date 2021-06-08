@@ -190,7 +190,7 @@ public class KBRepository implements TransactionsAPI {
  public boolean end () {
 	 if (transaction != null) {
 		 boolean b = transaction.end();
-		 System.out.println("END " + b);
+		 //System.out.println("END " + b);
 		 release();
 		 return b;
 	 }

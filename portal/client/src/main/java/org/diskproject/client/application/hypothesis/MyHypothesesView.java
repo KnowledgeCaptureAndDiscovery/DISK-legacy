@@ -181,7 +181,6 @@ public class MyHypothesesView extends ApplicationSubviewImpl
           generateHypothesisTree();
           if (hypothesisList.size() == 0) {
         	  // Show empty message.
-        	  GWT.log("empty!!");
         	  emptyDiv.setVisible(true);
           } else {
         	  // Hide empty message.

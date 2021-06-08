@@ -97,6 +97,7 @@ public class TriggeredLOIViewer extends Composite {
     DataQuerySection.setVisible(false);
     DataLabel.setVisible(false);
     brainSection.getStyle().setDisplay(Display.NONE);
+    shinySection.getStyle().setDisplay(Display.NONE);
     
     //brainVisualization.setVisible(false);
   }
@@ -562,6 +563,7 @@ public class TriggeredLOIViewer extends Composite {
 				String url = getShinyURL(result);
 				if (url != null && !url.equals("")) {
 					GWT.log("RETURN FROM shinyLog " + url);
+					shinySection.getStyle().setDisplay(Display.INITIAL);
 					shinyIframe.setSrc(url);
 				}
 			}

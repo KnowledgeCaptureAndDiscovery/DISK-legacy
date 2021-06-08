@@ -273,6 +273,7 @@ public class DiskRepository extends KBRepository {
 				String name = varname.substring(1);
 				KBObject constraints = kb.getPropertyValue(qvar, pmap.get("hasConstraints"));
 				KBObject fixedOptions = kb.getPropertyValue(qvar, pmap.get("hasFixedOptions"));
+				this.end();
 				if (fixedOptions != null) {
 					String[] fixedoptions = fixedOptions.getValueAsString().split(",");
 					for (String val: fixedoptions) {
@@ -286,7 +287,7 @@ public class DiskRepository extends KBRepository {
 							"SELECT DISTINCT ?label " + varname + " WHERE {\n  " +
 							constraints.getValueAsString() + "\n  " +
 							"OPTIONAL { " + varname + " rdfs:label ?label . }\n  }";
-					System.out.println(query);
+					//System.out.println(query);
 					List<List<SparqlQuerySolution>> solutions = queryAllEndpoints(kb, query);
 					for (List<SparqlQuerySolution> dataSolutions : solutions) {
 						String url = null;
@@ -312,13 +313,17 @@ public class DiskRepository extends KBRepository {
 						}
 					}
 				}
+			} else {
+				this.end();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
-			this.end();
+			if (is_in_transaction()) {
+				System.out.println("Exception on transaction!");
+				this.end();
+			}
 		}
-		System.out.println("options: " + options.size());
+		//System.out.println("options: " + options.size());
 		return options;
 	}
 	
