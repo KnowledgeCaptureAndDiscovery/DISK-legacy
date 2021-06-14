@@ -12,8 +12,10 @@ import org.diskproject.client.Utils;
 import org.diskproject.client.application.ApplicationSubviewImpl;
 import org.diskproject.client.authentication.AuthUser;
 import org.diskproject.client.components.hypothesis.HypothesisEditor;
+import org.diskproject.client.components.hypothesis.HypothesisItem;
 import org.diskproject.client.components.hypothesis.events.HypothesisSaveEvent;
 import org.diskproject.client.components.loader.Loader;
+import org.diskproject.client.components.searchpanel.SearchPanel;
 import org.diskproject.client.components.tloi.TriggeredLOIViewer;
 import org.diskproject.client.components.tree.TreeNode;
 import org.diskproject.client.components.tree.TreeWidget;
@@ -83,6 +85,8 @@ public class MyHypothesesView extends ApplicationSubviewImpl
   @UiField ListBox order;
 
   @UiField DialogBox helpDialog;
+
+  @UiField SearchPanel searchPanel;
   
   ListBox varList;
   Map<String, List<CheckBox>> checkMap;
@@ -185,6 +189,18 @@ public class MyHypothesesView extends ApplicationSubviewImpl
           } else {
         	  // Hide empty message.
         	  emptyDiv.setVisible(false);
+        	  
+        	  //----
+        	  for (TreeItem hyp: hypothesisList) {
+        		  HypothesisItem item = new HypothesisItem();
+        		  item.load(hyp);
+        		  //TODO: do something
+        		  searchPanel.addItem(hyp.getId(), item);
+        	  }
+        	  
+        	  if (tloilist != null) {
+        		  addExecutions(tloilist);
+        	  }
           }
         } else {
           AppNotification.notifyFailure("Error loading hypothesis");
@@ -203,8 +219,10 @@ public class MyHypothesesView extends ApplicationSubviewImpl
       public void onSuccess(List<TriggeredLOI> result) {
         if (result != null) {
           tloilist = result;
-          if (hypothesisList != null)
+          if (hypothesisList != null) {
              generateHypothesisTree();
+             addExecutions(tloilist);
+          }
         } else {
           AppNotification.notifyFailure("Error loading trigered lines of inquiry");
           showErrorWhileLoading();
@@ -218,6 +236,30 @@ public class MyHypothesesView extends ApplicationSubviewImpl
       }
     });
   }
+  
+  	private void addExecutions (List<TriggeredLOI> tlois) {
+  		GWT.log("Adding tlois!");
+		for (TreeItem hyp: hypothesisList) {
+			String hid = hyp.getId();
+			HypothesisItem item = (HypothesisItem) searchPanel.getItem(hid);
+
+			List<TriggeredLOI> allexec = tlois.stream()
+					.filter(p -> p.getParentHypothesisId() != null && p.getParentHypothesisId().equals(hid))
+					.collect(Collectors.toList());
+			
+			Map<String, List<TriggeredLOI>> groups = new HashMap<String, List<TriggeredLOI>>();
+			for (TriggeredLOI exec: allexec) {
+				String loiid = exec.getLoiId();
+				if (!groups.containsKey(loiid)) groups.put(loiid, new ArrayList<TriggeredLOI>());
+				List<TriggeredLOI> g = groups.get(loiid);
+				g.add(exec);
+			}
+			
+			for (String loiid: groups.keySet()) {
+				item.addExecutionList(loiid, groups.get(loiid));
+			}
+		}
+  	}
 
 	@UiHandler("order")
 	void onChange(ChangeEvent event) {

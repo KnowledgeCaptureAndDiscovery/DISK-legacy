@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:p='urn:import:com.vaadin.polymer.paper.widget'
+	xmlns:i='urn:import:com.vaadin.polymer.iron.widget'
+	xmlns:v='urn:import:com.vaadin.polymer.vaadin.widget'
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+    <g:HTMLPanel>
+		<style is="custom-style">
+			.title-row {
+				display: flex;
+				align-items: center;
+				padding: 2px 5px 0px 5px;
+			}
+			.title-row > iron-icon {
+				width: 30px;
+			}
+			.title-row > .exec-title {
+				width: calc(100% - 60px);
+			}
+			.exec-title {
+				font-weight: bold;
+				font-size: 1.1em;
+			}
+			.description {
+				font-size: small;
+				color: #999;
+			}
+			.create-button {
+				padding: 4px;
+				width: 32px;
+				height: 32px;
+				margin-left: 4px;
+			}
+			hr {
+				margin: 0px 10px;
+				border-bottom: 0px;
+				border-color: #fff;
+			}
+			.exec-container {
+				border: 1px solid #e5e5e5;
+				margin: 5px;
+			}
+			.exec-container:hover {
+				background-color: #f0f0f0;
+			}
+			.desc-row {
+				padding: 0px 20px;
+			}
+			.result-table {
+				width: 100%;
+				text-align: left;
+			}
+			.type-icon {
+				width: 30px;
+				color: green;
+				margin-right: 4px;
+			}
+		</style>
+
+    	<div class="exec-container">
+    		<div class="title-row">
+				<iron-icon icon="extension" class="type-icon"></iron-icon>
+				<div class="exec-title" ui:field="title"></div>
+				<p:PaperIconButton class="create-button" icon="update" ui:field="editButton"></p:PaperIconButton>
+    		</div>
+    		<!--hr/-->
+    		<div class="desc-row">
+				<div class="description" ui:field="description"></div>
+    			<table class="result-table">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Execution date</th>
+							<th>Status</th>
+							<th>Inputs</th>
+							<th>Outputs</th>
+							<th>p-value</th>
+							<th>Visualizations</th>
+						</tr>
+					</thead>
+					<tbody ui:field="tloilist">
+					</tbody>
+				</table>
+
+    		</div>
+    	</div>
+    </g:HTMLPanel>
+</ui:UiBinder>

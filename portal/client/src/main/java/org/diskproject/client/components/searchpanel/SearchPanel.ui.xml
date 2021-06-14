@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:p='urn:import:com.vaadin.polymer.paper.widget'
+	xmlns:i='urn:import:com.vaadin.polymer.iron.widget'
+	xmlns:v='urn:import:com.vaadin.polymer.vaadin.widget'
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+    <g:HTMLPanel>
+		<style is="custom-style">
+			.row {
+		      	display: flex;
+		      	align-items: center;
+		      	justify-content: space-around;
+		      	border-bottom: 1px solid #e5e5e5;
+		    }
+		    
+		    .row > paper-input {
+		        width: calc(100% - 175px);
+		    }
+
+		    .row > paper-dropdown-menu {
+		        width: 100px;
+		    }
+		</style>
+
+    	<div style="border: 1px solid #e5e5e5">
+    		<div class="row">
+				<iron-icon icon="search"></iron-icon>
+				<p:PaperInput label="Search" ui:field="inputSearch" noLabelFloat="true"></p:PaperInput>
+				<p:PaperIconButton icon="clear" ui:field="clearSearchButton"></p:PaperIconButton>
+
+				<p:PaperDropdownMenu ui:field="orderMenu" label="Order" noLabelFloat="true" noAnimations="true" noink="true">
+					<p:PaperListbox class="dropdown-content" selected="0">
+						<p:PaperItem>Date</p:PaperItem>
+						<p:PaperItem>Date (asc)</p:PaperItem>
+					</p:PaperListbox>
+				</p:PaperDropdownMenu>
+    		</div>
+    		<div ui:field="itemContainer">
+    		</div>
+    	</div>
+    </g:HTMLPanel>
+</ui:UiBinder>

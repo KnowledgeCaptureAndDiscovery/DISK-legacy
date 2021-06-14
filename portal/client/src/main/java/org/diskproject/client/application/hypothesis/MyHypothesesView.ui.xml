@@ -3,6 +3,7 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui" 
 	xmlns:l='urn:import:org.diskproject.client.components.loader'
+	xmlns:sp='urn:import:org.diskproject.client.components.searchpanel'
 	xmlns:t='urn:import:org.diskproject.client.components.tree'
 	xmlns:ls='urn:import:org.diskproject.client.components.list'
 	xmlns:h='urn:import:org.diskproject.client.components.hypothesis'
@@ -16,6 +17,9 @@
             div.content {
                 padding: 0px;
             }		
+            .tree {
+            	display: none;
+            }
             .tree .item {
                 @apply(--layout-horizontal);
                 margin: 16px 16px 0 16px;
@@ -152,13 +156,14 @@
 			  display: block;
 			}
 		</style>
+
 		<p:PaperFab ui:field="addicon" icon="add" mini="true" 
 			addStyleNames="addicon" title="Add Hypothesis" tabindex="0" />
 		<p:PaperFab ui:field="helpicon" icon="help-outline" mini="true" 
 			addStyleNames="helploiicon" title="Help: Line of Inquiry" tabindex="0" />
 		<g:HTMLPanel ui:field="description">
 		  <div style="padding: 4px 10px; font-size: 14px; color: #666">
-			 <div style="float:right">
+			 <div style="float:right; display:none">
 			    <!--g:CheckBox ui:field='onlyMine'>
 			    <label>Show only my hypothesis</label>
 			    </g:CheckBox-->
@@ -171,11 +176,12 @@
 					</g:ListBox>
 			 </div>
 		    <div style="margin-top: 5px;">
-				A hypothesis is a set of assertions about entities in the problem domain. <br/> 
+				A hypothesis is a set of assertions about entities in the problem domain.
 		    	A list of your available Hypotheses in the system is displayed below.
 		    </div>
 		  </div>
 		</g:HTMLPanel>
+		<sp:SearchPanel ui:field="searchPanel"></sp:SearchPanel>
 		<l:Loader ui:field="loader" />
 		<g:HTMLPanel ui:field="emptyDiv">
 		  <div style="display: block; font-size: 1.1em; height: 40px; line-height: 40px; text-align: center;">
