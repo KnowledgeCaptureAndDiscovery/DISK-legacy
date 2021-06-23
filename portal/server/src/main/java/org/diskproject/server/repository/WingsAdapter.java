@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -584,125 +585,204 @@ public class WingsAdapter {
 	return null;
 }
 
-public String fetchDataFromWings(String username, String domain,
-		String dataid) {
-	String getpage = "users/" + username + "/" + domain + "/data/fetch";
+	public String fetchDataFromWings(String username, String domain,
+			String dataid) {
+		String getpage = "users/" + username + "/" + domain + "/data/fetch";
 
-	// Check for data already present on the server
-	List<NameValuePair> formdata = new ArrayList<NameValuePair>();
-	formdata.add(new BasicNameValuePair("data_id", dataid));
-	return this.get(username, getpage, formdata);
-}
+		// Check for data already present on the server
+		List<NameValuePair> formdata = new ArrayList<NameValuePair>();
+		formdata.add(new BasicNameValuePair("data_id", dataid));
+		return this.get(username, getpage, formdata);
+	}
 
-public String addOrUpdateData(String username, String domain, String id,
-		String type, String contents, boolean addServer) {
-	if(addServer)
-		type = this.server+type;
-	String getpage = "users/" + username + "/" + domain
-			+ "/data/getDataJSON";
-	String postpage = "users/" + username + "/" + domain
-			+ "/data/addDataForType";
-	String uploadpage = "users/" + username + "/" + domain + "/upload";
-	String locationpage = "users/" + username + "/" + domain + "/data/setDataLocation";
+	public String addOrUpdateData(String username, String domain, String id,
+			String type, String contents, boolean addServer) {
+		if(addServer)
+			type = this.server+type;
+		String getpage = "users/" + username + "/" + domain
+				+ "/data/getDataJSON";
+		String postpage = "users/" + username + "/" + domain
+				+ "/data/addDataForType";
+		String uploadpage = "users/" + username + "/" + domain + "/upload";
+		String locationpage = "users/" + username + "/" + domain + "/data/setDataLocation";
 
-	String dataid = this.DATAID(username, domain, id);
-	List<NameValuePair> formdata = new ArrayList<NameValuePair>();
+		String dataid = this.DATAID(username, domain, id);
+		List<NameValuePair> formdata = new ArrayList<NameValuePair>();
 
-	System.out.println("Upload " + id);
-	String response = null;
-	try {
-		File dir = File.createTempFile("tmp", "");
-		if (!dir.delete() || !dir.mkdirs()) {
-			System.err.println("Could not create temporary directory "
-					+ dir);
-			return null;
-		}
-		File f = new File(dir.getAbsolutePath() + "/" + id);
-		FileUtils.write(f, contents);
-		this.upload(username, uploadpage, "data", f);
-		f.delete();
+		System.out.println("Upload " + id);
+		String response = null;
+		try {
+			File dir = File.createTempFile("tmp", "");
+			if (!dir.delete() || !dir.mkdirs()) {
+				System.err.println("Could not create temporary directory "
+						+ dir);
+				return null;
+			}
+			File f = new File(dir.getAbsolutePath() + "/" + id);
+			FileUtils.write(f, contents);
+			this.upload(username, uploadpage, "data", f);
+			f.delete();
 
-		List<NameValuePair> data = new ArrayList<NameValuePair>();
-		data.add(new BasicNameValuePair("data_id", dataid));
-		data.add(new BasicNameValuePair("data_type", type));
-		response = post(username, postpage, data);
-		List<NameValuePair> location = new ArrayList<NameValuePair>();
-		location.add(new BasicNameValuePair("data_id", dataid));
-		location.add(new BasicNameValuePair("location", "/scratch/data/wings/storage/default/users/"+username+"/"+domain+"/data/"+dataid.substring(dataid.indexOf('#')+1)));
-		response = post(username, locationpage, location);
-		if(response.equals("OK"))
-			System.out.println("Upload successful.");
-		else 
+			List<NameValuePair> data = new ArrayList<NameValuePair>();
+			data.add(new BasicNameValuePair("data_id", dataid));
+			data.add(new BasicNameValuePair("data_type", type));
+			response = post(username, postpage, data);
+			List<NameValuePair> location = new ArrayList<NameValuePair>();
+			location.add(new BasicNameValuePair("data_id", dataid));
+			location.add(new BasicNameValuePair("location", "/scratch/data/wings/storage/default/users/"+username+"/"+domain+"/data/"+dataid.substring(dataid.indexOf('#')+1)));
+			response = post(username, locationpage, location);
+			if(response.equals("OK"))
+				System.out.println("Upload successful.");
+			else 
+				System.out.println("Upload failed.");
+		} catch (Exception e) {
 			System.out.println("Upload failed.");
-	} catch (Exception e) {
-		System.out.println("Upload failed.");
-		e.printStackTrace();
-	}
-	return response;
-}
-
-public String addDataToWings(String username, String domain, String id,
-		String type, String contents) {
-
-	String getpage = "users/" + username + "/" + domain
-			+ "/data/getDataJSON";
-	String postpage = "users/" + username + "/" + domain
-			+ "/data/addDataForType";
-	String uploadpage = "users/" + username + "/" + domain + "/upload";
-
-	// Add unique md5 hash to id based on contents
-	String md5 = DigestUtils.md5Hex(contents.getBytes());
-	Pattern extensionPattern = Pattern.compile("^(.*)(\\..+)$");
-	Matcher mat = extensionPattern.matcher(id);
-	if (mat.find()) {
-		id = mat.group(1) + "-" + md5 + mat.group(2);
-	} else
-		id += "-" + md5;
-
-	// Check for data already present on the server
-	String dataid = this.DATAID(username, domain, id);
-	List<NameValuePair> formdata = new ArrayList<NameValuePair>();
-	formdata.add(new BasicNameValuePair("data_id", dataid));
-	String datajson = this.get(username, getpage, formdata);
-	if (datajson != null && !datajson.trim().equals("null")) {
-		// Already there
-		return dataid;
-	}
-
-	System.out.println("Not found, upload " + id);
-	// If not present, Create temporary file and upload
-	try {
-		File dir = File.createTempFile("tmp", "");
-		if (!dir.delete() || !dir.mkdirs()) {
-			System.err.println("Could not create temporary directory "
-					+ dir);
-			return null;
+			e.printStackTrace();
 		}
-		File f = new File(dir.getAbsolutePath() + "/" + id);
-		FileUtils.write(f, contents);
-		this.upload(username, uploadpage, "data", f);
-		f.delete();
-
-		List<NameValuePair> data = new ArrayList<NameValuePair>();
-		data.add(new BasicNameValuePair("data_id", dataid));
-		data.add(new BasicNameValuePair("data_type", type));
-		String response = this.post(username, postpage, data);
-		if (response != null && response.equals("OK"))
-			return dataid;
-	} catch (Exception e) {
-		e.printStackTrace();
+		return response;
 	}
-	return null;
-}
 
-public String addRemoteDataToWings(String username, String domain, String url) {
-  String type = this.internal_server + "/export/users/" + username + "/" + domain + "/data/ontology.owl#File";
-  String opurl = "users/" + username + "/" + domain + "/data/addRemoteDataForType";
-  List<NameValuePair> keyvalues = new ArrayList<NameValuePair>();
-  keyvalues.add(new BasicNameValuePair("data_url", url));
-  keyvalues.add(new BasicNameValuePair("data_type", type));
-  return this.post(username, opurl, keyvalues);
-}
+	public String addDataToWings(String username, String domain, String id,
+			String type, String contents) {
+
+		String getpage = "users/" + username + "/" + domain
+				+ "/data/getDataJSON";
+		String postpage = "users/" + username + "/" + domain
+				+ "/data/addDataForType";
+		String uploadpage = "users/" + username + "/" + domain + "/upload";
+
+		// Add unique md5 hash to id based on contents
+		String md5 = DigestUtils.md5Hex(contents.getBytes());
+		Pattern extensionPattern = Pattern.compile("^(.*)(\\..+)$");
+		Matcher mat = extensionPattern.matcher(id);
+		if (mat.find()) {
+			id = mat.group(1) + "-" + md5 + mat.group(2);
+		} else
+			id += "-" + md5;
+
+		// Check for data already present on the server
+		String dataid = this.DATAID(username, domain, id);
+		List<NameValuePair> formdata = new ArrayList<NameValuePair>();
+		formdata.add(new BasicNameValuePair("data_id", dataid));
+		String datajson = this.get(username, getpage, formdata);
+		if (datajson != null && !datajson.trim().equals("null")) {
+			// Already there
+			return dataid;
+		}
+
+		System.out.println("Not found, upload " + id);
+		// If not present, Create temporary file and upload
+		try {
+			File dir = File.createTempFile("tmp", "");
+			if (!dir.delete() || !dir.mkdirs()) {
+				System.err.println("Could not create temporary directory "
+						+ dir);
+				return null;
+			}
+			File f = new File(dir.getAbsolutePath() + "/" + id);
+			FileUtils.write(f, contents);
+			this.upload(username, uploadpage, "data", f);
+			f.delete();
+
+			List<NameValuePair> data = new ArrayList<NameValuePair>();
+			data.add(new BasicNameValuePair("data_id", dataid));
+			data.add(new BasicNameValuePair("data_type", type));
+			String response = this.post(username, postpage, data);
+			if (response != null && response.equals("OK"))
+				return dataid;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public String addRemoteDataToWings(String username, String domain, String url) {
+	  String type = this.internal_server + "/export/users/" + username + "/" + domain + "/data/ontology.owl#File";
+	  String opurl = "users/" + username + "/" + domain + "/data/addRemoteDataForType";
+	  List<NameValuePair> keyvalues = new ArrayList<NameValuePair>();
+	  keyvalues.add(new BasicNameValuePair("data_url", url));
+	  keyvalues.add(new BasicNameValuePair("data_type", type));
+	  return this.post(username, opurl, keyvalues);
+	}
+
+	public String addRemoteDataToWings(String username, String domain, String url, String name) {
+		String dataid = addRemoteDataToWings(username, domain, url);
+		String newid = this.internal_server + "/export/users/" + username + "/" + domain + "/data/library.owl#" + name;
+
+		String opurl = "users/" + username + "/" + domain + "/data/renameData";
+		List<NameValuePair> keyvalues = new ArrayList<NameValuePair>();
+		keyvalues.add(new BasicNameValuePair("data_id", dataid));
+		keyvalues.add(new BasicNameValuePair("newid", newid));
+		return this.post(username, opurl, keyvalues);
+	}
+	
+	public List<String> isFileListOnWings (String username, String domain, Set<String> filelist) {
+		List<String> returnValue = new ArrayList<String>();
+		String filetype = this.internal_server + "/export/users/" + username + "/" + domain + "/data/ontology.owl#File";
+		String fileprefix = "<" + this.internal_server + "/export/users/" + username + "/" + domain + "/data/library.owl#";
+
+		// Only checking that the filename is already on WINGs
+		String query = "SELECT DISTINCT ?value WHERE {\n"
+					 + "  ?value a <" + filetype + "> .\n"
+					 + "  VALUES ?value {\n";
+		for (String file: filelist) query += fileprefix + file + ">\n";
+		query += "  }\n}";
+
+		String pageid = "sparql";
+		List<NameValuePair> formdata = new ArrayList<NameValuePair>();
+		formdata.add(new BasicNameValuePair("query", query));
+		formdata.add(new BasicNameValuePair("format", "json"));
+		String resultjson = get(username, pageid, formdata);
+		if (resultjson == null || resultjson.equals(""))
+			return returnValue;
+		
+		//System.out.println(resultjson);
+
+		JsonParser jsonParser = new JsonParser();
+		JsonObject result = jsonParser.parse(resultjson).getAsJsonObject();
+		JsonArray qbindings = result.get("results").getAsJsonObject().get("bindings").getAsJsonArray();
+
+		for (JsonElement qbinding : qbindings) {
+			JsonObject qb = qbinding.getAsJsonObject();
+			if (qb.get("value") == null)
+				continue;
+			String fileurl = qb.get("value").getAsJsonObject().get("value").getAsString();
+			String name = fileurl.replaceAll("^.*\\#", "");
+			returnValue.add(name);
+		}
+		return returnValue;
+
+	}
+
+	public boolean isFileOnWings (String username, String domain, String url) {
+		String id = url.replaceAll("^.*\\/", "");
+		String filetype = this.internal_server + "/export/users/" + username + "/" + domain + "/data/ontology.owl#File";
+		String wingsid = this.internal_server + "/export/users/" + username + "/" + domain + "/data/library.owl#" + id;
+		// Only checking that the filename is already on WINGs
+		String query = "SELECT DISTINCT ?prop WHERE {\n"
+					 + "  <" + wingsid + "> ?prop <" + filetype + "> .\n"
+					 + "\n}";
+
+		String pageid = "sparql";
+		List<NameValuePair> formdata = new ArrayList<NameValuePair>();
+		formdata.add(new BasicNameValuePair("query", query));
+		formdata.add(new BasicNameValuePair("format", "json"));
+		String resultjson = get(username, pageid, formdata);
+		if (resultjson == null || resultjson.equals(""))
+			return false;
+		
+		JsonParser jsonParser = new JsonParser();
+		JsonObject result = jsonParser.parse(resultjson).getAsJsonObject();
+		JsonArray qbindings = result.get("results").getAsJsonObject().get("bindings").getAsJsonArray();
+
+		for (JsonElement qbinding : qbindings) {
+			JsonObject qb = qbinding.getAsJsonObject();
+			if (qb.get("prop") == null)
+				continue;
+			return true;
+		}
+		return false;
+	}
 
 private List<NameValuePair> getBindings(String json,
 		List<VariableBinding> initbindings, List<NameValuePair> formdata) {

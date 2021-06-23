@@ -327,6 +327,7 @@ public class DiskRepository extends KBRepository {
 		return options;
 	}
 	
+	//FIXME: could add to the memory
 	private Map<String, Map<String,String>> getEndpoints () {
 		PropertyListConfiguration cfg = this.getConfig();
 		Map<String, Map<String,String>> endpoints = new HashMap<String, Map<String,String>>();
@@ -370,6 +371,61 @@ public class DiskRepository extends KBRepository {
 			}
 		}
 		return allSolutions;
+	}
+	
+	private List<List<SparqlQuerySolution>> queryEndpoint (KBAPI kb, String query, String endpoint) {
+		List<List<SparqlQuerySolution>> solution = new ArrayList<List<SparqlQuerySolution>>();
+		Map<String, Map<String, String>> allEndpoints = this.getEndpoints();
+		
+		for (String key: allEndpoints.keySet()) {
+			String uri = allEndpoints.get(key).get("URI");
+			String user = allEndpoints.get(key).get("username");
+			String pass = allEndpoints.get(key).get("password");
+			if (uri.equals(endpoint)) {
+				try {
+					ArrayList<ArrayList<SparqlQuerySolution>> s = kb.sparqlQueryRemote(query, uri, user, pass);
+					if (s != null) {
+						solution.addAll(s);
+					}
+				} catch (Exception e) {
+					System.out.println("ERROR querying " + uri);
+					e.printStackTrace(); 
+				}
+			}
+		}
+		return solution;
+	}
+	
+	private Map<String,String> getWikiHash (List<String> files, String endpoint) {
+		Map<String, String> result = new HashMap<String, String>();
+		String query = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n"
+				+ "SELECT DISTINCT ?file ?sha WHERE {\n"
+				+ "  ?page ?contentUrl ?file .\n"
+				+ "  ?page ?hashProp ?sha .\n"
+				+ "  ?contentUrl rdfs:label \"HasContentUrl (E)\" .\n"
+				+ "  ?hashProp rdfs:label \"Checksum (E)\"\n"
+				+ "  VALUES ?file {\n    <"
+				+ String.join(">\n    <", files) + ">\n"
+				+ "  }\n"
+				+ "}";
+
+		List<List<SparqlQuerySolution>> queryResults = queryEndpoint(this.neuroontkb, query, endpoint);
+		for (List<SparqlQuerySolution> dataSolutions : queryResults) {
+			String filename = null;
+			String sha = null;
+			for (SparqlQuerySolution solution : dataSolutions) {
+				String var = solution.getVariable();
+			    String val = (solution.getObject().isLiteral()) ? solution.getObject().getValueAsString() : solution.getObject().getID();
+			    if (var.equals("file"))
+			    	filename = val;
+			    else if (var.equals("sha"))
+			    	sha = val;
+			}
+			if (filename != null && sha != null)
+				result.put(filename, sha);
+		}
+		
+		return result;
 	}
 
 	/**
@@ -1363,12 +1419,13 @@ public class DiskRepository extends KBRepository {
                   }
                 }
                 
+                String endpoint = loi.getDataSource();
                 TriggeredLOI tloi = new TriggeredLOI(loi, id);
                 tloi.setWorkflows(
-                    this.getTLOIBindings(username, domain, loi.getWorkflows(), dataVarBindings)
+                    this.getTLOIBindings(username, domain, loi.getWorkflows(), dataVarBindings, endpoint)
                     );
                 tloi.setMetaWorkflows(
-                    this.getTLOIBindings(username, domain, loi.getMetaWorkflows(), dataVarBindings));
+                    this.getTLOIBindings(username, domain, loi.getMetaWorkflows(), dataVarBindings, endpoint));
                 tloi.setDataQuery(dq);
                 tloi.setRelevantVariables(loi.getRelevantVariables());
                 tloi.setExplanation(loi.getExplanation());
@@ -1414,7 +1471,9 @@ public class DiskRepository extends KBRepository {
 	@SuppressWarnings("unchecked")
   private List<WorkflowBindings> getTLOIBindings(
 	    String username, String domain,
-	    List<WorkflowBindings> wflowBindings, Map<String, List<String>> dataVarBindings) {
+	    List<WorkflowBindings> wflowBindings,
+	    Map<String, List<String>> dataVarBindings,
+	    String endpoint) {
 	  
 	  List<WorkflowBindings> tloiBindings = new ArrayList<WorkflowBindings>();
 	  
@@ -1488,13 +1547,15 @@ public class DiskRepository extends KBRepository {
           // Get the data bindings for the sparql variable
           List<String> dsurls = dataVarBindings.get(sparqlvar);
           
+          // Check hashes, create local name and upload data:
+          Map<String, String> urlToName = addDataToWings(username, domain, dsurls, endpoint);
+          
           // Register all datasets with Wings & get dataset names
           List<String> dsnames = new ArrayList<String>();
           for(String dsurl : dsurls) {
-            String dsname = dsurl.replaceAll("^.*\\/", "");
-            /*System.out.println("tick");
-		WingsAdapter.get().addRemoteDataToWings(username, domain, dsurl); TODO: this uploads the data to wings
-            System.out.println("tock");*/
+            //String dsname = dsurl.replaceAll("^.*\\/", "");
+            //addDataToWings(username, domain, dsurl);
+            String dsname = urlToName.containsKey(dsurl) ? urlToName.get(dsurl) : dsurl.replaceAll("^.*\\/", "");
             dsnames.add(dsname);
           }
           
@@ -1537,6 +1598,37 @@ public class DiskRepository extends KBRepository {
       }
     return tloiBindings;
 	}
+	
+	private Map<String, String> addDataToWings(String username, String domain, List<String> dsurls, String endpoint) {
+		//To add files to wings and do not replace anything, we need to get the hash from the wiki.
+		Map<String, String> nameToUrl = new HashMap<String, String>();
+		Map<String, String> urlToName = new HashMap<String, String>();
+		/*for (String file: dsurls) {
+			String name = file.replaceAll("^.*\\/", "");
+			nameToUrl.put(name, file);
+			urlToName.put(file, name);
+		}*/
+		
+		Map<String, String> hashes = getWikiHash(dsurls, endpoint);
+		for (String file: hashes.keySet()) {
+			String hash = hashes.get(file);
+			String newName = "SHA" + hash.substring(0,6) + "_" + file.replaceAll("^.*\\/", "");
+			nameToUrl.put(newName, file);
+			urlToName.put(file, newName);
+		}
+		
+		Set<String> names = nameToUrl.keySet();
+		List<String> onWings = WingsAdapter.get().isFileListOnWings(username, domain, names);
+		names.removeAll(onWings);
+
+		for (String newFilename: names) {
+			String newFile = nameToUrl.get(newFilename);
+			System.out.println("Uploading to WINGS: " + newFile + " as " + newFilename);
+			WingsAdapter.get().addRemoteDataToWings(username, domain, newFile, newFilename);
+		}
+
+		return urlToName;
+	}
 
 	public Map<String, List<TriggeredLOI>> getHypothesisTLOIs (String username, String domain, String id) {
 		Map<String, List<TriggeredLOI>> map = new HashMap<String, List<TriggeredLOI>>();
@@ -1572,8 +1664,6 @@ public class DiskRepository extends KBRepository {
 		}
 		return map;
 	}
-	
-	
 	
 	public Boolean runAllHypotheses (String username, String domain) {
 		List<String> hlist = new ArrayList<String>();
