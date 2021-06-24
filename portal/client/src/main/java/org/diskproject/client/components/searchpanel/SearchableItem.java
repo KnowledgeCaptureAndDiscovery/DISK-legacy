@@ -8,4 +8,12 @@ import com.google.gwt.user.client.ui.Widget;
 public class SearchableItem extends Composite {
 	interface Binder extends UiBinder<Widget, SearchableItem> {};
 	private static Binder uiBinder = GWT.create(Binder.class);
+	
+	private String id;
+
+	public void SearchableItem (String id) {};
+
+	public String getTextRepresentation() {
+		return null;
+	}
 }

@@ -136,6 +136,7 @@ public class MyHypothesesView extends ApplicationSubviewImpl
       DiskREST.setDomain(domain);
       DiskREST.setUsername(userid);
       form.initialize(userid, domain);
+      HypothesisItem.setUsenameAndDomain(userid, domain);
     }
     
     this.setHeader(toolbar);    
@@ -192,7 +193,7 @@ public class MyHypothesesView extends ApplicationSubviewImpl
         	  
         	  //----
         	  for (TreeItem hyp: hypothesisList) {
-        		  HypothesisItem item = new HypothesisItem();
+        		  HypothesisItem item = new HypothesisItem(hyp.getId());
         		  item.load(hyp);
         		  //TODO: do something
         		  searchPanel.addItem(hyp.getId(), item);

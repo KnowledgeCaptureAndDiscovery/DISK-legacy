@@ -49,13 +49,13 @@
 			}
 			.hyp-container {
 				border: 1px solid #e5e5e5;
-				margin: 5px;
 			}
 			.hyp-container:hover {
 				background-color: #f5f5f5;
 			}
 			.desc-row {
-				padding: 0px 20px;
+				padding-left: 20px;
+				padding-right: 5px;
 			}
 		</style>
 
@@ -64,12 +64,12 @@
 				<iron-icon icon="help-outline" style="color: orange; margin-right: 4px;"></iron-icon>
 				<div class="title" ui:field="title"></div>
 				<div class="info" ui:field="info"></div>
-				<p:PaperIconButton class="create-button" icon="create" ui:field="editButton"></p:PaperIconButton>
+				<p:PaperIconButton icon="create" ui:field="editButton"></p:PaperIconButton>
     		</div>
     		<hr/>
     		<div class="desc-row">
 				<div class="description" ui:field="description"></div>
-				<label>Matching lines of inquiry:</label>
+				<label ui:field="tloiLabel"></label>
     			<div ui:field="executions"></div>
     		</div>
     	</div>

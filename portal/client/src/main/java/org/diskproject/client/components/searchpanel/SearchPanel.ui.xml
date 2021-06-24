@@ -7,36 +7,57 @@
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
     <g:HTMLPanel>
 		<style is="custom-style">
-			.row {
+			.search-main-container {
+				border: 1px solid #e5e5e5;
+				padding: 4px;
+			}
+			.search-row {
 		      	display: flex;
+		      	width: 100%;
 		      	align-items: center;
-		      	justify-content: space-around;
+		      	justify-content: space-between;
 		      	border-bottom: 1px solid #e5e5e5;
+		      	margin-bottom: 4px;
 		    }
-		    
-		    .row > paper-input {
-		        width: calc(100% - 175px);
+		    .search-row .input-search {
+		        width: calc(100% - 120px);
 		    }
-
-		    .row > paper-dropdown-menu {
-		        width: 100px;
+		    .search-row .gwt-ListBox {
+		        width: 120px;
+		        background: transparent;
+		    }
+		    .search-row .input-search .gwt-TextBox {
+		        width: calc(100% - 60px);
+		        padding: 0 25px;
+				font-size: 1.1em;
+		    }
+		    .search-row .input-search iron-icon.search-icon {
+		    	width: unset;
+		    	position: absolute;
+				left: 20px;
+		    }
+		    .search-row .input-search paper-icon-button {
+		    	padding: 0;
+				width: 24px;
+				height: 24px;
+				position: absolute;
+				right: 150px;
+		    }
+		    .item-container * {
+		    	margin-bottom: 3px;
 		    }
 		</style>
 
-    	<div style="border: 1px solid #e5e5e5">
-    		<div class="row">
-				<iron-icon icon="search"></iron-icon>
-				<p:PaperInput label="Search" ui:field="inputSearch" noLabelFloat="true"></p:PaperInput>
-				<p:PaperIconButton icon="clear" ui:field="clearSearchButton"></p:PaperIconButton>
-
-				<p:PaperDropdownMenu ui:field="orderMenu" label="Order" noLabelFloat="true" noAnimations="true" noink="true">
-					<p:PaperListbox class="dropdown-content" selected="0">
-						<p:PaperItem>Date</p:PaperItem>
-						<p:PaperItem>Date (asc)</p:PaperItem>
-					</p:PaperListbox>
-				</p:PaperDropdownMenu>
+    	<div class="search-main-container">
+    		<div class="search-row">
+    			<div class="input-search">
+					<iron-icon class="search-icon" icon="search"></iron-icon>
+					<g:TextBox ui:field="inputSearch"></g:TextBox>
+					<p:PaperIconButton icon="clear" ui:field="clearSearchButton"></p:PaperIconButton>
+    			</div>
+				<g:ListBox ui:field="orderMenu"></g:ListBox>
     		</div>
-    		<div ui:field="itemContainer">
+    		<div ui:field="itemContainer" class="item-container">
     		</div>
     	</div>
     </g:HTMLPanel>

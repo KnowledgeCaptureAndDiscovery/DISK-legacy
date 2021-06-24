@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
@@ -243,10 +244,13 @@ public class DiskRepository extends KBRepository {
 					//System.out.println(q.toString());
 				}
 			}
+			this.end();
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
-			this.end();
+			if (is_in_transaction()) {
+				System.out.println("Exception on transaction!");
+				this.end();
+			}
 		}
 		return all;
 	}
@@ -1603,11 +1607,6 @@ public class DiskRepository extends KBRepository {
 		//To add files to wings and do not replace anything, we need to get the hash from the wiki.
 		Map<String, String> nameToUrl = new HashMap<String, String>();
 		Map<String, String> urlToName = new HashMap<String, String>();
-		/*for (String file: dsurls) {
-			String name = file.replaceAll("^.*\\/", "");
-			nameToUrl.put(name, file);
-			urlToName.put(file, name);
-		}*/
 		
 		Map<String, String> hashes = getWikiHash(dsurls, endpoint);
 		for (String file: hashes.keySet()) {
@@ -1615,6 +1614,12 @@ public class DiskRepository extends KBRepository {
 			String newName = "SHA" + hash.substring(0,6) + "_" + file.replaceAll("^.*\\/", "");
 			nameToUrl.put(newName, file);
 			urlToName.put(file, newName);
+		}
+		
+		//Show files with no hash
+		for (String file: dsurls) {
+			if (!urlToName.containsKey(file))
+				System.out.println("Warning: file " + file + " does not contain hash on " + endpoint);
 		}
 		
 		Set<String> names = nameToUrl.keySet();
@@ -2217,11 +2222,14 @@ public class DiskRepository extends KBRepository {
 			loi.setMetaWorkflows(this.getWorkflowBindingsFromKB(username, domain, loikb, floiitem,
 					pmap.get("hasMetaWorkflowBinding")));
 
+			this.end();
 			return loi;
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
-		  this.end();
+			if (this.is_in_transaction()) {
+				System.out.println("Exception on transaction, end()... ");
+				this.end();
+		   	}
 		}
 		return null;
 	}
@@ -2313,26 +2321,31 @@ public class DiskRepository extends KBRepository {
 			KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, false);
 			KBAPI loikb = this.fac.getKB(fullid, OntSpec.PLAIN, false);
 			if (kb != null && loikb != null) {
-			  this.start_write();
+				this.start_write();
 				KBObject hypitem = kb.getIndividual(fullid);
-				kb.deleteObject(hypitem, true, true);
+				if (hypitem != null)
+					kb.deleteObject(hypitem, true, true);
 				
 				if(this.save(kb) && this.end()) {
 				  this.start_write();
 				  loikb.delete();
-				  return this.save(loikb);
+				  Boolean rval = this.save(loikb);
+				  this.end();
+				  return rval;
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
-		  this.end();
+			if (this.is_in_transaction()) {
+				System.out.println("Exception on transaction, end()... ");
+				this.end();
+		   	}
 		}
 		return false;
 	}
 
 	/**
-	 * Triggered Lines of Inquiries (LOIs)
+	 * Triggered Lines of Inquiries (TLOIs)
 	 */
 
 	public List<TriggeredLOI> listTriggeredLOIs(String username, String domain) {
@@ -2428,7 +2441,6 @@ public class DiskRepository extends KBRepository {
 	public void addTriggeredLOI(String username, String domain, TriggeredLOI tloi) {
 		tloi.setStatus(Status.QUEUED);
 		this.saveTriggeredLOI(username, domain, tloi);
-		//FILES SHOULD BE UPLOAD HERE! TODO
 
 		TLOIExecutionThread wflowThread = new TLOIExecutionThread(username, domain, tloi, false);
 		executor.execute(wflowThread);
@@ -2437,6 +2449,8 @@ public class DiskRepository extends KBRepository {
 	public boolean deleteTriggeredLOI(String username, String domain, String id) {
 		if (id == null)
 			return false;
+
+		System.out.println("- DELETING TLOI: " + id);
 
 		String url = this.TLOIURI(username, domain);
 		String fullid = url + "/" + id;
@@ -2461,17 +2475,22 @@ public class DiskRepository extends KBRepository {
 				  this.end();
 				}
 				
-				this.start_write();
-				kb.deleteObject(item, true, true);
-				status = this.save(kb) && this.end() && 
-				    this.start_write() && tloikb.delete() && this.save(tloikb) && this.end();
+				//FIXME: the running or monitoring thread are calling delete two times in a row, check that!
+				if (item != null) {
+					this.start_write();
+					kb.deleteObject(item, true, true);
+					status = this.save(kb) && this.end() && 
+						this.start_write() && tloikb.delete() && this.save(tloikb) && this.end();
+				} else {
+					status = false;
+				}
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			if (this.is_in_transaction()) {
 				System.out.println("Exception on transaction. Closing...");
 				this.end();
 			}
-			e.printStackTrace();
 		}
 		return status;
 	}
@@ -2501,24 +2520,6 @@ public class DiskRepository extends KBRepository {
 		for (KBObject robj : kb.getPropertyValues(obj, pmap.get("hasResultingHypothesis"))) {
 			String resHypId = robj.getName();
 			tloi.addResultingHypothesisId(resHypId);
-		
-			//ADDs confidence value:
-			String resHypURI = hypPrefix + "/" + resHypId;
-			String prov = resHypURI + "/provenance";
-			Graph g = this.getKBGraph(resHypURI);
-			try {
-				KBAPI provkb = this.fac.getKB(prov, OntSpec.PLAIN, false);
-				this.updateTripleDetails(g, provkb);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			for (Triple t: g.getTriples()) {
-				if (t.getDetails() != null) {
-					tloi.setConfidenceValue(t.getDetails().getConfidenceValue());
-					break;
-				}
-			}
 		}
 
 		KBObject stobj = kb.getPropertyValue(obj, pmap.get("hasTriggeredLineOfInquiryStatus"));
@@ -2552,6 +2553,25 @@ public class DiskRepository extends KBRepository {
 		KBObject explobj = kb.getPropertyValue(obj, pmap.get("dataQueryDescription"));
 		if (explobj != null)
 			tloi.setExplanation(explobj.getValueAsString());
+		
+		
+		KBObject confidenceObj = kb.getPropertyValue(obj, pmap.get("hasConfidenceValue"));
+		if (confidenceObj != null)
+			tloi.setConfidenceValue(Double.parseDouble(confidenceObj.getValueAsString()));
+
+		ArrayList<KBObject> inputFilesObj = kb.getPropertyValues(obj, pmap.get("hasInputFile"));
+		if (inputFilesObj != null && inputFilesObj.size() > 0) {
+			for (KBObject inputf: inputFilesObj) {
+				tloi.addInputFile(inputf.getValueAsString());
+			}
+		}
+
+		ArrayList<KBObject> outputFilesObj = kb.getPropertyValues(obj, pmap.get("hasOutputFile"));
+		if (outputFilesObj != null && outputFilesObj.size() > 0) {
+			for (KBObject outputf: outputFilesObj) {
+				tloi.addOutputFile(outputf.getValueAsString());
+			}
+		}
 
 		if (tloikb != null) {
 			KBObject floiitem = tloikb.getIndividual(id);
@@ -2646,6 +2666,7 @@ public class DiskRepository extends KBRepository {
 			return;
 
 		this.deleteTriggeredLOI(username, domain, id);
+		//TODO: add updated date to tloi
 		this.saveTriggeredLOI(username, domain, tloi);
 	}
 
@@ -2653,7 +2674,7 @@ public class DiskRepository extends KBRepository {
 		if (tloi.getId() == null)
 			return false;
 		
-		System.out.println("- SAVE TLOI -");
+		System.out.println("- SAVING TLOI: " + tloi.getId());
 
 		String url = this.TLOIURI(username, domain);
 		String fullid = url + "/" + tloi.getId();
@@ -2700,6 +2721,33 @@ public class DiskRepository extends KBRepository {
 			if (tloi.getExplanation() != null) {
 				kb.setPropertyValue(tloiitem, pmap.get("dataQueryDescription"), tloikb.createLiteral(tloi.getExplanation()));
 			}
+			
+			if (tloi.getConfidenceValue() > 0) {
+				kb.setPropertyValue(tloiitem, pmap.get("hasConfidenceValue"), tloikb.createLiteral(Double.toString(tloi.getConfidenceValue())));
+			}
+			
+			List<String> inputList = tloi.getInputFiles();
+			if (inputList != null && inputList.size() > 0) {
+				for (String inputurl: inputList) {
+					//kb.setPropertyValue(tloiitem, pmap.get("hasInputFile"), tloikb.createLiteral(inputurl));
+					kb.addPropertyValue(tloiitem, pmap.get("hasInputFile"), tloikb.createLiteral(inputurl));
+				}
+			}
+
+			List<String> outputList = tloi.getOutputFiles();
+			if (outputList != null && outputList.size() > 0) {
+				for (String outputurl: outputList) {
+					//kb.setPropertyValue(tloiitem, pmap.get("hasOutputFile"), tloikb.createLiteral(outputurl));
+					kb.addPropertyValue(tloiitem, pmap.get("hasOutputFile"), tloikb.createLiteral(outputurl));
+				}
+			}
+			
+			//if (tloi.getInputSize() > 0) {
+			//	kb.setPropertyValue(tloiitem, pmap.get("hasInputSize"), tloikb.createLiteral(Integer.toString(tloi.getInputSize())));
+			//}
+			//if (tloi.getOutputSize() > 0) {
+			//	kb.setPropertyValue(tloiitem, pmap.get("hasOutputSize"), tloikb.createLiteral(Integer.toString(tloi.getOutputSize())));
+			//}
 
 			if (tloi.getLoiId() != null) {
 				KBObject lobj = kb.getResource(loins + tloi.getLoiId());
@@ -2807,7 +2855,26 @@ public class DiskRepository extends KBRepository {
 		return null;
 	}
 
-
+	public String directQuery(String username, String domain, String query) {
+		//List<List<SparqlQuerySolution>> result = null;
+		String url = this.LOIURI(username, domain);
+		String query2 = "SELECT * WHERE { ?a ?b ?c }";
+		try {
+			this.start_read();
+			KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
+			ArrayList<ArrayList<SparqlQuerySolution>> result2 = kb.sparqlQuery(query2);
+			System.out.println("DOM " + url);
+			System.out.println("<< " + query2);
+			System.out.println(">> " + result2.toString());
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+		  this.end();
+		}
+		return "";
+	}
+	
 	/* Narratives */
 	public Map<String, String> getNarratives (String username, String domain, String tloid) {
 		Map<String,String> narratives = new HashMap<String, String>();
@@ -2944,122 +3011,10 @@ public class DiskRepository extends KBRepository {
       return path;
   }
 
-	/*
-	private List<WorkflowBindings> addEnimgaFiles(String username, String domain, TriggeredLOI tloi, boolean metamode, boolean upload) {
-		WingsAdapter wings = WingsAdapter.get();
-
-		List<WorkflowBindings> wflowBindings = tloi.getWorkflows();
-		if (metamode)
-			wflowBindings = tloi.getMetaWorkflows();
-		// Query for assertions pertaining to hasEnigmaQueryLiteral
-		ArrayList<KBTriple> equeries = new ArrayList<KBTriple>();
-		try {
-			String url = ASSERTIONSURI(username, domain);
-			this.start_read();
-			KBAPI kb = fac.getKB(url, OntSpec.PLAIN, false);
-			KBObject typeprop = kb.getProperty(KBConstants.NEURONS() + "hasEnigmaQueryLiteral");
-			equeries = kb.genericTripleQuery(null, typeprop, null);
-			this.end();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		// Iterate through data and add enigma query files if necessary
-		for (int i = 0; i < wflowBindings.size(); i++) {
-			List<VariableBinding> bindings = wflowBindings.get(i).getBindings();
-
-			Map<String, Variable> inputs = wings.getWorkflowInputs(username, domain,
-					wflowBindings.get(i).getWorkflow());
-			String[] files = null;
-			for (VariableBinding var : bindings) {
-				try {
-					String url = ASSERTIONSURI(username, domain);
-					String fullid = url + "#" + var.getBinding();
-					if (!inputs.get(var.getVariable()).isParam())
-						for (KBTriple kbt : equeries) {
-							if (kbt.getSubject().getValueAsString().equals(fullid)) {
-								files = addQuery(username, domain, kbt.getObject().getValueAsString(),
-										inputs.get(var.getVariable()).getType(), upload);
-								break;
-							}
-						}
-					if (files != null) {
-						for (int f = 0; f < files.length; f += 2) {
-							List<VariableBinding> newvb = new ArrayList<VariableBinding>();
-							for (VariableBinding newvar : bindings) {
-								if (!newvar.equals(var))
-									newvb.add(new VariableBinding(newvar.getVariable(), newvar.getBinding()));
-								else
-									newvb.add(new VariableBinding(newvar.getVariable(), files[f].substring(4)));
-
-							}
-							WorkflowBindings newwfb = new WorkflowBindings(wflowBindings.get(i).getWorkflow(),
-									wflowBindings.get(i).getWorkflowLink(), newvb);
-							newwfb.setRun(new WorkflowRun(wflowBindings.get(i).getRun().getId(),
-									wflowBindings.get(i).getRun().getLink(),
-									wflowBindings.get(i).getRun().getStatus()));
-							newwfb.setMeta(new MetaWorkflowDetails(wflowBindings.get(i).getMeta().getHypothesis(),
-									wflowBindings.get(i).getMeta().getRevisedHypothesis()));
-							wflowBindings.add(newwfb);
-						}
-						break;
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			if (files != null) {
-				wflowBindings.remove(wflowBindings.get(i));
-				i--;
-			}
-		}
-		return wflowBindings;
-	}
-	*/
-
-	/*
-	 * private String createDummyHypothesis(String username, String domain,
-	 * WorkflowBindings bindings, TriggeredLOI tloi) { Hypothesis parentHypothesis =
-	 * this.getHypothesis(username, domain, tloi.getParentHypothesisId());
-	 * Hypothesis newHypothesis = new Hypothesis();
-	 * newHypothesis.setId(GUID.randomId("Hypothesis"));
-	 * newHypothesis.setName("[Revision] " +parentHypothesis.getName()); String
-	 * description =
-	 * "Followed the line of inquiry: \""+tloi.getName()+"\" to run workflows " +
-	 * "and generate a hypothesis."; newHypothesis.setDescription(description);
-	 * newHypothesis.setParentId(parentHypothesis.getId());
-	 * 
-	 * List<Triple> triples = new
-	 * ArrayList<Triple>(parentHypothesis.getGraph().getTriples()); for(Triple t :
-	 * triples) { TripleDetails details = new TripleDetails();
-	 * details.setConfidenceValue(0.97); details.setTriggeredLOI(tloi.getId());
-	 * t.setDetails(details); } Graph newgraph = new Graph();
-	 * newgraph.setTriples(triples); newHypothesis.setGraph(newgraph);
-	 * 
-	 * this.addHypothesis(username, domain, newHypothesis); return
-	 * newHypothesis.getId(); }
-	 */
-
-	public String directQuery(String username, String domain, String query) {
-		//List<List<SparqlQuerySolution>> result = null;
-		String url = this.LOIURI(username, domain);
-		String query2 = "SELECT * WHERE { ?a ?b ?c }";
-		try {
-			this.start_read();
-			KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
-			ArrayList<ArrayList<SparqlQuerySolution>> result2 = kb.sparqlQuery(query2);
-			System.out.println("DOM " + url);
-			System.out.println("<< " + query2);
-			System.out.println(">> " + result2.toString());
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-		  this.end();
-		}
-		return "";
-	}
 	
+	/*
+	 * Threads
+	 */
 
 	class TLOIExecutionThread implements Runnable {
 		String username;
@@ -3208,6 +3163,11 @@ public class DiskRepository extends KBRepository {
 					String rname = runid.replaceAll("^.*#", "");
 					WorkflowRun wstatus = WingsAdapter.get().getWorkflowRunStatus(this.username, this.domain, rname);
 					bindings.setRun(wstatus);
+					
+					//Add input files:
+					Map<String, String> inputs = wstatus.getFiles();
+					Collection<String> urls = inputs.values();
+					tloi.setInputFiles(new ArrayList<String>(urls));
 
 					if (wstatus.getStatus().equals("FAILURE")) {
 						overallStatus = Status.FAILED;
@@ -3222,6 +3182,30 @@ public class DiskRepository extends KBRepository {
 					if (wstatus.getStatus().equals("SUCCESS")) {
 						numFinished++;
 						numSuccessful++;
+						
+						//Add outputs
+						Map<String, String> outputs = wstatus.getOutputs();
+						if (outputs != null) {
+							List<String> outputlist = new ArrayList<String>(outputs.values());
+							tloi.setOutputFiles(outputlist);
+
+							for (String outname: outputs.keySet()) {
+								if (outname.equals("p_value") || outname.equals("pval") || outname.equals("p_val")) {
+									String dataid = outputs.get(outname);
+									String wingsP = WingsAdapter.get().fetchDataFromWings(username, domain, dataid);
+									Double pval = 0.0;
+									try {
+										pval = Double.parseDouble(wingsP);
+									} catch (Exception e) {
+										System.err.println(dataid + " is a non valid p-value");
+									}
+									if (pval > 0) {
+										System.out.println("Detected p-value: " + pval);
+										tloi.setConfidenceValue(pval);
+									}
+								}
+							}
+						}
 
 						if (metamode) {
 							// Fetch the output hypothesis file, and create a

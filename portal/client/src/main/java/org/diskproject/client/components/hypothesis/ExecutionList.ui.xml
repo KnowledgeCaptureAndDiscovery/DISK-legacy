@@ -4,6 +4,7 @@
 	xmlns:p='urn:import:com.vaadin.polymer.paper.widget'
 	xmlns:i='urn:import:com.vaadin.polymer.iron.widget'
 	xmlns:v='urn:import:com.vaadin.polymer.vaadin.widget'
+	xmlns:c="urn:import:com.google.gwt.user.cellview.client"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
     <g:HTMLPanel>
 		<style is="custom-style">
@@ -39,13 +40,9 @@
 			}
 			.exec-container {
 				border: 1px solid #e5e5e5;
-				margin: 5px;
 			}
 			.exec-container:hover {
 				background-color: #f0f0f0;
-			}
-			.desc-row {
-				padding: 0px 20px;
 			}
 			.result-table {
 				width: 100%;
@@ -56,6 +53,13 @@
 				color: green;
 				margin-right: 4px;
 			}
+			
+			iron-icon.delete-button {
+				cursor: pointer;
+			}
+			iron-icon.delete-button:hover {
+				color: darkred;
+			}
 		</style>
 
     	<div class="exec-container">
@@ -65,9 +69,19 @@
 				<p:PaperIconButton class="create-button" icon="update" ui:field="editButton"></p:PaperIconButton>
     		</div>
     		<!--hr/-->
-    		<div class="desc-row">
+    		<div style="padding-left: 10px; padding-right: 5px;">
 				<div class="description" ui:field="description"></div>
     			<table class="result-table">
+    			  	<colgroup>
+						<col style="width:20px"/>
+						<col style="width:180px"/>
+						<col style="width:120px"/>
+						<col style="width:60px"/>
+						<col style="width:60px"/>
+						<col style="width:60px"/>
+						<col style="width: calc(100% - 540px)"/>
+						<col style="width:40px"/>
+			  		</colgroup>  
 					<thead>
 						<tr>
 							<th>#</th>
@@ -77,12 +91,12 @@
 							<th>Outputs</th>
 							<th>p-value</th>
 							<th>Visualizations</th>
+							<th></th> <!-- Buttons -->
 						</tr>
 					</thead>
 					<tbody ui:field="tloilist">
 					</tbody>
 				</table>
-
     		</div>
     	</div>
     </g:HTMLPanel>
