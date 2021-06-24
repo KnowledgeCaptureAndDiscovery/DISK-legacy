@@ -31,6 +31,7 @@ public class DiskClient implements EntryPoint {
   public void onModuleLoad() {
 	//Login with keycloak 
 	final Keycloak keycloak = new Keycloak("DiskClient", "/disk-portal/customise/keycloak.json");
+	keycloak.getInitOptions().setCheckLoginIframe(false);
 	keycloak.addKeycloakListener(new KeycloakListenerAdapter()
 		{
 		  @Override
