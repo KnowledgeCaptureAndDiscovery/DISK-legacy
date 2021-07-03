@@ -292,10 +292,11 @@ public interface DiskService extends DirectRestService {
   
   /* Should query the external storages, FIXME */
   @GET
-  @Path("{username}/{domain}/test")  
+  @Path("{username}/{domain}/externalQuery")  
   public Map<String, List<String>> queryExternalStore(
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
+      @QueryParam("endpoint") String endpoint,
       @QueryParam("variables") String variables,
       @QueryParam("query") String query);
   

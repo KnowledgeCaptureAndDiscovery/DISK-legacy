@@ -249,9 +249,10 @@ public class TriggeredLOIViewer extends Composite {
   private void loadAndShowData () {
     String vars = tloi.getRelevantVariables();
     String dq = tloi.getDataQuery();
+    String enp = tloi.getDataSource();
     if (vars != null && dq != null && dataRetrieved == null) {
       dataDiv.setInnerText("Loading...");
-      DiskREST.queryExternalStore(dq, vars, new Callback<Map<String, List<String>>, Throwable>() {
+      DiskREST.queryExternalStore(enp, dq, vars, new Callback<Map<String, List<String>>, Throwable>() {
         @Override
         public void onSuccess(Map<String, List<String>> response) {
           if (response != null) {
@@ -272,8 +273,9 @@ public class TriggeredLOIViewer extends Composite {
   private void showHypothesisData() {
     String vars = tloi.getRelevantVariables();
     String dq = tloi.getDataQuery();
+    String enp = tloi.getDataSource();
     if (vars != null && dq != null) {
-      DiskREST.queryExternalStore(dq, vars, new Callback<Map<String, List<String>>, Throwable>() {
+      DiskREST.queryExternalStore(enp, dq, vars, new Callback<Map<String, List<String>>, Throwable>() {
         @Override
         public void onSuccess(Map<String, List<String>> response) {
           if (response != null) {

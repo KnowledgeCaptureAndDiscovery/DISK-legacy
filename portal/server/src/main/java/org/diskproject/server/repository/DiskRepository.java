@@ -1066,15 +1066,6 @@ public class DiskRepository extends KBRepository {
 				"PREFIX disk: <" + KBConstants.DISKNS() + ">\n";
 	}
 	
-	private String getSparqlQuery(String queryPattern, String assertionsUri) {
-
-		return "PREFIX bio: <" + KBConstants.OMICSNS() + ">\n" + "PREFIX neuro: <" + KBConstants.NEURONS() + ">\n"
-				+ "PREFIX hyp: <" + KBConstants.HYPNS() + ">\n" + "PREFIX xsd: <" + KBConstants.XSDNS() + ">\n"
-				+ "PREFIX rdfs: <" + KBConstants.RDFSNS() + ">\n" + "PREFIX rdf: <" + KBConstants.RDFNS() + ">\n"				
-				+ "PREFIX disk: <" + KBConstants.DISKNS() + ">\n"
-				+ "PREFIX user: <" + assertionsUri + "#>\n\n" + "SELECT *\n" + "WHERE { \n" + queryPattern + "}\n";
-	}
-
 	private String getDistinctSparqlQuery(String queryPattern, String assertionsUri, List<String> variables) {
 		return "PREFIX bio: <" + KBConstants.OMICSNS() + ">\n" + "PREFIX neuro: <" + KBConstants.NEURONS() + ">\n"
 				+ "PREFIX hyp: <" + KBConstants.HYPNS() + ">\n" + "PREFIX xsd: <" + KBConstants.XSDNS() + ">\n"
@@ -1084,18 +1075,8 @@ public class DiskRepository extends KBRepository {
 				+ "\nWHERE { \n" + queryPattern + "}\n";
 	}
 
-	private String getDistinctSparqlQuery(String queryPattern, String assertionsUri) {
-		return "PREFIX bio: <" + KBConstants.OMICSNS() + ">\n" + "PREFIX neuro: <" + KBConstants.NEURONS() + ">\n"
-				+ "PREFIX hyp: <" + KBConstants.HYPNS() + ">\n" + "PREFIX xsd: <" + KBConstants.XSDNS() + ">\n"
-				+ "PREFIX rdfs: <" + KBConstants.RDFSNS() + ">\n" + "PREFIX rdf: <" + KBConstants.RDFNS() + ">\n"				
-				+ "PREFIX disk: <" + KBConstants.DISKNS() + ">\n"
-				+ "PREFIX user: <" + assertionsUri + "#>\n\n" + "SELECT DISTINCT * \nWHERE { \n" + queryPattern + "}\n";
-	}
-
-	public Map<String, List<String>> queryExternalStore(String username, String domain, String sparqlQuery, String variables) {
-		//TODO: This should have and endpoint.
-		//List<List<List<String>>> result = new ArrayList<List<List<String>>>();
-		String endpoint = null;
+	public Map<String, List<String>> queryExternalStore(String username, String domain, String endpoint, 
+	        String sparqlQuery, String variables) {
 		Map<String, List<String>> dataVarBindings = new HashMap<String, List<String>>();
 		
 		//TODO, should check the variables.
@@ -1120,25 +1101,11 @@ public class DiskRepository extends KBRepository {
 			queryKb.importFrom(this.hypontkb);
 			this.end();
 			
-			ArrayList<ArrayList<SparqlQuerySolution>> allDataSolutions = null;
-			boolean wikiStore = Config.get().getProperties().containsKey("data-store");
-			if(wikiStore) {
-			  String externalStore = endpoint != null ? endpoint :
-					  Config.get().getProperties().getString("data-store");
-			  String dataUser = Config.get().getProperties().getString("ENIGMA.username");
-			  String dataPass = Config.get().getProperties().getString("ENIGMA.password");
-			  if (dataUser != null && dataPass != null) {
-				  //Data store is password protected.
-				  allDataSolutions = queryKb.sparqlQueryRemote(dataQuery, externalStore, dataUser, dataPass);
-			  } else {
-				  allDataSolutions = queryKb.sparqlQueryRemote(dataQuery, externalStore);
-			  }
-			} else {
-			  allDataSolutions = queryKb.sparqlQuery(dataQuery);
-			}
+			List<List<SparqlQuerySolution>> allDataSolutions = null;
+			
+			allDataSolutions = queryEndpoint(queryKb, dataQuery, endpoint);
 
-			// Store solutions in dataVarBindings
-			for (ArrayList<SparqlQuerySolution> dataSolutions : allDataSolutions) {
+			for (List<SparqlQuerySolution> dataSolutions : allDataSolutions) {
 			  for (SparqlQuerySolution solution : dataSolutions) {
 			    String var = solution.getVariable();
 			    List<String> curValues = dataVarBindings.containsKey(var) ?
@@ -1146,7 +1113,7 @@ public class DiskRepository extends KBRepository {
 			    if (solution.getObject().isLiteral()) {
 			      curValues.add(solution.getObject().getValueAsString());
 			    } else {
-			      curValues.add(wikiStore ? solution.getObject().getID() : solution.getObject().getName());
+			      curValues.add(solution.getObject().getID());
 			    }
 			    dataVarBindings.put(var, curValues);
 			  }
@@ -1418,9 +1385,9 @@ public class DiskRepository extends KBRepository {
                     Set<String> fixed = new HashSet<String>(dataVarBindings.get(key));
                     dataVarBindings.put(key, new ArrayList<String>(fixed));
                   }
-                  for (String r: dataVarBindings.get(key)) {
-                    //System.out.println("  -  " + r);
-                  }
+                  /*for (String r: dataVarBindings.get(key)) {
+                    System.out.println("  -  " + r);
+                  }*/
                 }
                 
                 String endpoint = loi.getDataSource();
@@ -1624,6 +1591,7 @@ public class DiskRepository extends KBRepository {
 		
 		Set<String> names = nameToUrl.keySet();
 		List<String> onWings = WingsAdapter.get().isFileListOnWings(username, domain, names);
+		
 		names.removeAll(onWings);
 
 		for (String newFilename: names) {
@@ -2516,7 +2484,6 @@ public class DiskRepository extends KBRepository {
 		if (pobj != null)
 			tloi.setParentHypothesisId(pobj.getName());
 
-		String hypPrefix = this.HYPURI(username, domain);
 		for (KBObject robj : kb.getPropertyValues(obj, pmap.get("hasResultingHypothesis"))) {
 			String resHypId = robj.getName();
 			tloi.addResultingHypothesisId(resHypId);
@@ -2804,7 +2771,6 @@ public class DiskRepository extends KBRepository {
 		if (varmap.containsKey(varname)) {
 			String dataid = varmap.get(varname);
 			String dataname = dataid.replaceAll(".*#", "");
-			System.out.println("LOADING DATAID: " + dataid);
 			String content = WingsAdapter.get().fetchDataFromWings(username, domain, dataid);
 
 			HashMap<String, Integer> workflows = new HashMap<String, Integer>();

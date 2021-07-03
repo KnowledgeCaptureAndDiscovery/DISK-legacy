@@ -4,6 +4,7 @@ import java.util.Map;
 
 public class Config {
   public static Map<String, String> serverConfig = null;
+  public static Map<String, String> endpoints = null;
 
   public native static String getServerURL() /*-{
     return $wnd.CONFIG.SERVER;

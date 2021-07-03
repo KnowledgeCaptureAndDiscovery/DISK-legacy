@@ -39,6 +39,7 @@ import com.google.gwt.i18n.shared.DateTimeFormat;
 public class DiskREST {
   public static DiskService diskService;
   
+  //Vocabulary
   static class VocabularyCallbacks {
     List<Callback<Vocabulary, Throwable>> callbacks;
     public VocabularyCallbacks() {
@@ -67,13 +68,13 @@ public class DiskREST {
   private static Map<String, VocabularyCallbacks> vocabulary_callbacks =
       new HashMap<String, VocabularyCallbacks>(); 
   
+  //Workflows
   private static List<Workflow> workflows = 
       new ArrayList<Workflow>();
   private static Map<String, List<Variable>> workflow_variables =
       new HashMap<String, List<Variable>>();
   
   private static String username, domain;
-  
 
   private static String stackTraceToString(Throwable e) {
       StringBuilder sb = new StringBuilder();
@@ -108,7 +109,7 @@ public class DiskREST {
           }
           @Override
           public void onFailure(Method method, Throwable exception) {
-            AppNotification.notifyFailure("Could not load user vocabulary");
+            AppNotification.notifyFailure("Could not load configuration");
             callback.onFailure(exception);
           }
         }).call(getDiskService()).getConfig();
@@ -619,6 +620,30 @@ public class DiskREST {
 	    }).call(getDiskService()).monitorWorkflow(username, domain, id);
 	  } 
 
+  /*
+   * Endpoints
+   */
+
+  public static void getEndpoints(
+    final Callback<Map<String, String>, Throwable> callback) {      
+      if (Config.endpoints != null) {
+        callback.onSuccess(Config.endpoints);
+      } else {
+        REST.withCallback(new MethodCallback<Map<String, String>>() {
+          @Override
+          public void onSuccess(Method method, Map<String, String> endp) {
+            Config.endpoints = endp;
+            callback.onSuccess(endp);
+          }
+          @Override
+          public void onFailure(Method method, Throwable exception) {
+            AppNotification.notifyFailure("Could not load endpoint list");
+            callback.onFailure(exception);
+          }
+        }).call(getDiskService()).getEndpoints();
+      }
+  }
+
   public static void sparql(final String query, final Callback<String, Throwable> callback) {
 	    REST.withCallback(new MethodCallback<String>() {
 	      @Override
@@ -632,7 +657,7 @@ public class DiskREST {
 	    }).call(getDiskService()).sparql(username, domain, query);
 	  } 
 
-  public static void queryExternalStore(String query, String variables,
+  public static void queryExternalStore(String endpoint, String query, String variables,
       final Callback<Map<String, List<String>>, Throwable> callback) {
 	 GWT.log("variables: " + variables);
 	 GWT.log("query: " + query);
@@ -645,7 +670,7 @@ public class DiskREST {
       public void onFailure(Method method, Throwable exception) {
         callback.onFailure(exception);
       }      
-    }).call(getDiskService()).queryExternalStore(username, domain, query, variables);
+    }).call(getDiskService()).queryExternalStore(username, domain, endpoint, query, variables);
   }
   
   /*
