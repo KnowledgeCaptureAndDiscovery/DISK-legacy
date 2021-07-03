@@ -66,6 +66,8 @@ public class KBRepository implements TransactionsAPI {
 
       // Temporary hacks
       this.start_write();
+      this.temporaryHacks();
+      TimeUnit.SECONDS.sleep(1);
       
       pmap = new HashMap<String, KBObject>();
       cmap = new HashMap<String, KBObject>();
@@ -76,6 +78,13 @@ public class KBRepository implements TransactionsAPI {
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  private void temporaryHacks() {
+		//ADDs properties to the ontology being loaded.
+	    this.hackInDataProperty("hasConfidenceValue", "TriggeredLineOfInquiry", "string");
+	    this.hackInDataProperty("hasInputFile", "TriggeredLineOfInquiry", "string");
+	    this.hackInDataProperty("hasOutputFile", "TriggeredLineOfInquiry", "string");
   }
   
   private void stddump () { 

@@ -24,7 +24,9 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
   List<String> resultingHypothesisIds;
   List<WorkflowBindings> workflows;
   List<WorkflowBindings> metaWorkflows;
+
   double confidenceValue;
+  List<String> inputFiles, outputFiles;
 
   String author;
   String notes;
@@ -39,6 +41,8 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
     workflows = new ArrayList<WorkflowBindings>();
     metaWorkflows = new ArrayList<WorkflowBindings>();
     resultingHypothesisIds = new ArrayList<String>();
+    inputFiles = new ArrayList<String>();
+    outputFiles = new ArrayList<String>();
   }
 
   public TriggeredLOI(String id,
@@ -61,6 +65,9 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
 	  this.resultingHypothesisIds = resultingHypothesisIds;
 	  this.workflows = workflows;
 	  this.metaWorkflows = metaWorkflows;
+
+	  inputFiles = new ArrayList<String>();
+	  outputFiles = new ArrayList<String>();
 	  }
 
   public TriggeredLOI(LineOfInquiry loi, String hypothesisId) {
@@ -73,6 +80,8 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
     workflows = new ArrayList<WorkflowBindings>();
     metaWorkflows = new ArrayList<WorkflowBindings>();
     resultingHypothesisIds = new ArrayList<String>();
+    inputFiles = new ArrayList<String>();
+    outputFiles = new ArrayList<String>();
   }
 
   public void copyWorkflowBindings(List<WorkflowBindings> fromlist,
@@ -234,14 +243,6 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
       html += description;
     html += "</div>";
 
-    /* TODO: add date to tloi.
-    html += "<div class='footer' style='display: flex;justify-content: space-between;'>";
-    html += "<span><b>Creation date:</b> ";
-    html += (this.creationDate != null) ? this.creationDate : "None specified";
-    html += "</span><span><b>Author:</b> ";
-    html += (this.author != null) ? this.author : "None specified";
-    html += "</span></div>";*/
-
     return html;
   }
 
@@ -280,5 +281,29 @@ public class TriggeredLOI implements Comparable<TriggeredLOI> {
  
   public String getDateModified () {
 	  return dateModified;
+  }
+
+  public void setInputFiles (List<String> inputs) {
+	  this.inputFiles = inputs;
+  }
+
+  public void setOutputFiles (List<String> outputs) {
+	  this.outputFiles = outputs;
+  }
+  
+  public List<String> getInputFiles () {
+	  return this.inputFiles;
+  }
+  
+  public List<String> getOutputFiles () {
+	  return this.outputFiles;
+  }
+
+  public void addInputFile (String input) {
+	  this.inputFiles.add(input);
+  }
+
+  public void addOutputFile (String output) {
+	  this.outputFiles.add(output);
   }
 }
