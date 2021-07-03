@@ -294,7 +294,6 @@ public class WingsAdapter {
 	}
 
 	public WorkflowRun getWorkflowRunStatus(String username, String domain, String runid) {
-		System.out.println("getWorkflowRunStatus " + runid);
 		try {
 			// Get data
 			String execid = RUNID(username, domain, runid);
@@ -311,8 +310,6 @@ public class WingsAdapter {
 
 			JsonParser jsonParser = new JsonParser();
 			JsonObject runobj = jsonParser.parse(runjson).getAsJsonObject();
-			
-			//System.out.println("RAW: " + runobj.toString() );
 			
 			// Try to get the execution information
 			String status = null,
@@ -599,17 +596,13 @@ public class WingsAdapter {
 			String type, String contents, boolean addServer) {
 		if(addServer)
 			type = this.server+type;
-		String getpage = "users/" + username + "/" + domain
-				+ "/data/getDataJSON";
 		String postpage = "users/" + username + "/" + domain
 				+ "/data/addDataForType";
 		String uploadpage = "users/" + username + "/" + domain + "/upload";
 		String locationpage = "users/" + username + "/" + domain + "/data/setDataLocation";
 
 		String dataid = this.DATAID(username, domain, id);
-		List<NameValuePair> formdata = new ArrayList<NameValuePair>();
 
-		System.out.println("Upload " + id);
 		String response = null;
 		try {
 			File dir = File.createTempFile("tmp", "");
@@ -696,6 +689,44 @@ public class WingsAdapter {
 		return null;
 	}
 
+	public String addDataToWingsAsFile(String username, String domain, String id, String contents) {
+	    String type = this.internal_server + "/export/users/" + username + "/" + domain + "/data/ontology.owl#File";
+
+		String postpage = "users/" + username + "/" + domain + "/data/addDataForType";
+		String uploadpage = "users/" + username + "/" + domain + "/upload";
+		String dataid = this.DATAID(username, domain, id);
+		
+		
+		String sha = DigestUtils.sha1Hex(contents.getBytes());
+		String correctName = "SHA" + sha.substring(0,6);
+		if (!id.contains(correctName))
+		    System.out.println("File " + id + " does not have the same hash: " + sha);
+
+		// Create temporary file and upload
+		try {
+			File dir = File.createTempFile("tmp", "");
+			if (!dir.delete() || !dir.mkdirs()) {
+				System.err.println("Could not create temporary directory "
+						+ dir);
+				return null;
+			}
+			File f = new File(dir.getAbsolutePath() + "/" + id);
+			FileUtils.write(f, contents);
+			this.upload(username, uploadpage, "data", f);
+			f.delete();
+
+			List<NameValuePair> data = new ArrayList<NameValuePair>();
+			data.add(new BasicNameValuePair("data_id", dataid));
+			data.add(new BasicNameValuePair("data_type", type));
+			String response = this.post(username, postpage, data);
+			if (response != null && response.equals("OK"))
+				return dataid;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
 	public String addRemoteDataToWings(String username, String domain, String url) {
 	  String type = this.internal_server + "/export/users/" + username + "/" + domain + "/data/ontology.owl#File";
 	  String opurl = "users/" + username + "/" + domain + "/data/addRemoteDataForType";
@@ -706,14 +737,50 @@ public class WingsAdapter {
 	}
 
 	public String addRemoteDataToWings(String username, String domain, String url, String name) {
-		String dataid = addRemoteDataToWings(username, domain, url);
+	    /* FIXME: Wings rename does not rename the file, only the id 
+	     * thus we cannot upload two files with the same name and then rename them.
+	     */
+	    String fileContents = null;
+	    CloseableHttpClient client = HttpClientBuilder.create().build();
+	    try {
+	        HttpGet securedResource = new HttpGet(url);
+	        CloseableHttpResponse httpResponse = client.execute(securedResource);
+
+	        try {
+	            HttpEntity responseEntity = httpResponse.getEntity();
+	            fileContents = EntityUtils.toString(responseEntity);
+	            EntityUtils.consume(responseEntity);
+	            httpResponse.close();
+	        } catch (Exception e) {
+			// TODO: handle exception
+	        } finally {
+	            httpResponse.close();
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    } finally {
+	        try {
+	            client.close();
+	        } catch (IOException e) {
+	        }
+	    }
+	    
+		String dataid = addDataToWingsAsFile(username, domain, name, fileContents);
+		return dataid;
+	    
+		/*String dataid = addRemoteDataToWings(username, domain, url);
 		String newid = this.internal_server + "/export/users/" + username + "/" + domain + "/data/library.owl#" + name;
+		
+		System.out.println("stored id: " + dataid);
+		System.out.println("new id: " + newid);
 
 		String opurl = "users/" + username + "/" + domain + "/data/renameData";
 		List<NameValuePair> keyvalues = new ArrayList<NameValuePair>();
 		keyvalues.add(new BasicNameValuePair("data_id", dataid));
 		keyvalues.add(new BasicNameValuePair("newid", newid));
-		return this.post(username, opurl, keyvalues);
+		String rpp = this.post(username, opurl, keyvalues);
+		System.out.println(">>>> " + rpp);
+		return rpp;*/
 	}
 	
 	public List<String> isFileListOnWings (String username, String domain, Set<String> filelist) {
@@ -727,7 +794,7 @@ public class WingsAdapter {
 					 + "  VALUES ?value {\n";
 		for (String file: filelist) query += fileprefix + file + ">\n";
 		query += "  }\n}";
-
+		
 		String pageid = "sparql";
 		List<NameValuePair> formdata = new ArrayList<NameValuePair>();
 		formdata.add(new BasicNameValuePair("query", query));
@@ -736,8 +803,6 @@ public class WingsAdapter {
 		if (resultjson == null || resultjson.equals(""))
 			return returnValue;
 		
-		//System.out.println(resultjson);
-
 		JsonParser jsonParser = new JsonParser();
 		JsonObject result = jsonParser.parse(resultjson).getAsJsonObject();
 		JsonArray qbindings = result.get("results").getAsJsonObject().get("bindings").getAsJsonArray();

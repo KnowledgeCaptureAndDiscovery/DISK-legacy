@@ -420,14 +420,15 @@ public class DiskResource implements DiskService {
   }
 
   @GET
-  @Path("{username}/{domain}/test")
+  @Path("{username}/{domain}/externalQuery")
   @Override
   public Map<String, List<String>> queryExternalStore(
       @PathParam("username") String username, 
       @PathParam("domain") String domain, 
+      @QueryParam("endpoint") String endpoint,
       @QueryParam("variables") String variables,
       @QueryParam("query") String query) {
-	return repo.queryExternalStore(username, domain, variables, query);
+	return repo.queryExternalStore(username, domain, endpoint, variables, query);
   }
   
   
