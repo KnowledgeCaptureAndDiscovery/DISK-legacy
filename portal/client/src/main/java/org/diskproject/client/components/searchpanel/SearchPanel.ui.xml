@@ -10,6 +10,7 @@
 			.search-main-container {
 				border: 1px solid #e5e5e5;
 				padding: 4px;
+				margin: 0px;
 			}
 			.search-row {
 		      	display: flex;
@@ -43,7 +44,7 @@
 				position: absolute;
 				right: 150px;
 		    }
-		    .item-container * {
+		    .searchable-result {
 		    	margin-bottom: 3px;
 		    }
 		</style>

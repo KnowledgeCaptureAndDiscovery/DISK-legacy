@@ -76,6 +76,7 @@ public class SearchPanel extends Composite {
 	}
 	
 	public void addItem (String id, SearchableItem item) {
+	    item.addStyleName("searchable-result");
 		items.put(id, item);
 		visibleItems.put(id, true);
 		updateList();

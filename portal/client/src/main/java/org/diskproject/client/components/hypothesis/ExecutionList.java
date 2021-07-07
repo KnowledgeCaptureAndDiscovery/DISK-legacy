@@ -18,9 +18,13 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.ui.FocusPanel;
+import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.polymer.iron.widget.IronIcon;
+import com.vaadin.polymer.paper.widget.PaperSpinner;
 
 public class ExecutionList extends SearchableItem {
 	interface Binder extends UiBinder<Widget, ExecutionList> {};
@@ -31,9 +35,15 @@ public class ExecutionList extends SearchableItem {
 	
 	@UiField DivElement title, description;
 	@UiField TableSectionElement tloilist;
+	@UiField FocusPanel toggle;
+	@UiField HTMLPanel tableContainer;
+	@UiField PaperSpinner updating;
 	
 	public ExecutionList() {
 		initWidget(uiBinder.createAndBindUi(this)); 
+		super.onAttach();
+	    tableContainer.setVisible(false);
+	    updating.setVisible(false);
 	}
 	
 	public static void setUsenameAndDomain (String username, String domain) {
@@ -103,6 +113,16 @@ public class ExecutionList extends SearchableItem {
 			//inputs
 			TableCellElement in = TableCellElement.as(DOM.createTD());
 			in.setInnerText(Integer.toString(tloi.getInputFiles().size()));
+			IronIcon iconInputList = new IronIcon();
+			iconInputList.setIcon("delete");
+			iconInputList.addClickHandler(new ClickHandler() {
+			    @Override
+			    public void onClick(ClickEvent event) {
+			        GWT.log("waa");
+			        event.stopPropagation();
+			    }
+			});
+			in.appendChild(iconInputList.getElement());
 
 			//outputs
 			TableCellElement out = TableCellElement.as(DOM.createTD());
@@ -132,13 +152,12 @@ public class ExecutionList extends SearchableItem {
 			iconDelete.addStyleName("delete-button");
 			iconDelete.setIcon("delete");
 			iconDelete.addClickHandler(new ClickHandler() {
-			  @Override
-			  public void onClick(ClickEvent event) {
-				event.stopPropagation();
-				//Should delete the tloi.
-			  }
+			    @Override
+			    public void onClick(ClickEvent event) {
+			        GWT.log("Should delete " + tloi.getId());
+			        //event.stopPropagation();
+			    }
 			});
-			
 			options.appendChild(iconDelete.getElement());
 			
 			row.appendChild(n);
@@ -151,6 +170,11 @@ public class ExecutionList extends SearchableItem {
 			row.appendChild(options);
 			tloilist.appendChild(row);
 		}
+	};
+
+	@UiHandler("toggle")
+	void onToggleClicked(ClickEvent event) {
+	    tableContainer.setVisible(!tableContainer.isVisible());
 	}
 
 }
