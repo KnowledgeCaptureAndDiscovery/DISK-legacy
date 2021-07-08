@@ -353,7 +353,7 @@ public class MyHypothesesView extends ApplicationSubviewImpl
         tree.addNode(root, node);
       }
     }
-    List<TreeNode> ms = missing.getChildren();
+    //List<TreeNode> ms = missing.getChildren();
     //if (ms.size() > 0) tree.addNode(root, missing);
     tree.setRoot(root);
   }

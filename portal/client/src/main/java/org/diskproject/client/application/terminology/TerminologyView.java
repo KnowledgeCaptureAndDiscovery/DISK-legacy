@@ -1,28 +1,34 @@
 package org.diskproject.client.application.terminology;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+
+/*import java.util.ArrayList;
 import java.util.Map;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Set;*/
 
 import org.diskproject.client.application.ApplicationSubviewImpl;
-import org.diskproject.client.components.list.ListNode;
+import org.diskproject.client.rest.DiskREST;
+import org.diskproject.shared.classes.common.Graph;
+import org.diskproject.shared.classes.common.Triple;
+import org.diskproject.shared.classes.vocabulary.Vocabulary;
+import com.google.gwt.uibinder.client.UiBinder;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.SimplePanel;
+import com.google.gwt.user.client.ui.Widget;
+import com.google.inject.Inject;
+
+/*import org.diskproject.client.components.list.ListNode;
 import org.diskproject.client.components.list.ListWidget;
 import org.diskproject.client.components.loader.Loader;
 import org.diskproject.client.components.triples.TripleInput;
 import org.diskproject.client.rest.AppNotification;
-import org.diskproject.client.rest.DiskREST;
 import org.diskproject.client.Config;
 import org.diskproject.client.Utils;
-import org.diskproject.shared.classes.common.Graph;
-import org.diskproject.shared.classes.common.Triple;
 import org.diskproject.shared.classes.common.Value;
 import org.diskproject.shared.classes.util.KBConstants;
 import org.diskproject.shared.classes.vocabulary.Individual;
 import org.diskproject.shared.classes.vocabulary.Type;
-import org.diskproject.shared.classes.vocabulary.Vocabulary;
-
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -31,18 +37,13 @@ import com.google.gwt.dom.client.TableSectionElement;
 import com.google.gwt.dom.client.TableRowElement;
 import com.google.gwt.dom.client.TableCellElement;
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.CheckBox;
-import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.SimplePanel;
-import com.google.gwt.user.client.ui.Widget;
-import com.google.inject.Inject;
 import com.vaadin.polymer.Polymer;
-import com.vaadin.polymer.elemental.Function;
+import com.vaadin.polymer.elemental.Function;*/
 
 public class TerminologyView extends ApplicationSubviewImpl implements
 		TerminologyPresenter.MyView {
@@ -65,9 +66,9 @@ public class TerminologyView extends ApplicationSubviewImpl implements
 	List<Triple> loadedTriples;
 
 	/*@UiField TableSectionElement table;
-	@UiField TableRowElement inputRow;*/
+	@UiField TableRowElement inputRow;
 	private static Map<String, String> tableLabel;
-	private static Map<String, String> tableType;
+	private static Map<String, String> tableType;*/
 
 	Vocabulary vocab;
 

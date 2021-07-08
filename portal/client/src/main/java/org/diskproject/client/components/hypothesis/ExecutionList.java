@@ -14,18 +14,21 @@ import com.google.gwt.dom.client.TableRowElement;
 import com.google.gwt.dom.client.TableCellElement;
 import com.google.gwt.dom.client.TableSectionElement;
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Element;
+import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.EventListener;
 import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.polymer.iron.widget.IronIcon;
 import com.vaadin.polymer.paper.widget.PaperSpinner;
 
+@SuppressWarnings("deprecation")
 public class ExecutionList extends SearchableItem {
 	interface Binder extends UiBinder<Widget, ExecutionList> {};
 	private static Binder uiBinder = GWT.create(Binder.class);
@@ -73,6 +76,7 @@ public class ExecutionList extends SearchableItem {
 	
 	private void updateTable () {
 		List<TriggeredLOI> ordered = list;//FIXME!
+        Element el = null; //Pointer to pseudo elements
 
 		tloilist.removeAllChildren();
 		int i = 1;
@@ -84,7 +88,7 @@ public class ExecutionList extends SearchableItem {
 			n.setInnerText(Integer.toString(i));
 			i += 1;
 
-			//date
+			//Date
 			TableCellElement date = TableCellElement.as(DOM.createTD());
 			
 			AnchorElement link = AnchorElement.as(DOM.createAnchor());
@@ -114,21 +118,37 @@ public class ExecutionList extends SearchableItem {
 			TableCellElement in = TableCellElement.as(DOM.createTD());
 			in.setInnerText(Integer.toString(tloi.getInputFiles().size()));
 			IronIcon iconInputList = new IronIcon();
-			iconInputList.setIcon("delete");
-			iconInputList.addClickHandler(new ClickHandler() {
-			    @Override
-			    public void onClick(ClickEvent event) {
-			        GWT.log("waa");
-			        event.stopPropagation();
-			    }
-			});
-			in.appendChild(iconInputList.getElement());
+			iconInputList.addStyleName("inline-button");
+			iconInputList.setIcon("description");
+			el = iconInputList.getElement();
+			Event.sinkEvents(el, Event.ONCLICK);
+            Event.setEventListener(el, new EventListener() {
+              @Override
+              public void onBrowserEvent(Event event) {
+                  for (String in: tloi.getInputFiles())
+                      GWT.log(in);
+              }
+            });
+			in.appendChild(el);
 
 			//outputs
 			TableCellElement out = TableCellElement.as(DOM.createTD());
 			int outs = tloi.getOutputFiles().size();
 			if (curStatus == Status.SUCCESSFUL) {
 				out.setInnerText(Integer.toString(outs));
+                IronIcon iconOutputList = new IronIcon();
+                iconOutputList.addStyleName("inline-button");
+                iconOutputList.setIcon("description");
+                el = iconOutputList.getElement();
+                Event.sinkEvents(el, Event.ONCLICK);
+                Event.setEventListener(el, new EventListener() {
+                  @Override
+                  public void onBrowserEvent(Event event) {
+                      for (String in: tloi.getOutputFiles())
+                          GWT.log(in);
+                  }
+                });
+                out.appendChild(el);
 			} else if (curStatus == Status.FAILED) {
 				out.setInnerText("-");
 			} else {
@@ -145,20 +165,22 @@ public class ExecutionList extends SearchableItem {
 				pval.setInnerText("...");
 			}
 
-			TableCellElement viz = TableCellElement.as(DOM.createTD());
-
+			//Buttons at the end
 			TableCellElement options = TableCellElement.as(DOM.createTD());
+
 			IronIcon iconDelete = new IronIcon();
 			iconDelete.addStyleName("delete-button");
 			iconDelete.setIcon("delete");
-			iconDelete.addClickHandler(new ClickHandler() {
-			    @Override
-			    public void onClick(ClickEvent event) {
-			        GWT.log("Should delete " + tloi.getId());
-			        //event.stopPropagation();
-			    }
-			});
-			options.appendChild(iconDelete.getElement());
+            el = iconDelete.getElement();
+			Event.sinkEvents(el, Event.ONCLICK);
+            Event.setEventListener(el, new EventListener() {
+              @Override
+              public void onBrowserEvent(Event event) {
+                  GWT.log("Should delete " + tloi.getId());
+              }
+            });
+
+			options.appendChild(el);
 			
 			row.appendChild(n);
 			row.appendChild(date);
@@ -166,7 +188,6 @@ public class ExecutionList extends SearchableItem {
 			row.appendChild(in);
 			row.appendChild(out);
 			row.appendChild(pval);
-			row.appendChild(viz);
 			row.appendChild(options);
 			tloilist.appendChild(row);
 		}
