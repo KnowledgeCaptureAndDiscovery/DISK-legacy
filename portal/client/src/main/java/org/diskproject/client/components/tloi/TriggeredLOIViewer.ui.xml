@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml>
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui" 
 	xmlns:lw='urn:import:org.diskproject.client.components.list'
 	xmlns:tr='urn:import:org.diskproject.client.components.triples'	
 	xmlns:tloi='urn:import:org.diskproject.client.components.tloi'
-	xmlns:brain='urn:import:org.diskproject.client.components.brain'
 	xmlns:p='urn:import:com.vaadin.polymer.paper.widget' xmlns:G="urn:import:com.google.gwt.thirdparty.common.css.compiler.gssfunctions.GssFunctions" xmlns:s="urn:import:com.google.gwt.dom.builder.shared">
 
 	<g:HTMLPanel>
@@ -121,7 +121,10 @@
 			.shinyviz {
 				border-width: 0px;
 				width: 100%;
-				height: 600px;
+				height: 1000px;
+			}
+			.relative-div {
+			    position: relative;
 			}
 		</style>
 		<div class="vertical layout section">
@@ -170,7 +173,6 @@
 						<div ui:field="dataDiv" style="white-space: nowrap; overflow: scroll;"/>
 						<br/>
 						<p:PaperButton ui:field="downloadbutton"><iron-icon icon="save" />Download table as CSV</p:PaperButton>
-						<p:PaperButton ui:field="triplesbutton"><iron-icon icon="save" />Download triples</p:PaperButton>
 					</g:HTMLPanel>
 				</div>
 			</div>
@@ -216,7 +218,7 @@
 			<div ui:field="brainSection">
 				<label class="small-grey">Brain visualization</label>
 				<div class="bordered-list">
-					<brain:Brain ui:field="brainVisualization"></brain:Brain>
+	               <g:HTMLPanel ui:field="brainPanel" styleName="relative-div"/>
 				</div>
 			</div>
 

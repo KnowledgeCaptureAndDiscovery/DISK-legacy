@@ -12,7 +12,6 @@ import org.diskproject.client.application.tloi.TriggeredLOIView;
 import org.diskproject.client.application.users.UserView;
 import org.diskproject.client.place.NameTokens;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.History;

@@ -1089,7 +1089,7 @@ public class DiskRepository extends KBRepository {
 				"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" + 
 				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
 				"SELECT DISTINCT " + v + " WHERE {\n" +
-				sparqlQuery + "\n} LIMIT 30";
+				sparqlQuery + "\n}";
 		
 		//System.out.println(dataQuery);
 
@@ -2386,6 +2386,22 @@ public class DiskRepository extends KBRepository {
 		}
 		return list;
 	}
+	
+	public TriggeredLOI runHypothesisAndLOI (String username, String domain, String hypid, String loiid) {
+	    List<TriggeredLOI> hyptlois = queryHypothesis(username, domain, hypid);
+	    for (TriggeredLOI tloi: hyptlois) {
+	        if (tloi.getStatus() == null && tloi.getLoiId().equals(loiid)) {
+	            //Set basic metadata
+	            tloi.setAuthor("System");
+	            Date date = new Date(); 
+	            SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss yyyy-MM-dd");
+	            tloi.setDateCreated(formatter.format(date));
+	            addTriggeredLOI(username, domain, tloi);
+	            return tloi;
+	        }
+	    }
+	    return null;
+	}
 
 	public TriggeredLOI getTriggeredLOI(String username, String domain, String id) {
 		String url = this.TLOIURI(username, domain);
@@ -2821,7 +2837,6 @@ public class DiskRepository extends KBRepository {
 		return null;
 	}
 
-	//FIXME: should query the internal store.
 	public String directQuery(String username, String domain, String query) {
 		//List<List<SparqlQuerySolution>> result = null;
 		String url = this.LOIURI(username, domain);

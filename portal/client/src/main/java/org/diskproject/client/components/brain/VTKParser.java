@@ -3,12 +3,6 @@ package org.diskproject.client.components.brain;
 import org.treblereel.gwt.three4g.core.BufferGeometry;
 import org.treblereel.gwt.three4g.core.bufferattributes.Float32BufferAttribute;
 
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.core.client.JsArray;
-
-import jsinterop.base.JsArrayLike;
-
 public class VTKParser {
 	
 	public static BufferGeometry parse (String data) {

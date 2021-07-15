@@ -764,4 +764,18 @@ public class DiskREST {
 			// TODO: handle exception
 		}
 	}
+	
+    public static void getNewExecution(String hypid, String loiid,
+        final Callback<TriggeredLOI, Throwable> callback) {
+      REST.withCallback(new MethodCallback<TriggeredLOI>() {
+        @Override
+        public void onSuccess(Method method, TriggeredLOI response) {
+          callback.onSuccess(response);
+        }
+        @Override
+        public void onFailure(Method method, Throwable exception) {
+          callback.onFailure(exception);
+        }
+      }).call(getDiskService()).runHypothesisAndLOI(username, domain, hypid, loiid);
+    }
 }

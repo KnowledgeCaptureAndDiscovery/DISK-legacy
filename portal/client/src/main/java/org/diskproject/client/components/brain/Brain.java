@@ -4,16 +4,12 @@ import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.ScriptInjector;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Widget;
+import com.vaadin.polymer.paper.widget.PaperSpinner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.diskproject.client.Config;
+import org.diskproject.client.rest.DiskREST;
 import org.diskproject.client.rest.StaticREST;
 import org.treblereel.gwt.three4g.THREE;
 import org.treblereel.gwt.three4g.cameras.PerspectiveCamera;
@@ -56,9 +53,11 @@ public class Brain extends Composite {
   private static Binder uiBinder = GWT.create(Binder.class);
   
   private static boolean threeLoaded = false;
+  private static Brain singleton = null;
   
   @UiField HTMLCanvasElement canvas;
   @UiField HTMLDivElement container;
+  @UiField PaperSpinner loading;
 
   private PerspectiveCamera camera;
   private WebGLRenderer renderer;
@@ -76,7 +75,14 @@ public class Brain extends Composite {
   private Map<String, Mesh> meshes;
   private Map<String, MeshProperties> meshProperties;
   private Map<String, String> meshIdByName;
-
+  
+  
+  public static Brain get () {
+      if (Brain.singleton == null) {
+          Brain.singleton = new Brain();
+      }
+      return Brain.singleton;
+  }
 
   public Brain() {
 	  // See https://github.com/treblereel/three4g/issues/155
@@ -87,7 +93,13 @@ public class Brain extends Composite {
 	  }
 
 	  initWidget(uiBinder.createAndBindUi(this)); 
-	  //initialize();
+	  loading.setVisible(false);
+
+	  initialize();
+	  /*if (!Brain.initialized && !Brain.initializing) {
+	      Brain.initializing = true;
+	      initialize();
+	  }*/
   }
 
   public void initialize () {
@@ -543,95 +555,6 @@ public class Brain extends Composite {
 	  }
 	  console.log("checked array:"+ show(checked));*/
   }
-  
-  /* Some example code to load visualizations... */
-
-  /*@UiField ListBox example;
-  @UiField Button clear, reset, gray;
-
-  @UiHandler("clear")
-  void oClearClicked(ClickEvent event) {   
-	  GWT.log("CLICK clear");
-	  decreaseOpacityAll();
-  }
-
-  @UiHandler("reset")
-  void onResetClicked(ClickEvent event) {   
-	  GWT.log("CLICK reset");
-	  increaseOpacityAll();
-  }
-
-  @UiHandler("gray")
-  void onGrayClicked(ClickEvent event) {   
-	  clearColors();
-  }
-
-  @UiHandler("example")
-  void onExampleSelected(ChangeEvent event) {
-	  String value = example.getSelectedValue();
-	  
-	  //Some colors:
-	  float[] red = {0f, 0f, 1f};
-	  float[] green = {0f, 1f, 0f};
-	  float[] blue = {1f, 0f, 0f};
-	  float[] A = {0.5f, 0f, 0.5f};
-	  float[] B = {0.3f, 0.2f, 0.7f};
-	  if (value.equals("")) onResetClicked(null);
-	  else if (value.equals("1")) {
-		  BrainConfigLine[] ex1 = {
-				new BrainConfigLine("banks_of_left_superior_temporal_sulcus", 0.01f, null),
-				new BrainConfigLine("ctx-lh-superiorfrontal", 0.05f, null),
-				new BrainConfigLine("ctx-lh-superiorfrontal", 0.2f, null),
-				new BrainConfigLine("ctx-rh-caudalmiddlefrontal", 0.9f, null),
-				new BrainConfigLine("ctx-lh-parahippocampal", 0.5f, null)
-		  };
-		  readConfig(ex1);
-	  }
-	  else if (value.equals("2")) {
-		  BrainConfigLine[] ex2 = {
-				new BrainConfigLine("banks_of_right_superior_temporal_sulcus", 0f, red),
-				new BrainConfigLine("ctx-rh-superiorfrontal", 0f, blue),
-				new BrainConfigLine("ctx-rh-superiorfrontal", 0f, green),
-				new BrainConfigLine("ctx-lh-caudalmiddlefrontal", 0f, A),
-				new BrainConfigLine("ctx-rh-parahippocampal", 0f, B)
-		  };
-		  readConfig(ex2);
-	  }
-	  else if (value.equals("3")) {
-		  BrainConfigLine[] ex3 = {
-				new BrainConfigLine("banks_of_left_superior_temporal_sulcus", 0.01f, null),
-				new BrainConfigLine("ctx-lh-superiorfrontal", 0.05f, null),
-				new BrainConfigLine("ctx-lh-superiorfrontal", 0.2f, null),
-				new BrainConfigLine("ctx-rh-caudalmiddlefrontal", 0.9f, null),
-				new BrainConfigLine("ctx-lh-parahippocampal", 0.5f, null),
-				new BrainConfigLine("banks_of_right_superior_temporal_sulcus", 0f, red),
-				new BrainConfigLine("ctx-rh-superiorfrontal", 0f, blue),
-				new BrainConfigLine("ctx-rh-superiorfrontal", 0f, green),
-				new BrainConfigLine("ctx-lh-caudalmiddlefrontal", 0f, A),
-				new BrainConfigLine("ctx-rh-parahippocampal", 0f, B)
-		  };
-		  readConfig(ex3);
-	  }
-  }*/
-
-  private void readConfig (BrainConfigLine[] config) {
-	  decreaseOpacityAll();
-	  for (BrainConfigLine item: config) {
-		  Mesh mesh = selectMeshByName(item.name);
-		  if (mesh != null) {
-			  if (item.pval > 0) {
-				  // range of p-value from .2 to 1 opacity
-				  mesh.material.opacity = .2f + item.pval * .8f;
-				  
-				  float[] color = {1f, 0f, 0f};
-				  set_mesh_color(mesh, color);
-			  } else if (item.color != null && item.color.length == 3) {
-				  mesh.material.opacity = 1f;
-				  set_mesh_color(mesh, item.color);
-			  }
-		  }
-	  }
-  }
 
   private void readConfig (List<BrainConfigLine> config) {
 	  decreaseOpacityAll();
@@ -668,6 +591,24 @@ public class Brain extends Composite {
 	  }
 	  
 	  readConfig(config);
+  }
+  
+  public void loadConfigFile (String brainConfigURL) {
+        loading.setVisible(true);
+        String URL = brainConfigURL.replaceAll("^.*#", "");
+		DiskREST.getDataFromWingsAsJS(URL, new Callback<JavaScriptObject, Throwable>() {
+			@Override
+			public void onSuccess(JavaScriptObject result) {
+				loadBrainConfigurationFromJSObject(result);
+				loading.setVisible(false);
+			}
+			@Override
+			public void onFailure(Throwable reason) {
+				// TODO Auto-generated method stub
+				loading.setVisible(false);
+			}
+		});
+      
   }
 
   private native int nativeLen (JavaScriptObject obj) /*-{

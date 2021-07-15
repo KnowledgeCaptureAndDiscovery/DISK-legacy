@@ -61,9 +61,9 @@
   <ns0:Question rdf:about="http://disk-project.org/resources/question/HQ3">
     <rdf:label>Is the effect size of &#60;Genotype&#62; on &#60;Brain imaging derived trait&#62; of &#60;Region&#62; associated with &#60;Demographic&#62;</rdf:label>
     <ns0:hasQuestionTemplate>Is the EffectSize of ?Genotype on ?BrainImagingTrait of ?Region associated with ?DemographicAttribute</ns0:hasQuestionTemplate>
-    <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Genotype 
-?EffectSize neuro:targetCharacteristic ?BrainImagingTrait 
-?EffectSize neuro:targetCharacteristic ?Region 
+    <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Genotype
+?EffectSize neuro:targetCharacteristic ?BrainImagingTrait
+?EffectSize neuro:targetCharacteristic ?Region
 ?EffectSize hyp:associatedWith ?DemographicAttribute
 optional { ?DemographicAttribute hyp:lessThan ?maxAge }
 optional { ?DemographicAttribute hyp:moreThan ?minAge }</ns0:hasQuestionPattern>

@@ -10,7 +10,6 @@ import java.util.Set;
 
 import org.diskproject.client.application.ApplicationSubviewImpl;
 import org.diskproject.client.components.list.ListNode;
-import org.diskproject.client.components.list.ListWidget;
 import org.diskproject.client.components.loader.Loader;
 import org.diskproject.client.components.triples.TripleInput;
 import org.diskproject.client.rest.AppNotification;

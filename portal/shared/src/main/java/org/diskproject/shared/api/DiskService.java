@@ -273,6 +273,15 @@ public interface DiskService extends DirectRestService {
       @PathParam("lid") String lid);
   
   
+  @GET
+  @Path("{username}/{domain}/execute/{hid}/{lid}")
+  public TriggeredLOI runHypothesisAndLOI(
+      @PathParam("username") String username, 
+      @PathParam("domain") String domain,
+      @PathParam("hid") String hid, 
+      @PathParam("lid") String lid);
+
+  
   /* Get narratives for tloi id*/
   @GET
   @Path("{username}/{domain}/tloi/{tloiid}/narratives")
