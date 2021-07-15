@@ -1,12 +1,20 @@
 package org.diskproject.client.components.hypothesis;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.diskproject.client.application.dialog.CloseableDialog;
+import org.diskproject.client.application.dialog.FileListDialog;
+import org.diskproject.client.application.dialog.ShinyElement;
+import org.diskproject.client.components.brain.Brain;
 import org.diskproject.client.components.searchpanel.SearchableItem;
+import org.diskproject.client.rest.AppNotification;
+import org.diskproject.client.rest.DiskREST;
 import org.diskproject.shared.classes.common.TreeItem;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.loi.TriggeredLOI.Status;
 
+import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.AnchorElement;
 import com.google.gwt.dom.client.DivElement;
@@ -22,6 +30,7 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -41,12 +50,17 @@ public class ExecutionList extends SearchableItem {
 	@UiField FocusPanel toggle;
 	@UiField HTMLPanel tableContainer;
 	@UiField PaperSpinner updating;
+
+	List<TriggeredLOI> list;
+	private String parentHypothesisId, parentLOIId;
 	
-	public ExecutionList() {
+	public ExecutionList(String hypid, String loiid) {
 		initWidget(uiBinder.createAndBindUi(this)); 
 		super.onAttach();
 	    tableContainer.setVisible(false);
 	    updating.setVisible(false);
+	    parentHypothesisId = hypid;
+	    parentLOIId = loiid;
 	}
 	
 	public static void setUsenameAndDomain (String username, String domain) {
@@ -68,7 +82,6 @@ public class ExecutionList extends SearchableItem {
 		setDescription(item.getDescription());
 	}
 
-	List<TriggeredLOI> list;
 	public void setList(List<TriggeredLOI> tloilist) {
 		list = tloilist;
 		updateTable();
@@ -92,7 +105,12 @@ public class ExecutionList extends SearchableItem {
 			TableCellElement date = TableCellElement.as(DOM.createTD());
 			
 			AnchorElement link = AnchorElement.as(DOM.createAnchor());
-			link.setInnerText(tloi.getDateCreated());
+			String[] dsp = tloi.getDateCreated().split(" ");
+			if (dsp.length == 2)
+			    link.setInnerText(dsp[1] + " " + dsp[0]);
+			else 
+			    link.setInnerText(tloi.getDateCreated());
+			    
 			link.setHref("/#tlois/" + ExecutionList.username + "/" + ExecutionList.domain + "/" + tloi.getId());
 			//date.setInnerText(tloi.getDateCreated());
 			date.appendChild(link);
@@ -125,17 +143,35 @@ public class ExecutionList extends SearchableItem {
             Event.setEventListener(el, new EventListener() {
               @Override
               public void onBrowserEvent(Event event) {
-                  for (String in: tloi.getInputFiles())
-                      GWT.log(in);
+                  FileListDialog dialog = new FileListDialog();
+                  dialog.setFileList(tloi.getInputFiles());
+                  dialog.show();
+                  dialog.center();
               }
             });
 			in.appendChild(el);
 
-			//outputs
+			// Analyze outputs
 			TableCellElement out = TableCellElement.as(DOM.createTD());
-			int outs = tloi.getOutputFiles().size();
+			boolean hasShinyURL = false, hasBrainURL = false;
 			if (curStatus == Status.SUCCESSFUL) {
-				out.setInnerText(Integer.toString(outs));
+				// Count files excluding system-related files
+			    int nouts = 0;
+				for (String outfile: tloi.getOutputFiles()) {
+				    String outname = outfile.replaceAll("^.*#", "");
+				    if (outname.startsWith("shiny_visualization")) {
+				        hasShinyURL = true;
+				    } else if (outname.startsWith("brain_visualization")) {
+				        hasBrainURL = true;
+				    } else if (outname.startsWith("p_val") || outname.startsWith("pval") || outname.startsWith("p_value")) {
+				        //Do nothing
+				    } else {
+				        nouts += 1;
+				    }
+				}
+				out.setInnerText(Integer.toString(nouts));
+
+				// Add list file dialog.
                 IronIcon iconOutputList = new IronIcon();
                 iconOutputList.addStyleName("inline-button");
                 iconOutputList.setIcon("description");
@@ -144,8 +180,18 @@ public class ExecutionList extends SearchableItem {
                 Event.setEventListener(el, new EventListener() {
                   @Override
                   public void onBrowserEvent(Event event) {
-                      for (String in: tloi.getOutputFiles())
-                          GWT.log(in);
+                      List<String> filtered = new ArrayList<String>();
+                      for (String outfile: tloi.getOutputFiles()) {
+                          if (!(outfile.contains("shiny_visualization") || outfile.contains("brain_visualization")
+                              || outfile.contains("pval") || outfile.contains("p_val") || outfile.contains("p_value"))) {
+                              filtered.add(outfile);
+                          }
+                      }
+
+                      FileListDialog dialog = new FileListDialog();
+                      dialog.setFileList(filtered);
+                      dialog.show();
+                      dialog.center();
                   }
                 });
                 out.appendChild(el);
@@ -167,6 +213,68 @@ public class ExecutionList extends SearchableItem {
 
 			//Buttons at the end
 			TableCellElement options = TableCellElement.as(DOM.createTD());
+			
+			if (hasShinyURL) {
+                IronIcon iconShiny = new IronIcon();
+                iconShiny.addStyleName("inline-button");
+                iconShiny.setIcon("assessment");
+                el = iconShiny.getElement();
+                Event.sinkEvents(el, Event.ONCLICK);
+                Event.setEventListener(el, new EventListener() {
+                  @Override
+                  public void onBrowserEvent(Event event) {
+                      String shinyURL = null;
+                      for (String outfile: tloi.getOutputFiles()) {
+                          if (outfile.contains("shiny_visualization")) {
+                              shinyURL = outfile;
+                              break;
+                          }
+                      }
+                      if (shinyURL != null) {
+                          CloseableDialog dialog = new CloseableDialog();
+                          ShinyElement shiny =  new ShinyElement();
+                          shiny.load(shinyURL);
+                          dialog.setText("Shiny Visualization");
+                          dialog.add(shiny);
+                          dialog.centerAndShow();
+                      } else {
+                          AppNotification.notifyFailure("Could not find Shiny visualization");
+                      }
+                  }
+                });
+                options.appendChild(el);
+			}
+
+			if (hasBrainURL) {
+                IronIcon iconBrain = new IronIcon();
+                iconBrain.addStyleName("inline-button");
+                iconBrain.setIcon("3d-rotation");
+                el = iconBrain.getElement();
+                Event.sinkEvents(el, Event.ONCLICK);
+                Event.setEventListener(el, new EventListener() {
+                  @Override
+                  public void onBrowserEvent(Event event) {
+                      String brainURL = null;
+                      for (String outfile: tloi.getOutputFiles()) {
+                          if (outfile.contains("brain_visualization")) {
+                              brainURL = outfile;
+                              break;
+                          }
+                      }
+                      if (brainURL != null) {
+                          CloseableDialog dialog = new CloseableDialog();
+                          Brain brain = Brain.get();
+                          brain.loadConfigFile(brainURL);
+                          dialog.setText("Brain Visualization");
+                          dialog.add(brain);
+                          dialog.centerAndShow();
+                      } else {
+                          AppNotification.notifyFailure("Could not find Brain visualization");
+                      }
+                  }
+                });
+                options.appendChild(el);
+			}
 
 			IronIcon iconDelete = new IronIcon();
 			iconDelete.addStyleName("delete-button");
@@ -174,10 +282,28 @@ public class ExecutionList extends SearchableItem {
             el = iconDelete.getElement();
 			Event.sinkEvents(el, Event.ONCLICK);
             Event.setEventListener(el, new EventListener() {
-              @Override
-              public void onBrowserEvent(Event event) {
-                  GWT.log("Should delete " + tloi.getId());
-              }
+                @Override
+                public void onBrowserEvent(Event event) {
+                    String id = tloi.getId();
+                    if (id != null) {
+                        if (Window.confirm("Are you sure you want to delete " + tloi.getName())) {
+                            updating.setVisible(true);
+                            DiskREST.deleteTriggeredLOI(id, new Callback<Void, Throwable>() {
+                                @Override
+                                public void onFailure(Throwable reason) {
+                                    updating.setVisible(false);
+                                    AppNotification.notifyFailure(reason.getMessage());
+                                }
+                                @Override
+                                public void onSuccess(Void result) {
+                                    updating.setVisible(false);
+                                    list.remove(tloi);
+                                    updateTable();
+                                }
+                            });
+                        }
+                    }
+                }
             });
 
 			options.appendChild(el);
@@ -196,6 +322,30 @@ public class ExecutionList extends SearchableItem {
 	@UiHandler("toggle")
 	void onToggleClicked(ClickEvent event) {
 	    tableContainer.setVisible(!tableContainer.isVisible());
+	}
+
+	@UiHandler("updateButton")
+	void onUpdateButtonClicked(ClickEvent event) {
+	    updating.setVisible(true);
+	    GWT.log("Checking " + this.parentHypothesisId + " - " + this.parentLOIId);
+	    DiskREST.getNewExecution(parentHypothesisId, parentLOIId, new Callback<TriggeredLOI, Throwable>() {
+	        @Override
+	        public void onSuccess (TriggeredLOI result) {
+	            updating.setVisible(false);
+	            GWT.log("Success!");
+	            if (result == null) GWT.log(" NULL");
+	            else {
+	                list.add(result);
+	                updateTable();
+	            }
+	        }
+	        @Override
+	        public void onFailure (Throwable reason) {
+	            updating.setVisible(false);
+	            GWT.log("On update:", reason);
+	            AppNotification.notifyFailure(reason.toString());
+	        }
+        });
 	}
 
 }

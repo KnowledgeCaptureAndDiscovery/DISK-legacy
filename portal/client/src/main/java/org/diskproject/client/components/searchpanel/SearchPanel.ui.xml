@@ -28,6 +28,7 @@
 		        width: 120px;
 		        height: 1.3em;
 		        background: transparent;
+		        font-size: 1.2em;
 		    }
 		    .search-row .input-search .gwt-TextBox {
 		        width: calc(100% - 60px);

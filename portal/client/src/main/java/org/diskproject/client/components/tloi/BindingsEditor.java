@@ -1,34 +1,22 @@
 package org.diskproject.client.components.tloi;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.diskproject.client.rest.AppNotification;
-import org.diskproject.client.rest.DiskREST;
 import org.diskproject.shared.classes.loi.WorkflowBindings;
-import org.diskproject.shared.classes.workflow.Variable;
 import org.diskproject.shared.classes.workflow.VariableBinding;
-import org.diskproject.shared.classes.workflow.Workflow;
 
-import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.polymer.Polymer;
-import com.vaadin.polymer.PolymerWidget;
-import com.vaadin.polymer.paper.widget.PaperIconButton;
-import com.vaadin.polymer.paper.widget.PaperInput;
 import com.vaadin.polymer.vaadin.widget.VaadinComboBox;
 import com.vaadin.polymer.vaadin.widget.event.ValueChangedEvent;
 

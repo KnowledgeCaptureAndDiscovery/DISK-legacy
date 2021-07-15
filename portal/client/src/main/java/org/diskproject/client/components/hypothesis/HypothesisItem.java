@@ -29,7 +29,7 @@ public class HypothesisItem extends SearchableItem {
 	@UiField DivElement title, description, info, executions;
 	@UiField PaperIconButton editButton;
 	@UiField LabelElement tloiLabel;
-	private String strTitle, strDescription, strAuthor;
+	private String strTitle, strDescription, strAuthor, strDate;
 	private String id;
 	private static String username, domain;
 	private Map<String, ExecutionList> executionLists;
@@ -56,6 +56,14 @@ public class HypothesisItem extends SearchableItem {
 		return repr;
 	}
 	
+	public String getCreationDate () {
+	    return this.strDate;
+	}
+	
+	public String getId () {
+	    return this.id;
+	}
+	
 	public void setTitle (String newTitle) {
 		strTitle = newTitle;
 		title.setInnerText(newTitle);
@@ -68,6 +76,7 @@ public class HypothesisItem extends SearchableItem {
 	
 	public void setInfo (String author, String date) {
 		strAuthor = author;
+		strDate = date;
 		SpanElement authSpan = SpanElement.as(DOM.createSpan());
 		SpanElement dateSpan = SpanElement.as(DOM.createSpan());
 		authSpan.setInnerText(author);
@@ -91,7 +100,7 @@ public class HypothesisItem extends SearchableItem {
 			return;
 		}
 		if (!executionLists.containsKey(loiid)) {
-			ExecutionList n = new ExecutionList();
+			ExecutionList n = new ExecutionList(this.getId(), loiid);
 			executionLists.put(loiid, n);
 			executions.appendChild(n.getElement());
 		}

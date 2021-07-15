@@ -1,11 +1,16 @@
 package org.diskproject.client.components.searchpanel;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+
+import org.diskproject.client.Utils;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.DivElement;
+import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -66,13 +71,24 @@ public class SearchPanel extends Composite {
 	}
 
 	@UiHandler("orderMenu")
-	void onOrderClicked(ClickEvent event) {
+	void onOrderClicked(ChangeEvent  event) {
 		String order = orderMenu.getSelectedItemText();
 		if (activeOrder == null || !activeOrder.equals(order)) {
 			activeOrder = order;
-			GWT.log("Order changed");
-			//TODO apply order!
+			updateList();
 		}
+	}
+	
+	public List<SearchableItem> getOrderedItems () {
+	    List<SearchableItem> all = new ArrayList<SearchableItem>( items.values() );
+	    if (activeOrder != null) {
+			if (activeOrder.equals("Date (asc)")) {
+			    Collections.sort(all, Utils.orderAscDate);
+			} else if (activeOrder.equals("Date")) {
+			    Collections.sort(all, Utils.orderDesDate);
+			}
+	    }
+	    return all;
 	}
 	
 	public void addItem (String id, SearchableItem item) {
@@ -89,10 +105,10 @@ public class SearchPanel extends Composite {
 	private void updateList () {
 		itemContainer.removeAllChildren();
 		//TODO Apply order
-		Set<String> ordered = items.keySet();
-		for (String key : ordered) {
-			if (visibleItems.get(key))
-				itemContainer.appendChild( items.get(key).getElement() );
+		List<SearchableItem> ordered = this.getOrderedItems();
+		for (SearchableItem item : ordered) {
+		    if (visibleItems.get(item.getId()))
+		        itemContainer.appendChild( item.getElement() );
 		}
 		/* TODO: show something if:
 		 * - catalog empty

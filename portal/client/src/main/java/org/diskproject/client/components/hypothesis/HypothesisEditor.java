@@ -19,9 +19,6 @@ import org.diskproject.shared.classes.vocabulary.Vocabulary;
 
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.SpanElement;
-import com.google.gwt.dom.client.Style.Display;
-import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
@@ -31,7 +28,6 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.polymer.paper.PaperInputElement;
 import com.vaadin.polymer.paper.PaperTextareaElement;

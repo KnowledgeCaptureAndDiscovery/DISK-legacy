@@ -4,6 +4,7 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui" 
 	xmlns:l='urn:import:org.diskproject.client.components.loader'
+    xmlns:sp='urn:import:org.diskproject.client.components.searchpanel'
 	xmlns:t='urn:import:org.diskproject.client.components.tree'
 	xmlns:ls='urn:import:org.diskproject.client.components.list'
 	xmlns:h='urn:import:org.diskproject.client.components.hypothesis'
@@ -143,11 +144,11 @@
 				display:none;
 			}
 			.block {
-			  display: block;
+			    display: block;
 			}
 			.new-binding {
-			  margin-left: 20px;
-        width: calc(100% - 55px);
+			    margin-left: 20px;
+                width: calc(100% - 55px);
 			}
 			.aux {
 			  font-size: 14px;
@@ -157,40 +158,47 @@
 			.aux[visible] {
 			  display: block;
 			}
+			.short-hyp-desc {
+				padding: 4px 10px;
+				font-size: 14px;
+				color: #666;
+				margin-top: 5px;
+			}
+			.info-button {
+				display: block;
+				font-size: 1.1em;
+				height: 40px;
+				line-height: 40px;
+				text-align: center;
+			}
 		</style>
+
 		<p:PaperFab ui:field="addicon" icon="add" mini="true" 
 			addStyleNames="addicon" title="Add Hypothesis" tabindex="0" />
 		<p:PaperFab ui:field="helpicon" icon="help-outline" mini="true" 
 			addStyleNames="helploiicon" title="Help: Line of Inquiry" tabindex="0" />
-		<g:HTMLPanel ui:field="retryDiv">
-		  <div style="display: block; font-size: 1.1em; height: 40px; line-height: 40px; text-align: center;">
-			  An error has occurred while loading this page.
-			  <a class="clickable" ui:field="retryLink">Click here to retry.</a>
-		  </div>
-		</g:HTMLPanel>
-		<g:HTMLPanel ui:field="description">
-		  <div style="padding: 4px 10px; font-size: 14px; color: #666">
-			 <div style="float:right">
-			    <!--g:CheckBox ui:field='onlyMine'>
-			    <label>Show only my hypothesis</label>
-			    </g:CheckBox-->
-					<label>Order by</label>
-					<g:ListBox ui:field='order'>
-						<g:item value='dateasc'>Date</g:item>
-						<g:item value='datedesc'>Date (desc)</g:item>
-						<g:item value='authorasc'>Author</g:item>
-						<g:item value='authordesc'>Author (desc)</g:item>
-					</g:ListBox>
-			 </div>
-		    <div style="margin-top: 5px;">
-				  A hypothesis is a set of assertions about entities in the problem domain. <br/> 
-		      A list of all the available Hypotheses in the system is displayed below.
-		      To add a <b>new hypothesis</b> click on the top-right button.
-		    </div>
-		  </div>
-		</g:HTMLPanel>
-		<l:Loader ui:field="loader" />
-		<div ui:field="notloi" class="aux">No Line of Inquiry matches your hypothesis.</div>
+
+        <g:HTMLPanel ui:field="description" styleName="short-hyp-desc">
+	    	A hypothesis is a set of assertions about entities in the problem domain.
+	    	A list of all the available Hypotheses in the system is displayed below.<br/>
+	    	To add a <b>new hypothesis</b> click on the top-right button.
+        </g:HTMLPanel>
+
+        <sp:SearchPanel ui:field="searchPanel"></sp:SearchPanel>
+        <l:Loader ui:field="loader" />
+
+        <g:HTMLPanel ui:field="emptyDiv" styleName="info-button">
+	        You dont have any hypothesis.
+	        <a class="clickable" ui:field="addLink">Click here</a> to create one.
+        </g:HTMLPanel>
+
+        <g:HTMLPanel ui:field="retryDiv" styleName="info-button">
+            An error has occurred while loading this page.
+            <a class="clickable" ui:field="retryLink">Click here to retry.</a>
+        </g:HTMLPanel>
+
+        <div ui:field="notloi" class="aux">No Line of Inquiry matches your hypothesis.</div>
+
 		<t:TreeWidget ui:field="tree" styleName="tree" />
 		<h:HypothesisEditor ui:field="form" styleName="padded" />
 		<g:HTMLPanel ui:field="matchlist" styleName="tree list matchlist" />

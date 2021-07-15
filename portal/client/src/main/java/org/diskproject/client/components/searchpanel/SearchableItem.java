@@ -16,4 +16,12 @@ public class SearchableItem extends Composite {
 	public String getTextRepresentation() {
 		return null;
 	}
+	
+	public String getCreationDate () {
+	    return null;
+	}
+	
+	public String getId () {
+	    return null;
+	}
 }

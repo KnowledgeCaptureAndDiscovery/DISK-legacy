@@ -37,6 +37,8 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.EventListener;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.CheckBox;
@@ -58,17 +60,17 @@ public class TriggeredLOIViewer extends Composite {
   @UiField LabelElement WFLabel;
   @UiField Label DataLabel;
   @UiField HTMLPanel revHypothesisSection, DataSection, DataQuerySection;
-  @UiField HTMLPanel executionNarrative, dataQueryNarrative;
+  @UiField HTMLPanel executionNarrative, dataQueryNarrative, brainPanel;
   @UiField TripleViewer hypothesis;
   @UiField SparqlInput dataQuery;
   @UiField ListWidget workflowlist, metaworkflowlist;
   @UiField AnchorElement hypothesisLink, loiLink;
-  @UiField PaperButton downloadbutton, triplesbutton, editBindingsButton, runButton;
+  @UiField PaperButton downloadbutton, editBindingsButton, runButton;
   @UiField PaperDialog editBindingsDialog;
   @UiField BindingsEditor bindingseditor;
-  @UiField Brain brainVisualization;
+  @UiField IFrameElement shinyIframe;
+
   private Status status;
-  private boolean brainInitialized = false;
 
   String username, domain;
   String rawcsv; //USED to save the downloadable CSV.
@@ -80,7 +82,21 @@ public class TriggeredLOIViewer extends Composite {
 
   public TriggeredLOIViewer() {
     initWidget(uiBinder.createAndBindUi(this));
+
+    //TriggeredLOIViewer me = this;
+    Event.sinkEvents(shinyIframe, Event.ONLOAD);
+    Event.setEventListener(shinyIframe, new EventListener() {
+      @Override
+      public void onBrowserEvent(Event event) {
+  	    GWT.log("Iframe loaded!");
+  	    nativeLog(event);
+      }
+    });
   }
+
+	private native void  nativeLog(Object obj) /*-{
+    	console.log(obj);
+  	}-*/;  
 
   public void initialize(String username, String domain) {
     this.username = username;
@@ -92,7 +108,6 @@ public class TriggeredLOIViewer extends Composite {
     metaworkflowlist.addCustomAction("runlink", "Run details", 
         "icons:build", "blue-button run-link");    
     downloadbutton.setVisible(false);
-    triplesbutton.setVisible(false);
     DataSection.setVisible(false);
     DataQuerySection.setVisible(false);
     DataLabel.setVisible(false);
@@ -300,7 +315,6 @@ public class TriggeredLOIViewer extends Composite {
       DataSection.setVisible(false);
       DataLabel.setVisible(false);
       downloadbutton.setVisible(false);
-      triplesbutton.setVisible(false);
       return;
     }
     
@@ -309,7 +323,6 @@ public class TriggeredLOIViewer extends Composite {
     if (vars.size() == 0) {
     	section.setInnerHTML("No data retrieved.");
     	downloadbutton.setVisible(false);
-    	triplesbutton.setVisible(false);
     	return;
     }
     rawcsv = "";
@@ -318,7 +331,6 @@ public class TriggeredLOIViewer extends Composite {
     downloadbutton.setVisible(true);
     if (this.tloi != null) {
     	Status s = this.tloi.getStatus();
-    	if (s != null) triplesbutton.setVisible(true);
     }
     
     int lines = 0;
@@ -337,9 +349,7 @@ public class TriggeredLOIViewer extends Composite {
     for (int i = 0; i < lines; i++) {
     	html += "<tr>";
     	for (String v: vars) {
-    		String url = dataRetrieved.get(v).get(i).replace(
-    				"http://localhost:8080/enigma_new/index.php/Special:URIResolver/",
-    				"http://organicdatapublishing.org/enigma_new/index.php/");
+    		String url = dataRetrieved.get(v).get(i).replace("localhost:8080", "organicdatapublishing.org");
     		if (url.contains("http")) {
     			String parts[] = url.split("/");
     			String name = (parts.length>3) ?
@@ -528,9 +538,7 @@ public class TriggeredLOIViewer extends Composite {
 				  if (outputs.keySet().contains("brain_visualization")) {
 					  //This workflow returns a brain visualizations:
 					  //TODO: Assuming theres only one brainviz per tloi.
-					  String sp[] = outputs.get("brain_visualization").split("#");
-					  String id = sp[sp.length-1];
-					  loadBrainViz(id);
+					  loadBrainViz( outputs.get("brain_visualization") );
 				  }
 
 				  if (outputs.keySet().contains("shiny_visualization")) {
@@ -556,7 +564,6 @@ public class TriggeredLOIViewer extends Composite {
 	  }
     }
 
-  	@UiField IFrameElement shinyIframe;
   	private void loadShinyViz (String shinyLog) {
 		DiskREST.getDataFromWingsAsJS(shinyLog, new Callback<JavaScriptObject, Throwable>() {
 			@Override
@@ -583,27 +590,12 @@ public class TriggeredLOIViewer extends Composite {
   		return shinyobj && shinyobj.url ? shinyobj.url : "";
 	}-*/;
 
-  	private void loadBrainViz (String brainVizId) {
-		if (!brainInitialized) { 
-			brainVisualization.initialize();
-			brainInitialized = true;
-		}
-
-		DiskREST.getDataFromWingsAsJS(brainVizId, new Callback<JavaScriptObject, Throwable>() {
-			@Override
-			public void onSuccess(JavaScriptObject result) {
-				// TODO Auto-generated method stub
-				brainVisualization.loadBrainConfigurationFromJSObject(result);
-				//brainSection.getStyle().setVisibility(Visibility.VISIBLE);
-				brainSection.getStyle().setDisplay(Display.INITIAL);
-			}
-			
-			@Override
-			public void onFailure(Throwable reason) {
-				// TODO Auto-generated method stub
-				
-			}
-		});
+  	private void loadBrainViz (String brainURL) {
+		brainSection.getStyle().setDisplay(Display.INITIAL);
+		brainPanel.clear();
+        Brain brain = Brain.get();
+        brain.loadConfigFile(brainURL);
+        brainPanel.add(brain);
   	}
 
   	public static native void download(String name, String raw, String enc) /*-{
@@ -638,7 +630,7 @@ public class TriggeredLOIViewer extends Composite {
     	return r;
     }
  
-	@UiHandler("triplesbutton")
+	//@UiHandler("triplesbutton")
 	void onDlTriplesButtonClicked(ClickEvent event) {
 		GWT.log("Downloading triples...");
 		TriggeredLOI t = tloi;

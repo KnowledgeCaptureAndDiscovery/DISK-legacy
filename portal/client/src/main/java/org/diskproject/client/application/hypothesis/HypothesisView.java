@@ -1,16 +1,20 @@
 package org.diskproject.client.application.hypothesis;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.diskproject.client.Config;
 import org.diskproject.client.Utils;
 import org.diskproject.client.application.ApplicationSubviewImpl;
 import org.diskproject.client.components.hypothesis.HypothesisEditor;
+import org.diskproject.client.components.hypothesis.HypothesisItem;
 import org.diskproject.client.components.hypothesis.events.HypothesisSaveEvent;
 import org.diskproject.client.components.loader.Loader;
+import org.diskproject.client.components.searchpanel.SearchPanel;
 import org.diskproject.client.components.tloi.TriggeredLOIViewer;
 import org.diskproject.client.components.tree.TreeNode;
 import org.diskproject.client.components.tree.TreeWidget;
@@ -30,7 +34,6 @@ import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.AnchorElement;
 import com.google.gwt.dom.client.DivElement;
-import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -69,13 +72,12 @@ public class HypothesisView extends ApplicationSubviewImpl
   @UiField PaperFab addicon;
   @UiField HTMLPanel matchlist;
   @UiField HTMLPanel description;
-  @UiField HTMLPanel retryDiv;
-  @UiField AnchorElement retryLink;
+  @UiField HTMLPanel retryDiv, emptyDiv;
+  @UiField AnchorElement retryLink, addLink;
   @UiField DivElement notloi;
   
-  @UiField ListBox order;
-
   @UiField DialogBox helpDialog;
+  @UiField SearchPanel searchPanel;
   
   ListBox varList;
   Map<String, List<CheckBox>> checkMap;
@@ -103,6 +105,13 @@ public class HypothesisView extends ApplicationSubviewImpl
         me.showHypothesisList();
       }
     });
+    Event.sinkEvents(addLink, Event.ONCLICK);
+    Event.setEventListener(addLink, new EventListener() {
+        @Override
+        public void onBrowserEvent(Event event) {
+            me.onAddIconClicked(null);
+        }
+    });
   }
 
   @Override
@@ -118,6 +127,7 @@ public class HypothesisView extends ApplicationSubviewImpl
       DiskREST.setDomain(domain);
       DiskREST.setUsername(userid);
       form.initialize(userid, domain);
+      HypothesisItem.setUsenameAndDomain(userid, domain);
     }
     
     this.setHeader(toolbar);    
@@ -137,9 +147,11 @@ public class HypothesisView extends ApplicationSubviewImpl
   private void clear() {
 	notloi.removeAttribute("visible");
 	retryDiv.setVisible(false);
+	emptyDiv.setVisible(false);
     loader.setVisible(false);
     form.setVisible(false);
     tree.setVisible(false);
+    searchPanel.setVisible(false);
     description.setVisible(false);
     addicon.setVisible(false);
     matchlist.setVisible(false);
@@ -160,7 +172,8 @@ public class HypothesisView extends ApplicationSubviewImpl
       public void onSuccess(List<TreeItem> result) {
         if (result != null) {
           hypothesisList = result;
-          generateHypothesisTree();
+          //generateHypothesisTree();
+          generateHypothesisItems();
         } else {
           AppNotification.notifyFailure("Error loading hypothesis");
           showErrorWhileLoading();
@@ -178,8 +191,7 @@ public class HypothesisView extends ApplicationSubviewImpl
       public void onSuccess(List<TriggeredLOI> result) {
         if (result != null) {
           tloilist = result;
-          if (hypothesisList != null)
-             generateHypothesisTree();
+          if (hypothesisList != null) addExecutions(tloilist);
         } else {
           AppNotification.notifyFailure("Error loading trigered lines of inquiry");
           showErrorWhileLoading();
@@ -193,26 +205,47 @@ public class HypothesisView extends ApplicationSubviewImpl
       }
     });
   }
-
-	@UiHandler("order")
-	void onChange(ChangeEvent event) {
-	  generateHypothesisTree();
-	}
-
-  private void applyOrder (List<TreeItem> list)  {
-    String orderType = order.getSelectedValue();
-    if (orderType != null) {
-    	if (orderType.compareTo("dateasc") == 0) {
-			Collections.sort(hypothesisList, Utils.ascDateOrder);
-    	} else if (orderType.compareTo("datedesc") == 0) {
-			Collections.sort(hypothesisList, Utils.descDateOrder);
-    	} else if (orderType.compareTo("authorasc") == 0) {
-			Collections.sort(hypothesisList, Utils.ascAuthorOrder);
-    	} else if (orderType.compareTo("authordesc") == 0) {
-			Collections.sort(hypothesisList, Utils.descAuthorOrder);
-    	}
-    }
+  
+  private void generateHypothesisItems () {
+      clear();
+      addicon.setVisible(true);
+      description.setVisible(true);
+      searchPanel.setVisible(true);
+      
+      if (hypothesisList.size() == 0) {
+          emptyDiv.setVisible(true);
+      } else {
+          for (TreeItem hyp: hypothesisList) {
+              HypothesisItem item = new HypothesisItem(hyp.getId());
+              item.load(hyp);
+              searchPanel.addItem(hyp.getId(), item);
+          }
+          if (tloilist != null) addExecutions(tloilist);
+      }
   }
+
+    private void addExecutions (List<TriggeredLOI> tlois) {
+        for (TreeItem hyp: hypothesisList) {
+            String hid = hyp.getId();
+            HypothesisItem item = (HypothesisItem) searchPanel.getItem(hid);
+
+            List<TriggeredLOI> allexec = tlois.stream()
+                    .filter(p -> p.getParentHypothesisId() != null && p.getParentHypothesisId().equals(hid))
+                    .collect(Collectors.toList());
+            
+            Map<String, List<TriggeredLOI>> groups = new HashMap<String, List<TriggeredLOI>>();
+            for (TriggeredLOI exec: allexec) {
+                String loiid = exec.getLoiId();
+                if (!groups.containsKey(loiid)) groups.put(loiid, new ArrayList<TriggeredLOI>());
+                List<TriggeredLOI> g = groups.get(loiid);
+                g.add(exec);
+            }
+            
+            for (String loiid: groups.keySet()) {
+                item.addExecutionList(loiid, groups.get(loiid));
+            }
+        }
+    }
 
   private void generateHypothesisTree () {
     if (hypothesisList == null) return;
@@ -226,8 +259,6 @@ public class HypothesisView extends ApplicationSubviewImpl
         "A List of Hypotheses", null, null);
     TreeNode missing = new TreeNode("Missing","Orphan TLOIs",
         "TLOIs with missing LOI are displayed here", null, null);
-    
-    applyOrder(hypothesisList);
     
     HashMap<String, TreeNode> map = new HashMap<String, TreeNode>();
     for(TreeItem hyp : hypothesisList) {
@@ -427,6 +458,7 @@ public class HypothesisView extends ApplicationSubviewImpl
   @UiHandler("addicon")
   void onAddIconClicked(ClickEvent event) {
     tree.setVisible(false);
+    searchPanel.setVisible(false);
     description.setVisible(false);
     addicon.setVisible(false);
     form.setVisible(true);        

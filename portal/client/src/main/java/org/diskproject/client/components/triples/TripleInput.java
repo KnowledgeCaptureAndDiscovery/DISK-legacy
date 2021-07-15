@@ -18,7 +18,6 @@ import org.diskproject.shared.classes.vocabulary.Type;
 import org.diskproject.shared.classes.vocabulary.Vocabulary;
 
 import com.google.gwt.core.client.Callback;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;

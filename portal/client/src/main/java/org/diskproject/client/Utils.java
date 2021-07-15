@@ -1,5 +1,6 @@
 package org.diskproject.client;
 
+import org.diskproject.client.components.searchpanel.SearchableItem;
 import org.diskproject.shared.classes.common.TreeItem;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.loi.TriggeredLOI.Status;
@@ -41,6 +42,44 @@ public class Utils {
 
 	public static Comparator<TreeItem> descDateOrder = new Comparator<TreeItem>() {
 		public int compare (TreeItem l, TreeItem r) {
+			String lc = l.getCreationDate();
+			String lr = r.getCreationDate();
+			if (lc != null && lr != null) {
+				DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
+				Date dl = fm.parse(lc);
+				Date dr = fm.parse(lr);
+				if (dl.before(dr)) return -1;
+				else return 1;
+			} else if (lc != null) {
+				return -1;
+			} else if (lr != null) {
+				return 1;
+			}
+			return 0;
+		}
+	};
+
+	public static Comparator<SearchableItem> orderAscDate = new Comparator<SearchableItem>() {
+		public int compare (SearchableItem l, SearchableItem r) {
+			String lc = l.getCreationDate();
+			String lr = r.getCreationDate();
+			if (lc != null && lr != null) {
+				DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
+				Date dl = fm.parse(lc);
+				Date dr = fm.parse(lr);
+				if (dl.after(dr)) return -1;
+				else return 1;
+			} else if (lc != null) {
+				return -1;
+			} else if (lr != null) {
+				return 1;
+			}
+			return 0;
+		}
+	};
+
+	public static Comparator<SearchableItem> orderDesDate = new Comparator<SearchableItem>() {
+		public int compare (SearchableItem l, SearchableItem r) {
 			String lc = l.getCreationDate();
 			String lr = r.getCreationDate();
 			if (lc != null && lr != null) {
