@@ -203,8 +203,11 @@ public class MyHypothesesView extends ApplicationSubviewImpl
             emptyDiv.setVisible(false);
             for (TreeItem hyp: hypothesisList) {
                 HypothesisItem item = new HypothesisItem(hyp.getId());
-                item.load(hyp);
-                searchPanel.addItem(hyp.getId(), item);
+                String parentid = hyp.getParentId();
+                if (parentid == null || parentid.equals("")) {
+                    item.load(hyp);
+                    searchPanel.addItem(hyp.getId(), item);
+                }
             }
             if (tloilist != null) addExecutions(tloilist);
         }
