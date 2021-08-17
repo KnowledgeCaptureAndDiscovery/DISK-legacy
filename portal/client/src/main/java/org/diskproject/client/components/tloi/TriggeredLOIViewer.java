@@ -329,9 +329,6 @@ public class TriggeredLOIViewer extends Composite {
     DataSection.setVisible(true);
     DataLabel.setVisible(true);
     downloadbutton.setVisible(true);
-    if (this.tloi != null) {
-    	Status s = this.tloi.getStatus();
-    }
     
     int lines = 0;
     
@@ -629,29 +626,6 @@ public class TriggeredLOIViewer extends Composite {
     	}
     	return r;
     }
- 
-	//@UiHandler("triplesbutton")
-	void onDlTriplesButtonClicked(ClickEvent event) {
-		GWT.log("Downloading triples...");
-		TriggeredLOI t = tloi;
-		DiskREST.getTriggeredLOITriples(t.getId(),
-			new Callback<List<Triple>, Throwable>() {
-		  @Override
-		  public void onSuccess(List<Triple> result) {
-			  String name = (t != null) ? t.getId() + "_triples.nt" : "triples.nt";
-			  String cont = "";
-			  for (Triple t: result) {
-				  cont += t.toString() + " .\n";
-			  }
-			  GWT.log(cont);
-			  download(name, cont, "application/n-triples");
-		  }
-		  @Override
-		  public void onFailure(Throwable reason) {
-			AppNotification.notifyFailure(reason.getMessage());
-		  }
-		});
-	}
 
 	@UiHandler("runButton")
 	void onRunButtonClicked(ClickEvent event) {

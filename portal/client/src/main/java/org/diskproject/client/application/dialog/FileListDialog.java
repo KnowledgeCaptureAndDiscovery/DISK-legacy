@@ -25,6 +25,7 @@ public class FileListDialog extends DialogBox { //implements ClickHandler {
 
         setAnimationEnabled(false);
         setModal(true);
+        setText("File list");
 
         //setWidth("780px")
         //setHeight("90vh");

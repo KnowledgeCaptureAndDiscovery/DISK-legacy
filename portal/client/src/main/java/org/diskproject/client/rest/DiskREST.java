@@ -12,7 +12,6 @@ import org.diskproject.client.authentication.AuthenticatedDispatcher;
 import org.diskproject.shared.api.DiskService;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
-import org.diskproject.shared.classes.common.Triple;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
@@ -499,20 +498,6 @@ public class DiskREST {
     }).call(getDiskService()).deleteTriggeredLOI(username, domain, id);
   }  
 
-  public static void getTriggeredLOITriples(String id, 
-      final Callback<List<Triple>, Throwable> callback) {
-    REST.withCallback(new MethodCallback<List<Triple>>() {
-      @Override
-      public void onSuccess(Method method, List<Triple> response) {
-        callback.onSuccess(response);
-      }
-      @Override
-      public void onFailure(Method method, Throwable exception) {
-        callback.onFailure(exception);
-      }
-    }).call(getDiskService()).getTriggeredLOITriples(username, domain, id);
-  }
-
   /*
    * Assertions
    */
@@ -644,19 +629,6 @@ public class DiskREST {
       }
   }
 
-  public static void sparql(final String query, final Callback<String, Throwable> callback) {
-	    REST.withCallback(new MethodCallback<String>() {
-	      @Override
-	      public void onSuccess(Method method, String response) {
-	    	  callback.onSuccess(response);
-	      }
-	      @Override
-	      public void onFailure(Method method, Throwable exception) {
-	        callback.onFailure(exception);
-	      }      
-	    }).call(getDiskService()).sparql(username, domain, query);
-	  } 
-
   public static void queryExternalStore(String endpoint, String query, String variables,
       final Callback<Map<String, List<String>>, Throwable> callback) {
 	 GWT.log("variables: " + variables);
@@ -766,10 +738,10 @@ public class DiskREST {
 	}
 	
     public static void getNewExecution(String hypid, String loiid,
-        final Callback<TriggeredLOI, Throwable> callback) {
-      REST.withCallback(new MethodCallback<TriggeredLOI>() {
+        final Callback<List<TriggeredLOI>, Throwable> callback) {
+      REST.withCallback(new MethodCallback<List<TriggeredLOI>>() {
         @Override
-        public void onSuccess(Method method, TriggeredLOI response) {
+        public void onSuccess(Method method, List<TriggeredLOI> response) {
           callback.onSuccess(response);
         }
         @Override

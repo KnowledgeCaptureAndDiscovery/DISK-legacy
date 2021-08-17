@@ -366,6 +366,7 @@ public class Brain extends Composite {
 	  meshProperties.remove(roi_key);
   }
 
+  @SuppressWarnings("rawtypes")
   private native BufferGeometry<BufferGeometry> VTKLoader (String buffer) /*-{
   	return new THREE.VTKLoader().parse(buffer);
   }-*/;
@@ -382,6 +383,7 @@ public class Brain extends Composite {
 		  StaticREST.getAsString(url, new Callback<String, Throwable>() {
 			  @Override
 			  public void onSuccess(String result) {
+				  @SuppressWarnings("rawtypes")
 				  BufferGeometry bufferGeometry = VTKParser.parse(result);
 
 				  Geometry geometry = new Geometry().fromBufferGeometry(bufferGeometry);

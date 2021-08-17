@@ -25,7 +25,6 @@ import org.diskproject.server.repository.WingsAdapter;
 import org.diskproject.shared.api.DiskService;
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
-import org.diskproject.shared.classes.common.Triple;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
@@ -364,19 +363,6 @@ public class DiskResource implements DiskService {
   }
  
   /*
-   * Triples
-   */
-
-  @GET
-  @Path("{username}/{domain}/triples/{id}")
-  @Override
-  public List<Triple> getTriggeredLOITriples(@PathParam("username") String username, 
-      @PathParam("domain") String domain,
-      @PathParam("id") String id) {
-    return this.repo.getTriggeredLOITriples(username, domain, id);
-  }
-  
-  /*
    * Workflows
    */
   @GET
@@ -408,16 +394,6 @@ public class DiskResource implements DiskService {
     // Check execution status
     return WingsAdapter.get().getWorkflowRunStatus(username, domain, id);
   }  
-
-  @POST
-  @Path("{username}/{domain}/sparql")
-  @Override
-  public String sparql(
-      @PathParam("username") String username, 
-      @PathParam("domain") String domain,
-      @JsonProperty("query") String query) {
-    return this.repo.directQuery(username, domain, query);
-  }
 
   @GET
   @Path("{username}/{domain}/externalQuery")
@@ -471,7 +447,7 @@ public class DiskResource implements DiskService {
   @GET
   @Path("{username}/{domain}/execute/{hid}/{lid}")
   @Override
-  public TriggeredLOI runHypothesisAndLOI(
+  public List<TriggeredLOI> runHypothesisAndLOI(
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @PathParam("hid") String hid, 

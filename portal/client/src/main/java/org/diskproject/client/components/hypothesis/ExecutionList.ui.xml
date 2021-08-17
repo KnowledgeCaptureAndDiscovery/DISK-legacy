@@ -62,8 +62,7 @@
                 --paper-spinner-layer-4-color: var(--paper-green-500);
             }
             .exec-table-container {
-                padding-left: 10px;
-                padding-right: 5px;
+                padding: 0px 5px 5px 10px;
             }
             iron-icon.delete-button {
                 cursor: pointer;

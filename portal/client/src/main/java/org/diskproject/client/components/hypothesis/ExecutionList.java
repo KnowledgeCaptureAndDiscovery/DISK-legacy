@@ -1,10 +1,13 @@
 package org.diskproject.client.components.hypothesis;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.diskproject.client.Utils;
 import org.diskproject.client.application.dialog.CloseableDialog;
 import org.diskproject.client.application.dialog.FileListDialog;
+import org.diskproject.client.application.dialog.Narrative;
 import org.diskproject.client.application.dialog.ShinyElement;
 import org.diskproject.client.components.brain.Brain;
 import org.diskproject.client.components.searchpanel.SearchableItem;
@@ -43,7 +46,7 @@ public class ExecutionList extends SearchableItem {
 	private static Binder uiBinder = GWT.create(Binder.class);
 
 	private static String username, domain;
-	private static NumberFormat decimalFormat = NumberFormat.getFormat("#0.000");
+	public static NumberFormat decimalFormat = NumberFormat.getFormat("#0.000");
 	
 	@UiField DivElement title, description;
 	@UiField TableSectionElement tloilist;
@@ -89,6 +92,7 @@ public class ExecutionList extends SearchableItem {
 	
 	private void updateTable () {
 		List<TriggeredLOI> ordered = list;//FIXME!
+	    Collections.sort(ordered, Utils.orderTLOIs);
         Element el = null; //Pointer to pseudo elements
 
 		tloilist.removeAllChildren();
@@ -277,6 +281,24 @@ public class ExecutionList extends SearchableItem {
                 options.appendChild(el);
 			}
 
+			IronIcon iconNarrative = new IronIcon();
+			iconNarrative.addStyleName("inline-button");
+			iconNarrative.setIcon("assignment");
+            el = iconNarrative.getElement();
+			Event.sinkEvents(el, Event.ONCLICK);
+            Event.setEventListener(el, new EventListener() {
+                @Override
+                public void onBrowserEvent(Event event) {
+                    CloseableDialog dialog = new CloseableDialog();
+                    Narrative narrativeEl = new Narrative(tloi);
+                    dialog.setText("Execution narrative");
+                    dialog.add(narrativeEl);
+                    dialog.centerAndShow();
+                }
+            });
+
+			options.appendChild(el);
+
 			IronIcon iconDelete = new IronIcon();
 			iconDelete.addStyleName("delete-button");
 			iconDelete.setIcon("delete");
@@ -329,14 +351,15 @@ public class ExecutionList extends SearchableItem {
 	void onUpdateButtonClicked(ClickEvent event) {
 	    updating.setVisible(true);
 	    GWT.log("Checking " + this.parentHypothesisId + " - " + this.parentLOIId);
-	    DiskREST.getNewExecution(parentHypothesisId, parentLOIId, new Callback<TriggeredLOI, Throwable>() {
+	    DiskREST.getNewExecution(parentHypothesisId, parentLOIId, new Callback<List<TriggeredLOI>, Throwable>() {
 	        @Override
-	        public void onSuccess (TriggeredLOI result) {
+	        public void onSuccess (List<TriggeredLOI> result) {
 	            updating.setVisible(false);
 	            GWT.log("Success!");
 	            if (result == null) GWT.log(" NULL");
 	            else {
-	                list.add(result);
+	                //list.add(result);
+	                list = result;
 	                updateTable();
 	            }
 	        }

@@ -3,9 +3,10 @@ package org.diskproject.client.components.brain;
 import org.treblereel.gwt.three4g.core.BufferGeometry;
 import org.treblereel.gwt.three4g.core.bufferattributes.Float32BufferAttribute;
 
+
+@SuppressWarnings("rawtypes")
 public class VTKParser {
-	
-	public static BufferGeometry parse (String data) {
+    public static BufferGeometry parse (String data) {
 		//Assumes that the input is ASCII
 		//return parseASCII(data);
 		BufferGeometry geometry = new BufferGeometry();

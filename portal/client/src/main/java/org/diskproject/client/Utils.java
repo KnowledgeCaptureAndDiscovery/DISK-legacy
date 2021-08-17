@@ -96,6 +96,25 @@ public class Utils {
 			return 0;
 		}
 	};
+
+	public static Comparator<TriggeredLOI> orderTLOIs = new Comparator<TriggeredLOI>() {
+		public int compare (TriggeredLOI l, TriggeredLOI r) {
+			String lc = l.getDateCreated();
+			String lr = r.getDateCreated();
+			if (lc != null && lr != null) {
+				DateTimeFormat fm = DateTimeFormat.getFormat("HH:mm:ss yyyy-MM-dd");
+				Date dl = fm.parse(lc);
+				Date dr = fm.parse(lr);
+				if (dl.before(dr)) return -1;
+				else return 1;
+			} else if (lc != null) {
+				return -1;
+			} else if (lr != null) {
+				return 1;
+			}
+			return 0;
+		}
+	};
 	
 	public static Comparator<TreeItem> ascAuthorOrder = new Comparator<TreeItem>(){
 		public int compare (TreeItem l, TreeItem r) {

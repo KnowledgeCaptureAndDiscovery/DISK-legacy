@@ -88,7 +88,7 @@ public class DataQuery {
 			HttpClient httpclient = apiLogin();
 			String saveQuery = inputQuery;
 			// Make query machine readable and initialize variables
-			int offset = 0;
+			//int offset = 0;
 
 			String MachineReadableQuery = "http://organicdatacuration.org/enigma_new/api.php?action=ask&format=json&query="
 					+ inputQuery.replace(" ", "%20").replace("|", "%7C");

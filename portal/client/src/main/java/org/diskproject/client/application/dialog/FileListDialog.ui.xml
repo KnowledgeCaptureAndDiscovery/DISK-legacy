@@ -52,8 +52,13 @@
             list-style-position: inside;
             padding: 0px 10px;
         }
+        .file-container {
+            max-height: 85vh;
+            overflow-x: hidden;
+            overflow-y: scroll;
+        }
     </style>
-    <g:HTMLPanel ui:field='listContainer'/>
+    <g:HTMLPanel ui:field='listContainer' styleName="file-container"/>
 
     <div class="footer">
         <g:Button ui:field='closeButton'>Close</g:Button>

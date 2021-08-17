@@ -87,27 +87,6 @@ public class KBRepository implements TransactionsAPI {
 	    this.hackInDataProperty("hasOutputFile", "TriggeredLineOfInquiry", "string");
   }
   
-  private void stddump () { 
-	  System.out.println("CLASSES:");
-	  for (String key: cmap.keySet()) {
-		  KBObject el = cmap.get(key);
-		  if (el.isAnonymous()) {
-			  System.out.println(key + ": is anonymous");
-		  } else {
-			  System.out.println(key + ": " + el.getValueAsString());
-		  }
-	  }
-	  System.out.println("PROPERTIES:");
-	  for (String key: pmap.keySet()) {
-		  KBObject el = pmap.get(key);
-		  if (el.isAnonymous()) {
-			  System.out.println(key + ": is anonymous");
-		  } else {
-			  System.out.println(key + ": " + el.getValueAsString());
-		  }
-	  }
-  }
-  
   private void hackInDataProperty(String prop, String domain, String range) {
     String ns = ontns;
     if(!this.ontkb.containsResource(ns+prop)) {
@@ -118,6 +97,7 @@ public class KBRepository implements TransactionsAPI {
     }
   }
 
+  @SuppressWarnings("unused")
   private void hackInObjectProperty(String prop, String domain, String range) {
     String ns = ontns;
     if(!this.ontkb.containsResource(ns+prop)) {
@@ -128,6 +108,7 @@ public class KBRepository implements TransactionsAPI {
     }
   }
   
+  @SuppressWarnings("unused")
   private void hackInClass(String classname) {
     String ns = ontns;
     if(!this.ontkb.containsResource(ns+classname)) {

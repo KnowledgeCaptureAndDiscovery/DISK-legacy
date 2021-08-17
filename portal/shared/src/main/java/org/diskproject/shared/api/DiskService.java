@@ -15,7 +15,6 @@ import javax.ws.rs.Produces;
 
 import org.diskproject.shared.classes.common.Graph;
 import org.diskproject.shared.classes.common.TreeItem;
-import org.diskproject.shared.classes.common.Triple;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
@@ -256,13 +255,6 @@ public interface DiskService extends DirectRestService {
   public Boolean runHypotheses(@PathParam("username") String username, 
       @PathParam("domain") String domain);
 
-  /* Export triples */
-  @GET
-  @Path("{username}/{domain}/triples/{id}")
-  public List<Triple> getTriggeredLOITriples(@PathParam("username") String username, 
-      @PathParam("domain") String domain,
-      @PathParam("id") String id);
-
   /* Get TLOIs for Hypothesis ID and LOI ID */
   @GET
   @Path("{username}/{domain}/executions/{hid}/{lid}")
@@ -275,7 +267,7 @@ public interface DiskService extends DirectRestService {
   
   @GET
   @Path("{username}/{domain}/execute/{hid}/{lid}")
-  public TriggeredLOI runHypothesisAndLOI(
+  public List<TriggeredLOI> runHypothesisAndLOI(
       @PathParam("username") String username, 
       @PathParam("domain") String domain,
       @PathParam("hid") String hid, 
@@ -291,15 +283,6 @@ public interface DiskService extends DirectRestService {
       @PathParam("tloiid") String tloiid);
 
 
-  /* Should query the internal storage, FIXME */
-  @POST
-  @Path("{username}/{domain}/sparql")
-  public String sparql(
-      @PathParam("username") String username, 
-      @PathParam("domain") String domain,
-      @JsonProperty("query") String query);
-  
-  /* Should query the external storages, FIXME */
   @GET
   @Path("{username}/{domain}/externalQuery")  
   public Map<String, List<String>> queryExternalStore(
