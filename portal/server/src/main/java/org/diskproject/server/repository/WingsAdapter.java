@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -787,34 +788,64 @@ public class WingsAdapter {
 		List<String> returnValue = new ArrayList<String>();
 		String filetype = this.internal_server + "/export/users/" + username + "/" + domain + "/data/ontology.owl#File";
 		String fileprefix = "<" + this.internal_server + "/export/users/" + username + "/" + domain + "/data/library.owl#";
-
+		
+		
 		// Only checking that the filename is already on WINGs
-		String query = "SELECT DISTINCT ?value WHERE {\n"
+		// This will fail if the query is too long, only ask 20 at one time.
+		String queryStart = "SELECT DISTINCT ?value WHERE {\n"
 					 + "  ?value a <" + filetype + "> .\n"
 					 + "  VALUES ?value {\n";
-		for (String file: filelist) query += fileprefix + file + ">\n";
-		query += "  }\n}";
+		String queryEnd = "  }\n}";
 		
-		String pageid = "sparql";
-		List<NameValuePair> formdata = new ArrayList<NameValuePair>();
-		formdata.add(new BasicNameValuePair("query", query));
-		formdata.add(new BasicNameValuePair("format", "json"));
-		String resultjson = get(username, pageid, formdata);
-		if (resultjson == null || resultjson.equals(""))
-			return returnValue;
-		
-		JsonParser jsonParser = new JsonParser();
-		JsonObject result = jsonParser.parse(resultjson).getAsJsonObject();
-		JsonArray qbindings = result.get("results").getAsJsonObject().get("bindings").getAsJsonArray();
-
-		for (JsonElement qbinding : qbindings) {
-			JsonObject qb = qbinding.getAsJsonObject();
-			if (qb.get("value") == null)
-				continue;
-			String fileurl = qb.get("value").getAsJsonObject().get("value").getAsString();
-			String name = fileurl.replaceAll("^.*\\#", "");
-			returnValue.add(name);
+		List<Set<String>> grouped = new ArrayList<Set<String>>();
+		int size = filelist.size();
+		if (size <= 20) {
+		    grouped.add(filelist);
+		} else {
+		    int i = 0;
+		    Set<String> cur = new HashSet<String>();
+		    for (String file: filelist) {
+		        cur.add(file);
+		        i++;
+		        if (i == 20) {
+		            grouped.add(cur);
+		            cur = new HashSet<String>();
+		            i = 0;
+		        }
+		    }
+		    if (i != 0) { // That means the last one wasnt added yet
+		        grouped.add(cur);
+		    }
 		}
+		
+		for (Set<String> group: grouped) {
+		    String query = queryStart;
+		    for (String file: group) query += fileprefix + file + ">\n";
+		    query += queryEnd;
+
+		    //Doing the query
+            String pageid = "sparql";
+            List<NameValuePair> formdata = new ArrayList<NameValuePair>();
+            formdata.add(new BasicNameValuePair("query", query));
+            formdata.add(new BasicNameValuePair("format", "json"));
+            String resultjson = get(username, pageid, formdata);
+            if (resultjson == null || resultjson.equals(""))
+                return returnValue;
+            
+            JsonParser jsonParser = new JsonParser();
+            JsonObject result = jsonParser.parse(resultjson).getAsJsonObject();
+            JsonArray qbindings = result.get("results").getAsJsonObject().get("bindings").getAsJsonArray();
+
+            for (JsonElement qbinding : qbindings) {
+                JsonObject qb = qbinding.getAsJsonObject();
+                if (qb.get("value") == null)
+                    continue;
+                String fileurl = qb.get("value").getAsJsonObject().get("value").getAsString();
+                String name = fileurl.replaceAll("^.*\\#", "");
+                returnValue.add(name);
+            }
+		}
+
 		return returnValue;
 
 	}
