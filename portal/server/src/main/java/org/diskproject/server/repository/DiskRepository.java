@@ -1,6 +1,7 @@
 package org.diskproject.server.repository;
 
 import java.io.Serializable;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -2422,7 +2423,7 @@ public class DiskRepository extends KBRepository {
         
         KBObject confidenceObj = kb.getPropertyValue(obj, pmap.get("hasConfidenceValue"));
         if (confidenceObj != null)
-            tloi.setConfidenceValue(Double.parseDouble(confidenceObj.getValueAsString()));
+            tloi.setConfidenceValue(Double.valueOf(confidenceObj.getValueAsString()));
 
         ArrayList<KBObject> inputFilesObj = kb.getPropertyValues(obj, pmap.get("hasInputFile"));
         if (inputFilesObj != null && inputFilesObj.size() > 0) {
@@ -2600,22 +2601,12 @@ public class DiskRepository extends KBRepository {
                 }
                 System.out.println("binding: " + binding);
             }
+            Double confidence = tloi.getConfidenceValue();
+            DecimalFormat df = new DecimalFormat(confidence != 0 && confidence < 0.001 ?
+                    "0.#E0"
+                    : "0.###");
             
-            String pval = Double.toString(tloi.getConfidenceValue());
-            int pvallen = pval.length();
-            if (pval != null && pvallen > 3) {
-                int decimals = 0;
-                String newval = "";
-                for (int i = 0; i < pvallen; i++) {
-                    if (pval.charAt(i) != '0' && pval.charAt(i) != '.' && decimals < 2) {
-                        decimals += 1;
-                    }
-                    newval += pval.charAt(i);
-                    if (decimals >= 2) break;
-                }
-                pval = newval;
-            }
-            
+            String pval = df.format(confidence);           
             //Execution narratives
             String execution = "The Hypothesis with title: <b>" + hyp.getName()
                              + "</b> was runned <span class=\"" + tloi.getStatus() + "\">" 
@@ -3035,7 +3026,8 @@ public class DiskRepository extends KBRepository {
                                     String wingsP = WingsAdapter.get().fetchDataFromWings(username, domain, dataid);
                                     Double pval = 0.0;
                                     try {
-                                        pval = Double.parseDouble(wingsP);
+                                        //pval = Double.parseDouble(wingsP);
+                                        pval = Double.valueOf(wingsP);
                                     } catch (Exception e) {
                                         System.err.println(dataid + " is a non valid p-value");
                                     }

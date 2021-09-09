@@ -47,6 +47,8 @@ public class ExecutionList extends SearchableItem {
 
 	private static String username, domain;
 	public static NumberFormat decimalFormat = NumberFormat.getFormat("#0.000");
+	public static NumberFormat exponentFormat = NumberFormat.getFormat("#0.0E0");
+
 	
 	@UiField DivElement title, description;
 	@UiField TableSectionElement tloilist;
@@ -209,7 +211,11 @@ public class ExecutionList extends SearchableItem {
 			//p value
 			TableCellElement pval = TableCellElement.as(DOM.createTD());
 			if (curStatus == Status.SUCCESSFUL) {
-				pval.setInnerText(ExecutionList.decimalFormat.format(tloi.getConfidenceValue()));
+			    double confidence = tloi.getConfidenceValue();
+				pval.setInnerText(
+				        confidence != 0 && confidence < 0.001 ?
+				        ExecutionList.exponentFormat.format(confidence)
+				        : ExecutionList.decimalFormat.format(confidence));
 			} else if (curStatus == Status.FAILED) {
 				pval.setInnerText("-");
 			} else {
