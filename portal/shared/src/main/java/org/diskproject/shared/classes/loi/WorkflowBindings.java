@@ -185,6 +185,18 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
       description += vbinding.getVariable() + " = " + vbinding.getBinding();
       i++;
     }
+    for(VariableBinding vbinding : parameters) {
+      if(i > 0)
+        description += ", ";
+      description += vbinding.getVariable() + " = " + vbinding.getBinding();
+      i++;
+    }
+    for(VariableBinding vbinding : optionalParameters) {
+      if(i > 0)
+        description += ", ";
+      description += vbinding.getVariable() + " = " + vbinding.getBinding();
+      i++;
+    }
     if(this.meta.getHypothesis() != null) {
       if(i > 0)
         description += ", ";

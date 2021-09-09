@@ -1143,13 +1143,13 @@ public class DiskRepository extends KBRepository {
                 //System.out.println("Results proceced");
                 // Add the parameters
                 for (String param: loi.getAllWorkflowParameters()) {
-                   if (param.charAt(0) == '?') param = param.substring(1);
-                   String bind = hypBinds.get(param);
-                   if (bind != null) {
-                     List<String> abind = new ArrayList<String>();
-                     abind.add(bind);
-                     dataVarBindings.put(param, abind);
-                   }
+                    if (param.charAt(0) == '?') param = param.substring(1);
+                    String bind = hypBinds.get(param);
+                    if (bind != null) {
+                        List<String> abind = new ArrayList<String>();
+                        abind.add(bind);
+                        dataVarBindings.put(param, abind);
+                    }
                 }
                 
                 // check collections
@@ -1371,147 +1371,140 @@ public class DiskRepository extends KBRepository {
     }
 
     @SuppressWarnings("unchecked")
-    private List<WorkflowBindings> getTLOIBindings(
-        String username, String domain,
-        List<WorkflowBindings> wflowBindings,
-        Map<String, List<String>> dataVarBindings,
-        String endpoint) {
+    private List<WorkflowBindings> getTLOIBindings(String username, String domain,
+            List<WorkflowBindings> wflowBindings, Map<String, List<String>> dataVarBindings, String endpoint) {
       
-      List<WorkflowBindings> tloiBindings = new ArrayList<WorkflowBindings>();
+        List<WorkflowBindings> tloiBindings = new ArrayList<WorkflowBindings>();
       
-      for (WorkflowBindings bindings : wflowBindings) {
-
-        // For each loi Workflow binding, create an empty tloi Binding
-        WorkflowBindings tloiBinding = new WorkflowBindings(
-             bindings.getWorkflow(),
-             bindings.getWorkflowLink());
-
-        tloiBinding.setMeta(bindings.getMeta());
-        tloiBindings.add(tloiBinding);
-        
-        //System.out.println("adding parameters for " + bindings.getWorkflow());
-        // Add parameters
-        for (VariableBinding param: bindings.getParameters()) {
-          String binding = param.getBinding();
-          if (binding.charAt(0)=='?') binding = binding.substring(1);
-          //System.out.println("param binding: " + binding);
-          if (dataVarBindings.containsKey(binding)) {
-              List<String> possibleBindings = dataVarBindings.get(binding);
-              if (possibleBindings.size() == 1) {
-                  param.setBinding(possibleBindings.get(0));
-              } else {
-                  System.out.println("more than one value for " + binding);
-              }
-          } else {
-              System.out.println("dict does not contain " + binding);
-          }
-        }
-
-        // Add optional parameters
-        for (VariableBinding param: bindings.getOptionalParameters()) {
-          String binding = param.getBinding();
-          if (binding.charAt(0)=='?') binding = binding.substring(1);
-          //System.out.println("param binding: " + binding);
-          if (dataVarBindings.containsKey(binding)) {
-              List<String> possibleBindings = dataVarBindings.get(binding);
-              if (possibleBindings.size() == 1) {
-                  param.setBinding(possibleBindings.get(0));
-              } else {
-                  System.out.println("more than one value for optional " + binding);
-              }
-          } else {
-              //System.out.println("dict does not contain optional " + binding);
-          }
-        }
-        // CHECK ^
-      
-      for (VariableBinding vbinding : bindings.getBindings()) {
-        // For each Variable binding, check :
-        // - If this variable expects a collection or single values
-        // - Check the binding values from the data store
-        String binding = vbinding.getBinding();
-        
-        Matcher collmat = varCollPattern.matcher(binding);
-        Matcher mat = varPattern.matcher(binding);
-        
-        // Check if this binding is meant for a collection
-        // Also get the sparql variable
-        boolean isCollection = false;
-        String sparqlvar = null;
-        if(collmat.find() && dataVarBindings.containsKey(collmat.group(1))) {
-          sparqlvar = collmat.group(1);
-          isCollection = true;
-        }
-        else if(mat.find() && dataVarBindings.containsKey(mat.group(1))) {
-          sparqlvar = mat.group(1);
-        }
-        
-        if(sparqlvar != null) {
-          // Get the data bindings for the sparql variable
-          List<String> dsurls = dataVarBindings.get(sparqlvar);
-          
-          // Checks if the bindings are input files.
-          boolean bindingsAreFiles = true;
-          for (String candurl: dsurls) {
-              if (!candurl.startsWith("http")) {
-                  bindingsAreFiles = false;
-                  break;
-              }
-          }
-
-          // aAl datasets Wings names
-          List<String> dsnames = new ArrayList<String>();
-
-          // Check hashes, create local name and upload data:
-          if (bindingsAreFiles) {
-              Map<String, String> urlToName = addDataToWings(username, domain, dsurls, endpoint);
-              for(String dsurl : dsurls) {
-                String dsname = urlToName.containsKey(dsurl) ? urlToName.get(dsurl) : dsurl.replaceAll("^.*\\/", "");
-                dsnames.add(dsname);
-              }
-          } else {
-              for(String dsurl : dsurls) {
-                String dsname = dsurl.replaceAll("^.*\\/", "");
-                dsnames.add(dsname);
-              }
-          }
-          
-          // If Collection, all datasets go to same workflow
-          if (isCollection) {
-              // This variable expects a collection. Modify the existing tloiBinding values,
-              // collections of non-files are send as comma separated values:
-              for (WorkflowBindings tmpBinding : tloiBindings) {
-                  VariableBinding newVB = new VariableBinding( vbinding.getVariable(), dsnames.toString());
-                  tmpBinding.addBinding(newVB);
-              }
-          } else {
-            // This variable expects a single file. Add new tloi bindings for each dataset
-            List<WorkflowBindings> newTloiBindings = new ArrayList<WorkflowBindings>();
-            for(WorkflowBindings tmpBinding : tloiBindings) {
-              for(String dsname: dsnames) {
-                ArrayList<VariableBinding> newBindings = (ArrayList<VariableBinding>) SerializationUtils
-                    .clone((Serializable) tmpBinding.getBindings());
-                WorkflowBindings newWorkflowBindings = new WorkflowBindings(
-                    bindings.getWorkflow(), 
-                    bindings.getWorkflowLink(), 
-                    newBindings,
-                    bindings.getParameters(),
-                    bindings.getOptionalParameters());
-                newWorkflowBindings.addBinding(new VariableBinding(
-                    vbinding.getVariable(),
-                    dsname
-                ));
-                newWorkflowBindings.setMeta(bindings.getMeta());
-                newTloiBindings.add(newWorkflowBindings);
-              }
+        for (WorkflowBindings bindings : wflowBindings) { //FOR EACH WORKFLOW
+            // For each Workflow, create an empty copy to set the values
+            WorkflowBindings tloiBinding = new WorkflowBindings(
+                    bindings.getWorkflow(),
+                    bindings.getWorkflowLink());
+            tloiBinding.setMeta(bindings.getMeta());
+            tloiBindings.add(tloiBinding);
+            
+            // Add parameters values
+            for (VariableBinding param: bindings.getParameters()) {
+                String binding = param.getBinding();
+                if (binding.charAt(0)=='?') binding = binding.substring(1);
+                if (dataVarBindings.containsKey(binding)) {
+                    List<String> possibleBindings = dataVarBindings.get(binding);
+                    if (possibleBindings.size() == 1) {
+                        //param.setBinding(possibleBindings.get(0));
+                        tloiBinding.addParameter(new VariableBinding(param.getVariable(), possibleBindings.get(0)));
+                    } else {
+                        System.out.println("more than one value for " + binding);
+                    }
+                } else {
+                    System.out.println("dict does not contain " + binding);
+                }
             }
-            tloiBindings = newTloiBindings;
-          }
-        }
-      }
 
-      }
-    return tloiBindings;
+            // Add optional parameters
+            for (VariableBinding param: bindings.getOptionalParameters()) {
+                String binding = param.getBinding();
+                if (binding.charAt(0)=='?') binding = binding.substring(1);
+                //System.out.println("param binding: " + binding);
+                if (dataVarBindings.containsKey(binding)) {
+                    List<String> possibleBindings = dataVarBindings.get(binding);
+                    if (possibleBindings.size() == 1) {
+                        //param.setBinding(possibleBindings.get(0));
+                        tloiBinding.addOptionalParameter(new VariableBinding(param.getVariable(), possibleBindings.get(0)));
+                    } else {
+                        System.out.println("more than one value for optional " + binding);
+                    }
+                } else {
+                    //System.out.println("dict does not contain optional " + binding);
+                }
+            }
+            // CHECK ^
+      
+            for (VariableBinding vbinding : bindings.getBindings()) { //Normal variable bindings.
+                // For each Variable binding, check :
+                // - If this variable expects a collection or single values
+                // - Check the binding values from the data store
+                String binding = vbinding.getBinding();
+                Matcher collmat = varCollPattern.matcher(binding);
+                Matcher mat = varPattern.matcher(binding);
+        
+                // Check if this binding is meant for a collection
+                // Also get the sparql variable
+                boolean isCollection = false;
+                String sparqlvar = null;
+                if(collmat.find() && dataVarBindings.containsKey(collmat.group(1))) {
+                    sparqlvar = collmat.group(1);
+                    isCollection = true;
+                } else if(mat.find() && dataVarBindings.containsKey(mat.group(1))) {
+                    sparqlvar = mat.group(1);
+                }
+        
+                if (sparqlvar != null) {
+                    // Get the data bindings for the sparql variable
+                    List<String> dsurls = dataVarBindings.get(sparqlvar);
+                  
+                    // Checks if the bindings are input files.
+                    boolean bindingsAreFiles = true;
+                    for (String candurl: dsurls) {
+                        if (!candurl.startsWith("http")) {
+                            bindingsAreFiles = false;
+                            break;
+                        }
+                    }
+
+                    // Datasets Wings names
+                    List<String> dsnames = new ArrayList<String>();
+
+                    // Check hashes, create local name and upload data:
+                    if (bindingsAreFiles) {
+                        Map<String, String> urlToName = addDataToWings(username, domain, dsurls, endpoint);
+                        for(String dsurl : dsurls) {
+                            String dsname = urlToName.containsKey(dsurl) ? urlToName.get(dsurl) : dsurl.replaceAll("^.*\\/", "");
+                            dsnames.add(dsname);
+                        }
+                    } else {
+                        for(String dsurl : dsurls) {
+                            String dsname = dsurl.replaceAll("^.*\\/", "");
+                            dsnames.add(dsname);
+                        }
+                    }
+                  
+                    // If Collection, all datasets go to same workflow
+                    if (isCollection) {
+                        // This variable expects a collection. Modify the existing tloiBinding values,
+                        // collections of non-files are send as comma separated values:
+                        tloiBinding.addBinding(new VariableBinding( vbinding.getVariable(), dsnames.toString()));
+                        
+                    } else {
+                        // This variable expects a single file. Add new tloi bindings for each dataset
+                        List<WorkflowBindings> newTloiBindings = new ArrayList<WorkflowBindings>();
+                        for (WorkflowBindings tmpBinding : tloiBindings) { //For all already processed workflow bindings 
+                            for (String dsname: dsnames) {
+                                ArrayList<VariableBinding> newBindings = (ArrayList<VariableBinding>) SerializationUtils
+                                        .clone((Serializable) tmpBinding.getBindings());
+                                ArrayList<VariableBinding> newParameters = (ArrayList<VariableBinding>) SerializationUtils
+                                        .clone((Serializable) tmpBinding.getParameters());
+                                ArrayList<VariableBinding> newOptionalParameters = (ArrayList<VariableBinding>) SerializationUtils
+                                        .clone((Serializable) tmpBinding.getOptionalParameters());
+
+                                WorkflowBindings newWorkflowBindings = new WorkflowBindings(
+                                        bindings.getWorkflow(), 
+                                        bindings.getWorkflowLink(), 
+                                        newBindings,
+                                        newParameters,
+                                        newOptionalParameters
+                                );
+                                newWorkflowBindings.addBinding(new VariableBinding(vbinding.getVariable(), dsname));
+                                newWorkflowBindings.setMeta(bindings.getMeta());
+                                newTloiBindings.add(newWorkflowBindings);
+                            }
+                        }
+                        tloiBindings = newTloiBindings;
+                    }
+                }
+            }
+        }
+        return tloiBindings;
     }
     
     private Map<String, String> addDataToWings(String username, String domain, List<String> dsurls, String endpoint) {
@@ -2650,7 +2643,8 @@ public class DiskRepository extends KBRepository {
       String dataQuery1 = dataQuery.replaceAll("^(//)n${1}",""); //this is necessary to replace the new line characters in query
       String[] querylist = dataQuery1.split("\\.");
       String rdfs_label = "rdfs:label";
-      //storing properties
+      
+      try {
       Map<String, String> properties = new HashMap<String, String>();
       for(int i = 0; i < querylist.length; i++) {
           if(querylist[i].contains(rdfs_label)){
@@ -2688,7 +2682,6 @@ public class DiskRepository extends KBRepository {
               }
           }
       }
-
       //Now we traverse the path
       String path = "";
       for (String key : inputs.keySet()) {
@@ -2705,6 +2698,10 @@ public class DiskRepository extends KBRepository {
           }
 //      System.out.println("Narrative"+path);
       return path;
+      } catch (Exception e) {
+        return "Error generating narrative";
+    }
+
   }
 
 
