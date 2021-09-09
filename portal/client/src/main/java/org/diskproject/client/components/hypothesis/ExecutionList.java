@@ -281,23 +281,25 @@ public class ExecutionList extends SearchableItem {
                 options.appendChild(el);
 			}
 
-			IronIcon iconNarrative = new IronIcon();
-			iconNarrative.addStyleName("inline-button");
-			iconNarrative.setIcon("assignment");
-            el = iconNarrative.getElement();
-			Event.sinkEvents(el, Event.ONCLICK);
-            Event.setEventListener(el, new EventListener() {
-                @Override
-                public void onBrowserEvent(Event event) {
-                    CloseableDialog dialog = new CloseableDialog();
-                    Narrative narrativeEl = new Narrative(tloi);
-                    dialog.setText("Execution narrative");
-                    dialog.add(narrativeEl);
-                    dialog.centerAndShow();
-                }
-            });
+			if (curStatus == Status.SUCCESSFUL) {
+                IronIcon iconNarrative = new IronIcon();
+                iconNarrative.addStyleName("inline-button");
+                iconNarrative.setIcon("assignment");
+                el = iconNarrative.getElement();
+                Event.sinkEvents(el, Event.ONCLICK);
+                Event.setEventListener(el, new EventListener() {
+                    @Override
+                    public void onBrowserEvent(Event event) {
+                        CloseableDialog dialog = new CloseableDialog();
+                        Narrative narrativeEl = new Narrative(tloi);
+                        dialog.setText("Execution narrative");
+                        dialog.add(narrativeEl);
+                        dialog.centerAndShow();
+                    }
+                });
 
-			options.appendChild(el);
+                options.appendChild(el);
+			}
 
 			IronIcon iconDelete = new IronIcon();
 			iconDelete.addStyleName("delete-button");

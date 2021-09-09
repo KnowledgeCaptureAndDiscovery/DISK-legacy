@@ -52,10 +52,18 @@
 			.hyp-desc-row {
 			    padding: 0px 5px 5px 30px;
 			}
-			.edit-hyp-button {
+			.edit-button-hyp {
 			    width: 32px;
 			    height: 32px;
 			    padding: 3px;
+			}
+			.del-button-hyp {
+			    width: 32px;
+			    height: 32px;
+			    padding: 5px;
+			}
+			.del-button-hyp:hover {
+                color: darkred;
 			}
 		</style>
 
@@ -64,7 +72,8 @@
 				<iron-icon icon="help-outline" style="color: orange; padding: 4px; height: 24px;"></iron-icon>
 				<div class="title" ui:field="title"></div>
 				<div class="info" ui:field="info"></div>
-				<p:PaperIconButton icon="create" ui:field="editButton" class="edit-hyp-button"></p:PaperIconButton>
+				<p:PaperIconButton icon="create" ui:field="editButton" class="edit-button-hyp"></p:PaperIconButton>
+				<p:PaperIconButton icon="delete" ui:field="deleteButton" class="del-button-hyp"></p:PaperIconButton>
     		</div>
     		<hr/>
     		<div class="hyp-desc-row">

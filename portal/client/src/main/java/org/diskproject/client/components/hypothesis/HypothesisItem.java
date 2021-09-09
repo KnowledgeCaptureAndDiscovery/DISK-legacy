@@ -6,9 +6,12 @@ import java.util.Map;
 
 import org.diskproject.client.components.searchpanel.SearchableItem;
 import org.diskproject.client.place.NameTokens;
+import org.diskproject.client.rest.AppNotification;
+import org.diskproject.client.rest.DiskREST;
 import org.diskproject.shared.classes.common.TreeItem;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 
+import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.LabelElement;
@@ -20,6 +23,7 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.Window;
 import com.vaadin.polymer.paper.widget.PaperIconButton;
 
 public class HypothesisItem extends SearchableItem {
@@ -27,7 +31,7 @@ public class HypothesisItem extends SearchableItem {
 	private static Binder uiBinder = GWT.create(Binder.class);
 	
 	@UiField DivElement title, description, info, executions;
-	@UiField PaperIconButton editButton;
+	@UiField PaperIconButton editButton, deleteButton;
 	@UiField LabelElement tloiLabel;
 	private String strTitle, strDescription, strAuthor, strDate;
 	private String id;
@@ -116,5 +120,24 @@ public class HypothesisItem extends SearchableItem {
 	void onEditButtonClicked(ClickEvent event) {
 		String token = NameTokens.hypotheses + "/" + HypothesisItem.username +"/" + HypothesisItem.domain + "/" + this.id;
 		History.newItem(token); 
+	}
+
+	@UiHandler("deleteButton")
+	void onDelButtonClicked(ClickEvent event) {
+	    HypothesisItem me = this;
+		if (Window.confirm("Are you sure you want to delete " + this.strTitle)) {
+          DiskREST.deleteHypothesis(this.id, new Callback<Void, Throwable>() {
+            @Override
+            public void onFailure(Throwable reason) {
+              AppNotification.notifyFailure(reason.getMessage());
+            }
+            @Override
+            public void onSuccess(Void result) {
+              AppNotification.notifySuccess("Deleted", 500);
+              //TODO: do some kind of update to remove this element
+              me.setVisible(false);
+            }
+          });
+        }
 	}
 }
