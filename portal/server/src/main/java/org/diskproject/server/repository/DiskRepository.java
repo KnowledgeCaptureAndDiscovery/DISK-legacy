@@ -518,8 +518,11 @@ public class DiskRepository extends KBRepository {
                         for (DataResult solution: solutions.get(dataSourceName)) {
                             String valUrl = solution.getValue(name);
                             String valName = solution.getName(name);
+                            String userLabel = solution.getValue(name + "Label");
                             String label = solution.getValue("label");
-                            if (label == null && valName != null) {
+                            if (userLabel != null) {
+                                label = userLabel;
+                            } else if (label == null && valName != null) {
                                 label = valName;
                             } else {
                                 label = valUrl.replaceAll("^.*\\/", "");
@@ -539,13 +542,14 @@ public class DiskRepository extends KBRepository {
                     
                     //Add all options
                     for (List<List<String>> sameLabelOptions: labelToOption.values()) {
+
                         if (sameLabelOptions.size() == 1) {
                             options.add(sameLabelOptions.get(0).subList(0, 2));
                         } else { //There's more than one option with the same label
                             boolean allTheSame = true;
                             String lastValue = sameLabelOptions.get(0).get(0); //Comparing IDs
                             for (List<String> candOption: sameLabelOptions) {
-                                if (lastValue != candOption.get(0)) {
+                                if (!lastValue.equals(candOption.get(0))) {
                                     allTheSame = false;
                                     break;
                                 }
