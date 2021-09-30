@@ -641,7 +641,7 @@ public class DiskRepository extends KBRepository {
         if (variables == null || variables.contentEquals("")) {
             queryVars = "*";
         } else {
-            String[] vars = variables.replaceAll("\s+", " ").split(" ");
+            String[] vars = variables.replaceAll("\\s+", " ").split(" ");
             for (String v: vars) {
                 if (v.charAt(0) != '?')
                     return dataVarBindings;
