@@ -109,7 +109,7 @@
         <ns0:hasQuestionVariable rdf:resource="http://disk-project.org/resources/question/HQ1V1"/>
         <ns0:hasQuestionVariable rdf:resource="http://disk-project.org/resources/question/HQ1V2"/>
         <ns0:hasQuestionVariable rdf:resource="http://disk-project.org/resources/question/HQ1V3"/>
-        <rdf:label>Is the effect size of &lt;Genotype&gt; in &lt;Brain Imaging Trait&gt; associated with &lt;Demographic Attribute&gt;</rdf:label>
+        <rdfs:label>Is the effect size of &lt;Genotype&gt; in &lt;Brain Imaging Trait&gt; associated with &lt;Demographic Attribute&gt;</rdfs:label>
     </owl:NamedIndividual>
     
 
@@ -155,7 +155,7 @@
         <ns0:hasQuestionTemplate>Is ?BrainCharacteristic associated with ?NeurologicalDisorder</ns0:hasQuestionTemplate>
         <ns0:hasQuestionVariable rdf:resource="http://disk-project.org/resources/question/HQ2V1"/>
         <ns0:hasQuestionVariable rdf:resource="http://disk-project.org/resources/question/HQ2V2"/>
-        <rdf:label>Is &lt;Brain Characteristic&gt; associated with &lt;Neurological Disorder&gt; in comparison to healthy controls</rdf:label>
+        <rdfs:label>Is &lt;Brain Characteristic&gt; associated with &lt;Neurological Disorder&gt; in comparison to healthy controls</rdfs:label>
     </owl:NamedIndividual>
     
 
@@ -197,7 +197,7 @@ optional { ?DemographicAttribute hyp:moreThan ?minAge }</ns0:hasQuestionPattern>
         <ns0:hasQuestionVariable rdf:resource="http://disk-project.org/resources/question/HQ3V1"/>
         <ns0:hasQuestionVariable rdf:resource="http://disk-project.org/resources/question/HQ3V2"/>
         <ns0:hasQuestionVariable rdf:resource="http://disk-project.org/resources/question/HQ3V3"/>
-        <rdf:label>Is the effect size of &lt;Genotype&gt; on &lt;Brain Imaging Trait&gt; of &lt;Region&gt; associated with &lt;Demographic Attribute&gt;</rdf:label>
+        <rdfs:label>Is the effect size of &lt;Genotype&gt; on &lt;Brain Imaging Trait&gt; of &lt;Region&gt; associated with &lt;Demographic Attribute&gt;</rdfs:label>
     </owl:NamedIndividual>
     
 
