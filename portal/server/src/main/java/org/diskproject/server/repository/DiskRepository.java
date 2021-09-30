@@ -155,13 +155,9 @@ public class DiskRepository extends KBRepository {
             return;
         try {
             this.neuroontkb = fac.getKB(KBConstants.NEUROURI(), OntSpec.PLAIN, false, true);
-            System.out.println("GET KB: " + KBConstants.NEUROURI());
             this.hypontkb = fac.getKB(KBConstants.HYPURI(), OntSpec.PLAIN, false, true);
-            System.out.println("GET KB: " + KBConstants.HYPURI());
             this.omicsontkb = fac.getKB(KBConstants.OMICSURI(), OntSpec.PLAIN, false, true);
-            System.out.println("GET KB: " + KBConstants.OMICSURI());
             this.questionkb = fac.getKB(KBConstants.QUESTIONSURI(), OntSpec.PLAIN, false, true);
-            System.out.println("GET KB: " + KBConstants.QUESTIONSURI());
             
             this.initializeDataAdapters();
             
@@ -188,7 +184,7 @@ public class DiskRepository extends KBRepository {
     }
 
     public void reloadKBCaches () {
-        KBAPI[] kbs = {this.ontkb, this.hypontkb, this.omicsontkb, this.neuroontkb, this.hypontkb};
+        KBAPI[] kbs = {this.ontkb, this.hypontkb, this.omicsontkb, this.neuroontkb, this.hypontkb, this.questionkb};
 
         try {
             this.start_write();
@@ -431,7 +427,7 @@ public class DiskRepository extends KBRepository {
             this.start_read();
             KBObject hypcls = this.cmap.get("Question");
             KBObject typeprop = kb.getProperty(KBConstants.RDFNS() + "type");
-            KBObject labelprop = kb.getProperty(KBConstants.RDFNS() + "label");
+            KBObject labelprop = kb.getProperty(KBConstants.RDFSNS() + "label");
             for (KBTriple t : kb.genericTripleQuery(null, typeprop, hypcls)) {
                 KBObject question = t.getSubject();
                 KBObject name = kb.getPropertyValue(question, labelprop);
