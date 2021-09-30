@@ -211,13 +211,23 @@ public class QuestionFiller extends Composite {
 	  optList.clear();
 	  optList.addItem("<" + q.getVarName().substring(1) + ">", "");
 	  optList.getElement().getFirstChildElement().setAttribute("disabled", "disabled");
+
 	  for (List<String> idname: variableOptions) {
-		  String[] parts = idname.get(0).split("/");
-		  String name = parts[parts.length - 1];
-		  if (name.length() > 20) {
-			  name = name.substring(0, 20) +  "...";
-		  }
-		  optList.addItem(name, idname.get(1));
+	      String id, name;
+	      if (idname.size() >= 2) {
+	          id = idname.get(0);
+	          name = idname.get(1);
+	          if (name.equals("TH")) name = "Thickness";
+	          if (name.equals("SA")) name = "Surface Area";
+	          name = name.replaceAll("_", " ");
+	          //Add spaces when change capitalization
+	          name = name.replaceAll("([a-z])([A-Z])", "$1 $2");
+              if (name.length() > 30)
+                  name = name.substring(0, 30) +  "...";
+
+              optList.addItem(name, id);
+	      }
+
 	  }
   }
 

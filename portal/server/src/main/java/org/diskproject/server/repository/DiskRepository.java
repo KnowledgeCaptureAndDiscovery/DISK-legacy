@@ -25,6 +25,9 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.apache.commons.lang.SerializationUtils;
+import org.diskproject.server.adapters.DataAdapter;
+import org.diskproject.server.adapters.DataResult;
+import org.diskproject.server.adapters.sparqlAdapter;
 //import org.diskproject.server.repository.GmailService.MailMonitor;
 import org.diskproject.server.util.Config;
 import org.diskproject.server.util.DataQuery;
@@ -50,6 +53,8 @@ import org.diskproject.shared.classes.vocabulary.Type;
 import org.diskproject.shared.classes.workflow.Variable;
 import org.diskproject.shared.classes.workflow.VariableBinding;
 import org.diskproject.shared.classes.workflow.WorkflowRun;
+
+import com.mxgraph.io.graphml.mxGraphMlKey.keyForValues;
 
 import edu.isi.kcap.ontapi.KBAPI;
 import edu.isi.kcap.ontapi.KBObject;
@@ -77,8 +82,8 @@ public class DiskRepository extends KBRepository {
     //static GmailService gmail;
     static DataMonitor dataThread;
 
-    private Map<String, Map<String,String>> endpointList;
     private Map<String, List<List<String>>> optionsCache;
+    private Map<String, DataAdapter> dataAdapters;
 
     public static void main(String[] args) {
         get();
@@ -99,6 +104,7 @@ public class DiskRepository extends KBRepository {
             gmail = GmailService.get();
         }*/
         setConfiguration(KBConstants.DISKURI(), KBConstants.DISKNS());
+        dataAdapters = new HashMap<String, DataAdapter>();
         initializeKB(); // Here
         monitor = Executors.newScheduledThreadPool(0);
         executor = Executors.newFixedThreadPool(2);
@@ -149,13 +155,11 @@ public class DiskRepository extends KBRepository {
             return;
         try {
             this.neuroontkb = fac.getKB(KBConstants.NEUROURI(), OntSpec.PLAIN, false, true);
-            System.out.println("GET KB: " + KBConstants.NEUROURI());
             this.hypontkb = fac.getKB(KBConstants.HYPURI(), OntSpec.PLAIN, false, true);
-            System.out.println("GET KB: " + KBConstants.HYPURI());
             this.omicsontkb = fac.getKB(KBConstants.OMICSURI(), OntSpec.PLAIN, false, true);
-            System.out.println("GET KB: " + KBConstants.OMICSURI());
             this.questionkb = fac.getKB(KBConstants.QUESTIONSURI(), OntSpec.PLAIN, false, true);
-            System.out.println("GET KB: " + KBConstants.QUESTIONSURI());
+            
+            this.initializeDataAdapters();
             
             this.vocabularies = new HashMap<String, Vocabulary>();
             
@@ -180,7 +184,7 @@ public class DiskRepository extends KBRepository {
     }
 
     public void reloadKBCaches () {
-        KBAPI[] kbs = {this.ontkb, this.hypontkb, this.omicsontkb, this.neuroontkb, this.hypontkb};
+        KBAPI[] kbs = {this.ontkb, this.hypontkb, this.omicsontkb, this.neuroontkb, this.hypontkb, this.questionkb};
 
         try {
             this.start_write();
@@ -205,9 +209,8 @@ public class DiskRepository extends KBRepository {
         return Config.get().getProperties();
     }
     
-    private Map<String, Map<String,String>> getEndpoints () {
-        if (endpointList != null) return endpointList;
-        
+    private void initializeDataAdapters () {
+        //Reads data adapters from config file.
         PropertyListConfiguration cfg = this.getConfig();
         Map<String, Map<String,String>> endpoints = new HashMap<String, Map<String,String>>();
         Iterator<String> a = cfg.getKeys("endpoints");
@@ -226,10 +229,25 @@ public class DiskRepository extends KBRepository {
             }
         }
         
-        endpointList = endpoints;
-        return endpointList;
-    }
+        for (String name: endpoints.keySet()) {
+            Map<String,String> cur = endpoints.get(name);
+            String curURI = cur.get("URI"),
+                   curType = "SPARQL", //cur.get("type") //FIXME: ADD THIS TO CONFIG FILE:
+                   curUser = cur.get("username"),
+                   curPass = cur.get("password");
 
+            switch (curType) {
+            case "SPARQL":
+                DataAdapter curAdapter = new sparqlAdapter(curURI, name, curUser, curPass);
+                this.dataAdapters.put(curURI, curAdapter);
+                break;
+
+            default:
+                break;
+            }
+        }
+    }
+    
     /**
      * Vocabulary Initialization
      */
@@ -409,7 +427,7 @@ public class DiskRepository extends KBRepository {
             this.start_read();
             KBObject hypcls = this.cmap.get("Question");
             KBObject typeprop = kb.getProperty(KBConstants.RDFNS() + "type");
-            KBObject labelprop = kb.getProperty(KBConstants.RDFNS() + "label");
+            KBObject labelprop = kb.getProperty(KBConstants.RDFSNS() + "label");
             for (KBTriple t : kb.genericTripleQuery(null, typeprop, hypcls)) {
                 KBObject question = t.getSubject();
                 KBObject name = kb.getPropertyValue(question, labelprop);
@@ -484,35 +502,69 @@ public class DiskRepository extends KBRepository {
                         options.add(opt);
                     }
                 } else if (constraints != null) {
-                    query = "PREFIX xsd: <" + KBConstants.XSDNS() + ">\n" +
+                    query = "PREFIX xsd:  <" + KBConstants.XSDNS() + ">\n" +
                             "PREFIX rdfs: <" + KBConstants.RDFSNS() + ">\n" +
-                            "PREFIX rdf: <" + KBConstants.RDFNS() + ">\n" +
+                            "PREFIX rdf:  <" + KBConstants.RDFNS() + ">\n" +
                             "SELECT DISTINCT ?label " + varname + " WHERE {\n  " +
                             constraints.getValueAsString() + "\n  " +
-                            "OPTIONAL { " + varname + " rdfs:label ?label . }\n  }";
-                    //System.out.println(query);
-                    List<List<SparqlQuerySolution>> solutions = queryAllEndpoints(kb, query);
-                    for (List<SparqlQuerySolution> dataSolutions : solutions) {
-                        String url = null;
-                        String label = null;
-                        for (SparqlQuerySolution solution : dataSolutions) {
-                            String var = solution.getVariable();
-                            KBObject obj = solution.getObject();
-                            if (obj != null) {
-                                String val = obj.isLiteral() ? obj.getValueAsString() : obj.getID();
-                                if (var.equals(name)) {
-                                    url = val;
-                                } else if (var.equals("?label")) {
-                                    label = val;
-                                }
+                            "OPTIONAL { " + varname + " rdfs:label ?label . }\n}";
+
+                    Map<String, List<DataResult>> solutions = queryAllDataProviders(query);
+                    
+                    // To check that all labels are only once
+                    Map<String, List<List<String>>> labelToOption = new HashMap<String, List<List<String>>>();
+                    
+                    for (String dataSourceName: solutions.keySet()) {
+                        for (DataResult solution: solutions.get(dataSourceName)) {
+                            String valUrl = solution.getValue(name);
+                            String valName = solution.getName(name);
+                            String userLabel = solution.getValue(name + "Label");
+                            String label = solution.getValue("label");
+                            if (userLabel != null) {
+                                label = userLabel;
+                            } else if (label == null && valName != null) {
+                                label = valName;
+                            } else {
+                                label = valUrl.replaceAll("^.*\\/", "");
+                            }
+
+                            if (valUrl != null && label != null) {
+                                List<List<String>> sameLabelOptions = labelToOption.containsKey(label) ? labelToOption.get(label) : new ArrayList<List<String>>();
+                                List<String> thisOption = new ArrayList<String>();
+                                thisOption.add(valUrl);
+                                thisOption.add(label);
+                                thisOption.add(dataSourceName);
+                                sameLabelOptions.add(thisOption);
+                                labelToOption.put(label, sameLabelOptions);
                             }
                         }
-                        if (url != null) {
-                            if (label == null) label = url;
-                            List<String> opt = new ArrayList<String>();
-                            opt.add(url);
-                            opt.add(label);
-                            options.add(opt);
+                    }
+                    
+                    //Add all options
+                    for (List<List<String>> sameLabelOptions: labelToOption.values()) {
+
+                        if (sameLabelOptions.size() == 1) {
+                            options.add(sameLabelOptions.get(0).subList(0, 2));
+                        } else { //There's more than one option with the same label
+                            boolean allTheSame = true;
+                            String lastValue = sameLabelOptions.get(0).get(0); //Comparing IDs
+                            for (List<String> candOption: sameLabelOptions) {
+                                if (!lastValue.equals(candOption.get(0))) {
+                                    allTheSame = false;
+                                    break;
+                                }
+                            }
+                            
+                            if (allTheSame) {
+                                options.add(sameLabelOptions.get(0).subList(0, 2));
+                            } else {
+                                for (List<String> candOption: sameLabelOptions) {
+                                    List<String> newOption = new ArrayList<String>();
+                                    newOption.add(candOption.get(0));
+                                    newOption.add(candOption.get(1) + " (" + candOption.get(2) + ")");
+                                    options.add(newOption);
+                                }
+                            }
                         }
                     }
                 }
@@ -520,10 +572,11 @@ public class DiskRepository extends KBRepository {
                 this.end();
             }
         } catch (Exception e) {
-            e.printStackTrace();
             if (is_in_transaction()) {
-                System.out.println("Exception on transaction!");
+                System.err.println("ERROR:loadVariableOptions Exception with a transaction open.");
                 this.end();
+            } else {
+                e.printStackTrace();
             }
         }
         //System.out.println("options: " + options.size());
@@ -533,56 +586,17 @@ public class DiskRepository extends KBRepository {
     /*
      * Querying
      */    
-
-    private List<List<SparqlQuerySolution>> queryEndpoint (KBAPI kb, String query, String endpoint) {
-        List<List<SparqlQuerySolution>> solution = new ArrayList<List<SparqlQuerySolution>>();
-        Map<String, Map<String, String>> allEndpoints = this.getEndpoints();
-        
-        for (String key: allEndpoints.keySet()) {
-            String uri = allEndpoints.get(key).get("URI");
-            String user = allEndpoints.get(key).get("username");
-            String pass = allEndpoints.get(key).get("password");
-            if (uri.equals(endpoint)) {
-                try {
-                    ArrayList<ArrayList<SparqlQuerySolution>> s = kb.sparqlQueryRemote(query, uri, user, pass);
-                    if (s != null) {
-                        solution.addAll(s);
-                    }
-                } catch (Exception e) {
-                    System.out.println("ERROR querying " + uri);
-                    e.printStackTrace(); 
-                }
-            }
-        }
-        return solution;
-    }
     
-    private List<List<SparqlQuerySolution>> queryAllEndpoints (KBAPI kb, String query) {
-        List<List<SparqlQuerySolution>> allSolutions = new ArrayList<List<SparqlQuerySolution>>();
-        
-        Map<String, Map<String, String>> allEndpoints = this.getEndpoints();
-        
-        for (String key: allEndpoints.keySet()) {
-            String uri = allEndpoints.get(key).get("URI");
-            String user = allEndpoints.get(key).get("username");
-            String pass = allEndpoints.get(key).get("password");
-            try {
-            ArrayList<ArrayList<SparqlQuerySolution>> solutions = 
-                    kb.sparqlQueryRemote(query, uri, user, pass);
-            if (solutions != null) {
-                allSolutions.addAll(solutions);
-            }
-                
-            } catch (Exception e) {
-                System.out.println("ERROR querying " + uri);
-                e.printStackTrace(); 
-            }
+    private Map<String, List<DataResult>> queryAllDataProviders (String query) {
+        Map<String, List<DataResult>> all = new HashMap<String, List<DataResult>>();
+        for (DataAdapter adapter: this.dataAdapters.values()) {
+            all.put(adapter.getName(), adapter.query(query));
         }
-        return allSolutions;
+        
+        return all;
     }
     
     private Map<String,String> getWikiHash (List<String> files, String endpoint) {
-        Map<String, String> result = new HashMap<String, String>();
         String query = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n"
                 + "SELECT DISTINCT ?file ?sha WHERE {\n"
                 + "  ?page ?contentUrl ?file .\n"
@@ -594,22 +608,16 @@ public class DiskRepository extends KBRepository {
                 + "  }\n"
                 + "}";
 
-        List<List<SparqlQuerySolution>> queryResults = queryEndpoint(this.neuroontkb, query, endpoint);
-        for (List<SparqlQuerySolution> dataSolutions : queryResults) {
-            String filename = null;
-            String sha = null;
-            for (SparqlQuerySolution solution : dataSolutions) {
-                String var = solution.getVariable();
-                String val = (solution.getObject().isLiteral()) ? solution.getObject().getValueAsString() : solution.getObject().getID();
-                if (var.equals("file"))
-                    filename = val;
-                else if (var.equals("sha"))
-                    sha = val;
-            }
+        Map<String, String> result = new HashMap<String, String>();
+        List<DataResult> solutions = this.dataAdapters.get(endpoint).query(query);
+        
+        for (DataResult solution: solutions) {
+            String filename = solution.getValue("file");
+            String sha = solution.getValue("sha");
             if (filename != null && sha != null)
                 result.put(filename, sha);
         }
-        
+
         return result;
     }
 
@@ -622,12 +630,27 @@ public class DiskRepository extends KBRepository {
                 + "\nWHERE { \n" + queryPattern + "}\n";
     }
 
-    public Map<String, List<String>> queryExternalStore(String username, String domain, String endpoint, 
-            String sparqlQuery, String variables) {
+    public Map<String, List<String>> queryExternalStore(String username, String domain,
+            String endpoint, String sparqlQuery, String variables) {
+        //FIXME: change this to DataResults
+        // Variable name -> [row0, row1, ...]
         Map<String, List<String>> dataVarBindings = new HashMap<String, List<String>>();
         
-        //TODO, should check the variables.
-        String v = (variables == null || variables.contentEquals("")) ? "*" : variables;
+        //Check that the variables string contains valid sparql
+        String queryVars;
+        if (variables == null || variables.contentEquals("")) {
+            queryVars = "*";
+        } else {
+            String[] vars = variables.replaceAll("\s+", " ").split(" ");
+            for (String v: vars) {
+                if (v.charAt(0) != '?')
+                    return dataVarBindings;
+            }
+            queryVars = variables;
+        }
+        
+        if (!this.dataAdapters.containsKey(endpoint))
+            return dataVarBindings;
         
         String dataQuery = "PREFIX bio: <http://disk-project.org/ontology/omics#>\n" + 
                 "PREFIX neuro: <https://w3id.org/disk/ontology/enigma_hypothesis#>\n" + 
@@ -635,44 +658,25 @@ public class DiskRepository extends KBRepository {
                 "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n" + 
                 "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" + 
                 "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-                "SELECT DISTINCT " + v + " WHERE {\n" +
-                sparqlQuery + "\n}";
+                "SELECT DISTINCT " + queryVars + " WHERE {\n" +
+                sparqlQuery + "\n} LIMIT 200";
+        //There's a limit here to prevent {?a ?b ?c} and so on
         
-        //System.out.println(dataQuery);
-
-        try {
-            this.start_read();
-            KBAPI queryKb = this.fac.getKB(OntSpec.PLAIN);
-            queryKb.importFrom(this.omicsontkb);
-            queryKb.importFrom(this.neuroontkb);
-            queryKb.importFrom(this.hypontkb);
-            this.end();
-            
-            List<List<SparqlQuerySolution>> allDataSolutions = null;
-            
-            allDataSolutions = queryEndpoint(queryKb, dataQuery, endpoint);
-
-            for (List<SparqlQuerySolution> dataSolutions : allDataSolutions) {
-              for (SparqlQuerySolution solution : dataSolutions) {
-                String var = solution.getVariable();
-                List<String> curValues = dataVarBindings.containsKey(var) ?
-                    dataVarBindings.get(var) : new ArrayList<String>();
-                if (solution.getObject().isLiteral()) {
-                  curValues.add(solution.getObject().getValueAsString());
-                } else {
-                  curValues.add(solution.getObject().getID());
+        List<DataResult> solutions = this.dataAdapters.get(endpoint).query(dataQuery);
+        int size = solutions.size();
+        
+        if (size > 0) {
+            Set<String> varnames = solutions.get(0).getVariableNames();
+            for (String varname: varnames)
+                dataVarBindings.put(varname, new ArrayList<String>());
+            for (DataResult solution: solutions) {
+                for (String varname: varnames) {
+                    dataVarBindings.get(varname).add(solution.getValue(varname));
                 }
-                dataVarBindings.put(var, curValues);
-              }
             }
-
-            System.out.println("DONE - " + allDataSolutions.size() + " solutions found.");
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-          this.end();
         }
-        
+
+        System.out.println("DONE - " + solutions.size() + " solutions found."); //FIXME
         return dataVarBindings;
     }
 
@@ -1060,7 +1064,6 @@ public class DiskRepository extends KBRepository {
         if (matches.size() == 0) return tlois;
 
         try {
-            //this.start_read();
             KBAPI queryKb = this.fac.getKB(OntSpec.PLAIN);
             queryKb.importFrom(this.omicsontkb);
             queryKb.importFrom(this.neuroontkb);
@@ -1070,75 +1073,49 @@ public class DiskRepository extends KBRepository {
             
             for (LineOfInquiry loi: matches.keySet()) {
               List<Map<String, String>> results = matches.get(loi);
-              //System.out.println(loi.getName() + ": " + results.size());
+              
+              //Check if the data-source has a register adapter:
+              if (!this.dataAdapters.containsKey(loi.getDataSource())) {
+                  System.out.println("Data source not registered: " + loi.getDataSource());
+                  continue;
+              }
+
               for (Map<String, String> hypBinds: results) {
-                // At least one binding must be non variable
-                boolean ok = false;
-                for (String key: hypBinds.keySet()) {
-                  String val = hypBinds.get(key);
-                  //System.out.println("R:" + key + " -> " + val);
-                  if (val.charAt(0) != '?') ok = true;
-                }
-                if (!ok) continue;
+                  // At least one binding must be non variable (starts with '?')
+                  boolean ok = false;
+                  for (String key: hypBinds.keySet()) {
+                      String val = hypBinds.get(key);
+                      if (val.charAt(0) != '?') ok = true;
+                  }
+                  if (!ok) continue;
                 
-                //Creating 1 data query for hypothesis binding solution;
-                String dq = getQueryBindings(loi.getDataQuery(), varPattern, hypBinds);
-                dq = this.addQueryAssertions(dq, assertions);   //FIXME
-                dq = dq.replace("user:", "?");
-
-                String dataQuery = this.getDistinctSparqlQuery(dq, assertions, new ArrayList<String>(loi.getAllWorkflowVariables()) );
-                if (dataQuery.charAt(dataQuery.length()-1) == '\n')
-                    dataQuery = dataQuery.substring(0, dataQuery.length()-1);
-
-                ArrayList<ArrayList<SparqlQuerySolution>> allDataSolutions = null;
+                  //Creating a data query for hypothesis binding solution;
+                  String dq = getQueryBindings(loi.getDataQuery(), varPattern, hypBinds);
+                  dq = this.addQueryAssertions(dq, assertions);   //FIXME: this and the following line is not used anymore.
+                  dq = dq.replace("user:", "?");
+                  String dataQuery = this.getDistinctSparqlQuery(dq, assertions, new ArrayList<String>(loi.getAllWorkflowVariables()) );
+                  if (dataQuery.charAt(dataQuery.length()-1) == '\n')
+                      dataQuery = dataQuery.substring(0, dataQuery.length()-1);
                 
-                String dataSource = loi.getDataSource();
-                if (dataSource != null && !dataSource.equals("")) {
-                    Map<String, Map<String, String>> endpoints = this.getEndpoints();
-
-                    String user = null;
-                    String pass = null;
-
-                    for (String key: endpoints.keySet()) {
-                        if (endpoints.get(key).get("URI").equals(dataSource)) {
-                            user = endpoints.get(key).get("username");
-                            pass = endpoints.get(key).get("password");
-                            break;
-                        }
-                    }
-                    
-                    if (user != null && pass != null) {
-                        allDataSolutions = queryKb.sparqlQueryRemote(dataQuery, dataSource, user, pass);
-                    } else {
-                        allDataSolutions = queryKb.sparqlQueryRemote(dataQuery, dataSource);
-                    }
-                } else {
-                    this.start_read();
-                    allDataSolutions = queryKb.sparqlQuery(dataQuery);
-                    this.end();
-                }
+                  //Sending the query
+                  DataAdapter adapter = this.dataAdapters.get(loi.getDataSource());
+                  List<DataResult> solutions = adapter.query(dataQuery);
                 
-                //System.out.println("Query done!! " + allDataSolutions.size());
-                if (allDataSolutions.size() == 0) {
-                    //System.out.println("No results on the external store for " + loi.getId());
-                    continue;
-                }
+                  if (solutions.size() == 0) {
+                      //System.out.println("No results on the external store for " + loi.getId());
+                      continue;
+                  }
 
                 // Store solutions in dataVarBindings
                 Map<String, List<String>> dataVarBindings = new HashMap<String, List<String>>();
-                for (ArrayList<SparqlQuerySolution> dataSolutions : allDataSolutions) {
-                  for (SparqlQuerySolution solution : dataSolutions) {
-                    String var = solution.getVariable();
-                    List<String> curValues = dataVarBindings.containsKey(var) ? dataVarBindings.get(var) 
-                        : new ArrayList<String>();
+                Set<String> varNames =  solutions.get(0).getVariableNames();
+                for (String varname: varNames)
+                    dataVarBindings.put(varname, new ArrayList<String>());
 
-                    if (solution.getObject().isLiteral()) {
-                      curValues.add(solution.getObject().getValueAsString());
+                for (DataResult solution: solutions) {
+                    for (String varname: varNames) {
+                        dataVarBindings.get(varname).add(solution.getValue(varname));
                     }
-                    else
-                      curValues.add(dataSource != null && !dataSource.equals("") ? solution.getObject().getID() : solution.getObject().getName());
-                    dataVarBindings.put(var, curValues);
-                  }
                 }
 
                 //System.out.println("Results proceced");

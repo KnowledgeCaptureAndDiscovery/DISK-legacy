@@ -1,7 +1,6 @@
 package org.diskproject.server.repository;
 
 import java.io.File;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Semaphore;
 import java.util.HashMap;
 
@@ -51,70 +50,32 @@ public class KBRepository implements TransactionsAPI {
   }
   
   protected void initializeKB() {
-    if(this.tdbdir == null)
+    if (this.tdbdir == null)
       return;
     
-    this.mutex = new Semaphore(1);
+    if (this.mutex == null)
+        this.mutex = new Semaphore(1);
     
     this.fac = new OntFactory(OntFactory.JENA, tdbdir);
+    this.transaction = new TransactionsJena(this.fac);
+    this.pmap = new HashMap<String, KBObject>();
+    this.cmap = new HashMap<String, KBObject>();
+      
     try {
-      this.transaction = new TransactionsJena(this.fac);
-      
-      ontkb = fac.getKB(this.onturi, OntSpec.PELLET, false, true);
-      System.out.println("GET KB: " + this.onturi);
-      TimeUnit.SECONDS.sleep(2); 
-
-      // Temporary hacks
-      this.start_write();
-      this.temporaryHacks();
-      TimeUnit.SECONDS.sleep(1);
-      
-      pmap = new HashMap<String, KBObject>();
-      cmap = new HashMap<String, KBObject>();
-      this.cacheKBTerms(ontkb);
-      //this.stddump();
-      this.end();
-
+        this.ontkb = fac.getKB(this.onturi, OntSpec.PELLET, false, true);
     } catch (Exception e) {
-      e.printStackTrace();
+        e.printStackTrace();
     }
-  }
+    System.out.println("GET KB: " + this.onturi);
+    
+    if (this.ontkb != null) {
+        this.start_write();
+        this.cacheKBTerms(ontkb);
+        this.end();
+    } else {
+        return;
+    }
 
-  private void temporaryHacks() {
-		//ADDs properties to the ontology being loaded.
-	    this.hackInDataProperty("hasConfidenceValue", "TriggeredLineOfInquiry", "string");
-	    this.hackInDataProperty("hasInputFile", "TriggeredLineOfInquiry", "string");
-	    this.hackInDataProperty("hasOutputFile", "TriggeredLineOfInquiry", "string");
-  }
-  
-  private void hackInDataProperty(String prop, String domain, String range) {
-    String ns = ontns;
-    if(!this.ontkb.containsResource(ns+prop)) {
-      this.ontkb.createDatatypeProperty(ns+prop);
-      this.ontkb.setPropertyDomain(ns+prop, ns+domain);
-      this.ontkb.setPropertyRange(ns+prop, ns+range);
-      this.ontkb.save();
-    }
-  }
-
-  @SuppressWarnings("unused")
-  private void hackInObjectProperty(String prop, String domain, String range) {
-    String ns = ontns;
-    if(!this.ontkb.containsResource(ns+prop)) {
-      this.ontkb.createObjectProperty(ns+prop);
-      this.ontkb.setPropertyDomain(ns+prop, ns+domain);
-      this.ontkb.setPropertyRange(ns+prop, ns+range);
-      this.ontkb.save();
-    }
-  }
-  
-  @SuppressWarnings("unused")
-  private void hackInClass(String classname) {
-    String ns = ontns;
-    if(!this.ontkb.containsResource(ns+classname)) {
-      this.ontkb.createClass(ns+ classname);
-      this.ontkb.save();
-    }
   }
 
   protected void cacheKBTerms(KBAPI kb) {
@@ -160,7 +121,6 @@ public class KBRepository implements TransactionsAPI {
  public boolean start_read() {
 	 if (transaction != null) {
 		 acquire();
-		 //System.out.println("START READ " + mutex.availablePermits());
 		 return transaction.start_read();
 	 }
 	 return true; //true??? FIXME
@@ -170,7 +130,6 @@ public class KBRepository implements TransactionsAPI {
  public boolean start_write() {
 	 if (transaction != null) {
 		 acquire();
-		 //System.out.println("START WRITE " + mutex.availablePermits());
 		 return transaction.start_write();
 	 }
 	 return true;
@@ -180,7 +139,6 @@ public class KBRepository implements TransactionsAPI {
  public boolean end () {
 	 if (transaction != null) {
 		 boolean b = transaction.end();
-		 //System.out.println("END " + b);
 		 release();
 		 return b;
 	 }
