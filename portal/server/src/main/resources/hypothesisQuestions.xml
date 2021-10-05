@@ -244,11 +244,11 @@ BIND(REPLACE (REPLACE (?BrainImagingTrait, &quot;SA&quot;, &quot;Surface Area&qu
         <ns0:hasQuestionPattern>?EffectSize neuro:sourceGene ?Genotype
 ?EffectSize neuro:targetCharacteristic ?BrainImagingTrait
 ?EffectSize neuro:targetCharacteristic ?Region</ns0:hasQuestionPattern>
-        <ns0:hasQuestionTemplate>Is the Effect Size of ?Genotype on ?Region ?BrainImagingTrait</ns0:hasQuestionTemplate>
+        <ns0:hasQuestionTemplate>What is the Effect Size of ?Genotype on ?Region ?BrainImagingTrait</ns0:hasQuestionTemplate>
         <ns0:hasQuestionVariable rdf:resource="http://disk-project.org/resources/question/HQ3V1"/>
         <ns0:hasQuestionVariable rdf:resource="http://disk-project.org/resources/question/HQ3V2"/>
         <ns0:hasQuestionVariable rdf:resource="http://disk-project.org/resources/question/HQ3V3"/>
-        <rdfs:label>Is the effect size of &lt;Genotype&gt; on &lt;Region&gt;&lt;Brain Imaging Trait&gt;</rdfs:label>
+        <rdfs:label>What is the effect size of &lt;Genotype&gt; on &lt;Region&gt;&lt;Brain Imaging Trait&gt;</rdfs:label>
     </owl:NamedIndividual>
 </rdf:RDF>
 
