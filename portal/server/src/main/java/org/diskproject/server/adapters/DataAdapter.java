@@ -1,6 +1,11 @@
 package org.diskproject.server.adapters;
 
-public abstract class DataAdapter implements DataAdapterInterface {
+import java.util.List;
+import java.util.Map;
+
+import org.diskproject.shared.classes.loi.LineOfInquiry;
+
+public abstract class DataAdapter {
     private String URI, name, username, password;
 
     public DataAdapter (String URI, String name, String username, String password) {
@@ -29,4 +34,17 @@ public abstract class DataAdapter implements DataAdapterInterface {
     public String toString () {
         return "[" + this.name + "] " + this.username + "@" + this.URI;
     }
+
+    public abstract List<DataResult> query (String queryString);
+
+    //This data query must return two variable names:
+    static public String VARURI = "uri";
+    static public String VARLABEL = "label";
+    public abstract List<DataResult> queryOptions (String varname, String constraintQuery);
+
+    // file -> hash
+    public abstract Map<String, String> getFileHashes (List<String> dsurls);
+
+    // Check that a LOI is correctly configured for this adapter
+    public abstract boolean validateLOI (LineOfInquiry loi, Map<String, String> values);
 }

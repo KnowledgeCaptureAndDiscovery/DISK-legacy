@@ -65,8 +65,9 @@ public class KBRepository implements TransactionsAPI {
         this.ontkb = fac.getKB(this.onturi, OntSpec.PELLET, false, true);
     } catch (Exception e) {
         e.printStackTrace();
+        System.out.println("Error reading KB: " + this.onturi);
+        return;
     }
-    System.out.println("GET KB: " + this.onturi);
     
     if (this.ontkb != null) {
         this.start_write();
