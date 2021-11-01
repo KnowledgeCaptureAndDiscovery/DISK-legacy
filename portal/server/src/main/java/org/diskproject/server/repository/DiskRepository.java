@@ -2694,20 +2694,54 @@ public class DiskRepository extends KBRepository {
                 System.out.println("TLOID: " + tloid + " has does not have any workflow.");
             }
             
+            // List of data used.
             String dataset = "";
             String fileprefix = "https://enigma-disk.wings.isi.edu/wings-portal/users/admin/test/data/fetch?data_id=http%3A//skc.isi.edu%3A8080/wings-portal/export/users/" 
                               + username + "/" + domain + "/data/library.owl%23";
+            boolean allCollections = true;
+            int len = 0;
             for (VariableBinding ds: wf.getBindings()) {
-                String binding = ds.getBinding();
-                if (binding.startsWith("[")) {
-                    for (String datas: ds.getBindingAsArray()) {
+                if (!ds.isCollection()) {
+                    allCollections = false;
+                    break;
+                }
+                len = ds.getBindingAsArray().length > len ? ds.getBindingAsArray().length : len;
+            }
+            if (allCollections) {
+                //dataset += "<table>";
+                dataset += "<table><thead><tr><td><b>#</b></td>";
+                for (VariableBinding ds: wf.getBindings()) {
+                    dataset += "<td><b>" + ds.getVariable() + "</b></td>";
+                }
+                dataset += "</tr></thead><tbody>";
+                for (int i = 0; i < len; i++) {
+                    dataset += "<tr>";
+                    dataset += "<td>" + (i+1) + "</td>";
+                    for (VariableBinding ds: wf.getBindings()) {
+                        String[] bindings = ds.getBindingAsArray();
+                        String datas = bindings[i];
                         String dataname = datas.replaceAll("^.*#", "").replaceAll("SHA\\w{6}_", "");
                         String url = fileprefix + datas;
                         String anchor = "<a target=\"_blank\" href=\"" + url + "\">" + dataname + "</a>";
-                        dataset += "<li>" + anchor + "</li>";
+                        dataset += "<td>" + anchor + "</td>";
                     }
+                    dataset += "</tr>";
                 }
-                System.out.println("binding: " + binding);
+                dataset += "</tbody></table>";
+                
+            } else {
+                for (VariableBinding ds: wf.getBindings()) {
+                    String binding = ds.getBinding();
+                    if (binding.startsWith("[")) {
+                        for (String datas: ds.getBindingAsArray()) {
+                            String dataname = datas.replaceAll("^.*#", "").replaceAll("SHA\\w{6}_", "");
+                            String url = fileprefix + datas;
+                            String anchor = "<a target=\"_blank\" href=\"" + url + "\">" + dataname + "</a>";
+                            dataset += "<li>" + anchor + "</li>";
+                        }
+                    }
+                    System.out.println("binding: " + binding);
+                }
             }
             Double confidence = tloi.getConfidenceValue();
             DecimalFormat df = new DecimalFormat(confidence != 0 && confidence < 0.001 ?

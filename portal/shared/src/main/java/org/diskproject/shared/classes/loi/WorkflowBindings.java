@@ -224,12 +224,71 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
 
   @JsonIgnore
   public String getBindingsDescriptionAsTable() {
-    String html = "<ul style=\"margin: 0\">";
+    String html = "";//"<ul style=\"margin: 0\">";
+    if (this.meta.getHypothesis() != null || this.meta.getRevisedHypothesis() != null) {
+        html += "<ul style=\"margin: 0\">";
+        if(this.meta.getHypothesis() != null) {
+            html += "<li><b>" + this.meta.getHypothesis() + "</b>: [Hypothesis]</li>";
+        }
+        if(this.meta.getRevisedHypothesis() != null) {
+            html += "<li><b>" + this.meta.getRevisedHypothesis() + "</b>: [Revised Hypothesis]</li>";
+        }
+        html += "</ul>";
+    }
+      
     Map<String, String> files = this.getRun().getFiles();
     String prefix = "https://enigma-disk.wings.isi.edu/wings-portal/users/admin/test/data/fetch?data_id=";
+    int maxlen = 0;
+    html += "<table>";
+    for (VariableBinding vb: bindings) {
+        if (vb.isCollection()) {
+            int curlen = vb.getBindingAsArray().length;
+            maxlen = maxlen < curlen ? curlen : maxlen;
+        }
+    }
     
     Collections.sort(bindings);
-    for(VariableBinding vbinding : bindings) {
+    for (int i = 0; i < maxlen; i++) {
+        if (i == 0) { //Adds headers
+            html += "<thead><tr>";
+            html += "<th style=\"20px\"> # </th>";
+            for(VariableBinding vbinding : bindings) {
+                html += "<th>" + vbinding.getVariable() + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+        }
+        html += "<tr><td>" + i + "</td>";
+        for(VariableBinding vbinding : bindings) {
+            if (vbinding.isCollection()) {
+                String[] barr = vbinding.getBindingAsArray();
+                if (i < barr.length) {
+                    html += "<td>";// + barr[i] +
+                    String name = barr[i].startsWith("SHA") ? barr[i].substring(10) : barr[i];
+                    if (files != null && files.containsKey(barr[i])) {
+                        html += "<a target='_target' href='" + prefix + files.get(barr[i]) + "'>" + name + "</a>";
+                    } else {
+                        html += name;
+                    }
+                    html += "</td>";
+                } else {
+                    html += "<td> - </td>";
+                }
+            } else {
+                html += "<td>";// + vbinding.getBinding() + 
+                if (files != null && files.containsKey(vbinding.getBinding())) {
+                    html += "<a target='_target' href='" + prefix + files.get(vbinding.getBinding()) + "'>";
+                } else {
+                    html += vbinding.getBinding();
+                }
+                html += "</td>";
+            }
+        }
+        html += "</tr>";
+    }
+    html += "</tbody></table>";
+    return html;
+    
+    /*for(VariableBinding vbinding : bindings) {
       String[] barr = vbinding.getBindingAsArray();
       if (barr.length < 2) {
           html += "<li><b>" + vbinding.getVariable() + " = </b>";
@@ -256,7 +315,7 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
         html += "<li><b>" + this.meta.getRevisedHypothesis() + "</b>: [Revised Hypothesis]</li>";
     }
     html += "</ul>";
-    return html;
+    return html;*/
   }
 
   public String toString() {
