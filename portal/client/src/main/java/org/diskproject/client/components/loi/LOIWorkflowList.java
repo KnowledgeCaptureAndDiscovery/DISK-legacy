@@ -7,7 +7,9 @@ import org.diskproject.client.components.list.ListNode;
 import org.diskproject.client.components.list.ListWidget;
 import org.diskproject.client.components.list.events.ListItemActionEvent;
 import org.diskproject.client.components.list.events.ListItemSelectionEvent;
+import org.diskproject.shared.classes.loi.MetaWorkflowDetails;
 import org.diskproject.shared.classes.loi.WorkflowBindings;
+import org.diskproject.shared.classes.workflow.VariableBinding;
 import org.diskproject.shared.classes.workflow.Workflow;
 
 import com.google.gwt.core.client.GWT;
@@ -129,7 +131,8 @@ public class LOIWorkflowList extends Composite {
   private void addWorkflowBindingsToList(WorkflowBindings bindings, 
       ListNode tnode) {
     String id = bindings.getWorkflow();
-    String html = bindings.getHTML();
+    //String html = bindings.getHTML();
+    String html = createWorkflowBindingsBox(bindings);
 
     if(tnode == null) {
       tnode = new ListNode(id, new HTML(html));
@@ -145,6 +148,43 @@ public class LOIWorkflowList extends Composite {
       tnode.setData(bindings);
       workflowlist.updateNode(oldid, tnode);
     }    
+  }
+  
+  private String createWorkflowBindingsBox (WorkflowBindings bindings) {
+      String id = bindings.getWorkflow();
+      String html = "<div class='name'>"+ id +"</div>";
+      html += "<div class='description workflow-description'>";
+
+      List<VariableBinding> parameters = bindings.getParameters();
+      if (parameters != null && parameters.size() > 0) {
+          html += "<span><b>Parameters:</b></span><span><ul style=\"margin: 0\">";
+          for (VariableBinding param: parameters)
+              html += "<li><b>" + param.getVariable() + " = </b>" + param.getBinding() + "</li>" ;
+          html += "</ul></span>";
+      }
+      
+      List<VariableBinding> varBindings = bindings.getBindings();
+      if (varBindings != null && varBindings.size() > 0) {
+          html += "<span><b>Variable Bindings:</b></span><span><ul style=\"margin: 0\">";
+          for (VariableBinding varB: varBindings)
+              html += "<li><b>" + varB.getVariable() + " = </b>" + varB.getBinding() + "</li>" ;
+          html += "</ul></span>";
+      }
+      
+      MetaWorkflowDetails meta = bindings.getMeta();
+      if (meta != null && (meta.getHypothesis() != null || meta.getRevisedHypothesis() != null)) {
+          html += "<span></span> <span><ul style=\"margin: 0\">";
+          if (meta.getHypothesis() != null) {
+              html += "<li><b>" + meta.getHypothesis() + "</b>: [Hypothesis]</li>";
+          }
+          if (meta.getRevisedHypothesis() != null) {
+              html += "<li><b>" + meta.getRevisedHypothesis() + "</b>: [Revised Hypothesis]</li>";
+          }
+          html += "</ul></span>";
+      }
+      
+      html += "</div>";
+      return html;
   }
   
   private native boolean isConfirmed(Object obj) /*-{

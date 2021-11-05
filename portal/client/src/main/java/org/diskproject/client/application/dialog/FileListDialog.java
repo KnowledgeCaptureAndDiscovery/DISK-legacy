@@ -10,6 +10,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -18,7 +19,7 @@ public class FileListDialog extends DialogBox { //implements ClickHandler {
     private static Binder uiBinder = GWT.create(Binder.class);
 
     private List<String> list;
-    @UiField HTMLPanel listContainer;
+    @UiField HTMLPanel listContainer, listHeader;
 
     public FileListDialog() {
         setWidget(uiBinder.createAndBindUi(this));
@@ -30,6 +31,14 @@ public class FileListDialog extends DialogBox { //implements ClickHandler {
         //setWidth("780px")
         //setHeight("90vh");
         //initialize();
+    }
+    
+    public void setName (String name) {
+        setText(name);
+    }
+    
+    public void setHeader (String header) {
+        listHeader.add(new HTML(header));
     }
     
     public void setFileList (List<String> filelist) {

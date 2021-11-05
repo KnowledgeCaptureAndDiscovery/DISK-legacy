@@ -50,6 +50,7 @@ public class sparqlAdapter extends DataAdapter {
         try {
             solutions = plainKb.sparqlQueryRemote(queryString, this.getURI(), this.getUsername(), this.getPassword());
         } catch (Exception e) {
+            System.out.println(queryString);
             System.err.println(e);
         }
         List<DataResult> results = new ArrayList<DataResult>();
@@ -103,6 +104,10 @@ public class sparqlAdapter extends DataAdapter {
                 label = valName;
             } else {
                 label = valUrl.replaceAll("^.*\\/", "");
+                //Try to remove mediawiki stuff
+                label = label.replaceAll("Property-3A", "");
+                label = label.replaceAll("-28E-29", "");
+                label = label.replaceAll("_", " ");
             }
             cur.addValue(VARURI, valUrl);
             cur.addValue(VARLABEL, label);

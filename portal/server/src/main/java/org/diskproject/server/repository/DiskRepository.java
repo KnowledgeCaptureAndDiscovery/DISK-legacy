@@ -744,8 +744,6 @@ public class DiskRepository extends KBRepository {
     }
 
     public Hypothesis getHypothesis(String username, String domain, String id) {
-        //this.queryHypothesis(username, domain, id);
-        
         String url = this.HYPURI(username, domain);
         String fullid = url + "/" + id;
         String provid = fullid + "/provenance";
@@ -809,7 +807,8 @@ public class DiskRepository extends KBRepository {
             this.updateTripleDetails(graph, provkb);
 
             return hypothesis;
-
+        } catch (ConcurrentModificationException e) {
+           System.out.println("ERROR: Concurrent modification exception on getHypothesis");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -2680,6 +2679,11 @@ public class DiskRepository extends KBRepository {
             String loiId = tloi.getLoiId();
             Hypothesis hyp = this.getHypothesis(username, domain, hypId);
             LineOfInquiry loi = this.getLOI(username, domain, loiId);
+            
+            if (loi == null || hyp == null) {
+                System.out.print("ERROR: could not get hypotheses or LOI");
+                return narratives;
+            }
             
             // Assuming each tloi only has a workflow or metaworkdflow:
             WorkflowBindings wf = null;

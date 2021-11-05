@@ -152,6 +152,9 @@ public class ExecutionList extends SearchableItem {
               public void onBrowserEvent(Event event) {
                   FileListDialog dialog = new FileListDialog();
                   dialog.setFileList(tloi.getInputFiles());
+                  dialog.setName("Input files:");
+                  String header = "<b>" + tloi.getName().replaceAll("Triggered: ", "") + "</b>:";
+                  dialog.setHeader("Inputs used for " + header);
                   dialog.show();
                   dialog.center();
               }
@@ -178,30 +181,35 @@ public class ExecutionList extends SearchableItem {
 				}
 				out.setInnerText(Integer.toString(nouts));
 
-				// Add list file dialog.
-                IronIcon iconOutputList = new IronIcon();
-                iconOutputList.addStyleName("inline-button");
-                iconOutputList.setIcon("description");
-                el = iconOutputList.getElement();
-                Event.sinkEvents(el, Event.ONCLICK);
-                Event.setEventListener(el, new EventListener() {
-                  @Override
-                  public void onBrowserEvent(Event event) {
-                      List<String> filtered = new ArrayList<String>();
-                      for (String outfile: tloi.getOutputFiles()) {
-                          if (!(outfile.contains("shiny_visualization") || outfile.contains("brain_visualization")
-                              || outfile.contains("pval") || outfile.contains("p_val") || outfile.contains("p_value"))) {
-                              filtered.add(outfile);
+				if (nouts != 0) {
+                    // Add list file dialog.
+                    IronIcon iconOutputList = new IronIcon();
+                    iconOutputList.addStyleName("inline-button");
+                    iconOutputList.setIcon("description");
+                    el = iconOutputList.getElement();
+                    Event.sinkEvents(el, Event.ONCLICK);
+                    Event.setEventListener(el, new EventListener() {
+                      @Override
+                      public void onBrowserEvent(Event event) {
+                          List<String> filtered = new ArrayList<String>();
+                          for (String outfile: tloi.getOutputFiles()) {
+                              if (!(outfile.contains("shiny_visualization") || outfile.contains("brain_visualization")
+                                  || outfile.contains("pval") || outfile.contains("p_val") || outfile.contains("p_value"))) {
+                                  filtered.add(outfile);
+                              }
                           }
-                      }
 
-                      FileListDialog dialog = new FileListDialog();
-                      dialog.setFileList(filtered);
-                      dialog.show();
-                      dialog.center();
-                  }
-                });
-                out.appendChild(el);
+                          FileListDialog dialog = new FileListDialog();
+                          dialog.setFileList(filtered);
+                          dialog.setName("Output files:");
+                          String header = "<b>" + tloi.getName().replaceAll("Triggered: ", "") + "</b>:";
+                          dialog.setHeader("Outputs used for " + header);
+                          dialog.show();
+                          dialog.center();
+                      }
+                    });
+                    out.appendChild(el);
+				}
 			} else if (curStatus == Status.FAILED) {
 				out.setInnerText("-");
 			} else {
