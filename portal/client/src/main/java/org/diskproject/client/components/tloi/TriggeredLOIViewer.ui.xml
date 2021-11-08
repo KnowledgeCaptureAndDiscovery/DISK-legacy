@@ -132,7 +132,7 @@
                 padding: 0px 10px;
 			}
 
-			table.results-table > td {
+			table.results-table td {
 			    text-align: start;
                 padding: 0px 10px;
 			}
@@ -148,6 +148,8 @@
 			</p:PaperButton>
 
 			<div ui:field="header"/>
+
+			<g:HTMLPanel ui:field="narrative"> </g:HTMLPanel>
 
 			<div ui:field="hypothesisSection">
 				<label class="small-grey">Hypothesis</label>
@@ -192,30 +194,11 @@
 				</div>
 			</div>
 
-			<div ui:field="NarrativesSection">
-				<label class="small-grey">Narratives:</label>
-
-				<div class="bordered-list padded">
-					<span>
-						<g:CheckBox ui:field='showExecNarrative'>
-							<label>Show execution narrative</label>
-						</g:CheckBox>
-						<g:CheckBox ui:field='showDataQueryNarrative'>
-							<label>Show data query narrative</label>
-						</g:CheckBox>
-					</span>
-
-					<div>
-						<g:HTMLPanel ui:field="executionNarrative"> </g:HTMLPanel>
-					</div>
-					<div>
-						<g:HTMLPanel ui:field="dataQueryNarrative"> </g:HTMLPanel>
-					</div>
-				</div>
-			</div>
-
 			<div ui:field="WFSection">
-				<label class="small-grey">Triggered Workflows</label>
+                <div style="display:flex;justify-content: space-between;align-items: center;">
+					<label class="small-grey">Triggered Workflows</label>
+					<div ui:field="workflowButtons"></div>
+                </div>
 				<div class="bordered-list">
 					<lw:ListWidget ui:field="workflowlist" styleName="list" />
 				</div>
