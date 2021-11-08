@@ -7,7 +7,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.diskproject.client.Config;
+import org.diskproject.client.application.dialog.CloseableDialog;
+import org.diskproject.client.application.dialog.ShinyElement;
 import org.diskproject.client.components.brain.Brain;
+import org.diskproject.client.components.hypothesis.ExecutionList;
 import org.diskproject.client.components.list.ListNode;
 import org.diskproject.client.components.list.ListWidget;
 import org.diskproject.client.components.list.events.ListItemActionEvent;
@@ -18,6 +21,7 @@ import org.diskproject.client.rest.AppNotification;
 import org.diskproject.client.rest.DiskREST;
 import org.diskproject.shared.classes.common.Triple;
 import org.diskproject.shared.classes.hypothesis.Hypothesis;
+import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.loi.TriggeredLOI;
 import org.diskproject.shared.classes.loi.TriggeredLOI.Status;
 import org.diskproject.shared.classes.util.GUID;
@@ -30,13 +34,13 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.AnchorElement;
 import com.google.gwt.dom.client.DivElement;
-import com.google.gwt.dom.client.LabelElement;
 import com.google.gwt.dom.client.IFrameElement;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
 import com.google.gwt.user.client.History;
@@ -49,18 +53,18 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.polymer.paper.widget.PaperButton;
 import com.vaadin.polymer.paper.widget.PaperDialog;
+import com.vaadin.polymer.iron.widget.IronIcon;
 import com.vaadin.polymer.iron.widget.event.IronOverlayClosedEvent;
 
 public class TriggeredLOIViewer extends Composite {
   interface Binder extends UiBinder<Widget, TriggeredLOIViewer> {};
   private static Binder uiBinder = GWT.create(Binder.class);
 
-  @UiField DivElement header;
-  @UiField DivElement hypothesisSection, LOISection, dataDiv, WFSection, MetaWFSection, brainSection, shinySection;
-  @UiField LabelElement WFLabel;
+  @UiField DivElement header, workflowButtons;
+  @UiField DivElement hypothesisSection, LOISection, dataDiv, WFSection, MetaWFSection;
   @UiField Label DataLabel;
   @UiField HTMLPanel revHypothesisSection, DataSection, DataQuerySection;
-  @UiField HTMLPanel executionNarrative, dataQueryNarrative, brainPanel;
+  //@UiField HTMLPanel executionNarrative, dataQueryNarrative;
   @UiField TripleViewer hypothesis;
   @UiField SparqlInput dataQuery;
   @UiField ListWidget workflowlist, metaworkflowlist;
@@ -68,7 +72,6 @@ public class TriggeredLOIViewer extends Composite {
   @UiField PaperButton downloadbutton, editBindingsButton, runButton;
   @UiField PaperDialog editBindingsDialog;
   @UiField BindingsEditor bindingseditor;
-  @UiField IFrameElement shinyIframe;
 
   private Status status;
 
@@ -76,22 +79,17 @@ public class TriggeredLOIViewer extends Composite {
   String rawcsv; //USED to save the downloadable CSV.
   String datamode = "all";
   TriggeredLOI tloi;
+  Hypothesis parentHypothesis;
+  LineOfInquiry parentLOI;
   Map<String, List<String>> dataRetrieved;
-  @UiField CheckBox showdata, showdq, showExecNarrative, showDataQueryNarrative;
-
+  @UiField CheckBox showdata, showdq, showHypothesisGraph;
+  //@UiField CheckBox showExecNarrative, showDataQueryNarrative;
+  
+  //@UiField HTMLPanel workflowList;
+  @UiField HTMLPanel narrative;
 
   public TriggeredLOIViewer() {
     initWidget(uiBinder.createAndBindUi(this));
-
-    //TriggeredLOIViewer me = this;
-    Event.sinkEvents(shinyIframe, Event.ONLOAD);
-    Event.setEventListener(shinyIframe, new EventListener() {
-      @Override
-      public void onBrowserEvent(Event event) {
-  	    GWT.log("Iframe loaded!");
-  	    nativeLog(event);
-      }
-    });
   }
 
 	private native void  nativeLog(Object obj) /*-{
@@ -103,16 +101,16 @@ public class TriggeredLOIViewer extends Composite {
     this.domain = domain;
     editBindingsButton.setVisible(false);
     hypothesis.initialize(username, domain);
-    workflowlist.addCustomAction("runlink", "Run details", 
-        "icons:build", "blue-button run-link");
-    metaworkflowlist.addCustomAction("runlink", "Run details", 
-        "icons:build", "blue-button run-link");    
-    downloadbutton.setVisible(false);
+    hypothesis.setVisible(false);
+    
+    workflowlist.hideActionMenu();
+    metaworkflowlist.hideActionMenu();
+
     DataSection.setVisible(false);
     DataQuerySection.setVisible(false);
     DataLabel.setVisible(false);
-    brainSection.getStyle().setDisplay(Display.NONE);
-    shinySection.getStyle().setDisplay(Display.NONE);
+    //brainSection.getStyle().setDisplay(Display.NONE);
+    //shinySection.getStyle().setDisplay(Display.NONE);
     
     //brainVisualization.setVisible(false);
   }
@@ -140,33 +138,81 @@ public class TriggeredLOIViewer extends Composite {
     status = tloi.getStatus();
     runButton.setVisible(status==null);
     
-    //header.setInnerHTML(tloi.getHeaderHTML());
     setHeader(tloi);
     setLOILink(tloi.getName(), tloi.getLoiId(), loiLink);
+    if (tloi.getExplanation() != null) {
+    	DataLabel.setText(tloi.getExplanation());
+    }
 
+    // Load all workflows:
+    List<WorkflowBindings> wf = tloi.getWorkflows();
     List<WorkflowBindings> mwf = tloi.getMetaWorkflows();
-    WFLabel.setInnerText("Triggered Workflows");
+
     if (mwf.size() == 0) {
     	MetaWFSection.getStyle().setDisplay(Display.NONE);
     } else {
     	MetaWFSection.getStyle().setDisplay(Display.INITIAL);
     }
-    
-    if (tloi.getExplanation() != null) {
-    	DataLabel.setText(tloi.getExplanation());
-    }
     	
-    setWorkflowsHTML(tloi.getWorkflows(), workflowlist);
+    setWorkflowsHTML(wf, workflowlist);
+    //setWorkflowsHTML2(wf, workflowList);
     setWorkflowsHTML(mwf, metaworkflowlist);
     
-    setHypothesisHTML(tloi.getParentHypothesisId(), 
-        hypothesisSection, hypothesis, hypothesisLink);
+    setHypothesisHTML(tloi.getParentHypothesisId(), hypothesisSection, hypothesis, hypothesisLink);
     setDataQueryHTML(tloi.getDataQuery(), LOISection, dataQuery);
     setRevisedHypothesesHTML(tloi.getResultingHypothesisIds(), revHypothesisSection);
     
     if (status == Status.SUCCESSFUL) {
-    	loadNarratives(tloi);
+    	//loadNarratives(tloi);
+    	updateNarrative();
+    	if (wf.size() > 0) loadWorkflows(wf, workflowlist);
+    	if (mwf.size() > 0) loadWorkflows(mwf, workflowlist);
     }
+  }
+  
+  private void updateNarrative () {
+      if (this.tloi == null || this.parentHypothesis == null) {
+          // Hide div that shows narrative
+          narrative.setVisible(false);
+      } else {
+          WorkflowBindings wfb = null;
+          for (WorkflowBindings wb: tloi.getWorkflows()) {
+              wfb = wb;
+              break;
+          }
+          for (WorkflowBindings wb: tloi.getMetaWorkflows()) {
+              wfb = wb;
+              break;
+          }
+          if (wfb != null) {
+              WorkflowRun run = wfb.getRun();
+              int datasets = 0;
+              for (VariableBinding b: wfb.getBindings()) {
+                  if (b.isCollection()) {
+                      int size = b.getBindingAsArray().length;
+                      if (datasets < size) datasets = size;
+                  }
+              }
+              String html = "The hypothesis with title: <b>" + parentHypothesis.getName() + "</b> was runned";
+              String status = run.getStatus();
+              if (status != null) html += " <span class='" + run.getStatus() + "'>" + run.getStatus() + "</span>";
+              html += " with the Line of inquiry: <b>" + tloi.getName().replace("Triggered: ", "")
+                      + "</b>. The LOI triggered the workflow <b>" + wfb.getWorkflow() + "</b> on WINGS where it was tested with <b>"
+                      + datasets + "</b> datasets.";
+              double p = tloi.getConfidenceValue();
+              if (p > 0) html += " The resulting p-value is " + (p < 0.001 ?
+				        ExecutionList.exponentFormat.format(p)
+				        : ExecutionList.decimalFormat.format(p)
+                      );
+
+              narrative.clear();
+              narrative.add(new HTML(html));
+              narrative.setVisible(true);
+          } else {
+              GWT.log("Needs at least one workflow bindings");
+          }
+
+      }
   }
   
   private void setHeader(TriggeredLOI tloi) {
@@ -203,7 +249,7 @@ public class TriggeredLOIViewer extends Composite {
 	  header.setInnerHTML(html);
   }
 
-  private void loadNarratives (TriggeredLOI tloi) {
+  /*private void loadNarratives (TriggeredLOI tloi) {
 	  String id = tloi.getId();
       DiskREST.getTLOINarratives(id, new Callback<Map<String,String>, Throwable>() {
         @Override
@@ -222,7 +268,7 @@ public class TriggeredLOIViewer extends Composite {
           AppNotification.notifyFailure(reason.getMessage());
         }
 	  });
-  }
+  }*/
 
   @UiHandler("showdq")
   void onClickShowDQ(ClickEvent event) {
@@ -249,7 +295,13 @@ public class TriggeredLOIViewer extends Composite {
     }
   }
 
-  @UiHandler("showExecNarrative")
+  @UiHandler("showHypothesisGraph")
+  void onClickShowHypothesisGraph(ClickEvent event) {
+    boolean show = showHypothesisGraph.getValue();
+    hypothesis.setVisible(show);
+  }
+
+  /*@UiHandler("showExecNarrative")
   void onClickShowExecutionNarrative(ClickEvent event) {
     boolean show = showExecNarrative.getValue();
     executionNarrative.setVisible(show);
@@ -259,7 +311,7 @@ public class TriggeredLOIViewer extends Composite {
   void onClickShowDataQueryNarrative(ClickEvent event) {
     boolean show = showDataQueryNarrative.getValue();
     dataQueryNarrative.setVisible(show);
-  }
+  }*/
 
   private void loadAndShowData () {
     String vars = tloi.getRelevantVariables();
@@ -453,8 +505,7 @@ public class TriggeredLOIViewer extends Composite {
     }
     section.setAttribute("style", "");
 
-    DiskREST.getHypothesis(id, 
-        new Callback<Hypothesis, Throwable>() {
+    DiskREST.getHypothesis(id, new Callback<Hypothesis, Throwable>() {
       public void onSuccess(Hypothesis result) {
         anchor.setHref(getHypothesisLink(id));
         if (result.getName() != null) {
@@ -464,6 +515,8 @@ public class TriggeredLOIViewer extends Composite {
           tv.setDefaultNamespace(getNamespace(id));
           tv.load(result.getGraph().getTriples());
         }
+        parentHypothesis = result;
+        updateNarrative();
       }
       public void onFailure(Throwable reason) {}
     });  
@@ -481,8 +534,15 @@ public class TriggeredLOIViewer extends Composite {
     return "#" + NameTokens.getLOIs()+"/" + this.username+"/"+this.domain + "/" + id;
   }
 
-  private void setWorkflowsHTML(List<WorkflowBindings> wbindings, 
-      ListWidget list) {
+  private void setWorkflowsHTML2(List<WorkflowBindings> wbindings, HTMLPanel list) {
+    list.clear();
+    for (WorkflowBindings bindings: wbindings) {
+        WorkflowViewer wv = new WorkflowViewer(bindings);
+        list.add(wv);
+    }
+  }
+
+  private void setWorkflowsHTML(List<WorkflowBindings> wbindings, ListWidget list) {
     list.clear();
     for(WorkflowBindings bindings: wbindings) {
       String type = bindings.getRun().getLink() == null ? "no-run-link" : "";
@@ -494,6 +554,119 @@ public class TriggeredLOIViewer extends Composite {
       tnode.setType(type);
       list.addNode(tnode);
     }
+  }
+
+  private void loadWorkflows(List<WorkflowBindings> wbindings, ListWidget list) {
+      list.clear();
+      for (WorkflowBindings bindings: wbindings) {
+		  String base = bindings.getHTML();
+		  String html = base + "<div>Loading...</div>";
+          ListNode node = new ListNode(bindings.getWorkflow(), new HTML(html));
+
+          node.setIcon("icons:dashboard");
+          node.setIconStyle("orange");
+          node.setData(bindings);
+          list.addNode(node);
+
+          WorkflowRun run = bindings.getRun();
+          String id = run.getId();
+          if (id != null) {
+              String[] lid = id.split("#|/");
+              id = lid[lid.length - 1];
+          }
+
+		  GWT.log("Current Run:\n ID: " + run.getId());
+		  DiskREST.monitorWorkflow(id, new Callback<WorkflowRun, Throwable>() {
+			  @Override
+			  public void onSuccess(WorkflowRun result) {
+				  //Save data
+				  String sdate = result.getStartDate();
+				  String edate = result.getEndDate();
+				  if (sdate != null) run.setStartDate(sdate);
+				  if (edate != null) run.setEndDate(edate);
+
+                  @SuppressWarnings("deprecation")
+                  Element el;
+
+				  Map<String, String> outputs = result.getOutputs();
+				  if (outputs.containsKey("brain_visualization")) {
+                      IronIcon iconBrain = new IronIcon();
+                      iconBrain.addStyleName("inline-button");
+                      iconBrain.setIcon("3d-rotation");
+                      el = iconBrain.getElement();
+                      Event.sinkEvents(el, Event.ONCLICK);
+                      Event.setEventListener(el, new EventListener() {
+                        @Override
+                        public void onBrowserEvent(Event event) {
+                            String brainURL = null;
+                            for (String outfile: tloi.getOutputFiles()) {
+                                if (outfile.contains("brain_visualization")) {
+                                    brainURL = outfile;
+                                    break;
+                                }
+                            }
+                            if (brainURL != null) {
+                                CloseableDialog dialog = new CloseableDialog();
+                                Brain brain = Brain.get();
+                                brain.loadConfigFile(brainURL);
+                                dialog.setText("Brain Visualization");
+                                dialog.add(brain);
+                                dialog.centerAndShow();
+                            } else {
+                                AppNotification.notifyFailure("Could not find Brain visualization");
+                            }
+                        }
+                      });
+                      workflowButtons.appendChild(el);
+				      outputs.remove("brain_visualization");
+				  }
+				  if (outputs.containsKey("shiny_visualization")) {
+                      IronIcon iconShiny = new IronIcon();
+                      iconShiny.addStyleName("inline-button");
+                      iconShiny.setIcon("assessment");
+                      el = iconShiny.getElement();
+                      Event.sinkEvents(el, Event.ONCLICK);
+                      Event.setEventListener(el, new EventListener() {
+                        @Override
+                        public void onBrowserEvent(Event event) {
+                            String shinyURL = null;
+                            for (String outfile: tloi.getOutputFiles()) {
+                                if (outfile.contains("shiny_visualization")) {
+                                    shinyURL = outfile;
+                                    break;
+                                }
+                            }
+                            if (shinyURL != null) {
+                                CloseableDialog dialog = new CloseableDialog();
+                                ShinyElement shiny =  new ShinyElement();
+                                shiny.load(shinyURL);
+                                dialog.setText("Shiny Visualization");
+                                dialog.add(shiny);
+                                dialog.centerAndShow();
+                            } else {
+                                AppNotification.notifyFailure("Could not find Shiny visualization");
+                            }
+                        }
+                      });
+                      workflowButtons.appendChild(el);
+				      outputs.remove("shiny_visualization");
+				  }
+				  
+				  if (outputs != null && outputs.size() > 0) run.setOutputs(outputs);
+				  run.setFiles(result.getFiles());
+				  
+				  node.setFullContent(bindings.getHTML());
+				  updateNarrative();
+			  }
+			  @Override
+			  public void onFailure(Throwable reason) {
+				  String html = base 
+						  	  + "<div>An error has occurred retrieving this data from the Wings server."
+						  	  + "Please try again. </div>";
+				  node.setFullContent(html);
+			  }
+		  });
+      }
   }
   
   @UiHandler({"workflowlist", "metaworkflowlist"})
@@ -535,7 +708,7 @@ public class TriggeredLOIViewer extends Composite {
 				  if (outputs.keySet().contains("brain_visualization")) {
 					  //This workflow returns a brain visualizations:
 					  //TODO: Assuming theres only one brainviz per tloi.
-					  loadBrainViz( outputs.get("brain_visualization") );
+					  //loadBrainViz( outputs.get("brain_visualization") );
 				  }
 
 				  if (outputs.keySet().contains("shiny_visualization")) {
@@ -543,7 +716,7 @@ public class TriggeredLOIViewer extends Composite {
 					  //TODO: Assuming theres only one shiny viz per tloi.
 					  String sp[] = outputs.get("shiny_visualization").split("#");
 					  String id = sp[sp.length-1];
-					  loadShinyViz(id);
+					  //loadShinyViz(id);
 				  }
 				  
 				  node.setFullContent(bindings.getHTML());
@@ -561,7 +734,7 @@ public class TriggeredLOIViewer extends Composite {
 	  }
     }
 
-  	private void loadShinyViz (String shinyLog) {
+  	/*private void loadShinyViz (String shinyLog) {
 		DiskREST.getDataFromWingsAsJS(shinyLog, new Callback<JavaScriptObject, Throwable>() {
 			@Override
 			public void onSuccess(JavaScriptObject result) {
@@ -583,17 +756,13 @@ public class TriggeredLOIViewer extends Composite {
   		
   	}
 
-  	public static native String getShinyURL(JavaScriptObject shinyobj) /*-{
-  		return shinyobj && shinyobj.url ? shinyobj.url : "";
-	}-*/;
-
   	private void loadBrainViz (String brainURL) {
 		brainSection.getStyle().setDisplay(Display.INITIAL);
 		brainPanel.clear();
         Brain brain = Brain.get();
         brain.loadConfigFile(brainURL);
         brainPanel.add(brain);
-  	}
+  	}*/
 
   	public static native void download(String name, String raw, String enc) /*-{
   		var blob = new Blob([raw], {type: enc});

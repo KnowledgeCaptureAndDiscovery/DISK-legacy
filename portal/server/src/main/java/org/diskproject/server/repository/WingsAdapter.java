@@ -39,7 +39,9 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.diskproject.server.adapters.MethodAdapter;
 import org.diskproject.server.util.Config;
+import org.diskproject.shared.classes.loi.LineOfInquiry;
 import org.diskproject.shared.classes.util.KBConstants;
 import org.diskproject.shared.classes.workflow.Variable;
 import org.diskproject.shared.classes.workflow.VariableBinding;
@@ -59,7 +61,7 @@ import edu.isi.kcap.ontapi.KBTriple;
 import edu.isi.kcap.ontapi.OntFactory;
 import edu.isi.kcap.ontapi.OntSpec;
 
-public class WingsAdapter {
+public class WingsAdapter extends MethodAdapter {
 	static WingsAdapter singleton = null;
 
 	private Gson json;
@@ -1229,4 +1231,25 @@ private String upload(String username, String pageid, String type, File file) {
 	}
 	return null;
 }
+
+    //TODO: Move this to other file when we have more adapters, and is related to SPARQL bc the variables...
+    @Override
+    public boolean validateLOI (LineOfInquiry loi, Map<String, String> values) {
+        String loiDataQuery = loi.getDataQuery();
+        Set<String> workflowVars = loi.getAllWorkflowVariables();
+        if ((loi.getWorkflows().size() == 0 && loi.getMetaWorkflows().size() == 0) || workflowVars.size() == 0)
+            return false;
+        
+        //All workflow variables must be on the data-query
+        for (String wvar: workflowVars)
+            if (!loiDataQuery.contains(wvar))
+                return false;
+
+        // All parameters must be set.
+        for (String parameter: loi.getAllWorkflowParameters())
+            if (!values.containsKey(parameter.substring(1)))
+                return false;
+
+        return true;
+    }
 }

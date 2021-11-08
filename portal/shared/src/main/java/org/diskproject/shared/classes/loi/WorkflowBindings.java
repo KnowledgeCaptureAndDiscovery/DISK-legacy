@@ -215,47 +215,81 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
 
   @JsonIgnore
   public String getParametersHTML() {
-    String html = "<ul style=\"margin: 0\">";
-    for (VariableBinding param: parameters)
-      html += "<li><b>" + param.getVariable() + " = </b>" + param.getBinding() + "</li>" ;
-    html += "</ul>";
+    String html = "<div>";
+    int len = parameters.size();
+    for (int i = 0; i < len; i++) {
+        VariableBinding param = parameters.get(i);
+        html += "<b>" + param.getVariable() + " = </b>" + param.getBinding() ;
+        if (i != (len-1)) html += "<br/>";
+    }
+    html += "</div>";
     return html;
   }
 
   @JsonIgnore
   public String getBindingsDescriptionAsTable() {
-    String html = "<ul style=\"margin: 0\">";
+    String html = "";//"<ul style=\"margin: 0\">";
+    if (this.meta.getHypothesis() != null || this.meta.getRevisedHypothesis() != null) {
+        html += "<ul style=\"margin: 0\">";
+        if(this.meta.getHypothesis() != null) {
+            html += "<li><b>" + this.meta.getHypothesis() + "</b>: [Hypothesis]</li>";
+        }
+        if(this.meta.getRevisedHypothesis() != null) {
+            html += "<li><b>" + this.meta.getRevisedHypothesis() + "</b>: [Revised Hypothesis]</li>";
+        }
+        html += "</ul>";
+    }
+      
     Map<String, String> files = this.getRun().getFiles();
     String prefix = "https://enigma-disk.wings.isi.edu/wings-portal/users/admin/test/data/fetch?data_id=";
+    int maxlen = 0;
+    html += "<table class='results-table'>";
+    for (VariableBinding vb: bindings) {
+        if (vb.isCollection()) {
+            int curlen = vb.getBindingAsArray().length;
+            maxlen = maxlen < curlen ? curlen : maxlen;
+        }
+    }
     
     Collections.sort(bindings);
-    for(VariableBinding vbinding : bindings) {
-      String[] barr = vbinding.getBindingAsArray();
-      if (barr.length < 2) {
-          html += "<li><b>" + vbinding.getVariable() + " = </b>";
-          if (files != null && files.containsKey(barr[0])) {
-              html += "<a target='_blank' href='" + prefix + files.get(barr[0]).replace(":", "%3A").replace("#", "%23") + "'>" + barr[0] + "</a>";
-          } else html += barr[0];
-          html += "</li>";
-      } else {
-          html += "<li><b>" + vbinding.getVariable() + " = </b></li><ul>";
-          for (String b: barr) {
-              html += "<li>";
-              if (files != null && files.containsKey(b))
-                  html += "<a target='_blank' href='" + prefix + files.get(b).replace(":", "%3A").replace("#", "%23") + "'>" + b + "</a>";
-              else html += b;
-              html += "</li>";
-          }
-          html += "</ul>";
-      }
+    for (int i = 0; i < maxlen; i++) {
+        if (i == 0) { //Adds headers
+            html += "<thead><tr>";
+            html += "<th> # </th>";
+            for(VariableBinding vbinding : bindings) {
+                html += "<th>" + vbinding.getVariable() + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+        }
+        html += "<tr><td>" + i + "</td>";
+        for(VariableBinding vbinding : bindings) {
+            if (vbinding.isCollection()) {
+                String[] barr = vbinding.getBindingAsArray();
+                if (i < barr.length) {
+                    html += "<td>";// + barr[i] +
+                    String name = barr[i].startsWith("SHA") ? barr[i].substring(10) : barr[i];
+                    if (files != null && files.containsKey(barr[i])) {
+                        html += "<a target='_target' href='" + prefix + files.get(barr[i]) + "'>" + name + "</a>";
+                    } else {
+                        html += name;
+                    }
+                    html += "</td>";
+                } else {
+                    html += "<td> - </td>";
+                }
+            } else {
+                html += "<td>";// + vbinding.getBinding() + 
+                if (files != null && files.containsKey(vbinding.getBinding())) {
+                    html += "<a target='_target' href='" + prefix + files.get(vbinding.getBinding()) + "'>";
+                } else {
+                    html += vbinding.getBinding();
+                }
+                html += "</td>";
+            }
+        }
+        html += "</tr>";
     }
-    if(this.meta.getHypothesis() != null) {
-        html += "<li><b>" + this.meta.getHypothesis() + "</b>: [Hypothesis]</li>";
-    }
-    if(this.meta.getRevisedHypothesis() != null) {
-        html += "<li><b>" + this.meta.getRevisedHypothesis() + "</b>: [Revised Hypothesis]</li>";
-    }
-    html += "</ul>";
+    html += "</tbody></table>";
     return html;
   }
 
@@ -316,15 +350,15 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
     if (outputs != null) {
       int osize = outputs.size();
       String prefix = "https://enigma-disk.wings.isi.edu/wings-portal/users/admin/test/data/fetch?data_id=";
-      html += "<span><b>Output files (" + Integer.toString(osize) + "):</b></span><span><ol style='margin:0'>";
+      html += "<span><b>Output files (" + Integer.toString(osize) + "):</b></span><span>";
       for (String outid: outputs.keySet()) {
     	  String outuri = outputs.get(outid);
           String dl = prefix + outuri.replace(":", "%3A").replace("#", "%23");
           String outname = outid.replaceAll("_", " ");
           outname = outname.substring(0,1).toUpperCase() + outname.substring(1);
-          html += "<li><b>" + outname + " = </b><a target=\"_blank\" href=\"" + dl + "\">" + outuri.replaceAll(".*?#", "") + "</a></li>";
+          html += "<b>" + outname + " = </b><a target=\"_blank\" href=\"" + dl + "\">" + outuri.replaceAll(".*?#", "") + "</a><br/>";
       }
-      html += "</ol></span>";
+      html += "</span>";
     }
     
     html += "</div>";

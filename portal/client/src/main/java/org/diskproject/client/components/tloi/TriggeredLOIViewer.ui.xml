@@ -57,7 +57,7 @@
             	--paper-icon-button-hover: {
             		color: var(--paper-green-600)
             	}
-            	--paper-icon-button-ink-color: var(--paper-green-200)				
+            	--paper-icon-button-ink-color: var(--paper-green-200)
 			}
 			.section a:hover {
 				text-decoration: underline;
@@ -126,6 +126,16 @@
 			.relative-div {
 			    position: relative;
 			}
+			
+			table.results-table thead th {
+			    text-align: start;
+                padding: 0px 10px;
+			}
+
+			table.results-table td {
+			    text-align: start;
+                padding: 0px 10px;
+			}
 		</style>
 		<div class="vertical layout section">
 			<p:PaperButton ui:field="runButton" styleName="edit-button">
@@ -139,11 +149,18 @@
 
 			<div ui:field="header"/>
 
+			<g:HTMLPanel ui:field="narrative"> </g:HTMLPanel>
+
 			<div ui:field="hypothesisSection">
 				<label class="small-grey">Hypothesis</label>
-				<div class="bordered-list padded">				
-					<div><a ui:field="hypothesisLink" /></div>
-					<tr:TripleViewer ui:field="hypothesis" />
+				<div class="bordered-list padded">
+					<div style="display:flex; justify-content: space-between;">
+					   <a ui:field="hypothesisLink"/>
+					   <g:CheckBox ui:field='showHypothesisGraph' value="false">
+						  <label>Show semantic representation</label>
+						</g:CheckBox>
+					</div>
+					<tr:TripleViewer ui:field="hypothesis"/>
 				</div>
 			</div>
 			
@@ -177,30 +194,11 @@
 				</div>
 			</div>
 
-			<div ui:field="NarrativesSection">
-				<label class="small-grey">Narratives:</label>
-
-				<div class="bordered-list padded">
-					<span>
-						<g:CheckBox ui:field='showExecNarrative'>
-							<label>Show execution narrative</label>
-						</g:CheckBox>
-						<g:CheckBox ui:field='showDataQueryNarrative'>
-							<label>Show data query narrative</label>
-						</g:CheckBox>
-					</span>
-
-					<div>
-						<g:HTMLPanel ui:field="executionNarrative"> </g:HTMLPanel>
-					</div>
-					<div>
-						<g:HTMLPanel ui:field="dataQueryNarrative"> </g:HTMLPanel>
-					</div>
-				</div>
-			</div>
-
 			<div ui:field="WFSection">
-				<label ui:field="WFLabel" class="small-grey">Triggered Workflows</label>
+                <div style="display:flex;justify-content: space-between;align-items: center;">
+					<label class="small-grey">Triggered Workflows</label>
+					<div ui:field="workflowButtons"></div>
+                </div>
 				<div class="bordered-list">
 					<lw:ListWidget ui:field="workflowlist" styleName="list" />
 				</div>
@@ -214,26 +212,10 @@
 			</div>
 			
 			<g:HTMLPanel ui:field="revHypothesisSection" />
-
-			<div ui:field="brainSection">
-				<label class="small-grey">Brain visualization</label>
-				<div class="bordered-list">
-	               <g:HTMLPanel ui:field="brainPanel" styleName="relative-div"/>
-				</div>
-			</div>
-
-			<div ui:field="shinySection">
-				<label class="small-grey">Shiny visualization</label>
-				<div class="bordered-list">
-					<iframe class="shinyviz" ui:field="shinyIframe"></iframe>
-				</div>
-			</div>
-
 		</div>
 
 		<p:PaperDialog ui:field="editBindingsDialog" noCancelOnOutsideClick="true" noCancelOnEscKey="true">
 			<tloi:BindingsEditor ui:field="bindingseditor"/>
 		</p:PaperDialog>
-		
 	</g:HTMLPanel>
 </ui:UiBinder>

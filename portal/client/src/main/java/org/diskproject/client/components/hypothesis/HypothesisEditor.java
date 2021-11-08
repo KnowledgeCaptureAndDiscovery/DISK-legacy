@@ -151,7 +151,13 @@ public class HypothesisEditor extends Composite
     hypothesis.setQuestion(questionFiller.getSelectedQuestion());
     hypothesis.setQuestionBindings(questionFiller.getVariableBindings());
     Graph graph = new Graph();
-    graph.setTriples(triples.getTriples());
+    try {
+        graph.setTriples(triples.getTriples());
+    } catch (Exception e) {
+        questionFiller.addSelectedHypothesis();
+        graph.setTriples(triples.getTriples());
+    }
+    GWT.log("AFTER");
     hypothesis.setGraph(graph);
     
     fireEvent(new HypothesisSaveEvent(hypothesis));

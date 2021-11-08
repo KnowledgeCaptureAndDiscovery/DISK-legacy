@@ -58,6 +58,7 @@
             overflow-y: scroll;
         }
     </style>
+    <g:HTMLPanel ui:field='listHeader'/>
     <g:HTMLPanel ui:field='listContainer' styleName="file-container"/>
 
     <div class="footer">

@@ -529,7 +529,6 @@ public class HypothesisView extends ApplicationSubviewImpl
 
   private String getNamespace(String id) {
     return Config.getServerURL() + "/"+userid+"/"+domain + "/hypotheses/" + id + "#";
-    
   }
 
   @UiHandler("helpicon")

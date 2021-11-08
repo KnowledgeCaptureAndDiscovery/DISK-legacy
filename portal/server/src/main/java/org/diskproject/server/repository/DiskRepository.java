@@ -27,6 +27,7 @@ import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.apache.commons.lang.SerializationUtils;
 import org.diskproject.server.adapters.DataAdapter;
 import org.diskproject.server.adapters.DataResult;
+import org.diskproject.server.adapters.MethodAdapter;
 import org.diskproject.server.adapters.sparqlAdapter;
 //import org.diskproject.server.repository.GmailService.MailMonitor;
 import org.diskproject.server.util.Config;
@@ -53,8 +54,6 @@ import org.diskproject.shared.classes.vocabulary.Type;
 import org.diskproject.shared.classes.workflow.Variable;
 import org.diskproject.shared.classes.workflow.VariableBinding;
 import org.diskproject.shared.classes.workflow.WorkflowRun;
-
-import com.mxgraph.io.graphml.mxGraphMlKey.keyForValues;
 
 import edu.isi.kcap.ontapi.KBAPI;
 import edu.isi.kcap.ontapi.KBObject;
@@ -105,11 +104,11 @@ public class DiskRepository extends KBRepository {
         }*/
         setConfiguration(KBConstants.DISKURI(), KBConstants.DISKNS());
         dataAdapters = new HashMap<String, DataAdapter>();
+        optionsCache = new WeakHashMap<String, List<List<String>>>();
         initializeKB(); // Here
         monitor = Executors.newScheduledThreadPool(0);
         executor = Executors.newFixedThreadPool(2);
         dataThread = new DataMonitor();
-        optionsCache = new WeakHashMap<String, List<List<String>>>();
     }
 
     public void shutdownExecutors() {
@@ -153,34 +152,20 @@ public class DiskRepository extends KBRepository {
         super.initializeKB();
         if (fac == null)
             return;
+        
         try {
             this.neuroontkb = fac.getKB(KBConstants.NEUROURI(), OntSpec.PLAIN, false, true);
-            this.hypontkb = fac.getKB(KBConstants.HYPURI(), OntSpec.PLAIN, false, true);
+            this.hypontkb   = fac.getKB(KBConstants.HYPURI(), OntSpec.PLAIN, false, true);
             this.omicsontkb = fac.getKB(KBConstants.OMICSURI(), OntSpec.PLAIN, false, true);
             this.questionkb = fac.getKB(KBConstants.QUESTIONSURI(), OntSpec.PLAIN, false, true);
-            
-            this.initializeDataAdapters();
-            
-            this.vocabularies = new HashMap<String, Vocabulary>();
-            
-            this.start_read();            
-            
-            this.vocabularies.put(KBConstants.NEUROURI(),
-                    this.initializeVocabularyFromKB(this.neuroontkb, KBConstants.NEURONS()));
-            this.vocabularies.put(KBConstants.HYPURI(),
-                    this.initializeVocabularyFromKB(this.hypontkb, KBConstants.HYPNS()));
-            this.vocabularies.put(KBConstants.OMICSURI(),
-                    this.initializeVocabularyFromKB(this.omicsontkb, KBConstants.OMICSNS()));
-            this.vocabularies.put(KBConstants.DISKURI(),
-                    this.initializeVocabularyFromKB(this.ontkb, KBConstants.DISKNS()));
-            this.vocabularies.put(KBConstants.QUESTIONSURI(),
-                    this.initializeVocabularyFromKB(this.questionkb, KBConstants.QUESTIONSNS()));
-
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            this.end();
+            System.out.println("Error reading KB");
+            return;
         }
+           
+        this.initializeDataAdapters();
+        this.initializeVocabularies();
     }
 
     public void reloadKBCaches () {
@@ -194,7 +179,6 @@ public class DiskRepository extends KBRepository {
                 kb.delete();
                 this.save(kb);
                 this.end(); this.start_write();
-                
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -208,7 +192,7 @@ public class DiskRepository extends KBRepository {
     public PropertyListConfiguration getConfig() {
         return Config.get().getProperties();
     }
-    
+
     private void initializeDataAdapters () {
         //Reads data adapters from config file.
         PropertyListConfiguration cfg = this.getConfig();
@@ -237,57 +221,54 @@ public class DiskRepository extends KBRepository {
                    curPass = cur.get("password");
 
             switch (curType) {
-            case "SPARQL":
-                DataAdapter curAdapter = new sparqlAdapter(curURI, name, curUser, curPass);
-                this.dataAdapters.put(curURI, curAdapter);
-                break;
+                case "SPARQL":
+                    DataAdapter curAdapter = new sparqlAdapter(curURI, name, curUser, curPass);
+                    this.dataAdapters.put(curURI, curAdapter);
+                    break;
 
-            default:
-                break;
+                default:
+                    break;
             }
         }
     }
     
+    private DataAdapter getDataAdapter (String url) {
+        if (this.dataAdapters.containsKey(url))
+            return this.dataAdapters.get(url);
+        return null;
+    }
     /**
      * Vocabulary Initialization
      */
 
-    public Map<String, Vocabulary> getVocabularies() {
-        return this.vocabularies;
-    }
-
-    public Vocabulary getVocabulary(String uri) {
-        return this.vocabularies.get(uri);
-    }
-
-    public Vocabulary getUserVocabulary(String username, String domain) {
-        String url = this.ASSERTIONSURI(username, domain);
+    private void initializeVocabularies () {
+        this.vocabularies = new HashMap<String, Vocabulary>();
         try {
-            KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
             this.start_read();
-            return this.initializeVocabularyFromKB(kb, url + "#");
+
+            this.vocabularies.put(KBConstants.NEUROURI(),
+                    this.initializeVocabularyFromKB(this.neuroontkb, KBConstants.NEURONS()));
+            this.vocabularies.put(KBConstants.HYPURI(),
+                    this.initializeVocabularyFromKB(this.hypontkb, KBConstants.HYPNS()));
+            this.vocabularies.put(KBConstants.OMICSURI(),
+                    this.initializeVocabularyFromKB(this.omicsontkb, KBConstants.OMICSNS()));
+            this.vocabularies.put(KBConstants.DISKURI(),
+                    this.initializeVocabularyFromKB(this.ontkb, KBConstants.DISKNS()));
+            this.vocabularies.put(KBConstants.QUESTIONSURI(),
+                    this.initializeVocabularyFromKB(this.questionkb, KBConstants.QUESTIONSNS()));
+
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             this.end();
         }
-        return null;
     }
 
-    //FIXME: this is weird.
     public Vocabulary initializeVocabularyFromKB(KBAPI kb, String ns) {
         Vocabulary vocabulary = new Vocabulary(ns);
-        try {
-            this.fetchTypesAndIndividualsFromKB(kb, vocabulary); // Here
-            this.fetchPropertiesFromKB(kb, vocabulary);
-            return vocabulary;
-        } catch (Exception e) {
-            e.printStackTrace();
-            vocabulary = new Vocabulary(ns);
-            this.fetchTypesAndIndividualsFromKB(kb, vocabulary); // Here
-            this.fetchPropertiesFromKB(kb, vocabulary);
-            return vocabulary;
-        }
+        this.fetchTypesAndIndividualsFromKB(kb, vocabulary);
+        this.fetchPropertiesFromKB(kb, vocabulary);
+        return vocabulary;
     }
 
     private void fetchPropertiesFromKB(KBAPI kb, Vocabulary vocabulary) {
@@ -316,92 +297,75 @@ public class DiskRepository extends KBRepository {
     }
 
     private void fetchTypesAndIndividualsFromKB(KBAPI kb, Vocabulary vocabulary) {
-        try {
-            KBObject typeprop = kb.getProperty(KBConstants.RDFNS() + "type");
-            for (KBTriple t : kb.genericTripleQuery(null, typeprop, null)) {
-                KBObject inst = t.getSubject();
-                KBObject typeobj = t.getObject();
-                try {
-                    if (!inst.getID().startsWith(vocabulary.getNamespace())) // Null
-            // Pointer
-                                                                                // Exception
-                        continue;
-                    if (typeobj.getNamespace().equals(KBConstants.OWLNS()))
-                        continue;
-                    // Add individual
-                    //FIXME: this does not ADD individuals without type.
-                    Individual ind = new Individual();
-                    ind.setId(inst.getID());
-                    ind.setName(inst.getName());
-                    ind.setType(typeobj.getID());
-                    String label = kb.getLabel(inst);
-                    if (label == null)
-                        label = inst.getName();
-                    ind.setLabel(label);
-                    vocabulary.addIndividual(ind);
+        KBObject typeprop = kb.getProperty(KBConstants.RDFNS() + "type");
+        for (KBTriple t : kb.genericTripleQuery(null, typeprop, null)) {
+            KBObject inst = t.getSubject();
+            KBObject typeobj = t.getObject();
+            String instid = inst.getID();
 
-                    // Add asserted types
-                    if (!typeobj.getID().startsWith(vocabulary.getNamespace()))
-                        continue;
-                    String clsid = typeobj.getID();
-                    Type type = new Type();
-                    type.setId(clsid);
-                    type.setName(typeobj.getName());
-                    type.setLabel(kb.getLabel(typeobj));
-                    vocabulary.addType(type);
-                } catch (Exception e) {
-                    // Verified that exception is not abnormal
-                    // e.printStackTrace();
-                }
-            }
-            // Add types not asserted
-            KBObject clsobj = kb.getProperty(KBConstants.OWLNS() + "Class");
-
-            for (KBTriple t : kb.genericTripleQuery(null, typeprop, clsobj)) {
-                KBObject cls = t.getSubject();
-                try {
-                    if (!cls.getID().startsWith(vocabulary.getNamespace()))
-                        continue;
-                    if (cls.getNamespace().equals(KBConstants.OWLNS()))
-                        continue;
-
-                    String clsid = cls.getID();
-                    Type type = vocabulary.getType(clsid);
-                    if (type == null) {
-                        type = new Type();
-                        type.setId(clsid);
-                        type.setName(cls.getName());
-                        type.setLabel(kb.getLabel(cls));
-                        vocabulary.addType(type);
-                    }
-                } catch (Exception e) {
-                    if (vocabulary.getNamespace().indexOf("neuro") != -1) {
-                        e.printStackTrace();
-                    }
-                }
+            if (instid == null || instid.startsWith(vocabulary.getNamespace()) || typeobj.getNamespace().equals(KBConstants.OWLNS())) {
+                continue;
             }
 
-            // Add type hierarchy
-            KBObject subclsprop = kb.getProperty(KBConstants.RDFSNS() + "subClassOf");
-            for (KBTriple t : kb.genericTripleQuery(null, subclsprop, null)) {
-                KBObject subcls = t.getSubject();
-                KBObject cls = t.getObject();
-                String clsid = cls.getID();
+            // Add individual, this does not ADD individuals without type.
+            Individual ind = new Individual();
+            ind.setId(inst.getID());
+            ind.setName(inst.getName());
+            ind.setType(typeobj.getID());
+            String label = kb.getLabel(inst);
+            if (label == null)
+                label = inst.getName();
+            ind.setLabel(label);
+            vocabulary.addIndividual(ind);
 
-                Type subtype = vocabulary.getType(subcls.getID());
-                if (subtype == null)
-                    continue;
+            // Add asserted types
+            if (!typeobj.getID().startsWith(vocabulary.getNamespace()))
+                continue;
+            String clsid = typeobj.getID();
+            Type type = new Type();
+            type.setId(clsid);
+            type.setName(typeobj.getName());
+            type.setLabel(kb.getLabel(typeobj));
+            vocabulary.addType(type);
+        }
 
-                if (!clsid.startsWith(KBConstants.OWLNS()))
-                    subtype.setParent(clsid);
-
-                Type type = vocabulary.getType(cls.getID());
-                if (type != null && subtype.getId().startsWith(vocabulary.getNamespace())) {
-                    type.addChild(subtype.getId());
-                }
+        // Add types not asserted
+        KBObject clsobj = kb.getProperty(KBConstants.OWLNS() + "Class");
+        for (KBTriple t : kb.genericTripleQuery(null, typeprop, clsobj)) {
+            KBObject cls = t.getSubject();
+            String clsid = cls.getID();
+            if (clsid == null || !clsid.startsWith(vocabulary.getNamespace()) || cls.getNamespace().equals(KBConstants.OWLNS()) ) {
+                continue;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+
+            Type type = vocabulary.getType(clsid);
+            if (type == null) {
+                type = new Type();
+                type.setId(clsid);
+                type.setName(cls.getName());
+                type.setLabel(kb.getLabel(cls));
+                vocabulary.addType(type);
+            }
+        }
+
+        // Add type hierarchy
+        KBObject subclsprop = kb.getProperty(KBConstants.RDFSNS() + "subClassOf");
+        for (KBTriple t : kb.genericTripleQuery(null, subclsprop, null)) {
+            KBObject subcls = t.getSubject();
+            KBObject cls = t.getObject();
+            String clsid = cls.getID();
+
+            Type subtype = vocabulary.getType(subcls.getID());
+            if (subtype == null)
+                continue;
+
+            if (!clsid.startsWith(KBConstants.OWLNS()))
+                subtype.setParent(clsid);
+
+            Type type = vocabulary.getType(cls.getID());
+            if (type != null && subtype.getId().startsWith(vocabulary.getNamespace())) {
+                type.addChild(subtype.getId());
+            }
         }
     }
 
@@ -415,8 +379,30 @@ public class DiskRepository extends KBRepository {
         return pname.substring(0, 1).toUpperCase() + pname.substring(1);
     }
 
+    public Map<String, Vocabulary> getVocabularies() {
+        return this.vocabularies;
+    }
+
+    public Vocabulary getVocabulary(String uri) {
+        return this.vocabularies.get(uri);
+    }
+
+    public Vocabulary getUserVocabulary(String username, String domain) {
+        String url = this.ASSERTIONSURI(username, domain);
+        try {
+            KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
+            this.start_read();
+            return this.initializeVocabularyFromKB(kb, url + "#");
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            this.end();
+        }
+        return null;
+    }
+
     /*
-     * Questions and wiki options
+     * Questions and option configuration
      */
 
     public List<Question> listHypothesesQuestions () {
@@ -479,98 +465,32 @@ public class DiskRepository extends KBRepository {
     }
 
     private List<List<String>> loadVariableOptions (String sid) {
-        String id = "http://disk-project.org/resources/question/" + sid;
+        String id = KBConstants.QUESTIONSNS() + "/" + sid;
+
         List<List<String>> options = new ArrayList<List<String>>();
-        String query = null;
-        KBAPI kb = this.questionkb;
-        if (kb != null) try {
+        String varname = null, constraintQuery = null;
+        String[] fixedoptions = null;
+        
+        // Get questions options from KB.
+        try {
             this.start_read();
-            KBObject qvar = kb.getIndividual(id);
-            KBObject qname = qvar == null ? null : kb.getPropertyValue(qvar, pmap.get("hasVariableName"));
-            if (qvar != null && qname != null) {
-                String varname = qname.getValueAsString();
-                String name = varname.substring(1);
-                KBObject constraints = kb.getPropertyValue(qvar, pmap.get("hasConstraints"));
-                KBObject fixedOptions = kb.getPropertyValue(qvar, pmap.get("hasFixedOptions"));
-                this.end();
-                if (fixedOptions != null) {
-                    String[] fixedoptions = fixedOptions.getValueAsString().split(",");
-                    for (String val: fixedoptions) {
-                        List<String> opt = new ArrayList<String>();
-                        opt.add(val);
-                        opt.add(val);
-                        options.add(opt);
-                    }
-                } else if (constraints != null) {
-                    query = "PREFIX xsd:  <" + KBConstants.XSDNS() + ">\n" +
-                            "PREFIX rdfs: <" + KBConstants.RDFSNS() + ">\n" +
-                            "PREFIX rdf:  <" + KBConstants.RDFNS() + ">\n" +
-                            "SELECT DISTINCT ?label " + varname + " WHERE {\n  " +
-                            constraints.getValueAsString() + "\n  " +
-                            "OPTIONAL { " + varname + " rdfs:label ?label . }\n}";
-
-                    Map<String, List<DataResult>> solutions = queryAllDataProviders(query);
-                    
-                    // To check that all labels are only once
-                    Map<String, List<List<String>>> labelToOption = new HashMap<String, List<List<String>>>();
-                    
-                    for (String dataSourceName: solutions.keySet()) {
-                        for (DataResult solution: solutions.get(dataSourceName)) {
-                            String valUrl = solution.getValue(name);
-                            String valName = solution.getName(name);
-                            String userLabel = solution.getValue(name + "Label");
-                            String label = solution.getValue("label");
-                            if (userLabel != null) {
-                                label = userLabel;
-                            } else if (label == null && valName != null) {
-                                label = valName;
-                            } else {
-                                label = valUrl.replaceAll("^.*\\/", "");
-                            }
-
-                            if (valUrl != null && label != null) {
-                                List<List<String>> sameLabelOptions = labelToOption.containsKey(label) ? labelToOption.get(label) : new ArrayList<List<String>>();
-                                List<String> thisOption = new ArrayList<String>();
-                                thisOption.add(valUrl);
-                                thisOption.add(label);
-                                thisOption.add(dataSourceName);
-                                sameLabelOptions.add(thisOption);
-                                labelToOption.put(label, sameLabelOptions);
-                            }
-                        }
-                    }
-                    
-                    //Add all options
-                    for (List<List<String>> sameLabelOptions: labelToOption.values()) {
-
-                        if (sameLabelOptions.size() == 1) {
-                            options.add(sameLabelOptions.get(0).subList(0, 2));
-                        } else { //There's more than one option with the same label
-                            boolean allTheSame = true;
-                            String lastValue = sameLabelOptions.get(0).get(0); //Comparing IDs
-                            for (List<String> candOption: sameLabelOptions) {
-                                if (!lastValue.equals(candOption.get(0))) {
-                                    allTheSame = false;
-                                    break;
-                                }
-                            }
-                            
-                            if (allTheSame) {
-                                options.add(sameLabelOptions.get(0).subList(0, 2));
-                            } else {
-                                for (List<String> candOption: sameLabelOptions) {
-                                    List<String> newOption = new ArrayList<String>();
-                                    newOption.add(candOption.get(0));
-                                    newOption.add(candOption.get(1) + " (" + candOption.get(2) + ")");
-                                    options.add(newOption);
-                                }
-                            }
-                        }
-                    }
+            KBObject qvar = this.questionkb.getIndividual(id);
+            if (qvar != null) {
+                KBObject qname = this.questionkb.getPropertyValue(qvar, pmap.get("hasVariableName"));
+                KBObject constraints = this.questionkb.getPropertyValue(qvar, pmap.get("hasConstraints"));
+                KBObject fixedOptions = this.questionkb.getPropertyValue(qvar, pmap.get("hasFixedOptions"));
+                
+                if (qname != null) {
+                    varname = qname.getValueAsString();
                 }
-            } else {
-                this.end();
+
+                if (fixedOptions != null)
+                    fixedoptions = fixedOptions.getValueAsString().split(",");
+                
+                if (constraints != null)
+                    constraintQuery = constraints.getValueAsString();
             }
+            this.end();
         } catch (Exception e) {
             if (is_in_transaction()) {
                 System.err.println("ERROR:loadVariableOptions Exception with a transaction open.");
@@ -579,7 +499,72 @@ public class DiskRepository extends KBRepository {
                 e.printStackTrace();
             }
         }
-        //System.out.println("options: " + options.size());
+        
+        // If there are fixed options, return these
+        if (fixedoptions != null) {
+            for (String val: fixedoptions) {
+                List<String> opt = new ArrayList<String>();
+                opt.add(val);
+                opt.add(val);
+                options.add(opt);
+            }
+        } else if (constraintQuery != null) {
+            //If there is a constraint query, send it to all data providers;
+            Map<String, List<DataResult>> solutions = new HashMap<String, List<DataResult>>();
+            for (DataAdapter adapter: this.dataAdapters.values()) {
+                //TODO: add some way to check if this adapter support this type of query. All SPARQL for the moment.
+                solutions.put(adapter.getName(), adapter.queryOptions(varname, constraintQuery));
+            }
+            
+            
+            // To check that all labels are only once
+            Map<String, List<List<String>>> labelToOption = new HashMap<String, List<List<String>>>();
+            
+            for (String dataSourceName: solutions.keySet()) {
+                for (DataResult solution: solutions.get(dataSourceName)) {
+                    String uri = solution.getValue(DataAdapter.VARURI);
+                    String label = solution.getValue(DataAdapter.VARLABEL);
+
+                    if (uri != null && label != null) {
+                        List<List<String>> sameLabelOptions = labelToOption.containsKey(label) ? labelToOption.get(label) : new ArrayList<List<String>>();
+                        List<String> thisOption = new ArrayList<String>();
+                        thisOption.add(uri);
+                        thisOption.add(label);
+                        thisOption.add(dataSourceName);
+                        sameLabelOptions.add(thisOption);
+                        labelToOption.put(label, sameLabelOptions);
+                    }
+                }
+            }
+                    
+            //Add all options
+            for (List<List<String>> sameLabelOptions: labelToOption.values()) {
+                if (sameLabelOptions.size() == 1) {
+                    options.add(sameLabelOptions.get(0).subList(0, 2));
+                } else { //There's more than one option with the same label
+                    boolean allTheSame = true;
+                    String lastValue = sameLabelOptions.get(0).get(0); //Comparing IDs
+                    for (List<String> candOption: sameLabelOptions) {
+                        if (!lastValue.equals(candOption.get(0))) {
+                            allTheSame = false;
+                            break;
+                        }
+                    }
+                    
+                    if (allTheSame) {
+                        options.add(sameLabelOptions.get(0).subList(0, 2));
+                    } else {
+                        for (List<String> candOption: sameLabelOptions) {
+                            List<String> newOption = new ArrayList<String>();
+                            newOption.add(candOption.get(0));
+                            newOption.add(candOption.get(1) + " (" + candOption.get(2) + ")");
+                            options.add(newOption);
+                        }
+                    }
+                }
+            }
+        }
+                
         return options;
     }
     
@@ -587,40 +572,13 @@ public class DiskRepository extends KBRepository {
      * Querying
      */    
     
-    private Map<String, List<DataResult>> queryAllDataProviders (String query) {
-        Map<String, List<DataResult>> all = new HashMap<String, List<DataResult>>();
-        for (DataAdapter adapter: this.dataAdapters.values()) {
-            all.put(adapter.getName(), adapter.query(query));
-        }
-        
-        return all;
+    private String getAllPrefixes () {
+        return "PREFIX bio: <" + KBConstants.OMICSNS() + ">\nPREFIX neuro: <" + KBConstants.NEURONS() + ">\n"
+             + "PREFIX hyp: <" + KBConstants.HYPNS()   + ">\nPREFIX xsd: <" + KBConstants.XSDNS() + ">\n"
+             + "PREFIX rdfs: <" + KBConstants.RDFSNS() + ">\nPREFIX rdf: <" + KBConstants.RDFNS() + ">\n"                
+             + "PREFIX disk: <" + KBConstants.DISKNS() + ">\n";
     }
     
-    private Map<String,String> getWikiHash (List<String> files, String endpoint) {
-        String query = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n"
-                + "SELECT DISTINCT ?file ?sha WHERE {\n"
-                + "  ?page ?contentUrl ?file .\n"
-                + "  ?page ?hashProp ?sha .\n"
-                + "  ?contentUrl rdfs:label \"HasContentUrl (E)\" .\n"
-                + "  ?hashProp rdfs:label \"Checksum (E)\"\n"
-                + "  VALUES ?file {\n    <"
-                + String.join(">\n    <", files) + ">\n"
-                + "  }\n"
-                + "}";
-
-        Map<String, String> result = new HashMap<String, String>();
-        List<DataResult> solutions = this.dataAdapters.get(endpoint).query(query);
-        
-        for (DataResult solution: solutions) {
-            String filename = solution.getValue("file");
-            String sha = solution.getValue("sha");
-            if (filename != null && sha != null)
-                result.put(filename, sha);
-        }
-
-        return result;
-    }
-
     private String getDistinctSparqlQuery(String queryPattern, String assertionsUri, List<String> variables) {
         return "PREFIX bio: <" + KBConstants.OMICSNS() + ">\n" + "PREFIX neuro: <" + KBConstants.NEURONS() + ">\n"
                 + "PREFIX hyp: <" + KBConstants.HYPNS() + ">\n" + "PREFIX xsd: <" + KBConstants.XSDNS() + ">\n"
@@ -649,7 +607,8 @@ public class DiskRepository extends KBRepository {
             queryVars = variables;
         }
         
-        if (!this.dataAdapters.containsKey(endpoint))
+        DataAdapter dataAdapter = this.getDataAdapter(endpoint);
+        if (dataAdapter == null)
             return dataVarBindings;
         
         String dataQuery = "PREFIX bio: <http://disk-project.org/ontology/omics#>\n" + 
@@ -662,7 +621,7 @@ public class DiskRepository extends KBRepository {
                 sparqlQuery + "\n} LIMIT 200";
         //There's a limit here to prevent {?a ?b ?c} and so on
         
-        List<DataResult> solutions = this.dataAdapters.get(endpoint).query(dataQuery);
+        List<DataResult> solutions = dataAdapter.query(dataQuery);
         int size = solutions.size();
         
         if (size > 0) {
@@ -845,10 +804,11 @@ public class DiskRepository extends KBRepository {
                 if (variableBindings.size() > 0) hypothesis.setQuestionBindings(variableBindings);
             }
 
-            this.updateTripleDetails(graph, provkb); //Updates provenance on READ? FIXME
+            this.updateTripleDetails(graph, provkb);
 
             return hypothesis;
-
+        } catch (ConcurrentModificationException e) {
+           System.out.println("ERROR: Concurrent modification exception on getHypothesis");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -1053,9 +1013,179 @@ public class DiskRepository extends KBRepository {
 
     /*
      * Executing hypothesis
+     * 
+            KBAPI kb = this.fac.getKB(url, OntSpec.PLAIN, true);
+            KBObject hypcls = this.cmap.get("LineOfInquiry");
+            KBObject typeprop = kb.getProperty(KBConstants.RDFNS() + "type");
+            for (KBTriple t : kb.genericTripleQuery(null, typeprop, hypcls)) {
+                KBObject hypobj = t.getSubject();
+                String name = kb.getLabel(hypobj);
+                String description = kb.getComment(hypobj);
+
+                KBObject dateobj = kb.getPropertyValue(hypobj, pmap.get("dateCreated"));
+                String date = null;
+                if (dateobj != null)
+                    date = dateobj.getValueAsString();
      */
+
+    public Map<LineOfInquiry, List<Map<String, String>>> getLOIByHypothesisId (String username, String domain, String id) {
+        String hypuri = this.HYPURI(username, domain) + "/" + id;
+        // LOIID -> [{ variable -> value }]
+        Map<String, List<Map<String, String>>> allMatches = new HashMap<String, List<Map<String,String>>>();
+
+        //Starts checking all LOIs that match the hypothesis directly from the KB.
+        try {
+            this.start_read();
+            KBAPI hypkb = this.fac.getKB(hypuri, OntSpec.PLAIN, true);
+            KBAPI loikb = this.fac.getKB(this.LOIURI(username, domain), OntSpec.PLAIN, true);
+
+            KBObject hypcls = this.cmap.get("LineOfInquiry");
+            KBObject typeprop = loikb.getProperty(KBConstants.RDFNS() + "type");
+            for (KBTriple t : loikb.genericTripleQuery(null, typeprop, hypcls)) {
+                String loifullid = t.getSubject().getID();
+
+                KBAPI curkb = this.fac.getKB(loifullid, OntSpec.PLAIN, true);
+                KBObject loiobj = curkb.getIndividual(t.getSubject().getID());
+                KBObject hq = curkb.getPropertyValue(loiobj, pmap.get("hasHypothesisQuery"));
+                if (hq != null) {
+                    String query = this.getAllPrefixes()
+                                 + "SELECT DISTINCT * WHERE { \n" + hq.getValueAsString().replaceAll("\n", ".\n") + " }";
+                    ArrayList<ArrayList<SparqlQuerySolution>> allSolutions = hypkb.sparqlQuery(query);
+                    for (List<SparqlQuerySolution> row: allSolutions) {
+                        // One match per cell, store variables on cur.
+                        Map<String, String> cur = new HashMap<String, String>();
+                        for (SparqlQuerySolution cell: row) {
+                            String var = cell.getVariable(), val = null;
+                            KBObject obj = cell.getObject();
+                            if (obj != null) {
+                                if (obj.isLiteral()) {
+                                    val = '"' + obj.getValueAsString() + '"';
+                                } else {
+                                    val = "<" + obj.getID() + ">";
+                                }
+                                cur.put(var, val);
+                            }
+                        }
+                        // If there is at least one variable binded, add to match list.
+                        if (cur.size() > 0) {
+                            String loiid = loifullid.replaceAll("^.*\\/", "");
+                            if (!allMatches.containsKey(loiid))
+                                allMatches.put(loiid, new ArrayList<Map<String,String>>());
+                            List<Map<String, String>> curList = allMatches.get(loiid);
+                            curList.add(cur);
+                        }
+                    }
+                }
+            }
+            this.end();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Map<LineOfInquiry, List<Map<String, String>>> results = new HashMap<LineOfInquiry, List<Map<String,String>>>();
+        // allMatches contains LOIs that matches hypothesis, now check other conditions
+        for (String loiid: allMatches.keySet()) {
+            LineOfInquiry loi = this.getLOI(username, domain, loiid);
+            DataAdapter dataAdapter = getDataAdapter(loi.getDataSource());
+            MethodAdapter methodAdapter = WingsAdapter.get();
+            if (dataAdapter != null) {
+                if (!results.containsKey(loi))
+                    results.put(loi, new ArrayList<Map<String,String>>());
+                List<Map<String, String>> curList = results.get(loi);
+                for (Map<String, String> values: allMatches.get(loiid)) {
+                    if (dataAdapter.validateLOI(loi, values) && methodAdapter.validateLOI(loi, values)) {
+                        curList.add(values);
+                    }
+                }
+            }
+        }
+        
+        // LOI -> [{ variable -> value }, {...}, ...]
+        return results;
+    }
     
     public List<TriggeredLOI> queryHypothesis(String username, String domain, String id) {
+        List<TriggeredLOI> tlois = new ArrayList<TriggeredLOI>();
+
+        System.out.println("Quering hypothesis: " + id);
+        Map<LineOfInquiry, List<Map<String, String>>> matchingBindings = this.getLOIByHypothesisId(username, domain, id);
+        for (LineOfInquiry loi: matchingBindings.keySet()) {
+            //One hypothesis can match the same LOI in more than one way, the following for-loop handles that
+            for (Map<String, String> values: matchingBindings.get(loi)) {
+                String dq = getQueryBindings(loi.getDataQuery(), varPattern, values);
+                String query = this.getAllPrefixes() + "SELECT DISTINCT ";
+                for (String qvar: loi.getAllWorkflowVariables()) query += qvar + " ";
+                query += "{\n" + dq + "}";
+
+                List<DataResult> solutions = this.dataAdapters.get(loi.getDataSource()).query(query);
+                if (solutions.size() > 0) {
+                    System.out.println("  LOI " + loi.getId() + " got " + solutions.size() + " results");
+                    /*for (DataResult dr: queryResults) {
+                        System.out.println(dr.getVariableNames());
+                    }*/
+                    
+                    
+                    
+                    
+                ///TODO: continue here.
+                // Store solutions in dataVarBindings
+                Map<String, List<String>> dataVarBindings = new HashMap<String, List<String>>();
+                Set<String> varNames =  solutions.get(0).getVariableNames();
+                for (String varname: varNames)
+                    dataVarBindings.put(varname, new ArrayList<String>());
+
+                for (DataResult solution: solutions) {
+                    for (String varname: varNames) {
+                        dataVarBindings.get(varname).add(solution.getValue(varname));
+                    }
+                }
+
+                //System.out.println("Results proceced");
+                // Add the parameters
+                for (String param: loi.getAllWorkflowParameters()) {
+                    if (param.charAt(0) == '?') param = param.substring(1);
+                    String bind = values.get(param);
+                    if (bind != null) {
+                        List<String> abind = new ArrayList<String>();
+                        abind.add(bind);
+                        dataVarBindings.put(param, abind);
+                    }
+                }
+                
+                // check collections
+                Set<String> varNonCollection = loi.getAllWorkflowNonCollectionVariables();
+
+                //System.out.println("dataBindings:");
+                for (String key: dataVarBindings.keySet()) {
+                  //System.out.println(" " + key + ":");
+                  String var = (key.charAt(0) != '?') ? '?' + key : key;
+                  if (varNonCollection.contains(var)) {
+                    //System.out.println("  Is not a collection");
+                    Set<String> fixed = new HashSet<String>(dataVarBindings.get(key));
+                    dataVarBindings.put(key, new ArrayList<String>(fixed));
+                  }
+                }
+                
+                String endpoint = loi.getDataSource();
+                TriggeredLOI tloi = new TriggeredLOI(loi, id);
+                tloi.setWorkflows(
+                    this.getTLOIBindings(username, domain, loi.getWorkflows(), dataVarBindings, endpoint)
+                    );
+                tloi.setMetaWorkflows(
+                    this.getTLOIBindings(username, domain, loi.getMetaWorkflows(), dataVarBindings, endpoint));
+                tloi.setDataQuery(dq);
+                tloi.setRelevantVariables(loi.getRelevantVariables());
+                tloi.setExplanation(loi.getExplanation());
+                tlois.add(tloi);
+                    
+                }
+
+            }
+        }
+        return checkExistingTLOIs(username, domain, tlois);
+  }
+    
+    public List<TriggeredLOI> queryHypothesis2(String username, String domain, String id) {
         List<TriggeredLOI> tlois = new ArrayList<TriggeredLOI>();
         String hypuri = this.HYPURI(username, domain) + "/" + id;
         String assertions = this.ASSERTIONSURI(username, domain);
@@ -1075,7 +1205,8 @@ public class DiskRepository extends KBRepository {
               List<Map<String, String>> results = matches.get(loi);
               
               //Check if the data-source has a register adapter:
-              if (!this.dataAdapters.containsKey(loi.getDataSource())) {
+              DataAdapter adapter = getDataAdapter(loi.getDataSource());
+              if (adapter == null) {
                   System.out.println("Data source not registered: " + loi.getDataSource());
                   continue;
               }
@@ -1098,7 +1229,6 @@ public class DiskRepository extends KBRepository {
                       dataQuery = dataQuery.substring(0, dataQuery.length()-1);
                 
                   //Sending the query
-                  DataAdapter adapter = this.dataAdapters.get(loi.getDataSource());
                   List<DataResult> solutions = adapter.query(dataQuery);
                 
                   if (solutions.size() == 0) {
@@ -1490,7 +1620,7 @@ public class DiskRepository extends KBRepository {
         Map<String, String> nameToUrl = new HashMap<String, String>();
         Map<String, String> urlToName = new HashMap<String, String>();
         
-        Map<String, String> hashes = getWikiHash(dsurls, endpoint);
+        Map<String, String> hashes = getDataAdapter(endpoint).getFileHashes(dsurls);
         for (String file: hashes.keySet()) {
             String hash = hashes.get(file);
             String newName = "SHA" + hash.substring(0,6) + "_" + file.replaceAll("^.*\\/", "");
@@ -2550,6 +2680,11 @@ public class DiskRepository extends KBRepository {
             Hypothesis hyp = this.getHypothesis(username, domain, hypId);
             LineOfInquiry loi = this.getLOI(username, domain, loiId);
             
+            if (loi == null || hyp == null) {
+                System.out.print("ERROR: could not get hypotheses or LOI");
+                return narratives;
+            }
+            
             // Assuming each tloi only has a workflow or metaworkdflow:
             WorkflowBindings wf = null;
             List<WorkflowBindings> wfs = tloi.getWorkflows();
@@ -2563,20 +2698,54 @@ public class DiskRepository extends KBRepository {
                 System.out.println("TLOID: " + tloid + " has does not have any workflow.");
             }
             
+            // List of data used.
             String dataset = "";
             String fileprefix = "https://enigma-disk.wings.isi.edu/wings-portal/users/admin/test/data/fetch?data_id=http%3A//skc.isi.edu%3A8080/wings-portal/export/users/" 
                               + username + "/" + domain + "/data/library.owl%23";
+            boolean allCollections = true;
+            int len = 0;
             for (VariableBinding ds: wf.getBindings()) {
-                String binding = ds.getBinding();
-                if (binding.startsWith("[")) {
-                    for (String datas: ds.getBindingAsArray()) {
+                if (!ds.isCollection()) {
+                    allCollections = false;
+                    break;
+                }
+                len = ds.getBindingAsArray().length > len ? ds.getBindingAsArray().length : len;
+            }
+            if (allCollections) {
+                //dataset += "<table>";
+                dataset += "<table><thead><tr><td><b>#</b></td>";
+                for (VariableBinding ds: wf.getBindings()) {
+                    dataset += "<td><b>" + ds.getVariable() + "</b></td>";
+                }
+                dataset += "</tr></thead><tbody>";
+                for (int i = 0; i < len; i++) {
+                    dataset += "<tr>";
+                    dataset += "<td>" + (i+1) + "</td>";
+                    for (VariableBinding ds: wf.getBindings()) {
+                        String[] bindings = ds.getBindingAsArray();
+                        String datas = bindings[i];
                         String dataname = datas.replaceAll("^.*#", "").replaceAll("SHA\\w{6}_", "");
                         String url = fileprefix + datas;
                         String anchor = "<a target=\"_blank\" href=\"" + url + "\">" + dataname + "</a>";
-                        dataset += "<li>" + anchor + "</li>";
+                        dataset += "<td>" + anchor + "</td>";
                     }
+                    dataset += "</tr>";
                 }
-                System.out.println("binding: " + binding);
+                dataset += "</tbody></table>";
+                
+            } else {
+                for (VariableBinding ds: wf.getBindings()) {
+                    String binding = ds.getBinding();
+                    if (binding.startsWith("[")) {
+                        for (String datas: ds.getBindingAsArray()) {
+                            String dataname = datas.replaceAll("^.*#", "").replaceAll("SHA\\w{6}_", "");
+                            String url = fileprefix + datas;
+                            String anchor = "<a target=\"_blank\" href=\"" + url + "\">" + dataname + "</a>";
+                            dataset += "<li>" + anchor + "</li>";
+                        }
+                    }
+                    System.out.println("binding: " + binding);
+                }
             }
             Double confidence = tloi.getConfidenceValue();
             DecimalFormat df = new DecimalFormat(confidence != 0 && confidence < 0.001 ?
