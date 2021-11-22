@@ -190,8 +190,8 @@
 ?EffectSize neuro:targetCharacteristic ?BrainImagingTrait
 ?EffectSize neuro:targetCharacteristic ?Region
 ?EffectSize hyp:associatedWith ?DemographicAttribute
-optional { ?DemographicAttribute hyp:lessThan ?maxAge }
-optional { ?DemographicAttribute hyp:moreThan ?minAge }</ns0:hasQuestionPattern>
+optional { ?DemographicAttribute hyp:lessThan ?maxDemographic }
+optional { ?DemographicAttribute hyp:moreThan ?minDemographic }</ns0:hasQuestionPattern>
         <ns0:hasQuestionTemplate>Is the EffectSize of ?Genotype on ?BrainImagingTrait of ?Region associated with ?DemographicAttribute</ns0:hasQuestionTemplate>
         <ns0:hasQuestionVariable rdf:resource="http://disk-project.org/resources/question/HQ3V1"/>
         <ns0:hasQuestionVariable rdf:resource="http://disk-project.org/resources/question/HQ3V2"/>
@@ -242,9 +242,15 @@ BIND(REPLACE (REPLACE (?BrainImagingTrait, &quot;SA&quot;, &quot;Surface Area&qu
     <owl:NamedIndividual rdf:about="http://disk-project.org/resources/question/HQ3V4">
         <rdf:type rdf:resource="http://disk-project.org/ontology/disk#QuestionVariable"/>
         <ns0:hasConstraints>?hasCohortProj rdfs:label &quot;HasCohortProject (E)&quot; .
-?DemographicAttribute rdfs:label &quot;HasAge Mean (E)&quot; .
 [] ?hasCohortProj ?CohortProjects .
-?CohortProjects ?DemographicAttribute [] .</ns0:hasConstraints>
+?CohortProjects ?DemographicAttribute [] .
+?DemographicAttribute rdfs:label ?DemographicAttributeLabel .
+FILTER (
+  REGEX(?DemographicAttributeLabel, &quot;HasAge Mean&quot;) ||
+  REGEX(?DemographicAttributeLabel, &quot;HasNumberOfParticipants&quot;) ||    
+  REGEX(?DemographicAttributeLabel, &quot;HasNumberOfMaleSex&quot;) ||    
+  REGEX(?DemographicAttributeLabel, &quot;HasNumberOfFemaleSex&quot;)
+)</ns0:hasConstraints>
         <ns0:hasVariableName>?DemographicAttribute</ns0:hasVariableName>
     </owl:NamedIndividual>
     
