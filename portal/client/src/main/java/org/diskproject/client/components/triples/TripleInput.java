@@ -312,9 +312,7 @@ public class TripleInput extends GWTCodeMirror {
     DiskREST.getVocabulary(new Callback<Vocabulary, Throwable>() {
       @Override
       public void onSuccess(Vocabulary result) {
-        vocabularies.put(prefix, result);
-        util.addNamespacePrefix(prefix, result.getNamespace());
-        loadTerms(prefix, result);
+        setVocabulary(prefix, result);
         if(callback != null)
           callback.onSuccess(prefix);
       }      
@@ -326,6 +324,12 @@ public class TripleInput extends GWTCodeMirror {
           callback.onFailure(reason);
       }
     }, uri, false);
+  }
+  
+  public void setVocabulary (String prefix, Vocabulary result) {
+      vocabularies.put(prefix, result);
+      util.addNamespacePrefix(prefix, result.getNamespace());
+      loadTerms(prefix, result);
   }
   
   public void loadUserVocabulary(final String prefix, String userid, String domain,
@@ -375,7 +379,11 @@ public class TripleInput extends GWTCodeMirror {
     allprops.put("rdfs:subClassOf", subcProp);
     
     Property labelProp = new Property();
-    subcProp.setId(KBConstants.RDFSNS() + "label");
+    labelProp.setId(KBConstants.RDFSNS() + "label");
     allprops.put("rdfs:label", labelProp);
+    
+    Type integerType = new Type();
+    integerType.setId("http://www.w3.org/2001/XMLSchema#integer");
+    alltypes.put("xsd:integer", integerType);
   }
 }

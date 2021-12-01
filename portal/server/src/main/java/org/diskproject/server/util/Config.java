@@ -90,7 +90,9 @@ public class Config {
     config.addProperty("server", server);
     config.addProperty("username", "DEFAULT_USERNAME");
     config.addProperty("domain", "DEFAULT_DOMAIN");
-    config.addProperty("data-store", "DEFAULT_WIKI_ENDPOINT");
+    config.addProperty("data-adapters.EXAMPLE_ADAPTER.endpoint", "ADD_HERE");
+    config.addProperty("data-adapters.EXAMPLE_ADAPTER.namespace", "ADD_HERE");
+    config.addProperty("data-adapters.EXAMPLE_ADAPTER.prefix", "ADD_HERE");
     config.addProperty("wings.server", "http://www.wings-workflows.org/wings-omics-portal");
     config.addProperty("wings.passwords.USERNAME_HERE", "PASSWORD_HERE");
     config.addProperty("gmail.username", "USERNAME_HERE");

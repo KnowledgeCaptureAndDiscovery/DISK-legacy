@@ -197,11 +197,12 @@ public class DiskRepository extends KBRepository {
         //Reads data adapters from config file.
         PropertyListConfiguration cfg = this.getConfig();
         Map<String, Map<String,String>> endpoints = new HashMap<String, Map<String,String>>();
-        Iterator<String> a = cfg.getKeys("endpoints");
+        Iterator<String> a = cfg.getKeys("data-adapters");
         while (a.hasNext()) {
             String key = a.next();
             String sp[] = key.split("\\.");
-            if (sp != null && sp.length == 3) {
+            
+            if (sp != null && sp.length == 3) { // as the list is normalized length is how deep the property is
                 Map<String, String> map;
                 if (endpoints.containsKey(sp[1]))
                     map = endpoints.get(sp[1]);
@@ -215,14 +216,21 @@ public class DiskRepository extends KBRepository {
         
         for (String name: endpoints.keySet()) {
             Map<String,String> cur = endpoints.get(name);
-            String curURI = cur.get("URI"),
-                   curType = "SPARQL", //cur.get("type") //FIXME: ADD THIS TO CONFIG FILE:
-                   curUser = cur.get("username"),
-                   curPass = cur.get("password");
+            String curURI = cur.get("endpoint"),
+                   curType = cur.get("type");
+            String curUser = null, curPass = null, curNamespace = null, curPrefix = null;
+            if (cur.containsKey("username")) curUser = cur.get("username");
+            if (cur.containsKey("password")) curPass = cur.get("password");
+            if (cur.containsKey("namespace")) curNamespace = cur.get("namespace");
+            if (cur.containsKey("prefix")) curPrefix = cur.get("prefix");
 
             switch (curType) {
-                case "SPARQL":
+                case "sparql":
                     DataAdapter curAdapter = new sparqlAdapter(curURI, name, curUser, curPass);
+                    if (curNamespace != null && curPrefix != null) {
+                        curAdapter.setPrefix(curPrefix, curNamespace);
+                        //this.vocabularies.put(curURI, this.initializeVocabularyFromDataAdapter();
+                    }
                     this.dataAdapters.put(curURI, curAdapter);
                     break;
 
@@ -236,6 +244,16 @@ public class DiskRepository extends KBRepository {
         if (this.dataAdapters.containsKey(url))
             return this.dataAdapters.get(url);
         return null;
+    }
+    
+    public Map<String, String> getEndpoints () {
+      Map<String, String> endpoints = new HashMap<String, String>();
+      
+      for (String key: dataAdapters.keySet()) {
+          DataAdapter d = dataAdapters.get(key);
+          endpoints.put(d.getName(), d.getEndpointUrl());
+      }
+      return endpoints;
     }
     /**
      * Vocabulary Initialization
@@ -658,13 +676,9 @@ public class DiskRepository extends KBRepository {
                     }
                 }
             }
-            if (line.contains("?")) {
-                // Only have relevant lines in query containing variables
-                pattern += line;
-                if (!line.matches(".+\\.\\s*$"))
-                    pattern += " .";
-                pattern += "\n";
-            }
+            pattern += line;
+            //if (!line.matches(".+\\.\\s*$")) pattern += " .";
+            pattern += "\n";
         }
         return pattern;
     }
@@ -1113,6 +1127,7 @@ public class DiskRepository extends KBRepository {
             //One hypothesis can match the same LOI in more than one way, the following for-loop handles that
             for (Map<String, String> values: matchingBindings.get(loi)) {
                 String dq = getQueryBindings(loi.getDataQuery(), varPattern, values);
+                    
                 String query = this.getAllPrefixes() + "SELECT DISTINCT ";
                 for (String qvar: loi.getAllWorkflowVariables()) query += qvar + " ";
                 query += "{\n" + dq + "}";
@@ -1120,66 +1135,58 @@ public class DiskRepository extends KBRepository {
                 List<DataResult> solutions = this.dataAdapters.get(loi.getDataSource()).query(query);
                 if (solutions.size() > 0) {
                     System.out.println("  LOI " + loi.getId() + " got " + solutions.size() + " results");
-                    /*for (DataResult dr: queryResults) {
-                        System.out.println(dr.getVariableNames());
-                    }*/
                     
-                    
-                    
-                    
-                ///TODO: continue here.
-                // Store solutions in dataVarBindings
-                Map<String, List<String>> dataVarBindings = new HashMap<String, List<String>>();
-                Set<String> varNames =  solutions.get(0).getVariableNames();
-                for (String varname: varNames)
-                    dataVarBindings.put(varname, new ArrayList<String>());
+                    // Store solutions in dataVarBindings
+                    Map<String, List<String>> dataVarBindings = new HashMap<String, List<String>>();
+                    Set<String> varNames =  solutions.get(0).getVariableNames();
+                    for (String varname: varNames)
+                        dataVarBindings.put(varname, new ArrayList<String>());
 
-                for (DataResult solution: solutions) {
-                    for (String varname: varNames) {
-                        dataVarBindings.get(varname).add(solution.getValue(varname));
+                    for (DataResult solution: solutions) {
+                        for (String varname: varNames) {
+                            String cur = solution.getValue(varname);
+                            dataVarBindings.get(varname).add(cur);
+                        }
                     }
-                }
 
-                //System.out.println("Results proceced");
-                // Add the parameters
-                for (String param: loi.getAllWorkflowParameters()) {
-                    if (param.charAt(0) == '?') param = param.substring(1);
-                    String bind = values.get(param);
-                    if (bind != null) {
-                        List<String> abind = new ArrayList<String>();
-                        abind.add(bind);
-                        dataVarBindings.put(param, abind);
+                    // Add the parameters
+                    for (String param: loi.getAllWorkflowParameters()) {
+                        if (param.charAt(0) == '?') param = param.substring(1);
+                        String bind = values.get(param);
+                        if (bind != null) {
+                            List<String> abind = new ArrayList<String>();
+                            abind.add(bind);
+                            dataVarBindings.put(param, abind);
+                        }
                     }
-                }
                 
-                // check collections
-                Set<String> varNonCollection = loi.getAllWorkflowNonCollectionVariables();
+                    // check collections
+                    Set<String> varNonCollection = loi.getAllWorkflowNonCollectionVariables();
 
-                //System.out.println("dataBindings:");
-                for (String key: dataVarBindings.keySet()) {
-                  //System.out.println(" " + key + ":");
-                  String var = (key.charAt(0) != '?') ? '?' + key : key;
-                  if (varNonCollection.contains(var)) {
-                    //System.out.println("  Is not a collection");
-                    Set<String> fixed = new HashSet<String>(dataVarBindings.get(key));
-                    dataVarBindings.put(key, new ArrayList<String>(fixed));
-                  }
-                }
-                
-                String endpoint = loi.getDataSource();
-                TriggeredLOI tloi = new TriggeredLOI(loi, id);
-                tloi.setWorkflows(
-                    this.getTLOIBindings(username, domain, loi.getWorkflows(), dataVarBindings, endpoint)
-                    );
-                tloi.setMetaWorkflows(
-                    this.getTLOIBindings(username, domain, loi.getMetaWorkflows(), dataVarBindings, endpoint));
-                tloi.setDataQuery(dq);
-                tloi.setRelevantVariables(loi.getRelevantVariables());
-                tloi.setExplanation(loi.getExplanation());
-                tlois.add(tloi);
+                    //System.out.println("dataBindings:");
+                    for (String key: dataVarBindings.keySet()) {
+                      //System.out.println(" " + key + ":");
+                      String var = (key.charAt(0) != '?') ? '?' + key : key;
+                      if (varNonCollection.contains(var)) {
+                        //System.out.println("  Is not a collection");
+                        Set<String> fixed = new HashSet<String>(dataVarBindings.get(key));
+                        dataVarBindings.put(key, new ArrayList<String>(fixed));
+                      }
+                    }
+                    
+                    String endpoint = loi.getDataSource();
+                    TriggeredLOI tloi = new TriggeredLOI(loi, id);
+                    tloi.setWorkflows(
+                        this.getTLOIBindings(username, domain, loi.getWorkflows(), dataVarBindings, endpoint)
+                        );
+                    tloi.setMetaWorkflows(
+                        this.getTLOIBindings(username, domain, loi.getMetaWorkflows(), dataVarBindings, endpoint));
+                    tloi.setDataQuery(dq);
+                    tloi.setRelevantVariables(loi.getRelevantVariables());
+                    tloi.setExplanation(loi.getExplanation());
+                    tlois.add(tloi);
                     
                 }
-
             }
         }
         return checkExistingTLOIs(username, domain, tlois);

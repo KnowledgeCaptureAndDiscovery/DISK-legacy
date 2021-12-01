@@ -62,6 +62,7 @@ public class DataQuery {
 			// Request parameters and other properties.
 			params = new ArrayList<NameValuePair>(2);
 			params.add(new BasicNameValuePair("action", "login"));
+			//FIXME: This not longer work. Must use a data-adapter!
 			params.add(new BasicNameValuePair("lgname", Config.get().getProperties().getString("ENIGMA.username")));
 			params.add(new BasicNameValuePair("lgpassword", Config.get().getProperties().getString("ENIGMA.password")));
 			params.add(new BasicNameValuePair("lgtoken", token));

@@ -143,8 +143,7 @@
 				border-bottom: 1px dotted red;
 			}
 			paper-dialog {
-				width: 90%;
-				max-width: 400px;
+				max-width: 800px;
 			}			
 			paper-input, paper-textarea, 
 			paper-dropdown-menu, vaadin-combo-box {

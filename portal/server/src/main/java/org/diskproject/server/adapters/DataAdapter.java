@@ -6,33 +6,53 @@ import java.util.Map;
 import org.diskproject.shared.classes.loi.LineOfInquiry;
 
 public abstract class DataAdapter {
-    private String URI, name, username, password;
+    private String endpointUrl, name, username, password, prefix, namespace;
+
+    public DataAdapter (String URI, String name) {
+        this.endpointUrl = URI;
+        this.name = name;
+        this.username = null;
+        this.password = null;
+    }
 
     public DataAdapter (String URI, String name, String username, String password) {
-        this.URI = URI;
+        this.endpointUrl = URI;
         this.name = name;
         this.username = username;
         this.password = password;
     }
     
-    public String getURI () {
-        return this.URI;
+    public String getEndpointUrl () {
+        return this.endpointUrl;
     }
     
     public String getName ( ) {
         return this.name;
     }
     
-    public String getUsername () {
+    protected String getUsername () {
         return this.username;
     }
-    
+
     protected String getPassword () {
         return this.password;
     }
     
+    public void setPrefix (String prefix, String namespace) {
+        this.prefix = prefix;
+        this.namespace = namespace;
+    }
+    
+    public String getPrefix () {
+        return this.prefix;
+    }
+    
+    public String getNamespace () {
+        return this.namespace;
+    }
+    
     public String toString () {
-        return "[" + this.name + "] " + this.username + "@" + this.URI;
+        return "[" + this.name + "] " + this.username + "@" + this.endpointUrl;
     }
 
     public abstract List<DataResult> query (String queryString);

@@ -62,7 +62,6 @@ public class DiskResource implements DiskService {
     try {
       PropertyListConfiguration config = this.repo.getConfig();
       Map<String, String> vals = new HashMap<String, String>();
-      vals.put("data-store", config.getProperty("data-store").toString());
       vals.put("username", config.getProperty("username").toString());
       vals.put("domain", config.getProperty("domain").toString());
       vals.put("wings.server", config.getProperty("wings.server").toString());
@@ -76,25 +75,8 @@ public class DiskResource implements DiskService {
   @GET
   @Path("server/endpoints")
   @Override
-  public Map<String, String> getEndpoints() {
-    try {
-      PropertyListConfiguration config = this.repo.getConfig();
-      Map<String, String> vals = new HashMap<String, String>();
-      
-      Iterator<String> a = config.getKeys("endpoints");
-      while (a.hasNext()) {
-    	  String key = a.next();
-    	  String sp[] = key.split("\\.");
-    	  if (sp != null && sp.length == 3 && sp[2].equals("URI")) {
-    		  vals.put(sp[1], config.getProperty(key).toString());
-    	  }
-      }
-      
-      return vals;
-    } catch (Exception e) {
-      // e.printStackTrace();
-      throw new RuntimeException("Exception: " + e.getMessage());
-    }
+  public Map<String, String> getEndpoints () {
+      return this.repo.getEndpoints();
   }
   
   /*

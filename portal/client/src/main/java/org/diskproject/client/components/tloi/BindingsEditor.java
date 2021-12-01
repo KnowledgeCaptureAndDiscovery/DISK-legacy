@@ -11,21 +11,21 @@ import org.diskproject.shared.classes.workflow.VariableBinding;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.Widget;
-import com.vaadin.polymer.Polymer;
-import com.vaadin.polymer.vaadin.widget.VaadinComboBox;
-import com.vaadin.polymer.vaadin.widget.event.ValueChangedEvent;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.dom.client.SpanElement;
 
 public class BindingsEditor extends Composite {
   interface Binder extends UiBinder<Widget, BindingsEditor> {};
   private static Binder uiBinder = GWT.create(Binder.class);
  
   @UiField HTMLPanel varsection;
-  @UiField VaadinComboBox variableMenu;
+  @UiField SpanElement  workflowName;
+
+  List<CheckBox> orderedOptions;
 
   Map<String, HTMLPanel> variablePanels;
   
@@ -40,57 +40,96 @@ public class BindingsEditor extends Composite {
     this.bindings = bindings;
     clearUI();
     if(bindings != null) {
-        List<String> names = new ArrayList<String>();
-    	for (VariableBinding var: bindings.getBindings()) {
-    		if (var.isCollection()) {
-				String varname = var.getVariable();
-				String[] values = var.getBindingAsArray();
-				if (values.length > 1) {
-					names.add(varname);
-
-					if (!variablePanels.containsKey(varname))
-						variablePanels.put(varname, new HTMLPanel(""));
-					HTMLPanel panel = variablePanels.get(varname);
-					panel.addStyleName("options");
-					for (String value: values) {
-						CheckBox item = new CheckBox(value);
-						item.setValue(true);
-						panel.add(item);
-					}
-					varsection.add(panel);
-				}
-    		}
-    	}
-    	variableMenu.setItems(Polymer.asJsArray(names));
-    	if (names.size() > 0) variableMenu.setValue(names.get(0));
-    	onVariableMenuChanged(null);
+        updateTable();
+        workflowName.setInnerText(bindings.getWorkflow());
     }
   }
-  
+
+  private void updateTable () {
+    if (bindings != null) {
+      List<VariableBinding> allVarBindings = bindings.getBindings();
+      int nCols = allVarBindings.size(), nRows = 0, index = -1;
+
+      for (int i = 0; i < nCols; i++) {
+        VariableBinding var = allVarBindings.get(i);
+        if (var.isCollection()) {
+          String[] values = var.getBindingAsArray();
+          if (values.length > nRows) {
+              nRows = values.length;
+              index = i;
+          }
+        }
+      }
+      
+      if (index < 0) return; //TODO: show some error.
+
+      orderedOptions = new ArrayList<CheckBox>();
+      
+      //Only works when the number of elements for collection is the same.
+      //First order collections first to have some id. //FIXME: use more than one value to generate ID
+      List<VariableBinding> ordered = new ArrayList<VariableBinding>();
+      ordered.add(allVarBindings.get(index));
+      for (int i = 0; i < nCols; i++) {
+        if (i != index) ordered.add(allVarBindings.get(i));
+      }
+
+      FlexTable table = new FlexTable();
+      //Add headers
+      for (int i = 0; i < nCols; i++) {
+          table.setHTML(0, i+1, "<b>" + ordered.get(i).getVariable() + "</b>");
+      }
+      
+      for (int i = 0; i < nRows; i++) {
+          for (int j=0; j < nCols; j++) {
+              VariableBinding vb = ordered.get(j);
+              String value;
+              if (vb.isCollection()) {
+                  value = vb.getBindingAsArray()[i];
+              } else {
+                  value = vb.getBinding();
+              }
+              table.setHTML(i + 1, j + 1, value.replaceAll("^SHA[a-zA-Z0-9]{6}_", ""));
+              if (j == 0) {
+                  CheckBox item = new CheckBox();
+                  item.setValue(true);
+                  table.setWidget(i+1, j, item);
+                  orderedOptions.add(item);
+              }
+          }
+      }
+      
+      varsection.add(table);
+    }
+  }
+
   private void clearUI () {
-    variableMenu.clear();
     varsection.clear();
     variablePanels = new HashMap<String, HTMLPanel>();
   }
 
   public WorkflowBindings getWorkflowBindings() {
-    //WorkflowBindings newBindings = new WorkflowBindings();
-    //newBindings.setParameters(bindings.getParameters());
-    //newBindings.setOptionalParameters(bindings.getOptionalParameters());
+    List<Integer> indexes = new ArrayList<>();
+    for (int i = orderedOptions.size() - 1; i >= 0; i--) {
+        CheckBox cur = orderedOptions.get(i);
+        if (!cur.getValue())
+            indexes.add(i);
+    }
+      
+      
+    if (indexes.size() == 0) return bindings;
     
     List<VariableBinding> newVarBindings = new ArrayList<VariableBinding>();
     for (VariableBinding origBinding: bindings.getBindings()) {
     	String varname = origBinding.getVariable();
-    	if (origBinding.isCollection() && variablePanels.containsKey(varname)) {
-    		HTMLPanel varPanel = variablePanels.get(varname);
-    		int len = varPanel.getWidgetCount();
+    	if (origBinding.isCollection()) {
+    	    String[] values = origBinding.getBindingAsArray();
+    	    int len = values.length;
     		String newVal = "[";
     		boolean first = true;
     		for (int i = 0; i < len; i++) {
-    			CheckBox option = (CheckBox) varPanel.getWidget(i);
-    			if (option.getValue()) {
+    			if (!indexes.contains(i)) {
     				if (!first) newVal += ", ";
-    				newVal += option.getText();
+    				newVal += values[i];
     				first = false;
     			}
     		}
@@ -105,13 +144,4 @@ public class BindingsEditor extends Composite {
     
     return bindings;
   }  
-  
-  
-  @UiHandler("variableMenu")
-  void onVariableMenuChanged(ValueChangedEvent event) {
-	  String selected = variableMenu.getValue();
-	  for (String varname: variablePanels.keySet()) {
-		  variablePanels.get(varname).setVisible(varname.equals(selected));
-	  }
-  }
 }

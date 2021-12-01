@@ -75,19 +75,14 @@
 			.buttons {
 				justify-content: space-between;
 			}
-			.options {
-				display: grid;
+			.bold {
+			    font-weight: bold;
 			}
 		</style>
 		<div class="vertical center-justified layout">
-			<div class="horizontal layout">
-				<v:VaadinComboBox addStyleNames="workflowCombo"
-					label="Select binding variable" ui:field="variableMenu" />
-			</div>
-			
+			<p>Select variable bindings for <span ui:field="workflowName" class="bold"></span>:</p>
 			<div class="scrollable">
-				<g:HTMLPanel ui:field="varsection">
-				</g:HTMLPanel>
+				<g:HTMLPanel ui:field="varsection"/>
 
 			</div>
 				<div class="buttons">

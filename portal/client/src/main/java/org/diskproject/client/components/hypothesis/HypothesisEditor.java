@@ -91,6 +91,7 @@ public class HypothesisEditor extends Composite
     triples.loadVocabulary("neuro", KBConstants.NEUROURI(), vocabLoaded);
     triples.loadVocabulary("disk", KBConstants.DISKURI(), vocabLoaded);
     triples.loadUserVocabulary("user", this.userid, this.domain, vocabLoaded);
+    
   }
 
   private Callback<String, Throwable> vocabLoaded = 

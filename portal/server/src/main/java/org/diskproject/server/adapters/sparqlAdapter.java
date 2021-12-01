@@ -22,8 +22,8 @@ public class sparqlAdapter extends DataAdapter {
     private final KBAPI plainKb = new KBAPIJena(OntSpec.PLAIN);
     private final static Pattern varPattern = Pattern.compile("\\?(.+?)\\b");
     
-    public sparqlAdapter (String URI, String name, String username, String password) {
-        super(URI, name, username, password);
+    public sparqlAdapter (String endpoint, String name, String username, String password) {
+        super(endpoint, name, username, password);
     }
     
     public static Set<String> interceptVariables (final String queryA, final String queryB) {
@@ -48,7 +48,12 @@ public class sparqlAdapter extends DataAdapter {
     public List<DataResult> query (String queryString) {
         ArrayList<ArrayList<SparqlQuerySolution>> solutions = null;
         try {
-            solutions = plainKb.sparqlQueryRemote(queryString, this.getURI(), this.getUsername(), this.getPassword());
+            String user = this.getUsername(), pass = this.getPassword();
+            if (user != null && pass != null) {
+                solutions = plainKb.sparqlQueryRemote(queryString, this.getEndpointUrl(), this.getUsername(), this.getPassword());
+            } else {
+                solutions = plainKb.sparqlQueryRemote(queryString, this.getEndpointUrl());
+            }
         } catch (Exception e) {
             System.out.println(queryString);
             System.err.println(e);
