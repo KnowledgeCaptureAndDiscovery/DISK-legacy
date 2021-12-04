@@ -51,7 +51,12 @@ public class FileListDialog extends DialogBox { //implements ClickHandler {
         for (String file: this.list) {
 			AnchorElement link = AnchorElement.as(DOM.createAnchor());
 			String id = file.replaceAll("^.*#", "");
-			String name = id.replaceAll("_", " ");
+			String name = id.replaceAll("^SHA[a-zA-Z0-9]{6}_", "")
+			                .replaceAll("\\-[a-z0-9]{25}$", "")
+			                .replaceAll("_", " ");
+			if (name.equals("age vs allele") || name.equals("forest plot"))
+			    name += ".pdf";
+
 			String dl = "https://enigma-disk.wings.isi.edu/wings-portal/users/admin/test/data/fetch?data_id="
 			          + file.replace(":", "%3A").replace("#", "%23");
 			link.setInnerText(name);
