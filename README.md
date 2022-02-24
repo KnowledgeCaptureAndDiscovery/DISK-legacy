@@ -1,4 +1,4 @@
-# DISK
+# DISK [![DOI](https://zenodo.org/badge/46084861.svg)](https://zenodo.org/badge/latestdoi/46084861)
 
 ## Installation
 
