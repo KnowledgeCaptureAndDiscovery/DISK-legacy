@@ -22,21 +22,6 @@ public class Narrative extends Composite {
     public Narrative (TriggeredLOI tloi) {
         initWidget(uiBinder.createAndBindUi(this)); 
         nativeLog(tloi);
-
-        /*String loiname = tloi.getName().replace("Triggered: ", "");
-        String all = "The Hypothesis with title: <b>" + "HYP NAME"
-                   + "</b> was runned <span class=\"" + tloi.getStatus() + "\">" 
-                   + tloi.getStatus() + "</span>"
-                   + " with the Line of Inquiry: <b>" + loiname
-                   + "</b>. The LOI triggered the <a target=\"_blank\" href=\"" //+ wf.getWorkflowLink() 
-                   + "\">workflow on WINGS</a>"
-                   + " where it was tested with the following datasets:<ul>" + "[DATASETS]"
-                   + "</ul>The resulting p-value is " 
-                   + ExecutionList.decimalFormat.format(tloi.getConfidenceValue()) + ".";
-        
-        container.clear();
-        container.getElement().setInnerHTML(all);*/
-        
         load(tloi.getId());
     }
     

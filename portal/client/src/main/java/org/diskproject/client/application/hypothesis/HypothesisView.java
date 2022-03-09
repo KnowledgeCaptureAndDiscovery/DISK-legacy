@@ -387,6 +387,7 @@ public class HypothesisView extends ApplicationSubviewImpl
   @UiHandler("addicon")
   void onAddIconClicked(ClickEvent event) {
     tree.setVisible(false);
+    emptyDiv.setVisible(false);
     searchPanel.setVisible(false);
     description.setVisible(false);
     addicon.setVisible(false);

@@ -261,7 +261,7 @@ public class WorkflowBindings implements Comparable<WorkflowBindings>{
             }
             html += "</tr></thead><tbody>";
         }
-        html += "<tr><td>" + i + "</td>";
+        html += "<tr><td>" + (i+1) + "</td>";
         for(VariableBinding vbinding : bindings) {
             if (vbinding.isCollection()) {
                 String[] barr = vbinding.getBindingAsArray();

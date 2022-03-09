@@ -373,6 +373,7 @@ public class MyHypothesesView extends ApplicationSubviewImpl
 
   @UiHandler("addicon")
   void onAddIconClicked(ClickEvent event) {
+    searchPanel.setVisible(false);
     emptyDiv.setVisible(false);
     description.setVisible(false);
     addicon.setVisible(false);

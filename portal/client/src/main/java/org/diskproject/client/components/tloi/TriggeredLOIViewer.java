@@ -185,7 +185,6 @@ public class TriggeredLOIViewer extends Composite {
               break;
           }
           if (wfb != null) {
-              WorkflowRun run = wfb.getRun();
               int datasets = 0;
               for (VariableBinding b: wfb.getBindings()) {
                   if (b.isCollection()) {
@@ -193,11 +192,18 @@ public class TriggeredLOIViewer extends Composite {
                       if (datasets < size) datasets = size;
                   }
               }
-              String html = "The hypothesis with title: <b>" + parentHypothesis.getName() + "</b> was runned";
-              String status = run.getStatus();
-              if (status != null) html += " <span class='" + run.getStatus() + "'>" + run.getStatus() + "</span>";
-              html += " with the Line of inquiry: <b>" + tloi.getName().replace("Triggered: ", "")
-                      + "</b>. The LOI triggered the workflow <b>" + wfb.getWorkflow() + "</b> on WINGS where it was tested with <b>"
+              String html = "The hypothesis with title: <b>" + parentHypothesis.getName() + "</b>";
+              String status = null;
+              
+              Status s = tloi.getStatus();
+              if (s == null || s == Status.RUNNING) status = "RUNNING";
+              else if (s == Status.FAILED) status = "FAILED";
+              else if (s == Status.QUEUED) status = "QUEUED";
+              else if (s == Status.SUCCESSFUL) status = "SUCCESSFUL";
+
+              html += " had a <span class='" + status + "'>" + status + "</span> run for ";
+              html += " the Line of inquiry: <b>" + tloi.getName().replace("Triggered: ", "")
+                      + "</b>. The LOI triggered the workflow <b>" + wfb.getWorkflow() + "</b> on WINGS, where analysis was done with <b>"
                       + datasets + "</b> datasets.";
               double p = tloi.getConfidenceValue();
               if (p > 0) html += " The resulting p-value is " + (p < 0.001 ?
@@ -207,7 +213,7 @@ public class TriggeredLOIViewer extends Composite {
 
               narrative.clear();
               narrative.add(new HTML(html));
-              narrative.setVisible(true);
+              narrative.setVisible(s!=null);
           } else {
               GWT.log("Needs at least one workflow bindings");
           }

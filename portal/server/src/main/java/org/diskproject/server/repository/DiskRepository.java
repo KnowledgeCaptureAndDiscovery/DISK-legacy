@@ -2709,16 +2709,15 @@ public class DiskRepository extends KBRepository {
             String dataset = "";
             String fileprefix = "https://enigma-disk.wings.isi.edu/wings-portal/users/admin/test/data/fetch?data_id=http%3A//skc.isi.edu%3A8080/wings-portal/export/users/" 
                               + username + "/" + domain + "/data/library.owl%23";
-            boolean allCollections = true;
+            boolean someCollections = false;
             int len = 0;
             for (VariableBinding ds: wf.getBindings()) {
-                if (!ds.isCollection()) {
-                    allCollections = false;
-                    break;
+                if (ds.isCollection()) {
+                    someCollections = true;
                 }
                 len = ds.getBindingAsArray().length > len ? ds.getBindingAsArray().length : len;
             }
-            if (allCollections) {
+            if (someCollections) {
                 //dataset += "<table>";
                 dataset += "<table><thead><tr><td><b>#</b></td>";
                 for (VariableBinding ds: wf.getBindings()) {
@@ -2729,17 +2728,29 @@ public class DiskRepository extends KBRepository {
                     dataset += "<tr>";
                     dataset += "<td>" + (i+1) + "</td>";
                     for (VariableBinding ds: wf.getBindings()) {
-                        String[] bindings = ds.getBindingAsArray();
-                        String datas = bindings[i];
-                        String dataname = datas.replaceAll("^.*#", "").replaceAll("SHA\\w{6}_", "");
-                        String url = fileprefix + datas;
-                        String anchor = "<a target=\"_blank\" href=\"" + url + "\">" + dataname + "</a>";
-                        dataset += "<td>" + anchor + "</td>";
+                        String value = null;
+                        if (ds.isCollection()) {
+                            String[] bindings = ds.getBindingAsArray();
+                            if (i < bindings.length) {
+                                value = bindings[i];
+                            } else {
+                                value = bindings[0];
+                            }
+                        } else {
+                            value = ds.getBinding();
+                        }
+                        
+                        String anchor = null;
+                        if (value.startsWith("SHA")) {
+                            String dataname = value.replaceAll("^.*#", "").replaceAll("SHA\\w{6}_", "");
+                            String url = fileprefix + value;
+                            anchor = "<a target=\"_blank\" href=\"" + url + "\">" + dataname + "</a>";
+                        }
+                        dataset += "<td>" + (anchor != null ? anchor : value) + "</td>";
                     }
                     dataset += "</tr>";
                 }
                 dataset += "</tbody></table>";
-                
             } else {
                 for (VariableBinding ds: wf.getBindings()) {
                     String binding = ds.getBinding();
@@ -2751,7 +2762,6 @@ public class DiskRepository extends KBRepository {
                             dataset += "<li>" + anchor + "</li>";
                         }
                     }
-                    System.out.println("binding: " + binding);
                 }
             }
             Double confidence = tloi.getConfidenceValue();
@@ -2762,11 +2772,11 @@ public class DiskRepository extends KBRepository {
             String pval = df.format(confidence);           
             //Execution narratives
             String execution = "The Hypothesis with title: <b>" + hyp.getName()
-                             + "</b> was runned <span class=\"" + tloi.getStatus() + "\">" 
-                             + tloi.getStatus() + "</span>"
-                             + " with the Line of Inquiry: <b>" + loi.getName()
+                             + "</b> had a <span class=\"" + tloi.getStatus() + "\">" 
+                             + tloi.getStatus() + "</span> run for"
+                             + " the Line of Inquiry: <b>" + loi.getName()
                              + "</b>. The LOI triggered the <a target=\"_blank\" href=\"" + wf.getWorkflowLink() 
-                             + "\">workflow on WINGS</a>"
+                             + "\">workflow on WINGS</a>,"
                              + " where it was tested with the following datasets:<div class=\"data-list\"><ol>" + dataset
                              + "</ol></div>The resulting p-value is " + pval + ".";
             narratives.put("execution", execution);
