@@ -28,10 +28,12 @@ jobs:
         GITHUB_USERNAME: ${{ secrets.GITHUB_USERNAME }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Publish to GitHub Packages Apache Maven
-      run: cd portal && mvn --batch-mode deploy
+    - name: Build with Maven
+      run: cd portal && mvn -B package --file pom.xml
       env:
-        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_USERNAME: ${{ secrets.GITHUB_USERNAME }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
