@@ -3,7 +3,9 @@
 
 name: Publish backend
 
-on: [push, pull_request]
+on:
+  release:
+    types: [created]
 
 jobs:
   build:
