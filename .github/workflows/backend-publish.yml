@@ -29,6 +29,16 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Publish to GitHub Packages Apache Maven
-      run: mvn --batch-mode deploy
+      run: cd portal && mvn --batch-mode deploy
       env:
         GITHUB_TOKEN: ${{ github.token }}
+
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: portal/server/target/disk-project-server-*.war
+        asset_name: disk-project-server.war
+        tag: ${{ github.ref }}
+        overwrite: true
+        body: "Disk Server War "
