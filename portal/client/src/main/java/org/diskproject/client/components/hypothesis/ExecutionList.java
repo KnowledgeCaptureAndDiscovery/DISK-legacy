@@ -21,6 +21,7 @@ import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.AnchorElement;
 import com.google.gwt.dom.client.DivElement;
+import com.google.gwt.dom.client.Style.WhiteSpace;
 import com.google.gwt.dom.client.TableRowElement;
 import com.google.gwt.dom.client.TableCellElement;
 import com.google.gwt.dom.client.TableSectionElement;
@@ -232,6 +233,7 @@ public class ExecutionList extends SearchableItem {
 
 			//Buttons at the end
 			TableCellElement options = TableCellElement.as(DOM.createTD());
+			options.getStyle().setWhiteSpace(WhiteSpace.NOWRAP);
 			
 			if (hasShinyURL) {
                 IronIcon iconShiny = new IronIcon();
